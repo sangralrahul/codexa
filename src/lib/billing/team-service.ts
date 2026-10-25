@@ -66,7 +66,7 @@ export async function inviteMember(input: { workspace: Workspace; actor: Actor; 
   let emailStatus: "sent" | "outbox" | "failed" = "outbox";
   try {
     const r = await emails.workspaceInvite(email, workspace.name, actor.name || actor.email, inviteUrl(token));
-    emailStatus = r.provider === "resend" ? "sent" : "outbox";
+    emailStatus = r.provider === "outbox" ? "outbox" : "sent";
   } catch {
     emailStatus = "failed";
   }
@@ -101,7 +101,7 @@ export async function resendInvite(workspace: Workspace, actor: Actor, inviteId:
   let emailStatus: "sent" | "outbox" | "failed" = "outbox";
   try {
     const r = await emails.workspaceInvite(invite.email, workspace.name, actor.name || actor.email, inviteUrl(token));
-    emailStatus = r.provider === "resend" ? "sent" : "outbox";
+    emailStatus = r.provider === "outbox" ? "outbox" : "sent";
   } catch {
     emailStatus = "failed";
   }

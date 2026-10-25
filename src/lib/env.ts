@@ -33,6 +33,10 @@ const schema = z.object({
   AI_DEFAULT_MODEL: z.string().default("claude-sonnet-5-5"),
 
   RESEND_API_KEY: z.string().optional(),
+  CUSTOMERIO_APP_API_KEY: z.string().optional(),
+  CUSTOMERIO_REGION: z.enum(["us", "eu"]).default("us"),
+  CUSTOMERIO_TRANSACTIONAL_MESSAGE_ID: z.string().optional(),
+  EMAIL_PROVIDER: z.enum(["customerio", "resend"]).optional().or(z.literal("").transform(() => undefined)),
   EMAIL_FROM: z.string().default("Codexa <no-reply@codexa.local>"),
 
   GITHUB_CLIENT_ID: z.string().optional(),
@@ -85,7 +89,14 @@ export const capabilities = {
   get ai() {
     return nonEmpty(env.ANTHROPIC_API_KEY) || nonEmpty(env.OPENAI_API_KEY);
   },
+  /** Codexa's own account emails can be delivered (Customer.io or Resend). */
   get email() {
+    return nonEmpty(env.CUSTOMERIO_APP_API_KEY) || nonEmpty(env.RESEND_API_KEY);
+  },
+  get customerio() {
+    return nonEmpty(env.CUSTOMERIO_APP_API_KEY);
+  },
+  get resend() {
     return nonEmpty(env.RESEND_API_KEY);
   },
   get github() {

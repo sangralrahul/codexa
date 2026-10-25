@@ -294,7 +294,7 @@ export function MembersPanel({ workspaceId, currentUserId, role, members: initia
 
 function emailStatusText(email: string, status: "sent" | "outbox" | "failed") {
   if (status === "sent") return `Invitation emailed to ${email}.`;
-  if (status === "outbox") return `Invitation created for ${email}. Email delivery is not configured on this deployment, so the message is in the outbox (RESEND_API_KEY). Ask them to sign in with that address, or share the link from the email outbox.`;
+  if (status === "outbox") return `Invitation created for ${email}. Email delivery is not configured on this deployment, so the message is in the outbox (CUSTOMERIO_APP_API_KEY or RESEND_API_KEY). Ask them to sign in with that address, or share the link from the email outbox.`;
   return `Invitation created for ${email}, but the email could not be sent. Use Resend to try again.`;
 }
 

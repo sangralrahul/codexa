@@ -2,10 +2,11 @@
  * Job handlers. Keep these free of Next.js-only modules ("server-only", next/headers):
  * the worker runs under tsx outside Next.js.
  */
-import { and, eq, inArray, lt, lte, or, sql } from "drizzle-orm";
+import { and, eq, inArray, lt, lte, ne, or, sql } from "drizzle-orm";
 import { db } from "@/db";
 import { authTokens, emailOutbox, rateLimits, sessions, usageEvents, workspaceInvites } from "@/db/schema";
-import { env, capabilities } from "@/lib/env";
+import { env, runnerUrl } from "@/lib/env";
+import { activeEmailProvider, deliverEmail } from "@/lib/email/providers";
 import { enqueue, type JobKind } from "@/lib/jobs";
 import type { Job } from "@/db/schema";
 
@@ -22,37 +23,34 @@ export const RECURRING: Record<string, number> = {
 };
 
 export const handlers: Record<string, Handler> = {
-  /** Resend failed/queued outbox emails when Resend is configured; otherwise report and leave them in the outbox. */
+  /** Retry failed/queued outbox emails with the configured provider (Customer.io or Resend); otherwise report and leave them. */
   "email.retry": async (job) => {
     const limit = Number(job.payload.limit ?? 50);
-    if (!capabilities.email) {
+    const provider = activeEmailProvider();
+    if (!provider) {
       const [{ n }] = await db.select({ n: sql<number>`count(*)` }).from(emailOutbox).where(or(eq(emailOutbox.status, "failed"), eq(emailOutbox.status, "queued")));
-      return { skipped: "RESEND_API_KEY not configured", pending: Number(n) };
+      return { skipped: "No email provider configured (CUSTOMERIO_APP_API_KEY or RESEND_API_KEY)", pending: Number(n) };
     }
+    // Messages queued while no provider was configured ("outbox") are not
+    // retried automatically: they may hold stale one-time links.
     const rows = await db
       .select()
       .from(emailOutbox)
-      .where(or(eq(emailOutbox.status, "failed"), and(eq(emailOutbox.status, "queued"), eq(emailOutbox.provider, "resend"))))
+      .where(or(eq(emailOutbox.status, "failed"), and(eq(emailOutbox.status, "queued"), ne(emailOutbox.provider, "outbox"))))
       .limit(limit);
     let sent = 0;
     let failed = 0;
     for (const m of rows) {
       try {
-        const res = await fetch("https://api.resend.com/emails", {
-          method: "POST",
-          headers: { Authorization: `Bearer ${env.RESEND_API_KEY}`, "Content-Type": "application/json" },
-          body: JSON.stringify({ from: env.EMAIL_FROM, to: [m.to], subject: m.subject, html: m.html, text: m.text }),
-        });
-        const body = (await res.json().catch(() => ({}))) as { id?: string; message?: string };
-        if (!res.ok) throw new Error(body.message ?? `Resend error ${res.status}`);
-        await db.update(emailOutbox).set({ status: "sent", provider: "resend", providerId: body.id ?? null, sentAt: new Date(), error: null }).where(eq(emailOutbox.id, m.id));
+        const r = await deliverEmail({ to: m.to, subject: m.subject, html: m.html, text: m.text || undefined }, provider);
+        await db.update(emailOutbox).set({ status: "sent", provider: r.provider, providerId: r.providerId, sentAt: new Date(), error: null }).where(eq(emailOutbox.id, m.id));
         sent++;
       } catch (err) {
         failed++;
         await db.update(emailOutbox).set({ status: "failed", error: err instanceof Error ? err.message : String(err) }).where(eq(emailOutbox.id, m.id));
       }
     }
-    return { sent, failed, scanned: rows.length };
+    return { provider, sent, failed, scanned: rows.length };
   },
 
   "cleanup.sessions": async () => {
@@ -90,10 +88,12 @@ export const handlers: Record<string, Handler> = {
 
   /** Placeholder: pings the runner; does nothing when it is absent. The runner owns sandbox lifecycle. */
   "runtime.sweep": async () => {
+    const base = runnerUrl();
+    if (!base) return { runnerReachable: false, note: "no runner configured (RUNNER_URL is not set)" };
     try {
       const ctrl = new AbortController();
       const t = setTimeout(() => ctrl.abort(), 3000);
-      const res = await fetch(`${env.RUNNER_URL}/health`, { headers: { Authorization: `Bearer ${env.RUNNER_TOKEN}` }, signal: ctrl.signal });
+      const res = await fetch(new URL("/health", base), { headers: { Authorization: `Bearer ${env.RUNNER_TOKEN}` }, signal: ctrl.signal });
       clearTimeout(t);
       return { runnerReachable: res.ok, status: res.status };
     } catch {

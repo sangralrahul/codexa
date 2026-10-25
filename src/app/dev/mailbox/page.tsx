@@ -10,7 +10,7 @@ import { Logo } from "@/components/logo";
 export const metadata = { title: "Dev mailbox", robots: { index: false, follow: false } };
 
 /**
- * Development-only mailbox. When RESEND_API_KEY is not configured, every email
+ * Development-only mailbox. When no email provider is configured, every email
  * (verification links, password resets, invitations) is stored in email_outbox.
  * This page lets developers open those links. Disabled in production.
  */
@@ -27,7 +27,7 @@ export default async function DevMailboxPage() {
       </div>
       <h1 className="text-2xl font-semibold tracking-tight">Outbox</h1>
       <p className="mt-1 text-sm text-muted-foreground">
-        Emails are stored here because <code>RESEND_API_KEY</code> is not configured. You see messages addressed to {user.email}
+        Emails are stored here because no email provider (<code>CUSTOMERIO_APP_API_KEY</code> or <code>RESEND_API_KEY</code>) is configured. You see messages addressed to {user.email}
         {user.role !== "user" ? " and, as staff, all messages" : ""}.
       </p>
       {mine.length === 0 ? (

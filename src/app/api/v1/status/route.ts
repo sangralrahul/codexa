@@ -3,6 +3,7 @@ import { db } from "@/db";
 import { handler, json } from "@/lib/api";
 import { env, capabilities } from "@/lib/env";
 import { runnerHealth } from "@/lib/runtime/client";
+import { activeEmailProvider, EMAIL_PROVIDER_NAMES } from "@/lib/email/providers";
 
 export type ComponentState = "operational" | "degraded" | "down" | "not_configured" | "unknown";
 export type ComponentStatus = { id: string; name: string; state: ComponentState; detail: string; latencyMs?: number };
@@ -62,6 +63,6 @@ function checkAi(): ComponentStatus {
 
 function checkEmail(): ComponentStatus {
   return capabilities.email
-    ? { id: "email", name: "Email delivery", state: "unknown", detail: "Resend is configured. Delivery is confirmed per message in the outbox." }
+    ? { id: "email", name: "Email delivery", state: "unknown", detail: `${EMAIL_PROVIDER_NAMES[activeEmailProvider() ?? "resend"]} is configured. Delivery is confirmed per message in the outbox.` }
     : { id: "email", name: "Email delivery", state: "not_configured", detail: "No email provider is configured; verification and invitation emails are queued in the outbox." };
 }

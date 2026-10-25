@@ -50,7 +50,7 @@ npm run dev:all                       # web :3000, runner :4000/:4100, realtime 
 npm run worker:start                  # optional background jobs
 ```
 
-Open http://localhost:3000. Without `RESEND_API_KEY`, verification and invite emails are stored in the
+Open http://localhost:3000. Without an email provider (`CUSTOMERIO_APP_API_KEY` or `RESEND_API_KEY`), verification and invite emails are stored in the
 database and can be opened at http://localhost:3000/dev/mailbox (development only).
 
 To exercise the AI pipeline without a provider key during development set `AI_MOCK=1`
@@ -74,7 +74,7 @@ E2E_NO_SERVER=1 E2E_BASE_URL=https://<app> E2E_DATABASE_URL=<db> npx playwright 
 All variables are documented in `.env.example`. Required: `APP_URL`, `DATABASE_URL`, `SESSION_SECRET`,
 `ENCRYPTION_KEY`, `RUNNER_URL`, `RUNNER_TOKEN`. Optional integrations (each enables a capability and
 otherwise renders an explicit "not configured" state): `ANTHROPIC_API_KEY`, `OPENAI_API_KEY`,
-`RESEND_API_KEY`, `GITHUB_CLIENT_ID/SECRET`, `STRIPE_*`, `RAZORPAY_*`, `VERCEL_TOKEN`, `E2B_API_KEY`.
+`CUSTOMERIO_APP_API_KEY` or `RESEND_API_KEY`, `GITHUB_CLIENT_ID/SECRET`, `STRIPE_*`, `RAZORPAY_*`, `VERCEL_TOKEN`, `E2B_API_KEY`.
 
 ## Deployment
 

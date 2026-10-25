@@ -161,7 +161,7 @@ const DETAILS: Record<string, IntegrationDetail> = {
     setup: WORKSPACE_CONNECTION_STEPS,
     permissions: ["A Resend API key (re_…). A sending-only key is sufficient.", "A verified sending domain in Resend for production email."],
     limitations: [
-      "Codexa's own account emails are sent with the operator-level RESEND_API_KEY, not with workspace connections.",
+      "Codexa's own account emails use the operator-level email provider (CUSTOMERIO_APP_API_KEY or RESEND_API_KEY), not workspace connections.",
       "Templates and audiences are not managed by Codexa.",
     ],
   },

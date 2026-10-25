@@ -2,43 +2,37 @@ import "server-only";
 import { eq } from "drizzle-orm";
 import { db } from "@/db";
 import { emailOutbox } from "@/db/schema";
-import { env, capabilities } from "@/lib/env";
 import { logger } from "@/lib/logger";
+import { activeEmailProvider, deliverEmail, type EmailProviderId, type OutgoingEmail } from "./providers";
 
-export type EmailMessage = { to: string; subject: string; html: string; text?: string };
+export type EmailMessage = OutgoingEmail;
 
 /**
- * Email transport. With RESEND_API_KEY set, messages are sent through Resend.
- * Otherwise they are persisted to the email_outbox table (status "queued",
- * provider "outbox") and viewable at /dev/mailbox in development. This keeps
- * the auth flows fully functional without external credentials and makes the
- * missing configuration explicit instead of silently failing.
+ * Send one of Codexa's own emails. Every message is recorded in email_outbox
+ * first. With Customer.io or Resend configured it is delivered right away;
+ * otherwise it stays queued in the outbox (readable at /dev/mailbox in
+ * development) so the missing configuration is explicit, not silent.
  */
-export async function sendEmail(msg: EmailMessage): Promise<{ id: string; provider: string }> {
+export async function sendEmail(msg: EmailMessage): Promise<{ id: string; provider: EmailProviderId | "outbox" }> {
+  const provider = activeEmailProvider();
   const [row] = await db
     .insert(emailOutbox)
-    .values({ to: msg.to, subject: msg.subject, html: msg.html, text: msg.text ?? "", provider: capabilities.email ? "resend" : "outbox" })
+    .values({ to: msg.to, subject: msg.subject, html: msg.html, text: msg.text ?? "", provider: provider ?? "outbox" })
     .returning({ id: emailOutbox.id });
 
-  if (!capabilities.email) {
-    logger.info("email queued to outbox (RESEND_API_KEY not configured)", { to: msg.to, subject: msg.subject });
+  if (!provider) {
+    logger.info("email queued to outbox (no email provider configured)", { to: msg.to, subject: msg.subject });
     return { id: row.id, provider: "outbox" };
   }
 
   try {
-    const res = await fetch("https://api.resend.com/emails", {
-      method: "POST",
-      headers: { Authorization: `Bearer ${env.RESEND_API_KEY}`, "Content-Type": "application/json" },
-      body: JSON.stringify({ from: env.EMAIL_FROM, to: [msg.to], subject: msg.subject, html: msg.html, text: msg.text }),
-    });
-    const body = (await res.json().catch(() => ({}))) as { id?: string; message?: string };
-    if (!res.ok) throw new Error(body.message ?? `Resend error ${res.status}`);
-    await db.update(emailOutbox).set({ status: "sent", providerId: body.id ?? null, sentAt: new Date() }).where(eq(emailOutbox.id, row.id));
-    return { id: row.id, provider: "resend" };
+    const result = await deliverEmail(msg, provider);
+    await db.update(emailOutbox).set({ status: "sent", providerId: result.providerId, sentAt: new Date() }).where(eq(emailOutbox.id, row.id));
+    return { id: row.id, provider: result.provider };
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
     await db.update(emailOutbox).set({ status: "failed", error: message }).where(eq(emailOutbox.id, row.id));
-    logger.error("email send failed", { error: message });
+    logger.error("email send failed", { provider, error: message });
     throw err;
   }
 }

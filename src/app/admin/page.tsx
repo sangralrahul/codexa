@@ -13,7 +13,7 @@ export default async function AdminOverviewPage() {
   const caps: { label: string; ok: boolean; hint: string }[] = [
     { label: "Anthropic", ok: capabilities.anthropic, hint: "ANTHROPIC_API_KEY" },
     { label: "OpenAI", ok: capabilities.openai, hint: "OPENAI_API_KEY" },
-    { label: "Email (Resend)", ok: capabilities.email, hint: "RESEND_API_KEY" },
+    { label: "Email (Customer.io or Resend)", ok: capabilities.email, hint: "CUSTOMERIO_APP_API_KEY or RESEND_API_KEY" },
     { label: "GitHub OAuth", ok: capabilities.github, hint: "GITHUB_CLIENT_ID/SECRET" },
     { label: "Stripe", ok: capabilities.stripe, hint: "STRIPE_SECRET_KEY" },
     { label: "Razorpay", ok: capabilities.razorpay, hint: "RAZORPAY_KEY_ID/SECRET" },
