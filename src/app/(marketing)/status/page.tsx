@@ -4,6 +4,7 @@ import { site } from "@/config/site";
 import { StatusDot } from "@/components/ui/misc";
 import { Breadcrumbs } from "@/components/marketing/breadcrumbs";
 import { getStatus, type ComponentState } from "./health";
+import { PageTitle } from "@/components/marketing/backdrop";
 
 export const metadata = routeMetadata("/status");
 export const dynamic = "force-dynamic";
@@ -32,10 +33,10 @@ export default async function StatusPage() {
       <Breadcrumbs items={[{ name: "Status", path: "/status" }]} />
       <header className="mt-6 max-w-3xl">
         <p className="mb-3 text-xs font-semibold uppercase tracking-[0.14em] text-primary">Company</p>
-        <h1 className="text-3xl font-semibold tracking-tight sm:text-4xl lg:text-5xl">Platform status</h1>
+        <PageTitle className="lg:text-6xl">Platform status</PageTitle>
         <p className="mt-4 text-lg text-muted-foreground">Live checks run when this page is loaded. We do not publish uptime history or percentages yet because we do not have a long enough measured record.</p>
       </header>
-      <section aria-labelledby="overall" className="mt-8 flex flex-col gap-3 rounded-xl border border-border bg-card p-5 sm:flex-row sm:items-center sm:justify-between">
+      <section aria-labelledby="overall" className="mt-8 flex flex-col gap-3 glow-card rounded-2xl border border-border p-5 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex items-center gap-3">
           <StatusDot status={labels[report.overall].dot} />
           <h2 id="overall" className="text-base font-semibold">

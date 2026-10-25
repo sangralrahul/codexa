@@ -6,6 +6,7 @@ import { ArticleShell } from "@/components/docs/article-layout";
 import { Breadcrumbs } from "@/components/docs/breadcrumbs";
 import { NewsletterForm } from "@/components/docs/newsletter-form";
 import { EmptyState } from "@/components/ui/misc";
+import { PageTitle } from "@/components/marketing/backdrop";
 
 export const metadata = routeMetadata("/webinars");
 
@@ -14,7 +15,7 @@ export default function WebinarsPage() {
     <ArticleShell sidebar={LEARN_SIDEBAR}>
       <Breadcrumbs items={[{ name: "Learn", path: "/learn" }, { name: "Webinars", path: "/webinars" }]} className="mb-4" />
       <header className="max-w-3xl">
-        <h1 className="text-3xl font-semibold tracking-tight sm:text-4xl">Webinars</h1>
+        <PageTitle>Webinars</PageTitle>
         <p className="mt-3 text-base text-muted-foreground sm:text-lg">Live sessions and recordings about building with Codexa.</p>
       </header>
       <div className="mt-8 max-w-3xl">

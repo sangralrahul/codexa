@@ -5,6 +5,7 @@ import { Logo, LogoMark } from "@/components/logo";
 import { Breadcrumbs } from "@/components/marketing/breadcrumbs";
 import { Section, SectionHeader } from "@/components/marketing/section";
 import { buttonClasses } from "@/components/ui/button";
+import { PageTitle } from "@/components/marketing/backdrop";
 
 export const metadata = routeMetadata("/brand");
 
@@ -15,7 +16,7 @@ export default function BrandPage() {
         <Breadcrumbs items={[{ name: "Brand", path: "/brand" }]} />
         <header className="mt-6 max-w-3xl">
           <p className="mb-3 text-xs font-semibold uppercase tracking-[0.14em] text-primary">Company</p>
-          <h1 className="text-3xl font-semibold tracking-tight sm:text-4xl lg:text-5xl">The Codexa brand</h1>
+          <PageTitle className="lg:text-6xl">The Codexa brand</PageTitle>
           <p className="mt-4 text-lg text-muted-foreground">A mark, a wordmark, and a small set of colours. Everything on this page is rendered live from the same components the product uses, so what you see is what ships.</p>
         </header>
         <div className="mt-10 grid gap-4 sm:grid-cols-2">
@@ -34,7 +35,7 @@ export default function BrandPage() {
             <figcaption className="mt-6 text-center text-xs text-[#9aa3b2]">Mark and wordmark on dark</figcaption>
           </figure>
         </div>
-        <div className="mt-6 flex flex-wrap items-center gap-6 rounded-xl border border-border bg-card p-6">
+        <div className="mt-6 flex flex-wrap items-center gap-6 glow-card rounded-2xl border border-border p-6">
           <Logo />
           <Logo withText={false} />
           <p className="text-sm text-muted-foreground">The header lockup and the standalone mark, as rendered by the product.</p>

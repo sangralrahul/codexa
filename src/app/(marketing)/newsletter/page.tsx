@@ -3,6 +3,7 @@ import { LEARN_SIDEBAR } from "@/lib/content/nav";
 import { ArticleShell } from "@/components/docs/article-layout";
 import { Breadcrumbs } from "@/components/docs/breadcrumbs";
 import { NewsletterForm } from "@/components/docs/newsletter-form";
+import { PageTitle } from "@/components/marketing/backdrop";
 
 export const metadata = routeMetadata("/newsletter");
 
@@ -11,7 +12,7 @@ export default function NewsletterPage() {
     <ArticleShell sidebar={LEARN_SIDEBAR}>
       <Breadcrumbs items={[{ name: "Learn", path: "/learn" }, { name: "Newsletter", path: "/newsletter" }]} className="mb-4" />
       <header className="max-w-3xl">
-        <h1 className="text-3xl font-semibold tracking-tight sm:text-4xl">Newsletter</h1>
+        <PageTitle>Newsletter</PageTitle>
         <p className="mt-3 text-base text-muted-foreground sm:text-lg">Product updates, release notes and new guides, sent when there is something to say. No schedule, no marketing from third parties.</p>
       </header>
       <div className="mt-8 max-w-xl">

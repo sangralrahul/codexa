@@ -3,6 +3,7 @@ import { routeMetadata, jsonLd } from "@/lib/seo";
 import { FAQ_GROUPS } from "@/lib/content/faq";
 import { Breadcrumbs } from "@/components/docs/breadcrumbs";
 import { FaqAccordion } from "@/components/docs/faq-accordion";
+import { PageTitle } from "@/components/marketing/backdrop";
 
 export const metadata = routeMetadata("/faq");
 
@@ -16,7 +17,7 @@ export default function FaqPage() {
       <script type="application/ld+json" dangerouslySetInnerHTML={ld} />
       <Breadcrumbs items={[{ name: "FAQ", path: "/faq" }]} className="mb-4" />
       <header className="max-w-3xl">
-        <h1 className="text-3xl font-semibold tracking-tight sm:text-4xl">Frequently asked questions</h1>
+        <PageTitle>Frequently asked questions</PageTitle>
         <p className="mt-3 text-base text-muted-foreground sm:text-lg">Short answers with links to the full documentation. For account-specific problems, see the <Link href="/help" className="text-primary underline">help center</Link>.</p>
       </header>
       <nav aria-label="FAQ sections" className="mt-6">

@@ -11,6 +11,7 @@ import { listApproved, listSubmittedBy, serializeShowcaseItem } from "@/lib/serv
 import { routeMetadata } from "@/lib/seo";
 import { ShowcaseCard } from "./_components/showcase-card";
 import { ShowcaseSubmitForm } from "./_components/submit-form";
+import { PageTitle } from "@/components/marketing/backdrop";
 
 export const metadata = routeMetadata("/showcase");
 
@@ -35,7 +36,7 @@ export default async function ShowcasePage({ searchParams }: { searchParams: Sea
         <Breadcrumbs items={[{ name: "Showcase", path: "/showcase" }]} />
         <header className="mt-6 max-w-3xl">
           <p className="mb-3 text-xs font-semibold uppercase tracking-[0.14em] text-primary">Community showcase</p>
-          <h1 className="text-3xl font-semibold tracking-tight sm:text-4xl lg:text-5xl">Projects built with Codexa</h1>
+          <PageTitle className="lg:text-6xl">Projects built with Codexa</PageTitle>
           <p className="mt-4 text-lg text-muted-foreground">
             Real projects submitted by people who built them in Codexa and approved by our team. Each entry shows what the author chose to publish: a title, a description, tags and, when there is one, a live URL.
           </p>

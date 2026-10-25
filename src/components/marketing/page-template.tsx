@@ -6,7 +6,7 @@ import { ReviewNote } from "./review-note";
 import { ContentSections } from "./content-blocks";
 import { CTABand } from "./cta-band";
 import { cn } from "@/lib/utils";
-import { Eyebrow } from "./backdrop";
+import { Eyebrow, PageTitle } from "./backdrop";
 
 function crumbsFor(path: string, explicit?: Crumb[]): Crumb[] {
   if (explicit) return explicit;
@@ -35,9 +35,7 @@ export function PageTemplate({ page, children, aside, after }: { page: ContentPa
               <Eyebrow>{page.eyebrow}</Eyebrow>
             </div>
           ) : null}
-          <h1 data-reveal style={{ "--reveal-delay": "80ms" } as React.CSSProperties} className="text-balance text-4xl font-semibold tracking-[-0.03em] sm:text-5xl">
-            {page.title}
-          </h1>
+          <PageTitle>{page.title}</PageTitle>
           <p data-reveal style={{ "--reveal-delay": "160ms" } as React.CSSProperties} className="mt-5 text-pretty text-lg text-muted-foreground">
             {page.intro}
           </p>

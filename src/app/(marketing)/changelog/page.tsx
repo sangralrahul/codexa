@@ -4,6 +4,7 @@ import { formatDate, listDocs } from "@/lib/content";
 import { Breadcrumbs } from "@/components/docs/breadcrumbs";
 import { Badge } from "@/components/ui/badge";
 import { NewsletterForm } from "@/components/docs/newsletter-form";
+import { PageTitle } from "@/components/marketing/backdrop";
 
 export const metadata = routeMetadata("/changelog");
 
@@ -18,7 +19,7 @@ export default async function ChangelogPage() {
     <div className="container-x py-10 sm:py-14">
       <Breadcrumbs items={[{ name: "Changelog", path: "/changelog" }]} className="mb-4" />
       <header className="max-w-3xl">
-        <h1 className="text-3xl font-semibold tracking-tight sm:text-4xl">Changelog</h1>
+        <PageTitle>Changelog</PageTitle>
         <p className="mt-3 text-base text-muted-foreground sm:text-lg">What each release actually ships, by area. Entries describe implemented behaviour only; planned work lives on the <Link href="/roadmap" className="text-primary underline">roadmap</Link>.</p>
       </header>
       {entries.length === 0 ? (

@@ -6,6 +6,7 @@ import { site } from "@/config/site";
 import { Breadcrumbs } from "@/components/docs/breadcrumbs";
 import { SearchTrigger } from "@/components/search/search-dialog";
 import { buttonClasses } from "@/components/ui/button";
+import { PageTitle } from "@/components/marketing/backdrop";
 
 export const metadata = routeMetadata("/help");
 
@@ -15,7 +16,7 @@ export default async function HelpIndexPage() {
     <div className="container-x py-10 sm:py-14">
       <Breadcrumbs items={[{ name: "Help center", path: "/help" }]} className="mb-4" />
       <header className="max-w-3xl">
-        <h1 className="text-3xl font-semibold tracking-tight sm:text-4xl">Help center</h1>
+        <PageTitle>Help center</PageTitle>
         <p className="mt-3 text-base text-muted-foreground sm:text-lg">Answers to the questions we get most often about accounts, projects, previews, deployments and billing.</p>
         <div className="mt-6 flex flex-wrap items-center gap-3">
           <SearchTrigger className="sm:min-w-[16rem]" />

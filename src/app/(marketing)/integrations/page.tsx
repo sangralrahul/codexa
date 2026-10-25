@@ -4,6 +4,7 @@ import { CTABand } from "@/components/marketing/cta-band";
 import { IntegrationsDirectory, parseIntegrationSearch } from "@/components/integrations-directory";
 import { INTEGRATIONS } from "@/config/integrations";
 import { routeMetadata } from "@/lib/seo";
+import { PageTitle } from "@/components/marketing/backdrop";
 
 export const metadata = routeMetadata("/integrations");
 
@@ -21,7 +22,7 @@ export default async function IntegrationsPage({ searchParams }: { searchParams:
         <Breadcrumbs items={[{ name: "Integrations", path: "/integrations" }]} />
         <header className="mt-6 max-w-3xl">
           <p className="mb-3 text-xs font-semibold uppercase tracking-[0.14em] text-primary">Integrations</p>
-          <h1 className="text-3xl font-semibold tracking-tight sm:text-4xl lg:text-5xl">Connect the services your app needs</h1>
+          <PageTitle className="lg:text-6xl">Connect the services your app needs</PageTitle>
           <p className="mt-4 text-lg text-muted-foreground">
             Workspace-level connections for databases, AI providers, payments, email and hosting, plus GitHub for source control. Credentials are encrypted at rest, tested before they are saved, and never sent to the
             browser.

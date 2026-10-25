@@ -39,7 +39,7 @@ export default function ProductPage() {
         <ul className="mt-8 grid gap-4 sm:grid-cols-2">
           {pillars.map((p, i) => (
             <li key={p.title}>
-              <Link href={p.href} className="flex h-full gap-4 rounded-xl border border-border bg-card p-5 transition hover:border-border-strong">
+              <Link href={p.href} className="flex h-full gap-4 glow-card rounded-2xl border border-border p-5">
                 <span className="flex size-9 shrink-0 items-center justify-center rounded-full border border-border-strong text-sm font-semibold tabular-nums" aria-hidden="true">
                   {i + 1}
                 </span>

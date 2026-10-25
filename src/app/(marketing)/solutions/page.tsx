@@ -26,7 +26,7 @@ export default function SolutionsIndexPage() {
         <ul className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {SOLUTIONS.map((s) => (
             <li key={s.slug}>
-              <Link href={`/solutions/${s.slug}`} className="flex h-full flex-col rounded-xl border border-border bg-card p-5 shadow-sm transition hover:border-border-strong focus-visible:outline-2 focus-visible:outline-ring">
+              <Link href={`/solutions/${s.slug}`} className="flex h-full flex-col glow-card rounded-2xl border border-border p-5 focus-visible:outline-2 focus-visible:outline-ring">
                 <span className="flex items-center justify-between gap-2 text-base font-semibold tracking-tight">
                   {s.name}
                   <ArrowUpRight className="size-4 text-muted-foreground" aria-hidden="true" />

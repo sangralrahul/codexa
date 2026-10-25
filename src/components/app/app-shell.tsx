@@ -8,6 +8,7 @@ import { ThemeToggle } from "@/components/theme/theme-toggle";
 import { Logo } from "@/components/logo";
 import { Alert } from "@/components/ui/misc";
 import { ResendVerificationButton } from "@/components/auth/forms";
+import { Backdrop } from "@/components/marketing/backdrop";
 
 export function AppShell({
   user,
@@ -43,8 +44,9 @@ export function AppShell({
           </div>
         </div>
       ) : null}
-      <div className="flex min-w-0 flex-1 flex-col">
-        <header className="sticky top-0 z-40 flex h-14 items-center justify-between gap-3 border-b border-border bg-background/90 px-4 backdrop-blur">
+      <div className="relative isolate flex min-w-0 flex-1 flex-col">
+        <Backdrop still className="-z-10 bottom-auto h-80 opacity-60" />
+        <header className="glass sticky top-0 z-40 flex h-14 items-center justify-between gap-3 border-b border-border px-4">
           <div className="flex items-center gap-2 lg:hidden">
             <button type="button" onClick={() => setOpen(true)} className="rounded-md p-2 hover:bg-muted" aria-label="Open navigation">
               <Menu className="size-5" />

@@ -4,6 +4,7 @@ import { TemplateGallery, UseTemplateLink } from "@/components/templates";
 import { getCurrentUser } from "@/lib/auth/session";
 import { parseTemplateSearch, type TemplateCategory } from "@/templates";
 import type { Crumb } from "@/content/marketing/types";
+import { PageTitle } from "@/components/marketing/backdrop";
 
 export type GallerySearchParams = { q?: string; framework?: string; sort?: string; category?: string };
 
@@ -29,7 +30,7 @@ export async function PublicGalleryPage({
         <Breadcrumbs items={crumbs} />
         <header className="mt-6 max-w-3xl">
           <p className="mb-3 text-xs font-semibold uppercase tracking-[0.14em] text-primary">Templates</p>
-          <h1 className="text-3xl font-semibold tracking-tight sm:text-4xl lg:text-5xl">{title}</h1>
+          <PageTitle className="lg:text-6xl">{title}</PageTitle>
           <p className="mt-4 text-lg text-muted-foreground">{intro}</p>
           <p className="mt-3 text-sm text-muted-foreground">
             Every template is a real set of files with documented dependencies. Previews show the actual file tree and source — there are no screenshots or mock-ups.

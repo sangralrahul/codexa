@@ -24,7 +24,7 @@ export function StatusBadge({ status }: { status: IntegrationDefinition["status"
 export function IntegrationCard({ integration }: { integration: IntegrationDefinition }) {
   const i = integration;
   return (
-    <li className="flex h-full flex-col rounded-xl border border-border bg-card p-5 text-card-foreground shadow-sm transition-colors hover:border-border-strong">
+    <li className="flex h-full flex-col glow-card rounded-2xl border border-border p-5 text-card-foreground">
       <div className="flex items-start justify-between gap-3">
         <Badge variant="primary">{categoryName(i.category)}</Badge>
         <StatusBadge status={i.status} />

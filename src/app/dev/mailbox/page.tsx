@@ -37,7 +37,7 @@ export default async function DevMailboxPage() {
           {mine.map((m) => {
             const links = Array.from(m.html.matchAll(/href="([^"]+)"/g)).map((x) => x[1]);
             return (
-              <li key={m.id} className="rounded-xl border border-border bg-card p-4">
+              <li key={m.id} className="glow-card rounded-2xl border border-border p-4">
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   <div>
                     <div className="font-medium">{m.subject}</div>

@@ -10,6 +10,7 @@ import { buttonClasses } from "@/components/ui/button";
 import { getCurrentUser } from "@/lib/auth/session";
 import { jsonLd, pageMetadata } from "@/lib/seo";
 import { FRAMEWORKS, getTemplate, searchTemplates, summarizeTemplate, TEMPLATE_CATEGORIES, type Template } from "@/templates";
+import { PageTitle } from "@/components/marketing/backdrop";
 
 type Params = Promise<{ id: string }>;
 type SearchParams = Promise<{ file?: string }>;
@@ -73,7 +74,7 @@ export default async function TemplatePreviewPage({ params, searchParams }: { pa
               <DifficultyBadge level={t.difficulty} />
               {t.featured ? <Badge variant="accent">Featured</Badge> : null}
             </div>
-            <h1 className="mt-3 text-3xl font-semibold tracking-tight sm:text-4xl">{t.name}</h1>
+            <PageTitle className="mt-3">{t.name}</PageTitle>
             <p className="mt-3 text-lg text-muted-foreground">{t.description}</p>
             {t.longDescription ? <p className="mt-3 text-base text-muted-foreground">{t.longDescription}</p> : null}
             {t.tags.length ? (

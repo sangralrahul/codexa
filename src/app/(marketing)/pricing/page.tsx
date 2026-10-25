@@ -8,16 +8,17 @@ import { LimitsTable } from "@/components/marketing/limits-table";
 import { FAQ } from "@/components/marketing/faq";
 import { CTABand } from "@/components/marketing/cta-band";
 import { Breadcrumbs } from "@/components/marketing/breadcrumbs";
+import { PageTitle } from "@/components/marketing/backdrop";
 
 export const metadata = routeMetadata("/pricing");
 
 export default function PricingPage() {
   return (
     <>
-      <section className="border-b border-border bg-surface">
+      <section>
         <div className="container-x py-12 text-center sm:py-16">
           <Breadcrumbs items={[{ name: "Pricing", path: "/pricing" }]} className="[&_ol]:justify-center" />
-          <h1 className="mt-6 text-3xl font-semibold tracking-tight sm:text-4xl lg:text-5xl">Simple plans in INR and USD</h1>
+          <PageTitle className="mt-6 lg:text-6xl">Simple plans in INR and USD</PageTitle>
           <p className="mx-auto mt-4 max-w-2xl text-lg text-muted-foreground">Start free. Upgrade when you need more AI requests, runtime, deployments, or collaborators. Limits are enforced per workspace on the server.</p>
         </div>
       </section>

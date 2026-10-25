@@ -3,6 +3,7 @@ import { routeMetadata } from "@/lib/seo";
 import { Breadcrumbs } from "@/components/marketing/breadcrumbs";
 import { Section, SectionHeader } from "@/components/marketing/section";
 import { CTABand } from "@/components/marketing/cta-band";
+import { PageTitle } from "@/components/marketing/backdrop";
 
 export const metadata = routeMetadata("/brand-guidelines");
 
@@ -30,7 +31,7 @@ export default function BrandGuidelinesPage() {
         <Breadcrumbs items={[{ name: "Brand", path: "/brand" }, { name: "Brand guidelines", path: "/brand-guidelines" }]} />
         <header className="mt-6 max-w-3xl">
           <p className="mb-3 text-xs font-semibold uppercase tracking-[0.14em] text-primary">Company</p>
-          <h1 className="text-3xl font-semibold tracking-tight sm:text-4xl lg:text-5xl">Brand guidelines</h1>
+          <PageTitle className="lg:text-6xl">Brand guidelines</PageTitle>
           <p className="mt-4 text-lg text-muted-foreground">Colours, typography, and the rules for using the Codexa name and mark. The values are the design tokens the product is built with.</p>
         </header>
       </article>
@@ -51,12 +52,12 @@ export default function BrandGuidelinesPage() {
       <Section className="py-12">
         <SectionHeader title="Typography" description="Geist Sans for interface and marketing text; Geist Mono for code, file paths, and values." />
         <div className="mt-8 grid gap-4 md:grid-cols-2">
-          <div className="rounded-xl border border-border bg-card p-6">
+          <div className="glow-card rounded-2xl border border-border p-6">
             <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Geist Sans</p>
             <p className="mt-3 text-3xl font-semibold tracking-tight">Build software at the speed of thought.</p>
             <p className="mt-2 text-base text-muted-foreground">Regular for body, medium for labels, semibold for headings. Headings use tight letter-spacing.</p>
           </div>
-          <div className="rounded-xl border border-border bg-card p-6">
+          <div className="glow-card rounded-2xl border border-border p-6">
             <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Geist Mono</p>
             <pre className="mt-3">
               <code>{`npm run dev\nsrc/components/Invoice.tsx\n429 Too Many Requests`}</code>
@@ -67,7 +68,7 @@ export default function BrandGuidelinesPage() {
       <Section tone="surface" className="py-12">
         <SectionHeader title="Logo usage" />
         <div className="mt-8 grid gap-4 md:grid-cols-2">
-          <div className="rounded-xl border border-border bg-card p-6">
+          <div className="glow-card rounded-2xl border border-border p-6">
             <h3 className="flex items-center gap-2 text-base font-semibold">
               <Check className="size-4 text-success" aria-hidden="true" /> Do
             </h3>
@@ -77,7 +78,7 @@ export default function BrandGuidelinesPage() {
               ))}
             </ul>
           </div>
-          <div className="rounded-xl border border-border bg-card p-6">
+          <div className="glow-card rounded-2xl border border-border p-6">
             <h3 className="flex items-center gap-2 text-base font-semibold">
               <X className="size-4 text-danger" aria-hidden="true" /> Don&apos;t
             </h3>

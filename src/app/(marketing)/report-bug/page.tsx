@@ -11,7 +11,7 @@ export default async function Page() {
   const user = await getCurrentUser();
   return (
     <PageTemplate page={SUPPORT_PAGES[PATH]}>
-      <section aria-labelledby="form-heading" className="rounded-xl border border-border bg-card p-6">
+      <section aria-labelledby="form-heading" className="glow-card rounded-2xl border border-border p-6">
         <h2 id="form-heading" className="text-xl font-semibold tracking-tight">Describe the bug</h2>
         <SupportForm
           kind="bug"

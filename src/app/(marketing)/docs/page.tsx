@@ -6,6 +6,7 @@ import { sectionSidebar } from "@/lib/content/nav";
 import { ArticleShell } from "@/components/docs/article-layout";
 import { Breadcrumbs } from "@/components/docs/breadcrumbs";
 import { buttonClasses } from "@/components/ui/button";
+import { PageTitle } from "@/components/marketing/backdrop";
 
 export const metadata = routeMetadata("/docs");
 
@@ -15,7 +16,7 @@ export default async function DocsIndexPage() {
     <ArticleShell sidebar={sidebar}>
       <Breadcrumbs items={[{ name: "Documentation", path: "/docs" }]} className="mb-4" />
       <header className="max-w-3xl">
-        <h1 className="text-3xl font-semibold tracking-tight sm:text-4xl">Documentation</h1>
+        <PageTitle>Documentation</PageTitle>
         <p className="mt-3 text-base text-muted-foreground sm:text-lg">
           How Codexa works, from your first prompt to a deployed application. Everything here describes the product as it ships today; roadmap items are marked as such.
         </p>

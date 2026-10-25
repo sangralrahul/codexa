@@ -5,6 +5,7 @@ import { Breadcrumbs, type Crumb } from "./breadcrumbs";
 import { ArticleMeta, EditOnGitHub, PrevNext, RelatedLinks } from "./article-bits";
 import { DocsSidebar, type SidebarGroup } from "./sidebar";
 import { cn } from "@/lib/utils";
+import { PageTitle } from "@/components/marketing/backdrop";
 
 /**
  * Three-column article page: optional sidebar (desktop rail + mobile drawer),
@@ -47,7 +48,7 @@ export function ArticleBody({
       <article className="min-w-0">
         <Breadcrumbs items={crumbs} className="mb-4" />
         <header className="max-w-3xl">
-          <h1 className="text-3xl font-semibold tracking-tight sm:text-4xl">{title}</h1>
+          <PageTitle>{title}</PageTitle>
           {description ? <p className="mt-3 text-base text-muted-foreground sm:text-lg">{description}</p> : null}
           {meta ? <div className="mt-4">{meta}</div> : null}
         </header>

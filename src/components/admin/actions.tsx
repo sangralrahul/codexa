@@ -246,7 +246,7 @@ export function NewFlagForm() {
   const { busy, flash, run } = useAction();
   return (
     <form
-      className="grid gap-3 rounded-xl border border-border bg-card p-4 sm:grid-cols-[200px_minmax(0,1fr)_auto_auto] sm:items-end"
+      className="grid gap-3 glow-card rounded-2xl border border-border p-4 sm:grid-cols-[200px_minmax(0,1fr)_auto_auto] sm:items-end"
       onSubmit={(e) => {
         e.preventDefault();
         void run(async () => {

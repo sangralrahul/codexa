@@ -2,16 +2,7 @@ import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import { buttonClasses } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { Eyebrow, Highlight } from "./backdrop";
-
-/** Default accent: the closing clause after the last comma (if short), else the last two words. */
-function autoHighlight(title: string): string | undefined {
-  const comma = title.lastIndexOf(", ");
-  const clause = comma > 0 ? title.slice(comma + 2) : "";
-  if (clause && clause.split(" ").length <= 4) return clause;
-  const words = title.split(" ");
-  return words.length >= 4 ? words.slice(-2).join(" ") : undefined;
-}
+import { autoHighlight, Eyebrow, Highlight } from "./backdrop";
 
 export function Hero({
   eyebrow,

@@ -5,6 +5,7 @@ import { listDocs } from "@/lib/content";
 import { GLOSSARY } from "@/lib/content/glossary";
 import { Breadcrumbs } from "@/components/docs/breadcrumbs";
 import { ArticleGrid } from "@/components/docs/article-bits";
+import { PageTitle } from "@/components/marketing/backdrop";
 
 export const metadata = routeMetadata("/learn");
 
@@ -24,7 +25,7 @@ export default async function LearnPage() {
     <div className="container-x py-10 sm:py-14">
       <Breadcrumbs items={[{ name: "Learn", path: "/learn" }]} className="mb-4" />
       <header className="max-w-3xl">
-        <h1 className="text-3xl font-semibold tracking-tight sm:text-4xl">Learn</h1>
+        <PageTitle>Learn</PageTitle>
         <p className="mt-3 text-base text-muted-foreground sm:text-lg">Guides, tutorials and articles on building software with an AI agent that edits real files. Written by the Codexa team against the product as it ships.</p>
       </header>
       <ul className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">

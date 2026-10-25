@@ -11,6 +11,7 @@ import { Alert } from "@/components/ui/misc";
 import { INTEGRATION_IDS, getIntegration } from "@/config/integrations";
 import { getCurrentUser } from "@/lib/auth/session";
 import { pageMetadata } from "@/lib/seo";
+import { PageTitle } from "@/components/marketing/backdrop";
 
 type Params = Promise<{ id: string }>;
 
@@ -52,7 +53,7 @@ export default async function IntegrationDetailPage({ params }: { params: Params
               <Badge variant="primary">{categoryName(i.category)}</Badge>
               <StatusBadge status={i.status} />
             </div>
-            <h1 className="mt-3 text-3xl font-semibold tracking-tight sm:text-4xl">{i.name}</h1>
+            <PageTitle className="mt-3">{i.name}</PageTitle>
             <p className="mt-3 text-lg text-muted-foreground">{i.description}</p>
           </div>
           <div className="flex flex-col gap-2 sm:flex-row lg:flex-col">
@@ -199,7 +200,7 @@ export default async function IntegrationDetailPage({ params }: { params: Params
           </div>
 
           <aside className="min-w-0 space-y-4 lg:sticky lg:top-24 lg:self-start">
-            <div className="rounded-xl border border-border bg-card p-5">
+            <div className="glow-card rounded-2xl border border-border p-5">
               <h2 className="text-sm font-semibold">At a glance</h2>
               <dl className="mt-3 space-y-2 text-sm">
                 <div className="flex justify-between gap-3">

@@ -4,16 +4,17 @@ import { PricingTable } from "@/components/marketing/pricing-table";
 import { LimitsTable } from "@/components/marketing/limits-table";
 import { CTABand } from "@/components/marketing/cta-band";
 import { Breadcrumbs } from "@/components/marketing/breadcrumbs";
+import { PageTitle } from "@/components/marketing/backdrop";
 
 export const metadata = routeMetadata("/pricing/compare-plans");
 
 export default function ComparePlansPage() {
   return (
     <>
-      <section className="border-b border-border bg-surface">
+      <section>
         <div className="container-x py-12 sm:py-16">
           <Breadcrumbs items={[{ name: "Pricing", path: "/pricing" }, { name: "Compare plans", path: "/pricing/compare-plans" }]} />
-          <h1 className="mt-6 text-3xl font-semibold tracking-tight sm:text-4xl">Compare plans</h1>
+          <PageTitle className="mt-6">Compare plans</PageTitle>
           <p className="mt-4 max-w-2xl text-lg text-muted-foreground">Every limit and feature, side by side, straight from the plan configuration.</p>
         </div>
       </section>

@@ -61,7 +61,7 @@ export function GithubAccountCard({ configured, account, next, errorCode }: { co
           <code className="font-mono text-xs">&lt;APP_URL&gt;/api/auth/github/callback</code>) and restart the app.
         </Alert>
       ) : null}
-      <div className="flex flex-col gap-3 rounded-xl border border-border bg-card p-4 sm:flex-row sm:items-center sm:justify-between">
+      <div className="flex flex-col gap-3 glow-card rounded-2xl border border-border p-4 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex min-w-0 items-center gap-3">
           <FolderGit2 className="size-5 shrink-0 text-muted-foreground" aria-hidden="true" />
           <div className="min-w-0">

@@ -25,6 +25,7 @@ import { cn } from "@/lib/utils";
 import { Logo } from "@/components/logo";
 import { ThemeToggle } from "@/components/theme/theme-toggle";
 import { Badge } from "@/components/ui/badge";
+import { Backdrop } from "@/components/marketing/backdrop";
 
 export const ADMIN_NAV = [
   { href: "/admin", label: "Overview", icon: Gauge, exact: true },
@@ -98,7 +99,8 @@ export function AdminShell({ user, children }: { user: { name: string; email: st
           </div>
         </div>
       ) : null}
-      <div className="flex min-w-0 flex-1 flex-col">
+      <div className="relative isolate flex min-w-0 flex-1 flex-col">
+        <Backdrop still className="-z-10 bottom-auto h-80 opacity-60" />
         <header className="sticky top-0 z-40 flex h-14 items-center justify-between gap-3 border-b border-border bg-background/90 px-4 backdrop-blur">
           <div className="flex items-center gap-2">
             <button type="button" onClick={() => setOpen(true)} className="rounded-md p-2 hover:bg-muted lg:hidden" aria-label="Open navigation">

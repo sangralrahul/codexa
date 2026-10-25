@@ -4,6 +4,7 @@ import { ROADMAP } from "@/lib/content/roadmap";
 import { Breadcrumbs } from "@/components/docs/breadcrumbs";
 import { Callout } from "@/components/content";
 import { Badge } from "@/components/ui/badge";
+import { PageTitle } from "@/components/marketing/backdrop";
 
 export const metadata = routeMetadata("/roadmap");
 
@@ -14,7 +15,7 @@ export default function RoadmapPage() {
     <div className="container-x py-10 sm:py-14">
       <Breadcrumbs items={[{ name: "Roadmap", path: "/roadmap" }]} className="mb-4" />
       <header className="max-w-3xl">
-        <h1 className="text-3xl font-semibold tracking-tight sm:text-4xl">Roadmap</h1>
+        <PageTitle>Roadmap</PageTitle>
         <p className="mt-3 text-base text-muted-foreground sm:text-lg">What is shipping now, what we are building next, and what comes later. Priorities can change as we learn from real usage.</p>
       </header>
       <Callout kind="note" title="No dates committed" className="max-w-3xl">

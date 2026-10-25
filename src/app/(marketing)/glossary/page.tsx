@@ -4,6 +4,7 @@ import { groupGlossaryByLetter, GLOSSARY } from "@/lib/content/glossary";
 import { LEARN_SIDEBAR } from "@/lib/content/nav";
 import { ArticleShell } from "@/components/docs/article-layout";
 import { Breadcrumbs } from "@/components/docs/breadcrumbs";
+import { PageTitle } from "@/components/marketing/backdrop";
 
 export const metadata = routeMetadata("/glossary");
 
@@ -13,7 +14,7 @@ export default function GlossaryPage() {
     <ArticleShell sidebar={LEARN_SIDEBAR}>
       <Breadcrumbs items={[{ name: "Learn", path: "/learn" }, { name: "Glossary", path: "/glossary" }]} className="mb-4" />
       <header className="max-w-3xl">
-        <h1 className="text-3xl font-semibold tracking-tight sm:text-4xl">Glossary</h1>
+        <PageTitle>Glossary</PageTitle>
         <p className="mt-3 text-base text-muted-foreground sm:text-lg">{GLOSSARY.length} terms used across Codexa, each linked to the page that explains it in depth.</p>
       </header>
       <nav aria-label="Jump to letter" className="sticky top-16 z-10 -mx-4 mt-6 border-b border-border bg-background/95 px-4 py-2 backdrop-blur">

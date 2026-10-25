@@ -5,6 +5,7 @@ import { LEARN_SIDEBAR } from "@/lib/content/nav";
 import { ArticleShell } from "@/components/docs/article-layout";
 import { Breadcrumbs } from "@/components/docs/breadcrumbs";
 import { Badge } from "@/components/ui/badge";
+import { PageTitle } from "@/components/marketing/backdrop";
 
 export const metadata = routeMetadata("/blog");
 
@@ -14,7 +15,7 @@ export default async function BlogPage() {
     <ArticleShell sidebar={LEARN_SIDEBAR}>
       <Breadcrumbs items={[{ name: "Learn", path: "/learn" }, { name: "Blog", path: "/blog" }]} className="mb-4" />
       <header className="max-w-3xl">
-        <h1 className="text-3xl font-semibold tracking-tight sm:text-4xl">Blog</h1>
+        <PageTitle>Blog</PageTitle>
         <p className="mt-3 text-base text-muted-foreground sm:text-lg">Engineering notes and product updates from the team building Codexa.</p>
       </header>
       {posts.length === 0 ? (

@@ -10,6 +10,7 @@ import { getBySlug, serializeShowcaseItem } from "@/lib/services/showcase";
 import { jsonLd, pageMetadata } from "@/lib/seo";
 import { getTemplate } from "@/templates";
 import { BuiltWithBadge } from "../_components/showcase-card";
+import { PageTitle } from "@/components/marketing/backdrop";
 
 type Params = Promise<{ slug: string }>;
 
@@ -55,7 +56,7 @@ export default async function ShowcaseEntryPage({ params }: { params: Params }) 
               <BuiltWithBadge />
               <Badge variant="primary">{item.project.frameworkName}</Badge>
             </div>
-            <h1 className="mt-3 text-3xl font-semibold tracking-tight sm:text-4xl">{item.title}</h1>
+            <PageTitle className="mt-3">{item.title}</PageTitle>
             <p className="mt-2 text-sm text-muted-foreground">
               {item.submittedBy ? `Submitted by ${item.submittedBy.name}` : "Community submission"}
               {item.approvedAt ? ` · Published ${new Date(item.approvedAt).toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" })}` : ""}
@@ -77,7 +78,7 @@ export default async function ShowcaseEntryPage({ params }: { params: Params }) 
           </div>
 
           <aside className="space-y-4 lg:sticky lg:top-24 lg:self-start">
-            <div className="rounded-xl border border-border bg-card p-5">
+            <div className="glow-card rounded-2xl border border-border p-5">
               <h2 className="text-sm font-semibold">Links</h2>
               {item.liveUrl ? (
                 <a href={item.liveUrl} target="_blank" rel="noopener noreferrer nofollow" className={buttonClasses("primary", "md", "mt-3 w-full")}>
@@ -98,7 +99,7 @@ export default async function ShowcaseEntryPage({ params }: { params: Params }) 
                 </span>
               </p>
             </div>
-            <div className="rounded-xl border border-border bg-card p-5">
+            <div className="glow-card rounded-2xl border border-border p-5">
               <h2 className="text-sm font-semibold">About this project</h2>
               <dl className="mt-3 space-y-2 text-sm">
                 <div className="flex justify-between gap-3">

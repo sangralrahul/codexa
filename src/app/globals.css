@@ -18,9 +18,10 @@
   --border: #e3e6eb;
   --border-strong: #c9ced6;
   --input: #ffffff;
-  --ring: #3d7bff;
-  --primary: #2f6bff;
-  --primary-hover: #245ce6;
+  /* Brand: monochrome primary (ink on light, paper on dark) with a coral signal accent. */
+  --ring: #f2542d;
+  --primary: #0b0c0f;
+  --primary-hover: #2a2c33;
   --primary-foreground: #ffffff;
   --accent: #6d5cff;
   --accent-foreground: #ffffff;
@@ -31,7 +32,7 @@
   --info: #1d4ed8;
   --code-bg: #0f1115;
   --code-fg: #e6e8ec;
-  --selection: rgba(47, 107, 255, 0.18);
+  --selection: rgba(242, 84, 45, 0.18);
   --shadow-sm: 0 1px 2px rgba(11, 12, 15, 0.06);
   --shadow-md: 0 4px 14px rgba(11, 12, 15, 0.08);
   --shadow-lg: 0 12px 40px rgba(11, 12, 15, 0.12);
@@ -61,10 +62,10 @@
   --border: #23262d;
   --border-strong: #343842;
   --input: #0f1115;
-  --ring: #5b8cff;
-  --primary: #4d80ff;
-  --primary-hover: #6a94ff;
-  --primary-foreground: #ffffff;
+  --ring: #ff6a45;
+  --primary: #f2f3f5;
+  --primary-hover: #d9dbe0;
+  --primary-foreground: #0b0c0f;
   --accent: #8b7bff;
   --accent-foreground: #ffffff;
   --success: #22c55e;
@@ -74,7 +75,7 @@
   --info: #60a5fa;
   --code-bg: #0f1115;
   --code-fg: #e6e8ec;
-  --selection: rgba(77, 128, 255, 0.28);
+  --selection: rgba(255, 106, 69, 0.28);
   --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4);
   --shadow-md: 0 4px 14px rgba(0, 0, 0, 0.45);
   --shadow-lg: 0 12px 40px rgba(0, 0, 0, 0.55);
@@ -260,6 +261,9 @@
 
 @keyframes codexa-fade-in { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
 .animate-fade-in { animation: codexa-fade-in 180ms ease-out both; }
+/* Menus and dialogs open with a quick scale-in from their anchor. */
+@keyframes codexa-pop { from { opacity: 0; transform: scale(0.96) translateY(-4px); } to { opacity: 1; transform: none; } }
+.animate-pop { animation: codexa-pop 200ms cubic-bezier(0.2, 0.8, 0.2, 1) both; transform-origin: var(--radix-dropdown-menu-content-transform-origin, top center); }
 @keyframes codexa-pulse-dot { 0%, 100% { opacity: 0.4; } 50% { opacity: 1; } }
 .animate-pulse-dot { animation: codexa-pulse-dot 1.2s ease-in-out infinite; }
 
@@ -350,6 +354,8 @@
   opacity: 0;
   transition: opacity 400ms;
 }
+/* Cards that hold a form stay put: lifting under the cursor while typing is distracting. */
+.glow-card:has(form, input, textarea, select):hover { transform: none; }
 .glow-card:hover { transform: translateY(-2px); border-color: var(--border-strong); box-shadow: inset 0 1px 0 0 var(--hairline), var(--shadow-lg); }
 .glow-card:hover::before, .glow-card:focus-within::before { opacity: 1; }
 
@@ -376,7 +382,7 @@
   transform: translateX(-100%);
   transition: transform 700ms cubic-bezier(0.2, 0.8, 0.2, 1);
 }
-.btn-solid:hover { transform: translateY(-1px); }
+.btn-solid:hover { translate: 0 -1px; }
 .btn-solid:hover::after { transform: translateX(100%); }
 
 .glass {
@@ -384,6 +390,11 @@
   backdrop-filter: blur(14px) saturate(140%);
   -webkit-backdrop-filter: blur(14px) saturate(140%);
 }
+
+/* Click ripple (spawned by MotionEffects in a fixed layer over the clicked element). */
+.ripple-host { position: fixed; z-index: 2147483646; overflow: hidden; pointer-events: none; }
+.ripple-dot { position: absolute; border-radius: 9999px; opacity: 0.22; transform: scale(0); animation: ripple 650ms cubic-bezier(0.2, 0.8, 0.2, 1) forwards; }
+@keyframes ripple { to { transform: scale(1); opacity: 0; } }
 
 /* Infinite marquee (track holds the items twice). */
 .marquee { mask-image: linear-gradient(to right, transparent, #000 12%, #000 88%, transparent); }

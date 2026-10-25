@@ -74,7 +74,7 @@ export default async function DashboardPage() {
                 <Link
                   key={t.id}
                   href={`/new-project?template=${encodeURIComponent(t.id)}`}
-                  className="flex flex-col rounded-xl border border-border bg-card p-4 transition-colors hover:border-border-strong focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                  className="flex flex-col glow-card rounded-2xl border border-border p-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                 >
                   <LayoutTemplate className="mb-2 size-4 text-muted-foreground" aria-hidden="true" />
                   <span className="text-sm font-medium">{t.name}</span>

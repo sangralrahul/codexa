@@ -17,7 +17,7 @@ export function DropdownMenuContent({ className, sideOffset = 6, ...props }: Rea
       <RDM.Content
         sideOffset={sideOffset}
         className={cn(
-          "z-50 min-w-[10rem] overflow-hidden rounded-lg border border-border bg-card p-1 text-sm shadow-md data-[state=open]:animate-fade-in",
+          "z-50 min-w-[10rem] overflow-hidden rounded-xl border border-border bg-card p-1 text-sm shadow-lg data-[state=open]:animate-pop",
           className,
         )}
         {...props}
