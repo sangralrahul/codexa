@@ -37,7 +37,7 @@ export function SolutionPageTemplate({ solution }: { solution: Solution }) {
         <SectionHeader title="Example project ideas" description="Starting prompts you can paste into Codexa. Each one maps to a starter template and produces real, editable code." />
         <ul className="mt-8 grid gap-3 sm:grid-cols-2">
           {solution.ideas.map((idea) => (
-            <li key={idea} className="flex gap-3 rounded-lg border border-border bg-card p-4 text-sm">
+            <li key={idea} data-reveal className="glow-card flex gap-3 rounded-xl border border-border p-5 text-sm">
               <Lightbulb className="mt-0.5 size-4 shrink-0 text-primary" aria-hidden="true" />
               <span>{idea}</span>
             </li>
@@ -47,7 +47,7 @@ export function SolutionPageTemplate({ solution }: { solution: Solution }) {
 
       <Section tone="surface" className="py-12 sm:py-14">
         <div className="max-w-3xl space-y-4">
-          <div className="rounded-xl border border-border bg-card p-6">
+          <div data-reveal className="glass rounded-2xl border border-border p-7">
             <h2 className="flex items-center gap-2 text-lg font-semibold tracking-tight">
               <AlertCircle className="size-5 text-warning" aria-hidden="true" />
               Limitations to know about

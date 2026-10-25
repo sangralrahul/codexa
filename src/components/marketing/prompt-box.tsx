@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useId, useState, type FormEvent } from "react";
+import { useEffect, useId, useState, type FormEvent } from "react";
 import { ArrowRight, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
@@ -13,6 +13,37 @@ const examples = [
 ];
 
 const MAX = 2000;
+const STATIC_PLACEHOLDER = "Describe what you want to build. For example: a CRM for a two-person sales team with a pipeline view and email reminders.";
+
+/** Types the example ideas into the placeholder, one after another (static when motion is reduced). */
+function useTypedPlaceholder(active: boolean) {
+  const [text, setText] = useState(STATIC_PLACEHOLDER);
+  useEffect(() => {
+    if (!active || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    let item = 0;
+    let pos = 0;
+    let deleting = false;
+    let timer: ReturnType<typeof setTimeout>;
+    const tick = () => {
+      const full = `Build ${examples[item].charAt(0).toLowerCase()}${examples[item].slice(1)}`;
+      pos += deleting ? -2 : 1;
+      setText(full.slice(0, Math.max(0, pos)) || " ");
+      if (!deleting && pos >= full.length) {
+        deleting = true;
+        timer = setTimeout(tick, 2200);
+        return;
+      }
+      if (deleting && pos <= 0) {
+        deleting = false;
+        item = (item + 1) % examples.length;
+      }
+      timer = setTimeout(tick, deleting ? 18 : 38);
+    };
+    timer = setTimeout(tick, 600);
+    return () => clearTimeout(timer);
+  }, [active]);
+  return active ? text : STATIC_PLACEHOLDER;
+}
 
 export function PromptBox({ signedIn }: { signedIn: boolean }) {
   const router = useRouter();
@@ -20,6 +51,8 @@ export function PromptBox({ signedIn }: { signedIn: boolean }) {
   const [value, setValue] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const [focused, setFocused] = useState(false);
+  const placeholder = useTypedPlaceholder(!focused && value === "");
 
   function onSubmit(e: FormEvent) {
     e.preventDefault();
@@ -36,31 +69,35 @@ export function PromptBox({ signedIn }: { signedIn: boolean }) {
 
   return (
     <form onSubmit={onSubmit} className="mx-auto w-full max-w-2xl text-left" aria-labelledby={`${id}-label`}>
-      <div className="rounded-xl border border-border-strong bg-card p-2 shadow-md focus-within:border-ring">
-        <label id={`${id}-label`} htmlFor={`${id}-prompt`} className="sr-only">
-          Describe the application you want to build
-        </label>
-        <textarea
-          id={`${id}-prompt`}
-          name="prompt"
-          value={value}
-          onChange={(e) => setValue(e.target.value)}
-          rows={3}
-          maxLength={MAX}
-          placeholder="Describe what you want to build. For example: a CRM for a two-person sales team with a pipeline view and email reminders."
-          aria-describedby={error ? `${id}-error` : `${id}-hint`}
-          aria-invalid={Boolean(error)}
-          className="w-full resize-none bg-transparent px-3 py-2 text-base text-foreground placeholder:text-muted-foreground focus:outline-none"
-        />
-        <div className="flex flex-col gap-2 px-2 pb-1 sm:flex-row sm:items-center sm:justify-between">
-          <p id={`${id}-hint`} className="text-xs text-muted-foreground">
-            {signedIn ? "Continues in your dashboard." : "Creates a free account first; your idea is carried over."}
-          </p>
-          <Button type="submit" loading={submitting}>
-            <Sparkles className="size-4" aria-hidden="true" />
-            Build it
-            <ArrowRight className="size-4" aria-hidden="true" />
-          </Button>
+      <div className="glow-border shadow-2xl">
+        <div className="glow-border__inner p-2.5">
+          <label id={`${id}-label`} htmlFor={`${id}-prompt`} className="sr-only">
+            Describe the application you want to build
+          </label>
+          <textarea
+            id={`${id}-prompt`}
+            name="prompt"
+            value={value}
+            onChange={(e) => setValue(e.target.value)}
+            rows={3}
+            maxLength={MAX}
+            placeholder={placeholder}
+            onFocus={() => setFocused(true)}
+            onBlur={() => setFocused(false)}
+            aria-describedby={error ? `${id}-error` : `${id}-hint`}
+            aria-invalid={Boolean(error)}
+            className="w-full resize-none bg-transparent px-3 py-2 text-base text-foreground placeholder:text-muted-foreground focus:outline-none"
+          />
+          <div className="flex flex-col gap-2 px-2 pb-1 sm:flex-row sm:items-center sm:justify-between">
+            <p id={`${id}-hint`} className="text-xs text-muted-foreground">
+              {signedIn ? "Continues in your dashboard." : "Creates a free account first; your idea is carried over."}
+            </p>
+            <Button type="submit" loading={submitting} className="btn-glow rounded-lg">
+              <Sparkles className="size-4" aria-hidden="true" />
+              Build it
+              <ArrowRight className="size-4" aria-hidden="true" />
+            </Button>
+          </div>
         </div>
       </div>
       {error ? (
@@ -68,7 +105,7 @@ export function PromptBox({ signedIn }: { signedIn: boolean }) {
           {error}
         </p>
       ) : null}
-      <ul className="mt-4 flex flex-wrap gap-2" aria-label="Example ideas">
+      <ul className="mt-5 flex flex-wrap justify-center gap-2" aria-label="Example ideas">
         {examples.map((ex) => (
           <li key={ex}>
             <button
@@ -77,7 +114,7 @@ export function PromptBox({ signedIn }: { signedIn: boolean }) {
                 setValue(ex);
                 setError(null);
               }}
-              className="rounded-full border border-border bg-surface px-3 py-1.5 text-xs text-muted-foreground transition hover:border-border-strong hover:text-foreground"
+              className="glass rounded-full border border-border px-3 py-1.5 text-xs text-muted-foreground transition hover:-translate-y-0.5 hover:border-border-strong hover:text-foreground"
             >
               {ex}
             </button>

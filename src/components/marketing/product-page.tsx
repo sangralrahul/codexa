@@ -37,7 +37,9 @@ export function ProductPageTemplate({ page }: { page: ProductPage }) {
 
       {page.showPreview ? (
         <Section tone="surface" className="py-12">
-          <ProductScreenshot />
+          <div data-reveal className="tilt-in">
+            <ProductScreenshot animated />
+          </div>
         </Section>
       ) : null}
 
@@ -62,7 +64,7 @@ export function ProductPageTemplate({ page }: { page: ProductPage }) {
       ) : null}
 
       <Section tone="surface" className="py-12 sm:py-14">
-        <div className="max-w-3xl rounded-xl border border-border bg-card p-6">
+        <div data-reveal className="glass max-w-3xl rounded-2xl border border-border p-7">
           <h2 className="flex items-center gap-2 text-lg font-semibold tracking-tight">
             <AlertCircle className="size-5 text-warning" aria-hidden="true" />
             Limitations and requirements
@@ -90,7 +92,7 @@ export function ProductPageTemplate({ page }: { page: ProductPage }) {
           <ul className="mt-3 flex flex-wrap gap-2">
             {page.related.map((r) => (
               <li key={r.href}>
-                <Link href={r.href} className="inline-flex items-center gap-1 rounded-full border border-border bg-card px-3 py-1.5 text-sm hover:bg-muted">
+                <Link href={r.href} className="glass inline-flex items-center gap-1 rounded-full border border-border px-3.5 py-1.5 text-sm transition hover:-translate-y-0.5 hover:border-border-strong">
                   {r.label}
                   <ArrowUpRight className="size-3.5 text-muted-foreground" aria-hidden="true" />
                 </Link>

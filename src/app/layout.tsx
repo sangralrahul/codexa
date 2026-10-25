@@ -6,6 +6,7 @@ import "./globals.css";
 import { ThemeProvider, themeInitScript, type Theme } from "@/components/theme/theme-provider";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { site } from "@/config/site";
+import { MotionEffects } from "@/components/marketing/motion-effects";
 
 export const metadata: Metadata = {
   metadataBase: new URL(site.url),
@@ -33,6 +34,8 @@ export default async function RootLayout({ children }: { children: React.ReactNo
     <html lang="en" suppressHydrationWarning className={`${GeistSans.variable} ${GeistMono.variable} h-full antialiased ${theme === "dark" ? "dark" : ""}`}>
       <head>
         <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />
+        {/* Scroll-reveal styles only hide content once JS is known to run. */}
+        <script dangerouslySetInnerHTML={{ __html: "document.documentElement.classList.add('js')" }} />
       </head>
       <body className="flex min-h-full flex-col bg-background text-foreground">
         <ThemeProvider initialTheme={theme}>
@@ -44,6 +47,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
               Skip to content
             </a>
             {children}
+            <MotionEffects />
           </TooltipProvider>
         </ThemeProvider>
       </body>

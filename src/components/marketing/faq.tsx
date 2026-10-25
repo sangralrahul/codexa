@@ -7,7 +7,7 @@ import { cn } from "@/lib/utils";
 /** Accessible accordion built on native <details>/<summary>: keyboard operable, no JS required. */
 export function FAQ({ items, className, withJsonLd = false }: { items: FAQItem[]; className?: string; withJsonLd?: boolean }) {
   return (
-    <div className={cn("divide-y divide-border rounded-xl border border-border bg-card", className)}>
+    <div data-reveal className={cn("glass divide-y divide-border overflow-hidden rounded-2xl border border-border", className)}>
       {withJsonLd ? (
         <script
           type="application/ld+json"
@@ -22,7 +22,7 @@ export function FAQ({ items, className, withJsonLd = false }: { items: FAQItem[]
         />
       ) : null}
       {items.map((it) => (
-        <details key={it.question} className="group px-5 py-4">
+        <details key={it.question} className="group px-6 py-5 transition-colors open:bg-muted/40 hover:bg-muted/30">
           <summary className="flex cursor-pointer list-none items-center justify-between gap-4 text-left text-base font-medium [&::-webkit-details-marker]:hidden">
             <span>{it.question}</span>
             <ChevronDown className="size-4 shrink-0 text-muted-foreground transition-transform group-open:rotate-180" aria-hidden="true" />

@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import { buttonClasses } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
+import { Aurora } from "./aurora";
 
 export function CTABand({
   title = "Start building with Codexa",
@@ -14,22 +16,25 @@ export function CTABand({
   secondary?: { label: string; href: string } | null;
 }) {
   return (
-    <section className="border-t border-border bg-foreground text-background">
-      <div className="container-x flex flex-col items-start gap-6 py-16 sm:flex-row sm:items-center sm:justify-between">
-        <div className="max-w-xl">
-          <h2 className="text-2xl font-semibold tracking-tight sm:text-3xl">{title}</h2>
-          <p className="mt-2 text-base text-background/75">{description}</p>
-        </div>
-        <div className="flex flex-col gap-3 sm:flex-row">
-          <Link href={primary.href} className={buttonClasses("primary", "lg")}>
-            {primary.label}
-            <ArrowRight className="size-4" aria-hidden="true" />
-          </Link>
-          {secondary ? (
-            <Link href={secondary.href} className={buttonClasses("outline", "lg", "border-background/30 bg-transparent text-background hover:bg-background/10")}>
-              {secondary.label}
-            </Link>
-          ) : null}
+    <section className="relative isolate overflow-hidden border-t border-border py-20 sm:py-28">
+      <Aurora intensity="soft" />
+      <div className="container-x relative">
+        <div data-reveal className="glow-border mx-auto max-w-4xl">
+          <div className="glow-border__inner glass px-6 py-12 text-center sm:px-12 sm:py-16">
+            <h2 className="text-balance text-3xl font-semibold tracking-tight sm:text-4xl lg:text-5xl">{title}</h2>
+            <p className="mx-auto mt-4 max-w-xl text-pretty text-base text-muted-foreground sm:text-lg">{description}</p>
+            <div className="mt-8 flex flex-col justify-center gap-3 sm:flex-row">
+              <Link href={primary.href} className={cn(buttonClasses("primary", "lg"), "btn-glow rounded-xl")}>
+                {primary.label}
+                <ArrowRight className="size-4" aria-hidden="true" />
+              </Link>
+              {secondary ? (
+                <Link href={secondary.href} className={cn(buttonClasses("ghost", "lg"), "glass rounded-xl border border-border-strong")}>
+                  {secondary.label}
+                </Link>
+              ) : null}
+            </div>
+          </div>
         </div>
       </div>
     </section>

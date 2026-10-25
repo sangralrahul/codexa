@@ -117,14 +117,15 @@ export function PricingTableClient({ plans, compact }: { plans: PricingPlanView[
           return (
             <li
               key={p.id}
+              data-reveal
               className={cn(
-                "relative flex flex-col rounded-xl border bg-card p-6 shadow-sm",
-                p.highlight ? "border-primary ring-1 ring-primary" : "border-border",
+                "glow-card relative flex flex-col overflow-visible rounded-2xl border p-7",
+                p.highlight ? "border-transparent shadow-[0_0_0_1px_var(--glow-2),0_24px_70px_-24px_var(--glow-2)] lg:-translate-y-2" : "border-border",
               )}
             >
               {p.highlight ? (
-                <Badge variant="primary" className="absolute -top-2.5 left-5">
-                  Most popular
+                <Badge variant="primary" className="btn-glow absolute -top-2.5 left-6 border-0 text-white">
+                  Recommended
                 </Badge>
               ) : null}
               <h3 className="text-lg font-semibold tracking-tight">{p.name}</h3>
@@ -151,7 +152,7 @@ export function PricingTableClient({ plans, compact }: { plans: PricingPlanView[
                   </>
                 )}
               </div>
-              <Link href={p.cta.href} className={cn(buttonClasses(p.highlight ? "primary" : "outline", "md"), "mt-5 w-full")}>
+              <Link href={p.cta.href} className={cn(buttonClasses(p.highlight ? "primary" : "outline", "md"), "mt-6 w-full rounded-xl", p.highlight && "btn-glow")}>
                 {p.cta.label}
               </Link>
               {!compact ? (

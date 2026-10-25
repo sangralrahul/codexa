@@ -76,7 +76,7 @@ function DesktopMenu({
         hidden={!open}
         className="absolute left-0 top-full z-40 w-72 pt-2"
       >
-        <div className="rounded-xl border border-border bg-card p-2 shadow-lg animate-fade-in">
+        <div className="glass rounded-2xl border border-border p-2 shadow-lg animate-fade-in">
           {group.items.map((item) => (
             <Link
               key={item.href}
@@ -108,6 +108,13 @@ export function MarketingHeader({ signedIn }: { signedIn: boolean }) {
     setLastPath(pathname);
     setMobileOpen(false);
   }
+  const [scrolled, setScrolled] = useState(false);
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 8);
+    onScroll();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
   useEffect(() => {
     document.body.style.overflow = mobileOpen ? "hidden" : "";
     return () => {
@@ -121,7 +128,14 @@ export function MarketingHeader({ signedIn }: { signedIn: boolean }) {
   return (
     <header className="sticky top-0 z-50">
       {/* The blur lives on an inner bar: backdrop-filter would otherwise make the header the containing block for the fixed mobile panel. */}
-      <div className="border-b border-border bg-background/85 backdrop-blur supports-[backdrop-filter]:bg-background/70">
+      <div
+        className={cn(
+          "relative border-b transition-[background-color,border-color,box-shadow] duration-300",
+          scrolled || mobileOpen ? "glass border-border shadow-[0_8px_30px_-12px_rgba(0,0,0,0.25)]" : "border-transparent bg-transparent",
+        )}
+      >
+        {/* Gradient hairline that fades in once the page scrolls. */}
+        <div aria-hidden="true" className={cn("pointer-events-none absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-glow-2/60 to-transparent transition-opacity duration-300", scrolled ? "opacity-100" : "opacity-0")} />
         <div className="container-x flex h-16 items-center justify-between gap-4">
           <div className="flex items-center gap-6">
             <Logo />
@@ -164,7 +178,7 @@ export function MarketingHeader({ signedIn }: { signedIn: boolean }) {
                 <Link href="/login" className={buttonClasses("ghost", "sm")}>
                   Sign In
                 </Link>
-                <Link href="/signup" className={buttonClasses("primary", "sm")}>
+                <Link href="/signup" className={cn(buttonClasses("primary", "sm"), "btn-glow rounded-lg")}>
                   Start Building Free
                 </Link>
               </>
@@ -243,7 +257,7 @@ export function MarketingHeader({ signedIn }: { signedIn: boolean }) {
                 <>
                   <Link
                     href="/signup"
-                    className={buttonClasses("primary", "lg")}
+                    className={cn(buttonClasses("primary", "lg"), "btn-glow rounded-xl")}
                   >
                     Start Building Free
                   </Link>

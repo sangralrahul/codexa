@@ -6,6 +6,7 @@ import { ReviewNote } from "./review-note";
 import { ContentSections } from "./content-blocks";
 import { CTABand } from "./cta-band";
 import { cn } from "@/lib/utils";
+import { Eyebrow } from "./aurora";
 
 function crumbsFor(path: string, explicit?: Crumb[]): Crumb[] {
   if (explicit) return explicit;
@@ -26,12 +27,20 @@ export function PageTemplate({ page, children, aside, after }: { page: ContentPa
   const hasToc = page.sections.length >= 4;
   return (
     <>
-      <article className="container-x py-10 sm:py-14">
+      <article className="container-x py-10 sm:py-16">
         <Breadcrumbs items={crumbs} />
-        <header className="mt-6 max-w-3xl">
-          {page.eyebrow ? <p className="mb-3 text-xs font-semibold uppercase tracking-[0.14em] text-primary">{page.eyebrow}</p> : null}
-          <h1 className="text-3xl font-semibold tracking-tight sm:text-4xl lg:text-5xl">{page.title}</h1>
-          <p className="mt-4 text-lg text-muted-foreground">{page.intro}</p>
+        <header className="mt-8 max-w-3xl">
+          {page.eyebrow ? (
+            <div data-reveal className="mb-5">
+              <Eyebrow>{page.eyebrow}</Eyebrow>
+            </div>
+          ) : null}
+          <h1 data-reveal style={{ "--reveal-delay": "80ms" } as React.CSSProperties} className="text-balance text-4xl font-semibold tracking-tight sm:text-5xl">
+            {page.title}
+          </h1>
+          <p data-reveal style={{ "--reveal-delay": "160ms" } as React.CSSProperties} className="mt-5 text-pretty text-lg text-muted-foreground">
+            {page.intro}
+          </p>
           {page.updated ? (
             <p className="mt-3 text-sm text-muted-foreground">
               Last revised <time dateTime={page.updated}>{page.updated}</time>
@@ -47,7 +56,7 @@ export function PageTemplate({ page, children, aside, after }: { page: ContentPa
           {hasToc || aside ? (
             <aside className="space-y-6 lg:sticky lg:top-24 lg:self-start">
               {hasToc ? (
-                <nav aria-label="On this page" className="rounded-xl border border-border bg-card p-4">
+                <nav aria-label="On this page" className="glass rounded-2xl border border-border p-5">
                   <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">On this page</p>
                   <ul className="mt-2 space-y-1.5 text-sm">
                     {page.sections.map((s) => (

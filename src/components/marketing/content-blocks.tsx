@@ -72,7 +72,7 @@ export function ContentBlocks({ blocks }: { blocks: ContentBlock[] }) {
               <ul key={i} className="grid gap-3 sm:grid-cols-2">
                 {b.items.map((l) => (
                   <li key={l.href}>
-                    <Link href={l.href} className="flex items-start justify-between gap-3 rounded-lg border border-border bg-card p-4 hover:bg-muted">
+                    <Link href={l.href} className="glow-card group flex items-start justify-between gap-3 rounded-xl border border-border p-5">
                       <span>
                         <span className="block font-medium">{l.label}</span>
                         {l.description ? <span className="mt-0.5 block text-sm text-muted-foreground">{l.description}</span> : null}

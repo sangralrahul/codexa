@@ -38,19 +38,18 @@ const chat = [
  * primitives as the real app. It is labelled as an interface preview and is
  * not a screenshot of a live session.
  */
-export function ProductScreenshot({ className, caption }: { className?: string; caption?: string }) {
-  return (
-    <figure className={cn("mx-auto w-full max-w-5xl", className)}>
+export function ProductScreenshot({ className, caption, animated = false }: { className?: string; caption?: string; animated?: boolean }) {
+  const frame = (
       <div
         aria-hidden="true"
-        className="overflow-hidden rounded-xl border border-border bg-card text-left shadow-lg [font-size:11px] sm:[font-size:12px]"
+        className={cn("overflow-hidden bg-card text-left [font-size:11px] sm:[font-size:12px]", animated ? "glow-border__inner shadow-2xl" : "rounded-xl border border-border shadow-lg")}
       >
         <div className="flex items-center justify-between gap-3 border-b border-border bg-surface px-3 py-2">
           <div className="flex items-center gap-2">
             <span className="flex gap-1">
-              <span className="size-2.5 rounded-full bg-border-strong" />
-              <span className="size-2.5 rounded-full bg-border-strong" />
-              <span className="size-2.5 rounded-full bg-border-strong" />
+              <span className={cn("size-2.5 rounded-full", animated ? "bg-danger/80" : "bg-border-strong")} />
+              <span className={cn("size-2.5 rounded-full", animated ? "bg-warning/80" : "bg-border-strong")} />
+              <span className={cn("size-2.5 rounded-full", animated ? "bg-success/80" : "bg-border-strong")} />
             </span>
             <span className="ml-2 font-medium">invoice-tracker</span>
             <Badge variant="outline">vite-react</Badge>
@@ -59,7 +58,7 @@ export function ProductScreenshot({ className, caption }: { className?: string; 
             <span className="inline-flex items-center gap-1 rounded-md border border-border px-2 py-1">
               <Play className="size-3" /> Run
             </span>
-            <span className="inline-flex items-center gap-1 rounded-md bg-primary px-2 py-1 text-primary-foreground">Deploy</span>
+            <span className={cn("inline-flex items-center gap-1 rounded-md px-2 py-1", animated ? "btn-glow" : "bg-primary text-primary-foreground")}>Deploy</span>
           </div>
         </div>
         <div className="grid min-h-[320px] grid-cols-[minmax(0,1fr)] md:grid-cols-[150px_minmax(0,1.3fr)_minmax(0,1fr)]">
@@ -97,6 +96,7 @@ export function ProductScreenshot({ className, caption }: { className?: string; 
                   </span>
                 ),
               )}
+              {animated ? <span className="caret" /> : null}
             </pre>
             <div className="flex items-center gap-3 border-t border-border bg-surface px-3 py-1.5 text-muted-foreground">
               <span className="inline-flex items-center gap-1">
@@ -106,7 +106,10 @@ export function ProductScreenshot({ className, caption }: { className?: string; 
                 <Terminal className="size-3" /> Logs
               </span>
               <span className="ml-auto inline-flex items-center gap-1">
-                <StatusDot status="ok" /> Preview running
+                <span className={cn(animated && "animate-pulse-dot")}>
+                  <StatusDot status="ok" />
+                </span>{" "}
+                Preview running
               </span>
             </div>
           </div>
@@ -118,10 +121,11 @@ export function ProductScreenshot({ className, caption }: { className?: string; 
                 Build
               </Badge>
             </div>
-            <ul className="flex-1 space-y-2 p-3">
+            <ul className={cn("flex-1 space-y-2 p-3", animated && "seq")}>
               {chat.map((m, i) => (
                 <li
                   key={i}
+                  style={{ "--i": i } as React.CSSProperties}
                   className={cn(
                     "rounded-lg px-2.5 py-1.5",
                     m.role === "user" && "ml-6 bg-primary/10",
@@ -142,6 +146,10 @@ export function ProductScreenshot({ className, caption }: { className?: string; 
           </div>
         </div>
       </div>
+  );
+  return (
+    <figure className={cn("mx-auto w-full max-w-5xl", className)}>
+      {animated ? <div className="glow-border">{frame}</div> : frame}
       <figcaption className="mt-3 text-center text-xs text-muted-foreground">
         <Badge variant="outline" className="mr-2 align-middle">
           Interface preview
