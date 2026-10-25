@@ -8,3 +8,9 @@ ANTHROPIC_API_KEY=
 CUSTOMERIO_APP_API_KEY=
 CUSTOMERIO_REGION=us
 EMAIL_FROM="Codexa <no-reply@example.com>"
+# Live previews and hosted sites on your computer (browsers send *.localhost
+# to your own machine). They also need the "containers" block in
+# wrangler.jsonc turned on and Docker running.
+PREVIEW_HOST=preview.localhost:8787
+DEPLOY_HOST=sites.localhost:8787
+PREVIEW_PROTOCOL=http

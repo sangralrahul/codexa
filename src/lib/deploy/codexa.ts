@@ -1,12 +1,13 @@
 import "server-only";
-import { env } from "@/lib/env";
+import { env, runtimeSetupHint } from "@/lib/env";
+import { hostFor } from "@/lib/hosts";
 import { requireBinding } from "@/lib/cloudflare/bindings";
 import { runnerFor, runnerHealth, runtimeMode, RunnerRequestError, RunnerUnavailableError, type BuiltFile } from "@/lib/runtime/client";
 import { DeployError, type DeployProvider } from "./types";
 
 /**
  * Codexa static hosting: the project is built in its sandbox and served at
- * <protocol>://<slug>.<DEPLOY_HOST>. Only static output (static sites and Vite
+ * <protocol>://<slug>.<DEPLOY_HOST> (see src/lib/hosts.ts). Only static output (static sites and Vite
  * builds) can be hosted; server frameworks must use another provider.
  *
  * On Cloudflare the build runs in the project's container and the output is
@@ -14,7 +15,7 @@ import { DeployError, type DeployProvider } from "./types";
  * deployment is live, so rollback is a status change. With a self-hosted
  * runner, the runner stores and serves the files itself.
  */
-const siteUrl = (slug: string) => `${env.PREVIEW_PROTOCOL}://${slug}.${env.DEPLOY_HOST}/`;
+const siteUrl = (slug: string) => `${env.PREVIEW_PROTOCOL}://${hostFor(slug, env.DEPLOY_HOST)}/`;
 
 async function uploadToR2(deploymentId: string, files: BuiltFile[]) {
   const bucket = requireBinding("STORAGE");
@@ -31,7 +32,7 @@ export const codexaProvider: DeployProvider = {
   async availability() {
     const h = await runnerHealth();
     if (h.ok) return { available: true, reason: null };
-    return { available: false, reason: runtimeMode() ? `The runtime is not reachable: ${h.error ?? "unknown error"}` : "No runtime is configured for this deployment (set RUNNER_URL, or deploy to Cloudflare with Containers)." };
+    return { available: false, reason: runtimeMode() ? `The runtime is not reachable: ${h.error ?? "unknown error"}` : (runtimeSetupHint() ?? "No runtime is configured for this deployment.") };
   },
   async deploy(req) {
     const r = runnerFor(req.project.id);

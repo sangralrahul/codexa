@@ -1,7 +1,7 @@
 import { sql } from "drizzle-orm";
 import { db } from "@/db";
 import { handler, json } from "@/lib/api";
-import { env, capabilities } from "@/lib/env";
+import { env, capabilities, runtimeSetupHint } from "@/lib/env";
 import { runnerHealth } from "@/lib/runtime/client";
 import { activeEmailProvider, EMAIL_PROVIDER_NAMES } from "@/lib/email/providers";
 
@@ -31,15 +31,15 @@ async function checkDatabase(): Promise<ComponentStatus> {
   const start = Date.now();
   try {
     await Promise.race([db.run(sql`select 1`), new Promise((_, reject) => setTimeout(() => reject(new Error("timeout")), 2000))]);
-    return { id: "database", name: "Database", state: "operational", detail: "PostgreSQL answered a test query.", latencyMs: Date.now() - start };
+    return { id: "database", name: "Database", state: "operational", detail: "The database answered a test query.", latencyMs: Date.now() - start };
   } catch {
-    return { id: "database", name: "Database", state: "down", detail: "PostgreSQL did not answer within 2 seconds.", latencyMs: Date.now() - start };
+    return { id: "database", name: "Database", state: "down", detail: "The database did not answer within 2 seconds.", latencyMs: Date.now() - start };
   }
 }
 
 async function checkRunner(): Promise<ComponentStatus> {
   const start = Date.now();
-  if (!capabilities.runner) return { id: "runner", name: "Runner (sandboxes and previews)", state: "not_configured", detail: "No runner service is configured for this deployment (RUNNER_URL is not set). Previews, builds and Codexa hosting are unavailable." };
+  if (!capabilities.runner) return { id: "runner", name: "Runner (sandboxes and previews)", state: "not_configured", detail: runtimeSetupHint() ?? "Not configured." };
   const h = await runnerHealth(true);
   const ms = Date.now() - start;
   if (!h.ok) return { id: "runner", name: "Runner (sandboxes and previews)", state: "down", detail: "The runner service is not reachable. Previews, builds and Codexa deployments will not start.", latencyMs: ms };

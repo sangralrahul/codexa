@@ -9,6 +9,7 @@ import { getEnvVarsDecrypted } from "@/lib/services/env-vars";
 import { assertQuota, recordUsage } from "@/lib/services/usage";
 import { DeployError, getDeployProvider, listDeployProviders, type DeployProviderId } from "@/lib/deploy";
 import { env } from "@/lib/env";
+import { hostFor } from "@/lib/hosts";
 import type { DeploymentDto } from "@/lib/runtime/types";
 
 /**
@@ -166,8 +167,8 @@ export async function rollbackDeployment(project: Project, deploymentId: string,
 export function domainInstructions(project: Pick<Project, "slug" | "id">, workspace: Pick<Workspace, "slug">) {
   const slug = siteSlug(workspace, project);
   return {
-    host: `${slug}.${env.DEPLOY_HOST}`,
-    cname: env.DEPLOY_HOST.replace(/:\d+$/, ""),
+    host: hostFor(slug, env.DEPLOY_HOST),
+    cname: hostFor(slug, env.DEPLOY_HOST).replace(/:\d+$/, ""),
     verificationSupported: false as const,
     note: "Custom domain verification is not implemented yet. Point a CNAME at the host above and contact support to attach it; automatic verification is on the roadmap.",
   };

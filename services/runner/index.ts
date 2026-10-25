@@ -13,13 +13,14 @@ import { fileURLToPath } from "node:url";
 const here = path.dirname(fileURLToPath(import.meta.url));
 loadDotenv({ path: path.resolve(here, "../../.env"), quiet: true });
 
+import { hostFor } from "../../src/lib/hosts";
 import { createRunner } from "./app";
 
 async function main() {
   const app = await createRunner();
   const { cfg } = app;
   console.log(`[runner] control API    http://127.0.0.1:${app.apiPort}  (driver: ${cfg.driver}, data: ${cfg.dataDir})`);
-  console.log(`[runner] preview proxy  http://<token>.${cfg.previewHost}:${app.proxyPort}  sites: http://<slug>.${cfg.deployHost}:${app.proxyPort}`);
+  console.log(`[runner] preview proxy  http://${hostFor("<token>", cfg.previewHost)}:${app.proxyPort}  sites: http://${hostFor("<slug>", cfg.deployHost)}:${app.proxyPort}`);
   let shuttingDown = false;
   const shutdown = async (signal: string) => {
     if (shuttingDown) return;

@@ -85,8 +85,9 @@ a capability and otherwise renders an explicit "not configured" state): `ANTHROP
 ## Deployment
 
 **Cloudflare**: follow `docs/CLOUDFLARE.md` (step by step, plain language). In short: Workers Paid plan,
-a domain on Cloudflare, Docker running, secrets via `wrangler secret put`, then `npm run cf:deploy` and
-`npm run db:migrate:remote`. CI (`.github/workflows/ci.yml`) runs lint, typecheck, tests and both builds.
+secrets via `wrangler secret put`, then `npm run cf:deploy` and `npm run db:migrate:remote`. It runs on
+`workers.dev` without a domain; live previews and Codexa hosting additionally need a domain on Cloudflare
+(one `*` DNS record, free certificate) and Docker when deploying. CI (`.github/workflows/ci.yml`) runs lint, typecheck, tests and both builds.
 
 ## Security model (summary)
 

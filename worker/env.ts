@@ -8,27 +8,16 @@ export type Env = {
   PRESENCE: DurableObjectNamespace;
   ASSETS: Fetcher;
   SESSION_SECRET: string;
-  /** e.g. preview.codexa.example.com (wildcard DNS *.preview... routed to this Worker) */
+  /** e.g. -preview.example.com or preview.example.com (see src/lib/hosts.ts); empty without a domain */
   PREVIEW_HOST?: string;
-  /** e.g. sites.codexa.example.com (wildcard DNS *.sites... routed to this Worker) */
+  /** e.g. -sites.example.com or sites.example.com; empty without a domain */
   DEPLOY_HOST?: string;
   PREVIEW_PROTOCOL?: string;
 };
 
 export const RUNNER_CONTROL_HEADER = "x-codexa-runner";
 
-export function hostOnly(value: string | undefined): string | null {
-  if (!value) return null;
-  const h = value.replace(/^https?:\/\//, "").replace(/\/.*$/, "").replace(/:\d+$/, "").toLowerCase();
-  return h || null;
-}
-
-/** First DNS label of `host` when it is exactly one label under `base`. */
-export function labelUnder(host: string, base: string | null): string | null {
-  if (!base || !host.endsWith("." + base)) return null;
-  const label = host.slice(0, host.length - base.length - 1);
-  return /^[a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?$/.test(label) ? label : null;
-}
+export { hostBase as hostOnly, labelFor as labelUnder } from "../src/lib/hosts";
 
 /** HMAC-SHA256 with key sha256(secret), base64url: matches sign() in src/lib/crypto. */
 export async function hmac(secret: string, message: string): Promise<string> {

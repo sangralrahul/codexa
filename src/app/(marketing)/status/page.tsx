@@ -44,7 +44,6 @@ export default async function StatusPage() {
         </div>
         <p className="text-sm text-muted-foreground">
           Checked <time dateTime={report.checkedAt}>{checked.toUTCString()}</time>
-          {report.source === "fallback" ? " · direct checks" : " · status API"}
         </p>
       </section>
       <section aria-labelledby="components" className="mt-6">

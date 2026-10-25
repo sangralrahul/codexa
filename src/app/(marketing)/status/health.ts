@@ -2,7 +2,8 @@ import "server-only";
 import { activeEmailProvider, EMAIL_PROVIDER_NAMES } from "@/lib/email/providers";
 import { sql } from "drizzle-orm";
 import { db } from "@/db";
-import { env, capabilities, runnerUrl } from "@/lib/env";
+import { capabilities, runtimeSetupHint } from "@/lib/env";
+import { runnerHealth, runtimeMode } from "@/lib/runtime/client";
 
 export type ComponentState = "operational" | "degraded" | "down" | "not_configured" | "unknown";
 export type ComponentStatus = { id: string; name: string; state: ComponentState; detail: string; latencyMs?: number };
@@ -36,21 +37,17 @@ function withTimeout<T>(p: Promise<T>, ms: number): Promise<T> {
 async function checkDatabase(): Promise<ComponentStatus> {
   const r = await timed(() => withTimeout(db.run(sql`select 1`), TIMEOUT_MS));
   return r.ok
-    ? { id: "database", name: "Database", state: "operational", detail: "PostgreSQL answered a test query.", latencyMs: r.ms }
-    : { id: "database", name: "Database", state: "down", detail: "PostgreSQL did not answer within the timeout.", latencyMs: r.ms };
+    ? { id: "database", name: "Database", state: "operational", detail: "The database answered a test query.", latencyMs: r.ms }
+    : { id: "database", name: "Database", state: "down", detail: "The database did not answer within the timeout.", latencyMs: r.ms };
 }
 
 async function checkRunner(): Promise<ComponentStatus> {
-  const base = runnerUrl();
-  if (!base) return { id: "runner", name: "Runner (sandboxes and previews)", state: "not_configured", detail: "No runner service is configured for this deployment (RUNNER_URL is not set). Previews, builds and Codexa hosting are unavailable." };
-  const url = new URL("/health", base).toString();
-  const r = await timed(async () => {
-    const res = await fetch(url, { signal: AbortSignal.timeout(TIMEOUT_MS), cache: "no-store", headers: { authorization: `Bearer ${env.RUNNER_TOKEN}` } });
-    return res.status;
-  });
-  if (!r.ok) return { id: "runner", name: "Runner (sandboxes and previews)", state: "down", detail: "The runner service is not reachable. Previews and builds will not start.", latencyMs: r.ms };
-  if (r.value >= 200 && r.value < 300) return { id: "runner", name: "Runner (sandboxes and previews)", state: "operational", detail: "The runner service answered its health check.", latencyMs: r.ms };
-  return { id: "runner", name: "Runner (sandboxes and previews)", state: "degraded", detail: `The runner service answered with HTTP ${r.value}.`, latencyMs: r.ms };
+  if (!capabilities.runner) return { id: "runner", name: "Runner (sandboxes and previews)", state: "not_configured", detail: runtimeSetupHint() ?? "Not configured." };
+  if (runtimeMode() === "containers")
+    return { id: "runner", name: "Runner (sandboxes and previews)", state: "operational", detail: "Each project gets its own Cloudflare Container, started when someone runs it." };
+  const r = await timed(async () => (await runnerHealth(true)).ok);
+  if (!r.ok || !r.value) return { id: "runner", name: "Runner (sandboxes and previews)", state: "down", detail: "The runner service is not reachable. Previews and builds will not start.", latencyMs: r.ms };
+  return { id: "runner", name: "Runner (sandboxes and previews)", state: "operational", detail: "The runner service answered its health check.", latencyMs: r.ms };
 }
 
 function checkAi(): ComponentStatus {
@@ -65,10 +62,7 @@ function checkEmail(): ComponentStatus {
     : { id: "email", name: "Email delivery", state: "not_configured", detail: "No email provider is configured. Verification and invitation emails are queued in the outbox and can be read by an operator." };
 }
 
-/**
- * Fallback status used when the runtime owner's GET /api/v1/status is absent.
- * Checks the database and the runner directly with a 2s timeout each.
- */
+/** Checks the database and the runner directly with a 2s timeout each. */
 export async function getFallbackStatus(): Promise<StatusReport> {
   const [database, runner] = await Promise.all([checkDatabase(), checkRunner()]);
   const components: ComponentStatus[] = [
@@ -87,20 +81,10 @@ export function overallState(components: ComponentStatus[]): ComponentState {
   return "operational";
 }
 
-function isReport(v: unknown): v is StatusReport {
-  return Boolean(v && typeof v === "object" && Array.isArray((v as StatusReport).components));
-}
-
-/** Prefer the runtime owner's status API if it exists and returns the expected shape; otherwise fall back. */
+/**
+ * Runs the checks in-process (same components as GET /api/v1/status). Fetching our own API over
+ * the network would cost a round trip, and on Cloudflare a Worker calling its own URL is unreliable.
+ */
 export async function getStatus(): Promise<StatusReport> {
-  try {
-    const res = await fetch(new URL("/api/v1/status", env.APP_URL).toString(), { signal: AbortSignal.timeout(TIMEOUT_MS), cache: "no-store" });
-    if (res.ok) {
-      const data: unknown = await res.json();
-      if (isReport(data)) return { ...data, overall: data.overall ?? overallState(data.components), checkedAt: data.checkedAt ?? new Date().toISOString(), source: "api" };
-    }
-  } catch {
-    // The API is owned by another team and may not exist yet; fall through.
-  }
   return getFallbackStatus();
 }

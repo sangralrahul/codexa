@@ -134,7 +134,7 @@ test("verified users reach settings and admin; Codexa hosting deploys and rolls 
   if (!runtime.runnerConfigured) {
     const dep = await page.request.post(`/api/v1/projects/${id}/deployments`, { data: { provider: "codexa" } });
     expect(dep.status()).toBeGreaterThanOrEqual(400);
-    expect((await dep.json()).error.message).toMatch(/runner|not configured/i);
+    expect((await dep.json()).error.message).toMatch(/runner|not configured|own domain/i);
     return;
   }
 

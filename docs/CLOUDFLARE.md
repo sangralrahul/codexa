@@ -17,20 +17,24 @@ first time.
 
 ## What you need
 
-1. A Cloudflare account on the **Workers Paid** plan. Containers and the Worker's size (more than
-   3 MB) need it.
-2. **A domain added to Cloudflare** (for example `example.com`). Live previews and hosted sites need
-   their own sub-addresses (`<something>.preview.example.com`). The free `workers.dev` address can't do
-   that.
-3. **Docker Desktop**, installed and running. Wrangler uses it to build the container image when you
-   deploy. On Windows, start Docker Desktop and wait until it says "Engine running".
-4. **Node.js 22** and this repository on your computer.
-5. Your keys: an **Anthropic API key** (for AI) and a **Customer.io App API key** (for email).
+1. A Cloudflare account on the **Workers Paid** plan. The Worker is more than 3 MB, and containers
+   need it.
+2. **Node.js 22** and this repository on your computer.
+3. Your keys: an **Anthropic API key** (for AI) and a **Customer.io App API key** (for email).
+4. For live previews and published sites only:
+   - **A domain added to Cloudflare.** Any domain works, even one with another name, because
+     Codexa uses a sub-address of it (`codexa.yourdomain.com`).
+   - **Docker Desktop**, installed and running when you deploy. Wrangler uses it to build the
+     container image. On Windows, start Docker Desktop and wait until it says "Engine running".
+
+Without a domain, Codexa still runs at `https://codexa.<your-subdomain>.workers.dev`. Everything
+works except live preview, Run and Codexa hosting, and the app says plainly that those need a domain.
+You can add a domain later.
 
 ## Step by step
 
 Run every command in the `codexa` folder. The commands are the same on Windows (Command Prompt or
-PowerShell), macOS and Linux.
+PowerShell), macOS and Linux. Steps 2 and 3 are only for when you have a domain.
 
 ### 1. Install and log in
 
@@ -39,61 +43,59 @@ npm install
 npx wrangler login
 ```
 
-### 2. Put your domain in `wrangler.jsonc`
+### 2. Put your domain in `wrangler.jsonc` (with a domain)
 
-Open `wrangler.jsonc` and find the `routes` block near the end. Remove the `//` at the start of those
-five lines and replace `example.com` with your domain:
+Open `wrangler.jsonc`. In each place below, remove the `//` at the start of the lines and replace
+`example.com` with your domain.
+
+The `containers` block (live previews and builds):
+
+```jsonc
+"containers": [
+  {
+    "name": "codexa-runner",
+    ...
+  }
+],
+```
+
+The `routes` block:
 
 ```jsonc
 "routes": [
   { "pattern": "codexa.example.com", "custom_domain": true },
-  { "pattern": "*.preview.example.com/*", "zone_name": "example.com" },
-  { "pattern": "*.sites.example.com/*", "zone_name": "example.com" }
+  { "pattern": "*-preview.example.com/*", "zone_name": "example.com" },
+  { "pattern": "*-sites.example.com/*", "zone_name": "example.com" }
 ],
 ```
 
-Then change the `vars` block just below it:
+And in `vars`, fill in the two empty values:
 
 ```jsonc
-"vars": {
-  "NODE_ENV": "production",
-  "APP_URL": "https://codexa.example.com",
-  "PREVIEW_HOST": "preview.example.com",
-  "DEPLOY_HOST": "sites.example.com",
-  "PREVIEW_PROTOCOL": "https"
-}
+"PREVIEW_HOST": "-preview.example.com",
+"DEPLOY_HOST": "-sites.example.com",
 ```
 
 What these mean:
 
-- `codexa.example.com` is where people open Codexa. You can use any name, or the bare domain.
-- `<code>.preview.example.com` addresses show live previews while someone builds an app.
-- `<app-name>.sites.example.com` addresses are apps people published with **Deploy → Codexa hosting**.
+- `codexa.example.com` is where people open Codexa.
+- `abc123-preview.example.com` addresses show live previews while someone builds an app.
+- `my-app-sites.example.com` addresses are apps people published with **Deploy → Codexa hosting**.
 
-### 3. DNS records and a certificate for previews and sites
+The dash matters. Previews stay one level under your domain, so Cloudflare's free certificate covers
+them and you don't have to buy one.
 
-In the Cloudflare dashboard, open your domain.
+### 3. One DNS record (with a domain)
 
-**DNS → Records → Add record**, twice:
+In the Cloudflare dashboard, open your domain, then **DNS → Records → Add record**:
 
 | Type | Name | IPv6 address | Proxy status |
 | --- | --- | --- | --- |
-| AAAA | `*.preview` | `100::` | Proxied (orange cloud) |
-| AAAA | `*.sites` | `100::` | Proxied (orange cloud) |
+| AAAA | `*` | `100::` | Proxied (orange cloud) |
 
-`100::` is a placeholder. Cloudflare sends this traffic to your Worker and never uses that address.
-You don't need a record for `codexa.example.com`: the deploy creates it.
-
-**SSL/TLS → Edge Certificates → Order an advanced certificate.** Cloudflare's free certificate only
-covers one level (`*.example.com`). Previews are two levels deep (`abc.preview.example.com`), so they
-need an advanced certificate. This is a paid add-on (Advanced Certificate Manager). Add these
-hostnames: `example.com`, `*.preview.example.com`, `*.sites.example.com`. It is usually ready within
-a few minutes.
-
-> **Option without the add-on:** use two other domains for previews and sites, for example
-> `PREVIEW_HOST` = `myapp-preview.com` and `DEPLOY_HOST` = `myapp-sites.com`. Each gets a
-> `*` AAAA record and a `*.myapp-preview.com/*` route, which the free certificate covers. This also
-> keeps people's generated code on a different site from your Codexa login, which is a little safer.
+`100::` is a placeholder. Cloudflare sends preview and site traffic to your Worker and never uses
+that address. The records you already have (like `www`) keep working, because a specific name always
+wins over `*`. You don't need a record for `codexa.example.com`: the deploy creates it.
 
 ### 4. Add your secrets
 
@@ -106,9 +108,12 @@ npx wrangler secret put ENCRYPTION_KEY          # a different long random string
 npx wrangler secret put ANTHROPIC_API_KEY       # your Anthropic key
 npx wrangler secret put CUSTOMERIO_APP_API_KEY  # your Customer.io App API key
 npx wrangler secret put CUSTOMERIO_REGION       # us or eu (where your Customer.io workspace is)
-npx wrangler secret put EMAIL_FROM              # e.g. Codexa <no-reply@example.com> (domain verified in Customer.io)
+npx wrangler secret put EMAIL_FROM              # e.g. Codexa <no-reply@yourdomain.com> (domain verified in Customer.io)
 npx wrangler secret put ADMIN_EMAILS            # your email: that account becomes admin when you sign up
+npx wrangler secret put APP_URL                 # https://codexa.example.com (with a domain), or see step 5
 ```
+
+The first time you run `wrangler secret put`, it may ask whether to create the Worker. Answer yes.
 
 To make a random string, run this and copy what it prints. Do it once for each secret, so the two are
 different:
@@ -122,15 +127,22 @@ can no longer be read. Keep a copy somewhere safe.
 
 ### 5. Deploy
 
-Start Docker Desktop first, then:
+If you uncommented `containers` in step 2, start Docker Desktop first. Then:
 
 ```bash
 npm run cf:deploy
 ```
 
-This builds Codexa and the container image, then uploads both. The first time, Cloudflare also
-creates the D1 database (`codexa`) and the R2 bucket (`codexa-storage`). The first deploy takes
-several minutes. Later ones are faster.
+This builds Codexa (and the container image, if containers are on), then uploads it. The first time,
+Cloudflare also creates the D1 database (`codexa`) and the R2 bucket (`codexa-storage`). The first
+deploy takes several minutes. Later ones are faster.
+
+**Without a domain:** at the end it prints your address, like
+`https://codexa.yourname.workers.dev`. Set it as `APP_URL` now, so links in emails point to it:
+
+```bash
+npx wrangler secret put APP_URL
+```
 
 ### 6. Create the database tables
 
@@ -142,19 +154,27 @@ npm run db:migrate:remote
 
 ### 7. Sign up and check
 
-Open `https://codexa.example.com`, sign up with the email you put in `ADMIN_EMAILS`, and click the
-link in the verification email. You can now open `/admin`.
+Open your address, sign up with the email you put in `ADMIN_EMAILS`, and click the link in the
+verification email. You can now open `/admin`.
 
-Then open `https://codexa.example.com/status`. Web application, Database and Runner should say
-**Operational**. AI generation and Email delivery should say **Configured, not probed** (that page doesn't call
-Anthropic or Customer.io, so it doesn't use up any quota). Create a project and press **Run**. The first start of a project's
-container takes a few seconds longer while Cloudflare starts it.
+Then open `/status`. Web application and Database should say **Operational**. AI generation and Email
+delivery should say **Configured, not probed**: that page doesn't call Anthropic or Customer.io, so it
+doesn't use up any quota. Runner should say **Operational** with a domain, or **Not configured** with
+a note about the domain without one.
+
+With a domain, create a project and press **Run**. The first start of a project's container takes a
+few seconds longer while Cloudflare starts it.
 
 If you signed up before setting `ADMIN_EMAILS`, run this instead:
 
 ```bash
 npm run user:admin -- make-admin you@example.com --remote
 ```
+
+## Add your own domain later
+
+If you started on `workers.dev`: do steps 2 and 3, set `APP_URL` to `https://codexa.yourdomain.com`
+(`npx wrangler secret put APP_URL`), start Docker Desktop, and run `npm run cf:deploy` again.
 
 ## Updating later
 
@@ -174,24 +194,30 @@ containers through Docker, at http://localhost:8787.
 2. Create the local database once: `npm run db:migrate`.
 3. Run `npm run cf:preview`.
 
-Previews open at `http://<code>.preview.localhost:8787` and hosted sites at
-`http://<name>.sites.localhost:8787`. Browsers send `*.localhost` to your own computer, so this works
-without any DNS setup.
+For previews and hosted sites, turn on the `containers` block in `wrangler.jsonc` and keep Docker
+running. They open at `http://<code>.preview.localhost:8787` and `http://<name>.sites.localhost:8787`.
+Browsers send `*.localhost` to your own computer, so this works without any DNS setup.
 
 ## If something doesn't work
 
 | What you see | What to do |
 | --- | --- |
-| `npm run cf:deploy` fails with a Docker error | Start Docker Desktop, wait for "Engine running", and try again. |
+| `npm run cf:deploy` fails with a Docker error | Start Docker Desktop, wait for "Engine running", and try again. Without a domain, check that the `containers` block in `wrangler.jsonc` still has `//` in front. |
 | Pages show a database error | Run `npm run db:migrate:remote` (step 6). |
-| Previews don't open, or the browser shows a certificate warning | Check the two DNS records and the advanced certificate (step 3). |
-| Previews open but show "not found" | `PREVIEW_HOST` in `wrangler.jsonc` must match your route (`preview.example.com`). Deploy again after you change it. |
+| Previews don't open | Check the `*` DNS record (step 3) and the two `routes` with the dash (step 2). |
+| Previews open but show "not found" | `PREVIEW_HOST` in `wrangler.jsonc` must match your route (`-preview.example.com`, with the dash). Deploy again after you change it. |
+| The editor says previews need a domain | `PREVIEW_HOST` and `DEPLOY_HOST` are empty in `wrangler.jsonc` (step 2). |
 | No emails arrive | Check `CUSTOMERIO_APP_API_KEY`, `CUSTOMERIO_REGION`, and that the `EMAIL_FROM` domain is verified in Customer.io. |
-| Links in emails point to localhost | Set `APP_URL` in `wrangler.jsonc` (step 2) and deploy again. |
+| Links in emails point to localhost | Set `APP_URL` with `npx wrangler secret put APP_URL`. |
+| Settings you made don't seem to apply | Don't keep a `.env` or `.env.local` file in the `codexa` folder when you deploy: the build copies it into the Worker. |
 | See the live logs | `npx wrangler tail`, or Workers & Pages → codexa → Logs in the dashboard. |
 
 ## How it fits together (for developers)
 
+- Preview and site addresses come from `src/lib/hosts.ts`: a `PREVIEW_HOST`/`DEPLOY_HOST` that
+  starts with `-` attaches the label directly (`abc-preview.example.com`), otherwise as a subdomain
+  (`abc.preview.example.com`, which needs an advanced certificate on Cloudflare). Both empty means
+  no domain: containers stay off and the app shows `runtimeSetupHint()` (`src/lib/env.ts`).
 - `worker/index.ts` is the Worker entry. It routes `<token>.<PREVIEW_HOST>` to the project's
   `ProjectSandbox` Durable Object (`worker/sandbox.ts`), which starts the project's container and
   proxies to the runner inside it (`services/runner` with the `process` driver, image in

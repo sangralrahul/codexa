@@ -1,5 +1,5 @@
 import "server-only";
-import { env, runnerUrl } from "@/lib/env";
+import { containersEnabled, env, runnerUrl, runtimeSetupHint } from "@/lib/env";
 import { ApiError } from "@/lib/api";
 import { logger } from "@/lib/logger";
 import { bindings } from "@/lib/cloudflare/bindings";
@@ -23,7 +23,7 @@ export type RuntimeMode = "http" | "containers";
 
 export function runtimeMode(): RuntimeMode | null {
   if (runnerUrl()) return "http";
-  if (bindings().SANDBOX) return "containers";
+  if (containersEnabled()) return "containers";
   return null;
 }
 
@@ -37,7 +37,7 @@ export class RunnerUnavailableError extends ApiError {
         ? `The project's container could not be reached${detail ? ` (${detail})` : ""}. Try again in a moment.`
         : base
           ? `The runner service is not reachable at ${base}${detail ? ` (${detail})` : ""}. Start it with "npm run runner:dev" or check RUNNER_URL.`
-          : "No runtime is configured for this deployment (set RUNNER_URL, or deploy to Cloudflare with the SANDBOX container binding), so previews, builds and Codexa hosting are unavailable.",
+          : (runtimeSetupHint() ?? "No runtime is configured for this deployment."),
       mode || base ? "runner_unavailable" : "runner_not_configured",
     );
   }
@@ -116,7 +116,7 @@ let healthCache: { at: number; result: { ok: boolean; health: RunnerHealth | nul
 export async function runnerHealth(force = false): Promise<{ ok: boolean; health: RunnerHealth | null; error: string | null }> {
   const mode = runtimeMode();
   if (mode === "containers") return { ok: true, health: null, error: null };
-  if (!mode) return { ok: false, health: null, error: "not configured (set RUNNER_URL or deploy with Cloudflare Containers)" };
+  if (!mode) return { ok: false, health: null, error: runtimeSetupHint() ?? "not configured" };
   if (!force && healthCache && Date.now() - healthCache.at < HEALTH_TTL_MS) return healthCache.result;
   let result: { ok: boolean; health: RunnerHealth | null; error: string | null };
   try {

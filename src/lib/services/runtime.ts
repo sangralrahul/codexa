@@ -1,5 +1,5 @@
 import "server-only";
-import { capabilities } from "@/lib/env";
+import { capabilities, runtimeSetupHint } from "@/lib/env";
 import crypto from "node:crypto";
 import { and, desc, eq, inArray } from "drizzle-orm";
 import { db } from "@/db";
@@ -195,10 +195,10 @@ export async function getRuntime(project: Pick<Project, "id" | "workspaceId">): 
   const active = await getActiveSession(project.id);
   if (!active) {
     const latest = await getLatestSession(project.id);
-    return { session: latest ? toSessionDto(latest) : null, runnerAvailable: health.ok, runnerError: health.error, runnerConfigured: capabilities.runner };
+    return { session: latest ? toSessionDto(latest) : null, runnerAvailable: health.ok, runnerError: health.error, runnerConfigured: capabilities.runner, runnerSetupHint: runtimeSetupHint() };
   }
   const row = (await reconcile(active, project.workspaceId)) ?? active;
-  return { session: toSessionDto(row), runnerAvailable: health.ok, runnerError: health.error, runnerConfigured: capabilities.runner };
+  return { session: toSessionDto(row), runnerAvailable: health.ok, runnerError: health.error, runnerConfigured: capabilities.runner, runnerSetupHint: runtimeSetupHint() };
 }
 
 export async function stopRuntime(project: Pick<Project, "id" | "workspaceId">, userId: string | null): Promise<RuntimeSession | null> {

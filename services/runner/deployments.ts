@@ -14,6 +14,7 @@ import { installPrelude } from "./lib/allowlist";
 import { isSafeId, isSafeLabel, resolveInside } from "./lib/paths";
 import { LogBuffer } from "./lib/ring-buffer";
 import { SANDBOX_PATHS, type SandboxDriver, type SandboxSpec } from "./sandbox/types";
+import { hostFor } from "../../src/lib/hosts";
 import { proxyPassthrough, type ProjectSettings } from "./sessions";
 
 export type DeployInput = {
@@ -47,7 +48,7 @@ export class DeploymentManager {
 
   siteUrl(slug: string) {
     const port = this.cfg.publicPreviewPort;
-    return `${this.cfg.previewProtocol}://${slug}.${this.cfg.deployHost}${port && port !== (this.cfg.previewProtocol === "https" ? 443 : 80) ? `:${port}` : ""}/`;
+    return `${this.cfg.previewProtocol}://${hostFor(slug, this.cfg.deployHost)}${port && port !== (this.cfg.previewProtocol === "https" ? 443 : 80) ? `:${port}` : ""}/`;
   }
 
   async readAliases(): Promise<Record<string, string>> {

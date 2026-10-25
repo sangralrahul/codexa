@@ -166,7 +166,7 @@ describe.skipIf(!canRun)("runtime API", () => {
     as(alice);
     const res = await routes.runtime.GET(req("GET", `/projects/${staticProject.id}/runtime`), ctx({ id: staticProject.id }));
     expect(res.status).toBe(200);
-    expect(await res.json()).toEqual({ session: null, runnerAvailable: true, runnerError: null, runnerConfigured: true });
+    expect(await res.json()).toEqual({ session: null, runnerAvailable: true, runnerError: null, runnerConfigured: true, runnerSetupHint: null });
     as(null);
     expect((await routes.runtime.GET(req("GET", "/x"), ctx({ id: staticProject.id }))).status).toBe(401);
     as(bob);

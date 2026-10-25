@@ -272,10 +272,8 @@ export function PreviewPanel({ projectId }: { projectId: string; conversationId?
           {status === "unavailable" && state?.runnerConfigured === false ? (
             <div className="p-4">
               <Alert variant="info" title="Previews are not available on this deployment">
-                <p>Live previews, builds and Codexa hosting need the sandboxed runner service, and none is configured here (RUNNER_URL is not set). Your files, the editor, version history and AI still work.</p>
-                <p className="mt-2">
-                  To enable previews, run <code className="rounded bg-muted px-1">services/runner</code> on a Linux server and set <code className="rounded bg-muted px-1">RUNNER_URL</code> and <code className="rounded bg-muted px-1">RUNNER_TOKEN</code>. See the deployment docs.
-                </p>
+                <p>Your files, the editor, version history and AI still work.</p>
+                {state?.runnerSetupHint ? <p className="mt-2">{state.runnerSetupHint}</p> : null}
               </Alert>
             </div>
           ) : status === "unavailable" ? (

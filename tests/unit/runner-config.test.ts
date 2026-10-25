@@ -30,10 +30,35 @@ describe("runner and app URL configuration", () => {
       setCloudflareContext({ env: {} });
       expect(m.runnerUrl()).toBeNull();
       expect(m.capabilities.runner).toBe(false);
+      expect(m.runtimeSetupHint()).toMatch(/No runtime is configured/);
       setCloudflareContext({ env: { SANDBOX: {} as never } });
       expect(m.capabilities.runner).toBe(true);
+      expect(m.runtimeSetupHint()).toBeNull();
     } finally {
       setCloudflareContext(saved);
+    }
+  });
+
+  it("keeps Cloudflare containers off without preview/site hosts (workers.dev, no domain)", async () => {
+    const m = await load({ RUNNER_URL: undefined, VERCEL: "1", PREVIEW_HOST: "", DEPLOY_HOST: "" });
+    const { cloudflareContext, setCloudflareContext } = await import("@/lib/cloudflare/bindings");
+    const saved = cloudflareContext();
+    try {
+      setCloudflareContext({ env: { SANDBOX: {} as never } });
+      expect(m.containersEnabled()).toBe(false);
+      expect(m.capabilities.runner).toBe(false);
+      expect(m.runtimeSetupHint()).toMatch(/need your own domain/);
+    } finally {
+      setCloudflareContext(saved);
+    }
+    const withDomain = await load({ RUNNER_URL: undefined, VERCEL: "1", PREVIEW_HOST: "preview.example.com", DEPLOY_HOST: "sites.example.com" });
+    const b = await import("@/lib/cloudflare/bindings");
+    const before = b.cloudflareContext();
+    try {
+      b.setCloudflareContext({ env: { SANDBOX: {} as never } });
+      expect(withDomain.containersEnabled()).toBe(true);
+    } finally {
+      b.setCloudflareContext(before);
     }
   });
 

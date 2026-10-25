@@ -9,6 +9,7 @@ import path from "node:path";
 import type { RunnerConfig } from "./config";
 import { PREBUILT_FRAMEWORKS, KNOWN_FRAMEWORKS, type Framework } from "./config";
 import { HttpError } from "./http";
+import { hostFor } from "../../src/lib/hosts";
 import { EXEC_COMMANDS, resolveExec, type ExecCommand } from "./lib/allowlist";
 import { deleteFiles, linkBaseNodeModules, materialize, readPackageScripts, validateFileMap, FilesError, type FileMap } from "./lib/files";
 import { isSafeLabel, PathError, safeRelativePath } from "./lib/paths";
@@ -157,7 +158,7 @@ export class SessionManager {
       limits: this.cfg.limits,
       ports: [port],
     };
-    const hostLabel = `${input.previewToken}.${this.cfg.previewHost}`;
+    const hostLabel = hostFor(input.previewToken, this.cfg.previewHost);
     const publicPort = this.cfg.publicPreviewPort;
     const previewUrl = `${this.cfg.previewProtocol}://${hostLabel}${publicPort && publicPort !== (this.cfg.previewProtocol === "https" ? 443 : 80) ? `:${publicPort}` : ""}/`;
     const env: Record<string, string> = {
