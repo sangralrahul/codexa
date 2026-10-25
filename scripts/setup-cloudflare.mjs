@@ -153,7 +153,12 @@ if (names.length) {
 
 // 5. Deploy
 step(5, "Building and uploading Codexa (this takes a few minutes)");
-if (!run("npm run cf:deploy").ok) fail("The upload failed. Take a screenshot of the red error above and ask for help.");
+if (!run("npm run cf:deploy").ok) {
+  // Cloudflare sometimes finishes the Worker but not the container settings ("Re-run the same
+  // wrangler deploy command"). Retry the upload alone; the build output is reused, no rebuild.
+  say("\nThe upload didn't fully finish. Trying the upload again (no rebuild needed)...");
+  if (!run("npx opennextjs-cloudflare deploy").ok) fail("The upload failed. Take a screenshot of the red error above and ask for help.");
+}
 say("✔ Codexa uploaded");
 
 // 6. Database
