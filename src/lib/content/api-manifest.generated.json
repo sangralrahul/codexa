@@ -1,0 +1,330 @@
+{
+  "POST /api/auth/signup": {
+    "resolvedStatus": "implemented",
+    "routeFile": "src/app/api/auth/signup/route.ts"
+  },
+  "POST /api/auth/login": {
+    "resolvedStatus": "implemented",
+    "routeFile": "src/app/api/auth/login/route.ts"
+  },
+  "POST /api/auth/logout": {
+    "resolvedStatus": "implemented",
+    "routeFile": "src/app/api/auth/logout/route.ts"
+  },
+  "GET /api/auth/me": {
+    "resolvedStatus": "implemented",
+    "routeFile": "src/app/api/auth/me/route.ts"
+  },
+  "POST /api/auth/forgot-password": {
+    "resolvedStatus": "implemented",
+    "routeFile": "src/app/api/auth/forgot-password/route.ts"
+  },
+  "POST /api/auth/reset-password": {
+    "resolvedStatus": "implemented",
+    "routeFile": "src/app/api/auth/reset-password/route.ts"
+  },
+  "POST /api/auth/verify-email": {
+    "resolvedStatus": "implemented",
+    "routeFile": "src/app/api/auth/verify-email/route.ts"
+  },
+  "POST /api/auth/resend-verification": {
+    "resolvedStatus": "implemented",
+    "routeFile": "src/app/api/auth/resend-verification/route.ts"
+  },
+  "GET /api/auth/github/start": {
+    "resolvedStatus": "implemented",
+    "routeFile": "src/app/api/auth/github/start/route.ts"
+  },
+  "GET /api/auth/github/callback": {
+    "resolvedStatus": "implemented",
+    "routeFile": "src/app/api/auth/github/callback/route.ts"
+  },
+  "GET /api/v1/workspaces": {
+    "resolvedStatus": "implemented",
+    "routeFile": "src/app/api/v1/workspaces/route.ts"
+  },
+  "POST /api/v1/workspaces": {
+    "resolvedStatus": "implemented",
+    "routeFile": "src/app/api/v1/workspaces/route.ts"
+  },
+  "GET /api/v1/workspaces/:id/members": {
+    "resolvedStatus": "implemented",
+    "routeFile": "src/app/api/v1/workspaces/[id]/members/route.ts"
+  },
+  "POST /api/v1/workspaces/:id/invites": {
+    "resolvedStatus": "implemented",
+    "routeFile": "src/app/api/v1/workspaces/[id]/invites/route.ts"
+  },
+  "DELETE /api/v1/workspaces/:id/members/:userId": {
+    "resolvedStatus": "implemented",
+    "routeFile": "src/app/api/v1/workspaces/[id]/members/[userId]/route.ts"
+  },
+  "GET /api/v1/projects?workspaceId=": {
+    "resolvedStatus": "implemented",
+    "routeFile": "src/app/api/v1/projects/route.ts"
+  },
+  "POST /api/v1/projects": {
+    "resolvedStatus": "implemented",
+    "routeFile": "src/app/api/v1/projects/route.ts"
+  },
+  "GET /api/v1/projects/:id": {
+    "resolvedStatus": "implemented",
+    "routeFile": "src/app/api/v1/projects/[id]/route.ts"
+  },
+  "PATCH /api/v1/projects/:id": {
+    "resolvedStatus": "implemented",
+    "routeFile": "src/app/api/v1/projects/[id]/route.ts"
+  },
+  "DELETE /api/v1/projects/:id": {
+    "resolvedStatus": "implemented",
+    "routeFile": "src/app/api/v1/projects/[id]/route.ts"
+  },
+  "GET /api/v1/templates?q=&category=&framework=&sort=": {
+    "resolvedStatus": "implemented",
+    "routeFile": "src/app/api/v1/templates/route.ts"
+  },
+  "GET /api/v1/projects/:id/files": {
+    "resolvedStatus": "implemented",
+    "routeFile": "src/app/api/v1/projects/[id]/files/route.ts"
+  },
+  "GET /api/v1/projects/:id/files/content?path=": {
+    "resolvedStatus": "implemented",
+    "routeFile": "src/app/api/v1/projects/[id]/files/content/route.ts"
+  },
+  "PUT /api/v1/projects/:id/files/content": {
+    "resolvedStatus": "implemented",
+    "routeFile": "src/app/api/v1/projects/[id]/files/content/route.ts"
+  },
+  "POST /api/v1/projects/:id/files/rename": {
+    "resolvedStatus": "implemented",
+    "routeFile": "src/app/api/v1/projects/[id]/files/rename/route.ts"
+  },
+  "DELETE /api/v1/projects/:id/files?path=": {
+    "resolvedStatus": "implemented",
+    "routeFile": "src/app/api/v1/projects/[id]/files/route.ts"
+  },
+  "GET /api/v1/projects/:id/search?q=": {
+    "resolvedStatus": "implemented",
+    "routeFile": "src/app/api/v1/projects/[id]/search/route.ts"
+  },
+  "GET /api/v1/projects/:id/snapshots": {
+    "resolvedStatus": "implemented",
+    "routeFile": "src/app/api/v1/projects/[id]/snapshots/route.ts"
+  },
+  "POST /api/v1/projects/:id/snapshots": {
+    "resolvedStatus": "implemented",
+    "routeFile": "src/app/api/v1/projects/[id]/snapshots/route.ts"
+  },
+  "GET /api/v1/projects/:id/snapshots/:sid": {
+    "resolvedStatus": "implemented",
+    "routeFile": "src/app/api/v1/projects/[id]/snapshots/[sid]/route.ts"
+  },
+  "POST /api/v1/projects/:id/snapshots/:sid/restore": {
+    "resolvedStatus": "implemented",
+    "routeFile": "src/app/api/v1/projects/[id]/snapshots/[sid]/restore/route.ts"
+  },
+  "GET /api/v1/projects/:id/activity": {
+    "resolvedStatus": "implemented",
+    "routeFile": "src/app/api/v1/projects/[id]/activity/route.ts"
+  },
+  "GET /api/v1/projects/:id/env": {
+    "resolvedStatus": "implemented",
+    "routeFile": "src/app/api/v1/projects/[id]/env/route.ts"
+  },
+  "PUT /api/v1/projects/:id/env": {
+    "resolvedStatus": "implemented",
+    "routeFile": "src/app/api/v1/projects/[id]/env/route.ts"
+  },
+  "DELETE /api/v1/projects/:id/env": {
+    "resolvedStatus": "implemented",
+    "routeFile": "src/app/api/v1/projects/[id]/env/route.ts"
+  },
+  "POST /api/v1/projects/:id/share": {
+    "resolvedStatus": "implemented",
+    "routeFile": "src/app/api/v1/projects/[id]/share/route.ts"
+  },
+  "DELETE /api/v1/projects/:id/share/:linkId": {
+    "resolvedStatus": "implemented",
+    "routeFile": "src/app/api/v1/projects/[id]/share/[linkId]/route.ts"
+  },
+  "GET /api/v1/projects/:id/ai/status": {
+    "resolvedStatus": "implemented",
+    "routeFile": "src/app/api/v1/projects/[id]/ai/status/route.ts"
+  },
+  "GET /api/v1/projects/:id/ai/conversations": {
+    "resolvedStatus": "implemented",
+    "routeFile": "src/app/api/v1/projects/[id]/ai/conversations/route.ts"
+  },
+  "POST /api/v1/projects/:id/ai/conversations": {
+    "resolvedStatus": "implemented",
+    "routeFile": "src/app/api/v1/projects/[id]/ai/conversations/route.ts"
+  },
+  "GET /api/v1/projects/:id/ai/conversations/:cid/messages": {
+    "resolvedStatus": "implemented",
+    "routeFile": "src/app/api/v1/projects/[id]/ai/conversations/[cid]/messages/route.ts"
+  },
+  "POST /api/v1/projects/:id/ai/generate": {
+    "resolvedStatus": "implemented",
+    "routeFile": "src/app/api/v1/projects/[id]/ai/generate/route.ts"
+  },
+  "GET /api/v1/projects/:id/ai/runs/:runId": {
+    "resolvedStatus": "implemented",
+    "routeFile": "src/app/api/v1/projects/[id]/ai/runs/[runId]/route.ts"
+  },
+  "POST /api/v1/projects/:id/ai/runs/:runId/cancel": {
+    "resolvedStatus": "implemented",
+    "routeFile": "src/app/api/v1/projects/[id]/ai/runs/[runId]/cancel/route.ts"
+  },
+  "POST /api/v1/projects/:id/ai/runs/:runId/revert": {
+    "resolvedStatus": "implemented",
+    "routeFile": "src/app/api/v1/projects/[id]/ai/runs/[runId]/revert/route.ts"
+  },
+  "POST /api/v1/projects/:id/runtime/start": {
+    "resolvedStatus": "implemented",
+    "routeFile": "src/app/api/v1/projects/[id]/runtime/start/route.ts"
+  },
+  "POST /api/v1/projects/:id/runtime/stop": {
+    "resolvedStatus": "implemented",
+    "routeFile": "src/app/api/v1/projects/[id]/runtime/stop/route.ts"
+  },
+  "GET /api/v1/projects/:id/runtime": {
+    "resolvedStatus": "implemented",
+    "routeFile": "src/app/api/v1/projects/[id]/runtime/route.ts"
+  },
+  "GET /api/v1/projects/:id/runtime/logs": {
+    "resolvedStatus": "implemented",
+    "routeFile": "src/app/api/v1/projects/[id]/runtime/logs/route.ts"
+  },
+  "POST /api/v1/projects/:id/runtime/sync": {
+    "resolvedStatus": "implemented",
+    "routeFile": "src/app/api/v1/projects/[id]/runtime/sync/route.ts"
+  },
+  "POST /api/v1/projects/:id/runtime/exec": {
+    "resolvedStatus": "implemented",
+    "routeFile": "src/app/api/v1/projects/[id]/runtime/exec/route.ts"
+  },
+  "POST /api/v1/projects/:id/deployments": {
+    "resolvedStatus": "implemented",
+    "routeFile": "src/app/api/v1/projects/[id]/deployments/route.ts"
+  },
+  "GET /api/v1/projects/:id/deployments": {
+    "resolvedStatus": "implemented",
+    "routeFile": "src/app/api/v1/projects/[id]/deployments/route.ts"
+  },
+  "GET /api/v1/projects/:id/deployments/:did": {
+    "resolvedStatus": "implemented",
+    "routeFile": "src/app/api/v1/projects/[id]/deployments/[did]/route.ts"
+  },
+  "POST /api/v1/projects/:id/deployments/:did/rollback": {
+    "resolvedStatus": "implemented",
+    "routeFile": "src/app/api/v1/projects/[id]/deployments/[did]/rollback/route.ts"
+  },
+  "GET /api/v1/integrations": {
+    "resolvedStatus": "implemented",
+    "routeFile": "src/app/api/v1/integrations/route.ts"
+  },
+  "POST /api/v1/workspaces/:id/integrations": {
+    "resolvedStatus": "implemented",
+    "routeFile": "src/app/api/v1/workspaces/[id]/integrations/route.ts"
+  },
+  "POST /api/v1/workspaces/:id/integrations/:cid/test": {
+    "resolvedStatus": "implemented",
+    "routeFile": "src/app/api/v1/workspaces/[id]/integrations/[cid]/test/route.ts"
+  },
+  "DELETE /api/v1/workspaces/:id/integrations/:cid": {
+    "resolvedStatus": "implemented",
+    "routeFile": "src/app/api/v1/workspaces/[id]/integrations/[cid]/route.ts"
+  },
+  "POST /api/v1/projects/:id/github/import": {
+    "resolvedStatus": "implemented",
+    "routeFile": "src/app/api/v1/projects/[id]/github/import/route.ts"
+  },
+  "POST /api/v1/projects/:id/github/push": {
+    "resolvedStatus": "implemented",
+    "routeFile": "src/app/api/v1/projects/[id]/github/push/route.ts"
+  },
+  "GET /api/v1/projects/:id/github/status": {
+    "resolvedStatus": "implemented",
+    "routeFile": "src/app/api/v1/projects/[id]/github/status/route.ts"
+  },
+  "POST /api/v1/projects/:id/database/query": {
+    "resolvedStatus": "implemented",
+    "routeFile": "src/app/api/v1/projects/[id]/database/query/route.ts"
+  },
+  "GET /api/v1/projects/:id/database/schema?connectionId=": {
+    "resolvedStatus": "implemented",
+    "routeFile": "src/app/api/v1/projects/[id]/database/schema/route.ts"
+  },
+  "GET /api/v1/workspaces/:id/usage": {
+    "resolvedStatus": "implemented",
+    "routeFile": "src/app/api/v1/workspaces/[id]/usage/route.ts"
+  },
+  "GET /api/v1/workspaces/:id/billing": {
+    "resolvedStatus": "implemented",
+    "routeFile": "src/app/api/v1/workspaces/[id]/billing/route.ts"
+  },
+  "POST /api/v1/workspaces/:id/billing/checkout": {
+    "resolvedStatus": "implemented",
+    "routeFile": "src/app/api/v1/workspaces/[id]/billing/checkout/route.ts"
+  },
+  "POST /api/v1/workspaces/:id/billing/cancel": {
+    "resolvedStatus": "implemented",
+    "routeFile": "src/app/api/v1/workspaces/[id]/billing/cancel/route.ts"
+  },
+  "POST /api/v1/workspaces/:id/billing/portal": {
+    "resolvedStatus": "implemented",
+    "routeFile": "src/app/api/v1/workspaces/[id]/billing/portal/route.ts"
+  },
+  "POST /api/v1/forms/contact": {
+    "resolvedStatus": "implemented",
+    "routeFile": "src/app/api/v1/forms/[kind]/route.ts"
+  },
+  "POST /api/v1/forms/support": {
+    "resolvedStatus": "implemented",
+    "routeFile": "src/app/api/v1/forms/[kind]/route.ts"
+  },
+  "POST /api/v1/forms/bug": {
+    "resolvedStatus": "implemented",
+    "routeFile": "src/app/api/v1/forms/[kind]/route.ts"
+  },
+  "POST /api/v1/forms/feature": {
+    "resolvedStatus": "implemented",
+    "routeFile": "src/app/api/v1/forms/[kind]/route.ts"
+  },
+  "POST /api/v1/forms/feedback": {
+    "resolvedStatus": "implemented",
+    "routeFile": "src/app/api/v1/forms/[kind]/route.ts"
+  },
+  "POST /api/v1/forms/sales": {
+    "resolvedStatus": "implemented",
+    "routeFile": "src/app/api/v1/forms/[kind]/route.ts"
+  },
+  "POST /api/v1/forms/demo": {
+    "resolvedStatus": "implemented",
+    "routeFile": "src/app/api/v1/forms/[kind]/route.ts"
+  },
+  "POST /api/v1/forms/newsletter": {
+    "resolvedStatus": "implemented",
+    "routeFile": "src/app/api/v1/forms/[kind]/route.ts"
+  },
+  "POST /api/v1/forms/disclosure": {
+    "resolvedStatus": "implemented",
+    "routeFile": "src/app/api/v1/forms/[kind]/route.ts"
+  },
+  "GET /api/v1/search?q=&type=": {
+    "resolvedStatus": "implemented",
+    "routeFile": "src/app/api/v1/search/route.ts"
+  },
+  "POST /api/webhooks/stripe": {
+    "resolvedStatus": "implemented",
+    "routeFile": "src/app/api/webhooks/stripe/route.ts"
+  },
+  "POST /api/webhooks/razorpay": {
+    "resolvedStatus": "implemented",
+    "routeFile": "src/app/api/webhooks/razorpay/route.ts"
+  },
+  "POST /api/v1/tokens": {
+    "resolvedStatus": "planned",
+    "routeFile": "src/app/api/v1/tokens/route.ts"
+  }
+}

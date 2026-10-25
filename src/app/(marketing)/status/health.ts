@@ -1,7 +1,7 @@
 import "server-only";
 import { sql } from "drizzle-orm";
 import { db } from "@/db";
-import { env, capabilities } from "@/lib/env";
+import { env, capabilities, runnerUrl } from "@/lib/env";
 
 export type ComponentState = "operational" | "degraded" | "down" | "not_configured" | "unknown";
 export type ComponentStatus = { id: string; name: string; state: ComponentState; detail: string; latencyMs?: number };
@@ -40,7 +40,9 @@ async function checkDatabase(): Promise<ComponentStatus> {
 }
 
 async function checkRunner(): Promise<ComponentStatus> {
-  const url = new URL("/health", env.RUNNER_URL).toString();
+  const base = runnerUrl();
+  if (!base) return { id: "runner", name: "Runner (sandboxes and previews)", state: "not_configured", detail: "No runner service is configured for this deployment (RUNNER_URL is not set). Previews, builds and Codexa hosting are unavailable." };
+  const url = new URL("/health", base).toString();
   const r = await timed(async () => {
     const res = await fetch(url, { signal: AbortSignal.timeout(TIMEOUT_MS), cache: "no-store", headers: { authorization: `Bearer ${env.RUNNER_TOKEN}` } });
     return res.status;

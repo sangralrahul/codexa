@@ -46,6 +46,22 @@ export const LIMITS = {
   historyMessages: 10,
 } as const;
 
+/**
+ * Wall-clock budget for one run. Serverless hosts stop functions after a fixed
+ * duration (see maxDuration on the generate route), so the agent must finish
+ * and persist its result before that. Override with AI_RUN_TIMEOUT_MS.
+ */
+export function runTimeLimitMs(): number {
+  const configured = Number(process.env.AI_RUN_TIMEOUT_MS);
+  if (Number.isFinite(configured) && configured > 0) return configured;
+  return process.env.VERCEL ? 270_000 : LIMITS.maxDurationMs;
+}
+
+function formatLimit(ms: number) {
+  const min = Math.round(ms / 60_000);
+  return min >= 1 ? `${min} minute` : `${Math.round(ms / 1000)} second`;
+}
+
 export type RunStatus = "succeeded" | "failed" | "cancelled";
 
 export type AgentEvent =
@@ -229,7 +245,7 @@ export async function executeRun(prepared: PreparedRun, handlers: { onEvent: (ev
   };
   const checkLimits = async () => {
     if (await isCancelled()) throw new AgentCancelled();
-    if (Date.now() - startedAt > LIMITS.maxDurationMs) throw new AgentFailure("The run exceeded the 25 minute time limit.", "time_limit");
+    if (Date.now() - startedAt > runTimeLimitMs()) throw new AgentFailure(`The run exceeded the ${formatLimit(runTimeLimitMs())} time limit.`, "time_limit");
   };
 
   const ctxTools = {

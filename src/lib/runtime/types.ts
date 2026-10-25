@@ -48,7 +48,7 @@ export type RuntimeSessionDto = {
   lastHeartbeatAt: string;
 };
 
-export type RuntimeStateDto = { session: RuntimeSessionDto | null; runnerAvailable: boolean; runnerError?: string | null };
+export type RuntimeStateDto = { session: RuntimeSessionDto | null; runnerAvailable: boolean; runnerError?: string | null; runnerConfigured?: boolean };
 
 export type DeploymentDto = {
   id: string;

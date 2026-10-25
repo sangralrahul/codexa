@@ -1,5 +1,5 @@
 import "server-only";
-import { env } from "@/lib/env";
+import { env, runnerUrl } from "@/lib/env";
 import { ApiError } from "@/lib/api";
 import { logger } from "@/lib/logger";
 import type { RunnerDeployResult, RunnerExecResult, RunnerHealth, RunnerSessionView, LogLine, ExecCommand } from "./types";
@@ -11,7 +11,14 @@ import type { RunnerDeployResult, RunnerExecResult, RunnerHealth, RunnerSessionV
  */
 export class RunnerUnavailableError extends ApiError {
   constructor(detail?: string) {
-    super(503, `The runner service is not reachable at ${env.RUNNER_URL}${detail ? ` (${detail})` : ""}. Start it with "npm run runner:dev" or set RUNNER_URL.`, "runner_unavailable");
+    const base = runnerUrl();
+    super(
+      503,
+      base
+        ? `The runner service is not reachable at ${base}${detail ? ` (${detail})` : ""}. Start it with "npm run runner:dev" or check RUNNER_URL.`
+        : "No runner service is configured for this deployment (RUNNER_URL is not set), so previews, builds and Codexa hosting are unavailable.",
+      base ? "runner_unavailable" : "runner_not_configured",
+    );
   }
 }
 
@@ -31,13 +38,16 @@ function authHeaders(): Record<string, string> {
 }
 
 function url(path: string) {
-  return new URL(path, env.RUNNER_URL).toString();
+  const base = runnerUrl();
+  if (!base) throw new RunnerUnavailableError();
+  return new URL(path, base).toString();
 }
 
 async function request<T>(method: string, path: string, body?: unknown, opts: { timeoutMs?: number } = {}): Promise<T> {
   let res: Response;
+  const target = url(path);
   try {
-    res = await fetch(url(path), {
+    res = await fetch(target, {
       method,
       headers: authHeaders(),
       body: body === undefined ? undefined : JSON.stringify(body),
@@ -63,6 +73,11 @@ async function request<T>(method: string, path: string, body?: unknown, opts: { 
 export async function runnerHealth(force = false): Promise<{ ok: boolean; health: RunnerHealth | null; error: string | null }> {
   if (!force && healthCache && Date.now() - healthCache.at < HEALTH_TTL_MS) return healthCache.result;
   let result: { ok: boolean; health: RunnerHealth | null; error: string | null };
+  if (!runnerUrl()) {
+    result = { ok: false, health: null, error: "not configured (RUNNER_URL is not set)" };
+    healthCache = { at: Date.now(), result };
+    return result;
+  }
   try {
     const res = await fetch(url("/health"), { headers: authHeaders(), signal: AbortSignal.timeout(2000), cache: "no-store" });
     if (!res.ok) result = { ok: false, health: null, error: `HTTP ${res.status}` };

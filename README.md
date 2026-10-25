@@ -65,6 +65,8 @@ npm run typecheck
 npm run test             # 400+ unit + integration tests (uses TEST_DATABASE_URL)
 npm run build
 npm run test:e2e         # Playwright; core journey needs AI_MOCK=1 and the runner running
+# Against a deployed instance (e.g. Vercel):
+E2E_NO_SERVER=1 E2E_BASE_URL=https://<app> E2E_DATABASE_URL=<db> npx playwright test tests/e2e/serverless-smoke.spec.ts --project=desktop
 ```
 
 ## Environment variables
@@ -75,6 +77,9 @@ otherwise renders an explicit "not configured" state): `ANTHROPIC_API_KEY`, `OPE
 `RESEND_API_KEY`, `GITHUB_CLIENT_ID/SECRET`, `STRIPE_*`, `RAZORPAY_*`, `VERCEL_TOKEN`, `E2B_API_KEY`.
 
 ## Deployment
+
+- **Vercel** (website and app, no previews): follow `docs/VERCEL.md`. Import the repo, add a Postgres
+  database and three secrets, deploy, then run the serverless smoke test.
 
 - **Web app**: `Dockerfile` builds a production image (`npm run build` / `npm run start`); run migrations
   with `npx drizzle-kit migrate` before starting. `docker-compose.yml` wires Postgres, web and runner.

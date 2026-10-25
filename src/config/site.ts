@@ -3,7 +3,14 @@ export const site = {
   tagline: "Turn ideas into working software.",
   description:
     "Codexa is an AI-native software development platform. Describe your idea, generate a full-stack application, edit the code, run it, debug it, and deploy it.",
-  url: process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000",
+  // NEXT_PUBLIC_APP_URL wins; on Vercel the system variables give the deployment URL.
+  url:
+    process.env.NEXT_PUBLIC_APP_URL ||
+    (process.env.NEXT_PUBLIC_VERCEL_ENV === "production" && process.env.NEXT_PUBLIC_VERCEL_PROJECT_PRODUCTION_URL
+      ? `https://${process.env.NEXT_PUBLIC_VERCEL_PROJECT_PRODUCTION_URL}`
+      : process.env.NEXT_PUBLIC_VERCEL_URL
+        ? `https://${process.env.NEXT_PUBLIC_VERCEL_URL}`
+        : "http://localhost:3000"),
   company: {
     legalName: "Codexa",
     supportEmail: "support@codexa.app",

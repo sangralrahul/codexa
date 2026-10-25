@@ -2,7 +2,8 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import { API_ENDPOINTS, findRouteFile, resolveAllEndpoints, resolveEndpointStatus, routeFileForPath, type ApiEndpoint } from "@/lib/content/api-registry";
+import { API_ENDPOINTS, resolveAllEndpoints, routeFileForPath, type ApiEndpoint } from "@/lib/content/api-registry";
+import { findRouteFile, resolveEndpointStatus } from "@/lib/content/api-registry-fs";
 
 let root: string;
 function write(rel: string, content: string) {
@@ -23,12 +24,12 @@ const ep = (over: Partial<ApiEndpoint>): ApiEndpoint => ({ id: "x", method: "GET
 
 describe("api registry status detection", () => {
   it("maps :params to [param] folders", () => {
-    expect(routeFileForPath("/api/v1/projects/:id/files/content?path=")).toBe(path.join("src", "app", "api", "v1", "projects", "[id]", "files", "content", "route.ts"));
+    expect(routeFileForPath("/api/v1/projects/:id/files/content?path=")).toBe("src/app/api/v1/projects/[id]/files/content/route.ts");
   });
 
   it("finds route files through dynamic folders", () => {
-    expect(findRouteFile("/api/v1/forms/newsletter", root)).toBe(path.join("src", "app", "api", "v1", "forms", "[kind]", "route.ts"));
-    expect(findRouteFile("/api/v1/projects/:id", root)).toBe(path.join("src", "app", "api", "v1", "projects", "[id]", "route.ts"));
+    expect(findRouteFile("/api/v1/forms/newsletter", root)).toBe("src/app/api/v1/forms/[kind]/route.ts");
+    expect(findRouteFile("/api/v1/projects/:id", root)).toBe("src/app/api/v1/projects/[id]/route.ts");
     expect(findRouteFile("/api/v1/missing", root)).toBeNull();
   });
 

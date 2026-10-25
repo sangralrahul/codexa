@@ -5,14 +5,23 @@ import { z } from "zod";
  * Optional integrations are detected with the `has*` helpers so the UI can
  * show accurate "not configured" states instead of pretending features work.
  */
+/** APP_URL fallback: Vercel system variables when deployed there, else localhost. */
+function defaultAppUrl() {
+  const prod = process.env.VERCEL_ENV === "production" ? process.env.VERCEL_PROJECT_PRODUCTION_URL : undefined;
+  const host = prod || process.env.VERCEL_URL;
+  return host ? `https://${host}` : "http://localhost:3000";
+}
+
 const schema = z.object({
   NODE_ENV: z.enum(["development", "test", "production"]).default("development"),
-  APP_URL: z.string().url().default("http://localhost:3000"),
+  APP_URL: z.string().url().default(defaultAppUrl()),
   DATABASE_URL: z.string().min(1),
   SESSION_SECRET: z.string().min(16),
   ENCRYPTION_KEY: z.string().min(16),
 
-  RUNNER_URL: z.string().url().default("http://127.0.0.1:4000"),
+  // Unset on platforms that cannot host the runner (e.g. Vercel): previews,
+  // builds and Codexa hosting then report "not configured" instead of failing.
+  RUNNER_URL: z.string().url().optional().or(z.literal("").transform(() => undefined)),
   RUNNER_TOKEN: z.string().min(1).default("dev-runner-token"),
   PREVIEW_HOST: z.string().default("preview.localhost:4100"),
   PREVIEW_PROTOCOL: z.enum(["http", "https"]).default("http"),
@@ -57,6 +66,13 @@ function load(): Env {
 
 export const env: Env = load();
 
+/** Runner base URL, or null when no runner is configured for this deployment. */
+export function runnerUrl(): string | null {
+  if (env.RUNNER_URL) return env.RUNNER_URL;
+  // Local development defaults to the runner started by `npm run runner:dev`.
+  return process.env.VERCEL || env.NODE_ENV === "production" ? null : "http://127.0.0.1:4000";
+}
+
 const nonEmpty = (v?: string) => typeof v === "string" && v.trim().length > 0;
 
 export const capabilities = {
@@ -83,6 +99,9 @@ export const capabilities = {
   },
   get vercel() {
     return nonEmpty(env.VERCEL_TOKEN);
+  },
+  get runner() {
+    return runnerUrl() !== null;
   },
   get e2b() {
     return nonEmpty(env.E2B_API_KEY);

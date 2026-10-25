@@ -55,6 +55,9 @@ export function Presence({ projectId, activeFile, compact }: { projectId: string
   for (const p of others) if (!distinct.has(p.userId)) distinct.set(p.userId, p);
   const live = distinct.size + (self ? 1 : 0);
 
+  // Realtime is optional: deployments without it (e.g. Vercel) simply show nothing.
+  if (status === "not_configured") return null;
+
   if (status === "unavailable" || status === "unauthorized") {
     return (
       <div className={cn("flex items-center gap-2 text-xs text-muted-foreground", compact && "max-w-[12rem]")} role="status" aria-live="polite">

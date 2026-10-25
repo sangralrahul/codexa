@@ -6,7 +6,7 @@ import { api } from "./api";
 /** Peer shape mirrored from services/realtime/server.ts. */
 export type PresenceCursor = { path: string; line: number; column: number };
 export type PresencePeer = { id: string; userId: string; name: string; color: string; activeFile: string | null; cursor: PresenceCursor | null; joinedAt: number };
-export type PresenceStatus = "idle" | "connecting" | "connected" | "reconnecting" | "unavailable" | "unauthorized";
+export type PresenceStatus = "idle" | "connecting" | "connected" | "reconnecting" | "unavailable" | "unauthorized" | "not_configured";
 
 export type OutgoingMessage =
   | { type: "presence"; activeFile?: string | null; cursor?: PresenceCursor | null }
@@ -99,7 +99,7 @@ export function usePresence(projectId: string, opts: { enabled?: boolean } = {})
         return;
       }
       if (!tok.url) {
-        setStatus("unavailable");
+        setStatus("not_configured");
         setError("Realtime server not configured (NEXT_PUBLIC_REALTIME_URL is missing)");
         return;
       }

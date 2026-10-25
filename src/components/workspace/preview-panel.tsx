@@ -189,7 +189,8 @@ export function PreviewPanel({ projectId }: { projectId: string; conversationId?
   const width = VIEWPORTS[viewport].width;
   const previewUrl = session?.previewUrl ?? null;
   const dot = status === "running" ? "ok" : status === "starting" ? "busy" : status === "error" || status === "unavailable" ? "error" : "idle";
-  const label = useMemo(() => ({ unavailable: "Runner offline", starting: "Starting", running: "Running", stopped: "Stopped", error: "Error" })[status], [status]);
+  const runnerConfigured = state?.runnerConfigured !== false;
+  const label = useMemo(() => ({ unavailable: runnerConfigured ? "Runner offline" : "Not configured", starting: "Starting", running: "Running", stopped: "Stopped", error: "Error" })[status], [status, runnerConfigured]);
 
   return (
     <TooltipProvider>
@@ -268,7 +269,16 @@ export function PreviewPanel({ projectId }: { projectId: string; conversationId?
         ) : null}
 
         <div className="min-h-0 flex-1 overflow-auto bg-muted/40">
-          {status === "unavailable" ? (
+          {status === "unavailable" && state?.runnerConfigured === false ? (
+            <div className="p-4">
+              <Alert variant="info" title="Previews are not available on this deployment">
+                <p>Live previews, builds and Codexa hosting need the sandboxed runner service, and none is configured here (RUNNER_URL is not set). Your files, the editor, version history and AI still work.</p>
+                <p className="mt-2">
+                  To enable previews, run <code className="rounded bg-muted px-1">services/runner</code> on a Linux server and set <code className="rounded bg-muted px-1">RUNNER_URL</code> and <code className="rounded bg-muted px-1">RUNNER_TOKEN</code>. See the deployment docs.
+                </p>
+              </Alert>
+            </div>
+          ) : status === "unavailable" ? (
             <div className="p-4">
               <Alert variant="warning" title="The runner service is not reachable">
                 <p>Previews run in a separate sandboxed runner process, which is offline right now{state?.runnerError ? ` (${state.runnerError})` : ""}.</p>

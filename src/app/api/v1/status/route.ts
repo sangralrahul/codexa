@@ -38,6 +38,7 @@ async function checkDatabase(): Promise<ComponentStatus> {
 
 async function checkRunner(): Promise<ComponentStatus> {
   const start = Date.now();
+  if (!capabilities.runner) return { id: "runner", name: "Runner (sandboxes and previews)", state: "not_configured", detail: "No runner service is configured for this deployment (RUNNER_URL is not set). Previews, builds and Codexa hosting are unavailable." };
   const h = await runnerHealth(true);
   const ms = Date.now() - start;
   if (!h.ok) return { id: "runner", name: "Runner (sandboxes and previews)", state: "down", detail: "The runner service is not reachable. Previews, builds and Codexa deployments will not start.", latencyMs: ms };

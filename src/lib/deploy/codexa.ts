@@ -1,5 +1,5 @@
 import "server-only";
-import { env } from "@/lib/env";
+import { env, runnerUrl } from "@/lib/env";
 import { runner, runnerHealth, RunnerRequestError, RunnerUnavailableError } from "@/lib/runtime/client";
 import { DeployError, type DeployProvider } from "./types";
 
@@ -14,7 +14,9 @@ export const codexaProvider: DeployProvider = {
   name: `Codexa hosting (${env.DEPLOY_HOST})`,
   async availability() {
     const h = await runnerHealth();
-    return h.ok ? { available: true, reason: null } : { available: false, reason: `The runner service is not reachable at ${env.RUNNER_URL}: ${h.error ?? "unknown error"}` };
+    if (h.ok) return { available: true, reason: null };
+    const base = runnerUrl();
+    return { available: false, reason: base ? `The runner service is not reachable at ${base}: ${h.error ?? "unknown error"}` : "No runner service is configured for this deployment (RUNNER_URL is not set)." };
   },
   async deploy(req) {
     try {

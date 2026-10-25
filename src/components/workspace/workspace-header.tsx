@@ -168,7 +168,7 @@ export function WorkspaceHeader({
               <span className={cn("size-1.5 rounded-full", runtime.status === "running" ? "bg-success" : "bg-warning animate-pulse")} aria-hidden="true" />
             </Button>
           ) : (
-            <Button size="sm" onClick={onRun} disabled={!canEdit} aria-label="Run preview">
+            <Button size="sm" onClick={onRun} disabled={!canEdit || runtime.status === "unavailable"} aria-label="Run preview">
               <Play className="size-3.5" /> <span className="hidden sm:inline">Run</span>
             </Button>
           )}

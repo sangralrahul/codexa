@@ -14,6 +14,14 @@ const nextConfig: NextConfig = {
   reactStrictMode: true,
   poweredByHeader: false,
   serverExternalPackages: ["pg", "ws", "http-proxy", "tar"],
+  // Docs, guides, blog, help and changelog are markdown files read at request
+  // time; include them in every server trace so serverless hosts ship them.
+  outputFileTracingIncludes: {
+    "/**": ["./content/**/*"],
+  },
+  // `NEXT_OUTPUT=standalone npm run build` produces a self-contained server
+  // (used by the Docker image and to simulate serverless file tracing locally).
+  output: process.env.NEXT_OUTPUT === "standalone" ? "standalone" : undefined,
   turbopack: {
     rules: {
       "*.css": {

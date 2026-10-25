@@ -9,6 +9,9 @@ import { logger } from "@/lib/logger";
 
 type Ctx = { params: Promise<{ id: string }> };
 
+/** Serverless hosts (Vercel) stop the function after this many seconds; the agent budget stays below it. */
+export const maxDuration = 300;
+
 const bodySchema = z.object({
   prompt: z.string().min(1).max(8000),
   conversationId: z.string().min(1).max(64).optional().nullable(),
