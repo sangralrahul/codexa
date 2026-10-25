@@ -8,6 +8,7 @@ import { Logo } from "@/components/logo";
 import { NAV } from "@/config/routes";
 import { buttonClasses } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/theme/theme-toggle";
+import { SearchTrigger } from "@/components/search/search-dialog";
 import { cn } from "@/lib/utils";
 
 type Item = { label: string; href: string; description?: string };
@@ -121,6 +122,7 @@ export function MarketingHeader({ signedIn }: { signedIn: boolean }) {
           </nav>
         </div>
         <div className="hidden items-center gap-2 lg:flex">
+          <SearchTrigger className="inline-flex size-9 items-center justify-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground" />
           <ThemeToggle />
           {signedIn ? (
             <Link href="/dashboard" className={buttonClasses("primary", "sm")}>
@@ -189,7 +191,8 @@ export function MarketingHeader({ signedIn }: { signedIn: boolean }) {
                   </Link>
                 </>
               )}
-              <div className="mt-2 flex justify-center">
+              <div className="mt-2 flex items-center justify-center gap-3">
+                <SearchTrigger className="inline-flex size-9 items-center justify-center rounded-md border border-border text-muted-foreground hover:bg-muted hover:text-foreground" />
                 <ThemeToggle />
               </div>
             </div>
