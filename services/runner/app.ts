@@ -111,22 +111,15 @@ export async function createRunner(overrides: Partial<RunnerConfig> = {}): Promi
 
   router.add("POST", "/deployments", async ({ body }) => {
     const b = (await body()) as Record<string, unknown>;
-    try {
-      return await deployments.deploy({
-        projectId: String(b.projectId ?? ""),
-        deploymentId: String(b.deploymentId ?? ""),
-        framework: String(b.framework ?? ""),
-        settings: (b.settings as Record<string, unknown>) ?? {},
-        files: b.files,
-        slug: String(b.slug ?? ""),
-      });
-    } catch (err) {
-      if (err instanceof HttpError && (err as HttpError & { log?: string }).log !== undefined) {
-        const e = err as HttpError & { log?: string };
-        throw Object.assign(new HttpError(e.status, e.message, e.code), { log: e.log });
-      }
-      throw err;
-    }
+    // On failure the thrown HttpError carries `log`; the router includes it in the JSON error body.
+    return await deployments.deploy({
+      projectId: String(b.projectId ?? ""),
+      deploymentId: String(b.deploymentId ?? ""),
+      framework: String(b.framework ?? ""),
+      settings: (b.settings as Record<string, unknown>) ?? {},
+      files: b.files,
+      slug: String(b.slug ?? ""),
+    });
   });
 
   router.add("POST", "/deployments/alias", async ({ body }) => {
@@ -140,18 +133,7 @@ export async function createRunner(overrides: Partial<RunnerConfig> = {}): Promi
     return { log };
   });
 
-  const apiServer = http.createServer(async (req, res) => {
-    try {
-      await router.listener(req, res);
-    } catch (err) {
-      // Build failures carry the log so the Next side can persist it.
-      const e = err as HttpError & { log?: string };
-      if (!res.headersSent) {
-        res.writeHead(e.status ?? 500, { "content-type": "application/json" });
-        res.end(JSON.stringify({ error: { code: e.code ?? "internal", message: e.message }, log: e.log }));
-      }
-    }
-  });
+  const apiServer = http.createServer((req, res) => void router.listener(req, res));
   const proxyServer = createProxyServer(cfg, sessions, deployments, { appUrl: process.env.APP_URL });
 
   const apiBind = process.env.RUNNER_BIND || "127.0.0.1";

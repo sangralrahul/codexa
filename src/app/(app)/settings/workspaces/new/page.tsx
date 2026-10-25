@@ -1,0 +1,25 @@
+import { pageMetadata } from "@/lib/seo";
+import { requireUser } from "@/lib/auth/guards";
+import { PageHeader } from "@/components/app/app-shell";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { NewWorkspaceForm } from "@/components/settings/new-workspace-form";
+
+export const metadata = pageMetadata({ title: "New workspace", description: "Create a workspace for a team or a client.", path: "/settings/workspaces/new", noindex: true });
+
+export default async function NewWorkspacePage() {
+  await requireUser("/settings/workspaces/new");
+  return (
+    <div>
+      <PageHeader title="New workspace" description="Workspaces group projects, members and billing." />
+      <Card className="max-w-xl">
+        <CardHeader>
+          <CardTitle>Create a workspace</CardTitle>
+          <CardDescription>You can rename it or change its URL slug later.</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <NewWorkspaceForm />
+        </CardContent>
+      </Card>
+    </div>
+  );
+}

@@ -101,3 +101,30 @@ export async function destroyCgroup(cg: CgroupSet): Promise<void> {
 export function cgroupPids(cg: CgroupSet): number[] {
   return cg.pids ? readPids(cg.pids) : cg.memory ? readPids(cg.memory) : [];
 }
+
+/**
+ * Kill and remove every per-sandbox cgroup left behind by a previous runner
+ * process that did not shut down cleanly (crash, SIGKILL). Called once at
+ * startup by the real service entry point; in-process test runners must not
+ * call it because they share the cgroup root with the live runner.
+ */
+export async function reapOrphanCgroups(): Promise<{ cgroups: number; pids: number }> {
+  let cgroups = 0;
+  let pids = 0;
+  for (const ctrl of ["memory", "pids"]) {
+    const parent = path.join(ROOT, ctrl, PARENT);
+    let names: string[] = [];
+    try {
+      names = fs.readdirSync(parent, { withFileTypes: true }).filter((d) => d.isDirectory()).map((d) => d.name);
+    } catch {
+      continue;
+    }
+    for (const name of names) {
+      const dir = path.join(parent, name);
+      pids += readPids(dir).length;
+      await destroyCgroup({ memory: ctrl === "memory" ? dir : null, pids: ctrl === "pids" ? dir : null, available: true });
+      if (!fs.existsSync(dir)) cgroups++;
+    }
+  }
+  return { cgroups, pids };
+}

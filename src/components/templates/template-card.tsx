@@ -60,13 +60,13 @@ export function TemplateCard({ template, action }: { template: TemplateCardData;
 }
 
 /** Public "Use template" link: new-project for signed-in users, signup (with next) otherwise. */
-export function UseTemplateLink({ templateId, signedIn }: { templateId: string; signedIn: boolean }) {
+export function UseTemplateLink({ templateId, signedIn, size = "sm", label = "Use template" }: { templateId: string; signedIn: boolean; size?: "sm" | "md" | "lg"; label?: string }) {
   const target = `/new-project?template=${encodeURIComponent(templateId)}`;
   const href = signedIn ? target : `/signup?next=${encodeURIComponent(target)}`;
   return (
-    <Link href={href} className={buttonClasses("primary", "sm")}>
-      Use template
-      <ArrowRight className="size-3.5" aria-hidden="true" />
+    <Link href={href} className={buttonClasses("primary", size)}>
+      {label}
+      <ArrowRight className={size === "sm" ? "size-3.5" : "size-4"} aria-hidden="true" />
     </Link>
   );
 }

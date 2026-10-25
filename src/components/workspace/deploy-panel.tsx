@@ -54,6 +54,7 @@ export function DeployPanel({ projectId }: { projectId: string; conversationId?:
     }
   }, [projectId]);
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- initial fetch; state is set after the request resolves, not synchronously
     void load();
   }, [load]);
 

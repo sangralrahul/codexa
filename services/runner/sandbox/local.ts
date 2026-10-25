@@ -7,12 +7,12 @@
 import { spawn } from "node:child_process";
 import fs from "node:fs/promises";
 import path from "node:path";
-import { createCgroup, destroyCgroup, cgroupPids, cgroupsAvailable, type CgroupSet } from "../lib/cgroup";
+import { createCgroup, destroyCgroup, cgroupPids, cgroupsAvailable, reapOrphanCgroups, type CgroupSet } from "../lib/cgroup";
 import { truncateOutput } from "../lib/ring-buffer";
 import { buildLocalCommand, SANDBOX_INIT_SCRIPT } from "./command";
 import type { ExecOptions, ExecResult, SandboxDriver, SandboxProcess, SandboxSpec, SpawnOptions } from "./types";
 
-export type LocalDriverOptions = { binDir: string; nodeBin: string; outputBytes: number; uid: number; gid: number };
+export type LocalDriverOptions = { binDir: string; nodeBin: string; outputBytes: number; uid: number; gid: number; /** Kill sandboxes left behind by a crashed runner (never for in-process test runners). */ reapOrphans: boolean };
 
 export class LocalDriver implements SandboxDriver {
   readonly name = "local" as const;
@@ -43,6 +43,10 @@ export class LocalDriver implements SandboxDriver {
     this.checks["cgroup.pids"] = cg.pids;
     if (typeof process.getuid === "function" && process.getuid() !== 0) {
       throw new Error("The local driver must run as root so it can drop to the sandbox uid, chown project files and manage cgroups");
+    }
+    if (this.opts.reapOrphans && (cg.memory || cg.pids)) {
+      const reaped = await reapOrphanCgroups();
+      if (reaped.cgroups || reaped.pids) console.log(`[runner] reaped ${reaped.pids} orphaned sandbox process(es) in ${reaped.cgroups} cgroup(s) from a previous run`);
     }
   }
 

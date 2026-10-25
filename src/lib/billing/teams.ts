@@ -37,13 +37,14 @@ export function canChangeRole(actor: MemberLike, target: MemberLike, newRole: Wo
 /** Can `actor` remove `target` (or themselves, when actor.userId === target.userId)? */
 export function canRemoveMember(actor: MemberLike, target: MemberLike, members: MemberLike[]): RuleResult {
   const self = actor.userId === target.userId;
+  if (!self) {
+    if (ROLE_RANK[actor.role] < ROLE_RANK.admin) return { ok: false, status: 403, message: "Only owners and admins can remove members" };
+    if (actor.role === "admin" && target.role === "owner") return { ok: false, status: 403, message: "Admins cannot remove an owner" };
+  }
   if (target.role === "owner" && countOwners(members) <= 1) {
     return { ok: false, status: 400, message: self ? "You are the last owner. Transfer ownership before leaving." : "The last owner cannot be removed" };
   }
-  if (self) return { ok: true }; // members can always leave (last-owner rule above)
-  if (ROLE_RANK[actor.role] < ROLE_RANK.admin) return { ok: false, status: 403, message: "Only owners and admins can remove members" };
-  if (actor.role === "admin" && target.role === "owner") return { ok: false, status: 403, message: "Admins cannot remove an owner" };
-  return { ok: true };
+  return { ok: true }; // members can always leave (last-owner rule above)
 }
 
 /** Can `actor` invite someone with `role`? Admins cannot invite owners. */

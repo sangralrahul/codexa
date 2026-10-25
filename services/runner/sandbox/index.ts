@@ -10,7 +10,7 @@ export { SANDBOX_PATHS } from "./types";
 export function createDriver(cfg: RunnerConfig): SandboxDriver {
   switch (cfg.driver) {
     case "local":
-      return new LocalDriver({ binDir: cfg.binDir, nodeBin: cfg.nodeBin, outputBytes: cfg.limits.outputBytes, uid: cfg.uid, gid: cfg.gid });
+      return new LocalDriver({ binDir: cfg.binDir, nodeBin: cfg.nodeBin, outputBytes: cfg.limits.outputBytes, uid: cfg.uid, gid: cfg.gid, reapOrphans: cfg.reapOrphans });
     case "docker":
       return new DockerDriver({ image: process.env.RUNNER_DOCKER_IMAGE || "node:22-bookworm-slim", outputBytes: cfg.limits.outputBytes, cpus: Number(process.env.RUNNER_DOCKER_CPUS || 2) });
     case "e2b":

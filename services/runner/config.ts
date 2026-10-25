@@ -41,6 +41,8 @@ export type RunnerConfig = {
   /** Public port browsers use to reach the proxy (part of the preview URL). */
   publicPreviewPort: number | null;
   portRange: [number, number];
+  /** Kill sandboxes left behind by a crashed runner at startup (RUNNER_REAP_ORPHANS, default on). */
+  reapOrphans: boolean;
   limits: {
     memoryBytes: number;
     pidsMax: number;
@@ -86,6 +88,7 @@ export function loadConfig(): RunnerConfig {
     previewProtocol: process.env.PREVIEW_PROTOCOL === "https" ? "https" : "http",
     publicPreviewPort: m ? Number(m[1]) : null,
     portRange: [int("RUNNER_PORT_RANGE_START", 20000), int("RUNNER_PORT_RANGE_END", 29999)],
+    reapOrphans: process.env.RUNNER_REAP_ORPHANS !== "0",
     limits: {
       memoryBytes: int("RUNNER_MEMORY_BYTES", 1024 * 1024 * 1024),
       pidsMax: int("RUNNER_PIDS_MAX", 256),

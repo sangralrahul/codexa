@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState, useTransition } from "react";
+import { useRef, useState, useTransition } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { Search, X } from "lucide-react";
 import { Input, Label, Select } from "@/components/ui/input";
@@ -31,7 +31,12 @@ export function GalleryFilters({ value, categories, frameworks, categoryMode, ba
   const [q, setQ] = useState(value.q);
   const debounce = useRef<number | null>(null);
 
-  useEffect(() => setQ(value.q), [value.q]);
+  // Keep the input in sync when the URL changes from elsewhere (back button, chips).
+  const [syncedQ, setSyncedQ] = useState(value.q);
+  if (value.q !== syncedQ) {
+    setSyncedQ(value.q);
+    setQ(value.q);
+  }
 
   function navigate(next: Partial<GalleryFilterState>) {
     const sp = new URLSearchParams(params.toString());

@@ -79,7 +79,9 @@ export class Router {
       const code = err instanceof HttpError ? err.code : status === 400 ? "bad_request" : "internal";
       const message = err instanceof Error ? err.message : String(err);
       if (status >= 500) console.error("[runner] unhandled error", err);
-      sendJson(res, status, { error: { code, message } });
+      // Build failures carry their log so the Next side can persist it with the deployment.
+      const log = (err as { log?: unknown } | null)?.log;
+      sendJson(res, status, { error: { code, message }, ...(typeof log === "string" ? { log } : {}) });
     }
   };
 }

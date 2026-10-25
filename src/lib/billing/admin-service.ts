@@ -113,8 +113,9 @@ export async function listWorkspacesAdmin(opts: { q?: string; page?: number; pla
         ownerId: workspaces.ownerId,
         ownerEmail: users.email,
         createdAt: workspaces.createdAt,
-        members: sql<number>`coalesce(${members.n}, 0)`,
-        projects: sql<number>`coalesce(${projs.n}, 0)`,
+        // Qualify with the subquery aliases: both subqueries expose a column named "n".
+        members: sql<number>`coalesce("m"."n", 0)`,
+        projects: sql<number>`coalesce("p"."n", 0)`,
       })
       .from(workspaces)
       .leftJoin(users, eq(users.id, workspaces.ownerId))
