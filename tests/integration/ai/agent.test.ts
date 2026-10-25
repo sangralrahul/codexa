@@ -84,7 +84,9 @@ describe("AI engine (mock provider, real test DB)", () => {
     expect(done.status).toBe("succeeded");
     expect(done.changedFiles.map((f) => f.path).sort()).toEqual(["src/App.tsx", "src/components/Feature.tsx"]);
     expect(done.summary).toContain("Add a counter feature");
-    expect(done.validation?.skipped).toMatch(/not available/);
+    // Validation runs for real when the runner service is reachable, otherwise it is skipped.
+    if (done.validation?.skipped) expect(done.validation.skipped).toMatch(/not available/);
+    else expect(done.validation?.ok).toBe(true);
 
     // Event stream shape.
     const types = events.map((e) => e.type);

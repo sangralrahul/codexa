@@ -23,13 +23,10 @@ export type SearchResult = { type: SearchType; title: string; description: strin
 
 type IntegrationLike = { id: string; name: string; description?: string; category?: string; tags?: string[]; href?: string; docsUrl?: string };
 
-/** Load the integrations directory if another module has shipped it; otherwise skip quietly. */
+/** Load the integrations directory (shipped in src/config/integrations.ts). */
 async function loadIntegrations(): Promise<IntegrationLike[]> {
   try {
-    // A template path makes the bundler build a directory context instead of
-    // failing the build when src/config/integrations.ts does not exist yet.
-    const name = "integrations";
-    const mod = (await import(`../../config/${name}`)) as Record<string, unknown>;
+    const mod = (await import("@/config/integrations")) as Record<string, unknown>;
     const list = (mod.INTEGRATIONS ?? mod.integrations ?? mod.default) as unknown;
     if (!Array.isArray(list)) return [];
     return list.filter((x): x is IntegrationLike => Boolean(x && typeof x === "object" && "id" in x && "name" in x));

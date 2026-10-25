@@ -49,7 +49,7 @@ export function SignupForm({ githubEnabled }: { githubEnabled: boolean }) {
         <Input id="name" name="name" autoComplete="name" placeholder="Your name" maxLength={100} />
       </Field>
       <Field label="Email" htmlFor="email" error={fields.email}>
-        <Input id="email" name="email" type="email" autoComplete="email" required placeholder="you@company.com" aria-invalid={Boolean(fields.email)} />
+        <Input id="email" name="email" type="email" autoComplete="email" required placeholder="you@company.com" defaultValue={params.get("email") ?? ""} aria-invalid={Boolean(fields.email)} />
       </Field>
       <Field label="Password" htmlFor="password" hint="At least 8 characters with a letter and a number." error={fields.password}>
         <Input id="password" name="password" type="password" autoComplete="new-password" required minLength={8} aria-invalid={Boolean(fields.password)} />
