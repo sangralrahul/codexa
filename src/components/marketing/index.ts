@@ -17,3 +17,4 @@ export { ProductPageTemplate } from "./product-page";
 export { SolutionPageTemplate } from "./solution-page";
 export { MarketingHeader } from "./header";
 export { MarketingFooter } from "./footer";
+export { LimitsTable } from "./limits-table";

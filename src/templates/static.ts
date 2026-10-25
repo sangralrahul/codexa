@@ -1,12 +1,15 @@
 import type { Template } from "./types";
+import { STATIC_SETTINGS } from "./shared";
 
-const settings = { devCommand: "codexa-static", buildCommand: "", installCommand: "", outputDir: ".", port: 5173 };
+const settings = STATIC_SETTINGS;
 
 export const staticTemplates: Template[] = [
   {
     id: "static-site",
     name: "Static website",
     description: "Plain HTML, CSS, and JavaScript with no build step. Ideal for simple sites and learning.",
+    longDescription:
+      "Three files — index.html, styles.css and app.js — served as-is by the Codexa static runtime. There is no bundler, no framework and no install step, which makes it the fastest way to learn how the editor, preview and deployment fit together.",
     category: "websites",
     tags: ["html", "css", "javascript", "static"],
     framework: "static",
@@ -15,6 +18,7 @@ export const staticTemplates: Template[] = [
     prebuilt: true,
     featured: true,
     difficulty: "beginner",
+    previewPath: "/",
     files: {
       "index.html": `<!doctype html>
 <html lang="en">
@@ -64,6 +68,8 @@ section { padding: 24px 0; border-top: 1px solid #f3f4f6; }
     id: "static-portfolio",
     name: "Personal portfolio",
     description: "A single-page portfolio with projects grid and contact section. No build step.",
+    longDescription:
+      "A dark single-page portfolio: name, one-line introduction, a responsive projects grid and a contact link. Pure HTML and CSS, so it deploys to Codexa static hosting without a build.",
     category: "portfolios",
     tags: ["html", "css", "portfolio"],
     framework: "static",
@@ -71,6 +77,7 @@ section { padding: 24px 0; border-top: 1px solid #f3f4f6; }
     settings,
     prebuilt: true,
     difficulty: "beginner",
+    previewPath: "/",
     files: {
       "index.html": `<!doctype html>
 <html lang="en">

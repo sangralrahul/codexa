@@ -45,7 +45,7 @@ export function ComparisonTable({
   className?: string;
 }) {
   return (
-    <div className={cn("overflow-x-auto rounded-xl border border-border", className)}>
+    <div className={cn("relative overflow-x-auto rounded-xl border border-border", className)}>
       <table className="w-full min-w-[640px] border-collapse text-sm">
         <caption className="sr-only">{caption}</caption>
         <thead className="bg-muted">

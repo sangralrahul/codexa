@@ -49,7 +49,6 @@ export const API_GROUPS: { id: EndpointGroup; title: string; description: string
   { id: "webhooks", title: "Inbound webhooks", description: "Stripe and Razorpay event delivery." },
 ];
 
-const ERR = `{ "error": { "code": "not_found", "message": "Project not found" } }`;
 
 export const API_ENDPOINTS: ApiEndpoint[] = [
   // Auth
@@ -163,7 +162,7 @@ export const API_ENDPOINTS: ApiEndpoint[] = [
   { id: "api-tokens", method: "POST", path: "/api/v1/tokens", group: "auth", summary: "Create a personal API token for non-browser clients.", auth: "session", notes: "Planned. Today the API accepts only the session cookie.", status: "planned" },
 ];
 
-/** Map a public endpoint path to the App Router file that would implement it. */
+/** Map a public endpoint path to the App Router file that would implement it (static mapping). */
 export function routeFileForPath(endpointPath: string): string {
   const clean = endpointPath.split("?")[0];
   const segments = clean
@@ -171,6 +170,38 @@ export function routeFileForPath(endpointPath: string): string {
     .filter(Boolean)
     .map((s) => (s.startsWith(":") ? `[${s.slice(1)}]` : s));
   return path.join("src", "app", ...segments, "route.ts");
+}
+
+/**
+ * Find the route file on disk for an endpoint, honouring dynamic folders:
+ * a literal segment such as `newsletter` is satisfied by a `[kind]` folder
+ * when no literal folder exists, exactly as the App Router resolves it.
+ * Returns the repo-relative file path or null when nothing matches.
+ */
+export function findRouteFile(endpointPath: string, rootDir: string = process.cwd()): string | null {
+  const clean = endpointPath.split("?")[0];
+  const segments = clean.split("/").filter(Boolean);
+  let dir = path.join(rootDir, "src", "app");
+  const rel: string[] = ["src", "app"];
+  for (const seg of segments) {
+    const wanted = seg.startsWith(":") ? `[${seg.slice(1)}]` : seg;
+    let entries: string[] = [];
+    try {
+      entries = fs.readdirSync(dir, { withFileTypes: true }).filter((e) => e.isDirectory()).map((e) => e.name);
+    } catch {
+      return null;
+    }
+    let match: string | undefined = entries.find((e) => e === wanted);
+    if (!match && !seg.startsWith(":")) match = entries.find((e) => /^\[[^\].]+\]$/.test(e));
+    if (!match) match = entries.find((e) => /^\[\.\.\./.test(e));
+    if (!match) return null;
+    dir = path.join(dir, match);
+    rel.push(match);
+    if (/^\[\.\.\./.test(match)) break;
+  }
+  const file = path.join(dir, "route.ts");
+  if (!fs.existsSync(file)) return null;
+  return path.join(...rel, "route.ts");
 }
 
 export type ResolvedEndpoint = ApiEndpoint & { resolvedStatus: EndpointStatus; routeFile: string };
@@ -181,16 +212,16 @@ export type ResolvedEndpoint = ApiEndpoint & { resolvedStatus: EndpointStatus; r
  * the registry's intent so the docs never overstate what ships.
  */
 export function resolveEndpointStatus(endpoint: ApiEndpoint, rootDir: string = process.cwd()): ResolvedEndpoint {
-  const routeFile = routeFileForPath(endpoint.path);
-  if (endpoint.status === "planned") return { ...endpoint, resolvedStatus: "planned", routeFile };
-  const abs = path.join(rootDir, routeFile);
+  const fallback = routeFileForPath(endpoint.path);
+  if (endpoint.status === "planned") return { ...endpoint, resolvedStatus: "planned", routeFile: fallback };
+  const found = findRouteFile(endpoint.path, rootDir);
   let resolvedStatus: EndpointStatus = "planned";
-  if (fs.existsSync(abs)) {
-    const src = fs.readFileSync(abs, "utf8");
+  if (found) {
+    const src = fs.readFileSync(path.join(rootDir, found), "utf8");
     const exportsMethod = new RegExp(`export\\s+(?:const|let|async\\s+function|function)\\s+${endpoint.method}\\b`).test(src) || new RegExp(`export\\s*\\{[^}]*\\b${endpoint.method}\\b[^}]*\\}`).test(src);
     if (exportsMethod) resolvedStatus = "implemented";
   }
-  return { ...endpoint, resolvedStatus, routeFile };
+  return { ...endpoint, resolvedStatus, routeFile: found ?? fallback };
 }
 
 export function resolveAllEndpoints(rootDir: string = process.cwd()): ResolvedEndpoint[] {

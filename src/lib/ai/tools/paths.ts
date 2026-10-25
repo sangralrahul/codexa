@@ -16,7 +16,6 @@ export function safePath(input: unknown): string {
   if (!cleaned || cleaned.length > MAX_PATH_LENGTH) throw new ToolPathError("Invalid file path");
   const parts = cleaned.split("/");
   if (parts.some((s) => s === "." || s === ".." || s === "")) throw new ToolPathError(`Invalid file path: ${input}`);
-  // eslint-disable-next-line no-control-regex
   if (/[\0<>:"|?*]/.test(cleaned)) throw new ToolPathError("Invalid characters in file path");
   if (cleaned.startsWith("node_modules/") || cleaned.includes("/node_modules/")) throw new ToolPathError("node_modules is not part of the project");
   return cleaned;

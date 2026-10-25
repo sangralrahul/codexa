@@ -1,15 +1,23 @@
 import type { Template } from "./types";
+import { NODE_DEPS, NODE_SETTINGS } from "./shared";
+
+/**
+ * The first template here defines the prebuilt dependency set the runner
+ * installs for every node-express project (services/runner/prepare.ts).
+ */
 
 export const nodeExpressTemplates: Template[] = [
   {
     id: "node-express-api",
     name: "Express REST API",
     description: "A TypeScript Express API with routing, validation, and an in-memory store you can swap for PostgreSQL.",
+    longDescription:
+      "An Express 4 server written in TypeScript and run with tsx in development. It exposes a small todos resource with zod-validated request bodies and an in-memory array; replace the array with a database client and the handlers stay the same.",
     category: "web-apps",
     tags: ["node", "express", "api", "typescript", "backend"],
     framework: "node-express",
-    dependencies: { express: "^4.21.0", zod: "^3.24.0", tsx: "^4.19.0", typescript: "^5.8.0" },
-    settings: { devCommand: "npm run dev", buildCommand: "npm run build", installCommand: "npm install", outputDir: "dist", port: 3000 },
+    dependencies: NODE_DEPS,
+    settings: NODE_SETTINGS,
     prebuilt: true,
     difficulty: "intermediate",
     previewPath: "/api/todos",

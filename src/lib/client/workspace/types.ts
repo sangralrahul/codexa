@@ -78,3 +78,20 @@ export type ShareLinkDto = {
 };
 
 export type ChangeSummary = { path: string; action: "create" | "update" | "delete" };
+
+/** Template metadata without file contents (safe to pass to client components). */
+export type TemplateSummary = {
+  id: string;
+  name: string;
+  description: string;
+  category: string;
+  framework: string;
+  frameworkName: string;
+  tags: string[];
+  prebuilt: boolean;
+  featured: boolean;
+  difficulty: "beginner" | "intermediate" | "advanced";
+};
+
+/** Project row enriched with workspace context for list pages. */
+export type ProjectListItem = ProjectDto & { workspaceName: string; role: WorkspaceRole };

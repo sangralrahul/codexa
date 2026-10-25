@@ -1,6 +1,15 @@
 "use client";
 
-import { useCallback, useEffect, useId, useMemo, useRef, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useId,
+  useMemo,
+  useRef,
+  useState,
+  useSyncExternalStore,
+} from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Dialog as RD } from "radix-ui";
 import { ArrowRight, Clock, FileText, Loader2, Search, X } from "lucide-react";
@@ -16,8 +25,23 @@ const OPEN_EVENT = "codexa:search-open";
 const RECENT_KEY = "codexa:recent-searches";
 const MAX_RECENT = 6;
 
-type ResultType = "docs" | "guides" | "tutorials" | "blog" | "help" | "changelog" | "glossary" | "templates" | "integrations";
-type Result = { type: ResultType; title: string; description: string; href: string; snippet: string };
+type ResultType =
+  | "docs"
+  | "guides"
+  | "tutorials"
+  | "blog"
+  | "help"
+  | "changelog"
+  | "glossary"
+  | "templates"
+  | "integrations";
+type Result = {
+  type: ResultType;
+  title: string;
+  description: string;
+  href: string;
+  snippet: string;
+};
 type Suggestion = { title: string; href: string; type: ResultType };
 
 const FILTERS: { id: ResultType | "all"; label: string }[] = [
@@ -33,34 +57,79 @@ const FILTERS: { id: ResultType | "all"; label: string }[] = [
 ];
 
 export function openSearch() {
-  if (typeof window !== "undefined") window.dispatchEvent(new CustomEvent(OPEN_EVENT));
+  if (typeof window !== "undefined")
+    window.dispatchEvent(new CustomEvent(OPEN_EVENT));
+}
+
+/**
+ * Exactly one dialog instance should exist per page. The first component to
+ * claim the host slot renders it; this lets <SearchTrigger /> work on pages
+ * whose layout never mounted <SearchDialog /> explicitly, without creating a
+ * dialog per trigger.
+ */
+let hostId: string | null = null;
+const hostListeners = new Set<() => void>();
+function subscribeHost(cb: () => void) {
+  hostListeners.add(cb);
+  return () => {
+    hostListeners.delete(cb);
+  };
+}
+function useDialogHost() {
+  const id = useId();
+  useEffect(() => {
+    if (hostId !== null) return;
+    hostId = id;
+    hostListeners.forEach((cb) => cb());
+    return () => {
+      if (hostId !== id) return;
+      hostId = null;
+      hostListeners.forEach((cb) => cb());
+    };
+  }, [id]);
+  return useSyncExternalStore(
+    subscribeHost,
+    () => hostId === id,
+    () => false,
+  );
+}
+
+const noopSubscribe = () => () => {};
+/** True on Apple platforms after hydration; false during SSR so markup matches. */
+function useIsMac() {
+  return useSyncExternalStore(
+    noopSubscribe,
+    () => /Mac|iPhone|iPad/.test(navigator.platform ?? navigator.userAgent),
+    () => false,
+  );
 }
 
 export function SearchTrigger({ className }: { className?: string }) {
-  const [isMac, setIsMac] = useState(false);
-  useEffect(() => {
-    setIsMac(/Mac|iPhone|iPad/.test(navigator.platform ?? navigator.userAgent));
-  }, []);
+  const isMac = useIsMac();
+  const host = useDialogHost();
   return (
-    <button
-      type="button"
-      onClick={openSearch}
-      aria-label="Search documentation"
-      aria-keyshortcuts={isMac ? "Meta+K" : "Control+K"}
-      className={cn(
-        "inline-flex h-9 items-center justify-center gap-2 rounded-md border border-border bg-background text-sm text-muted-foreground transition hover:border-border-strong hover:text-foreground sm:justify-between sm:px-3",
-        "w-9 sm:w-auto sm:min-w-[11rem]",
-        className,
-      )}
-    >
-      <span className="inline-flex items-center gap-2">
-        <Search className="size-4" aria-hidden="true" />
-        <span className="hidden sm:inline">Search docs…</span>
-      </span>
-      <kbd className="hidden sm:inline-block" aria-hidden="true">
-        {isMac ? "⌘" : "Ctrl"} K
-      </kbd>
-    </button>
+    <>
+      <button
+        type="button"
+        onClick={openSearch}
+        aria-label="Search documentation"
+        aria-keyshortcuts={isMac ? "Meta+K" : "Control+K"}
+        className={cn(
+          "inline-flex h-9 items-center justify-center gap-2 rounded-md border border-border bg-background text-sm text-muted-foreground transition hover:border-border-strong hover:text-foreground sm:justify-between sm:px-3",
+          "w-9 sm:w-auto sm:min-w-[11rem]",
+          className,
+        )}
+      >
+        <span className="inline-flex items-center gap-2">
+          <Search className="size-4" aria-hidden="true" />
+          <span className="hidden sm:inline">Search docs…</span>
+        </span>
+        <kbd className="hidden sm:inline-block" aria-hidden="true">
+          {isMac ? "⌘" : "Ctrl"} K
+        </kbd>
+      </button>
+      {host ? <SearchDialogInner /> : null}
+    </>
   );
 }
 
@@ -68,7 +137,11 @@ function readRecent(): string[] {
   try {
     const raw = localStorage.getItem(RECENT_KEY);
     const list = raw ? (JSON.parse(raw) as unknown) : [];
-    return Array.isArray(list) ? list.filter((x): x is string => typeof x === "string").slice(0, MAX_RECENT) : [];
+    return Array.isArray(list)
+      ? list
+          .filter((x): x is string => typeof x === "string")
+          .slice(0, MAX_RECENT)
+      : [];
   } catch {
     return [];
   }
@@ -83,13 +156,20 @@ function writeRecent(list: string[]) {
 }
 
 export function SearchDialog() {
+  const host = useDialogHost();
+  return host ? <SearchDialogInner /> : null;
+}
+
+function SearchDialogInner() {
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
   const [filter, setFilter] = useState<ResultType | "all">("all");
   const [results, setResults] = useState<Result[]>([]);
   const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
-  const [status, setStatus] = useState<"idle" | "loading" | "done" | "error">("idle");
+  const [status, setStatus] = useState<"idle" | "loading" | "done" | "error">(
+    "idle",
+  );
   const [activeIndex, setActiveIndex] = useState(0);
   const [recent, setRecent] = useState<string[]>([]);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -97,55 +177,62 @@ export function SearchDialog() {
   const abortRef = useRef<AbortController | null>(null);
   const listId = useId();
 
-  // Open on Cmd/Ctrl+K or the trigger event.
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => {
-      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") {
-        e.preventDefault();
-        setOpen((o) => !o);
-      }
-    };
-    const onOpen = () => setOpen(true);
-    window.addEventListener("keydown", onKey);
-    window.addEventListener(OPEN_EVENT, onOpen);
-    return () => {
-      window.removeEventListener("keydown", onKey);
-      window.removeEventListener(OPEN_EVENT, onOpen);
-    };
-  }, []);
-
-  useEffect(() => {
-    if (open) setRecent(readRecent());
-    else {
+  /** Single place that opens/closes the dialog and resets its transient state. */
+  const handleOpenChange = useCallback((next: boolean) => {
+    setOpen(next);
+    if (next) {
+      setRecent(readRecent());
+    } else {
       setQuery("");
       setResults([]);
       setSuggestions([]);
       setStatus("idle");
       setActiveIndex(0);
     }
+  }, []);
+  const openRef = useRef(open);
+  useEffect(() => {
+    openRef.current = open;
   }, [open]);
+
+  // Open on Cmd/Ctrl+K or the trigger event.
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") {
+        e.preventDefault();
+        handleOpenChange(!openRef.current);
+      }
+    };
+    const onOpen = () => handleOpenChange(true);
+    window.addEventListener("keydown", onKey);
+    window.addEventListener(OPEN_EVENT, onOpen);
+    return () => {
+      window.removeEventListener("keydown", onKey);
+      window.removeEventListener(OPEN_EVENT, onOpen);
+    };
+  }, [handleOpenChange]);
 
   // Debounced fetch.
   useEffect(() => {
     if (!open) return;
     const q = query.trim();
     abortRef.current?.abort();
-    if (q.length === 0) {
-      setResults([]);
-      setSuggestions([]);
-      setStatus("idle");
-      return;
-    }
+    if (q.length === 0) return;
     const controller = new AbortController();
     abortRef.current = controller;
-    setStatus("loading");
     const t = setTimeout(async () => {
+      setStatus("loading");
       try {
         const params = new URLSearchParams({ q });
         if (filter !== "all") params.set("type", filter);
-        const res = await fetch(`/api/v1/search?${params.toString()}`, { signal: controller.signal });
+        const res = await fetch(`/api/v1/search?${params.toString()}`, {
+          signal: controller.signal,
+        });
         if (!res.ok) throw new Error(`Search failed (${res.status})`);
-        const data = (await res.json()) as { results: Result[]; suggestions: Suggestion[] };
+        const data = (await res.json()) as {
+          results: Result[];
+          suggestions: Suggestion[];
+        };
         setResults(data.results ?? []);
         setSuggestions(data.suggestions ?? []);
         setActiveIndex(0);
@@ -161,8 +248,17 @@ export function SearchDialog() {
     };
   }, [query, filter, open]);
 
-  const items = useMemo<{ title: string; href: string; type: ResultType; snippet?: string; kind: "result" | "suggestion" }[]>(() => {
-    if (results.length) return results.map((r) => ({ ...r, kind: "result" as const }));
+  const items = useMemo<
+    {
+      title: string;
+      href: string;
+      type: ResultType;
+      snippet?: string;
+      kind: "result" | "suggestion";
+    }[]
+  >(() => {
+    if (results.length)
+      return results.map((r) => ({ ...r, kind: "result" as const }));
     return suggestions.map((s) => ({ ...s, kind: "suggestion" as const }));
   }, [results, suggestions]);
 
@@ -174,10 +270,10 @@ export function SearchDialog() {
         setRecent(next);
         writeRecent(next);
       }
-      setOpen(false);
+      handleOpenChange(false);
       router.push(href);
     },
-    [query, recent, router],
+    [query, recent, router, handleOpenChange],
   );
 
   function onKeyDown(e: React.KeyboardEvent) {
@@ -186,7 +282,9 @@ export function SearchDialog() {
       setActiveIndex((i) => (items.length ? (i + 1) % items.length : 0));
     } else if (e.key === "ArrowUp") {
       e.preventDefault();
-      setActiveIndex((i) => (items.length ? (i - 1 + items.length) % items.length : 0));
+      setActiveIndex((i) =>
+        items.length ? (i - 1 + items.length) % items.length : 0,
+      );
     } else if (e.key === "Enter") {
       const item = items[activeIndex];
       if (item) {
@@ -197,15 +295,19 @@ export function SearchDialog() {
   }
 
   useEffect(() => {
-    const el = listRef.current?.querySelector<HTMLElement>(`[data-index="${activeIndex}"]`);
+    const el = listRef.current?.querySelector<HTMLElement>(
+      `[data-index="${activeIndex}"]`,
+    );
     el?.scrollIntoView({ block: "nearest" });
   }, [activeIndex]);
 
   const showRecent = query.trim().length === 0 && recent.length > 0;
-  const activeId = items[activeIndex] ? `${listId}-opt-${activeIndex}` : undefined;
+  const activeId = items[activeIndex]
+    ? `${listId}-opt-${activeIndex}`
+    : undefined;
 
   return (
-    <RD.Root open={open} onOpenChange={setOpen}>
+    <RD.Root open={open} onOpenChange={handleOpenChange}>
       <RD.Portal>
         <RD.Overlay className="fixed inset-0 z-50 bg-black/50 backdrop-blur-[2px] data-[state=open]:animate-fade-in" />
         <RD.Content
@@ -216,9 +318,22 @@ export function SearchDialog() {
           }}
         >
           <RD.Title className="sr-only">Search</RD.Title>
-          <RD.Description className="sr-only">Search documentation, guides, tutorials, blog posts, help articles and templates.</RD.Description>
+          <RD.Description className="sr-only">
+            Search documentation, guides, tutorials, blog posts, help articles
+            and templates.
+          </RD.Description>
           <div className="flex items-center gap-2 border-b border-border px-3">
-            {status === "loading" ? <Loader2 className="size-4 shrink-0 animate-spin text-muted-foreground" aria-hidden="true" /> : <Search className="size-4 shrink-0 text-muted-foreground" aria-hidden="true" />}
+            {status === "loading" ? (
+              <Loader2
+                className="size-4 shrink-0 animate-spin text-muted-foreground"
+                aria-hidden="true"
+              />
+            ) : (
+              <Search
+                className="size-4 shrink-0 text-muted-foreground"
+                aria-hidden="true"
+              />
+            )}
             <input
               ref={inputRef}
               type="search"
@@ -230,44 +345,78 @@ export function SearchDialog() {
               aria-label="Search"
               placeholder="Search docs, guides, help…"
               value={query}
-              onChange={(e) => setQuery(e.target.value)}
+              onChange={(e) => {
+                setQuery(e.target.value);
+                if (e.target.value.trim().length === 0) {
+                  setResults([]);
+                  setSuggestions([]);
+                  setStatus("idle");
+                }
+              }}
               onKeyDown={onKeyDown}
               autoComplete="off"
               className="h-12 w-full bg-transparent text-base outline-none placeholder:text-muted-foreground"
             />
-            <RD.Close className="rounded-md p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground" aria-label="Close search">
+            <RD.Close
+              className="rounded-md p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground"
+              aria-label="Close search"
+            >
               <X className="size-4" />
             </RD.Close>
           </div>
-          <div className="flex gap-1.5 overflow-x-auto border-b border-border px-3 py-2" role="group" aria-label="Filter by type">
+          <div
+            className="flex gap-1.5 overflow-x-auto border-b border-border px-3 py-2"
+            role="group"
+            aria-label="Filter by type"
+          >
             {FILTERS.map((f) => (
               <button
                 key={f.id}
                 type="button"
                 aria-pressed={filter === f.id}
-                onClick={() => setFilter(f.id)}
+                onClick={() => {
+                  setFilter(f.id);
+                  inputRef.current?.focus();
+                }}
                 className={cn(
                   "shrink-0 rounded-full border px-2.5 py-0.5 text-xs transition",
-                  filter === f.id ? "border-primary bg-primary/10 text-primary" : "border-border text-muted-foreground hover:border-border-strong hover:text-foreground",
+                  filter === f.id
+                    ? "border-primary bg-primary/10 text-primary"
+                    : "border-border text-muted-foreground hover:border-border-strong hover:text-foreground",
                 )}
               >
                 {f.label}
               </button>
             ))}
           </div>
-          <div className="min-h-0 flex-1 overflow-y-auto p-2" aria-live="polite">
+          <div
+            className="min-h-0 flex-1 overflow-y-auto p-2"
+            aria-live="polite"
+          >
             {status === "error" ? (
-              <p role="alert" className="px-3 py-6 text-center text-sm text-danger">
+              <p
+                role="alert"
+                className="px-3 py-6 text-center text-sm text-danger"
+              >
                 Search is unavailable right now. Please try again in a moment.
               </p>
             ) : showRecent ? (
               <div>
-                <p className="px-3 pb-1 pt-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Recent searches</p>
+                <p className="px-3 pb-1 pt-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                  Recent searches
+                </p>
                 <ul>
                   {recent.map((r) => (
                     <li key={r}>
-                      <button type="button" onClick={() => setQuery(r)} className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-sm hover:bg-muted">
-                        <Clock className="size-3.5 text-muted-foreground" aria-hidden="true" />
+                      <button
+                        type="button"
+                        onClick={() => setQuery(r)}
+                        className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-sm hover:bg-muted"
+                      >
+                        <Clock
+                          className="size-3.5 text-muted-foreground"
+                          aria-hidden="true"
+                        />
                         {r}
                       </button>
                     </li>
@@ -285,19 +434,34 @@ export function SearchDialog() {
                 </button>
               </div>
             ) : query.trim().length === 0 ? (
-              <p className="px-3 py-6 text-center text-sm text-muted-foreground">Type to search. Use ↑ ↓ to move and Enter to open.</p>
+              <p className="px-3 py-6 text-center text-sm text-muted-foreground">
+                Type to search. Use ↑ ↓ to move and Enter to open.
+              </p>
             ) : status === "done" && items.length === 0 ? (
               <p className="px-3 py-6 text-center text-sm text-muted-foreground">
-                No results for “{query.trim()}”. Try a different word, or browse the{" "}
-                <a href="/docs" className="text-primary underline">
+                No results for “{query.trim()}”. Try a different word, or browse
+                the{" "}
+                <Link
+                  href="/docs"
+                  className="text-primary underline"
+                  onClick={() => handleOpenChange(false)}
+                >
                   documentation
-                </a>
+                </Link>
                 .
               </p>
             ) : (
-              <ul id={listId} ref={listRef} role="listbox" aria-label="Search results">
+              <ul
+                id={listId}
+                ref={listRef}
+                role="listbox"
+                aria-label="Search results"
+              >
                 {items.length > 0 && items[0].kind === "suggestion" ? (
-                  <li role="presentation" className="px-3 pb-1 pt-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                  <li
+                    role="presentation"
+                    className="px-3 pb-1 pt-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground"
+                  >
                     Suggestions
                   </li>
                 ) : null}
@@ -310,17 +474,37 @@ export function SearchDialog() {
                     data-index={i}
                     onMouseEnter={() => setActiveIndex(i)}
                     onClick={() => go(item.href)}
-                    className={cn("flex cursor-pointer items-start gap-3 rounded-md px-3 py-2", i === activeIndex ? "bg-muted" : "")}
+                    className={cn(
+                      "flex cursor-pointer items-start gap-3 rounded-md px-3 py-2",
+                      i === activeIndex ? "bg-muted" : "",
+                    )}
                   >
-                    <FileText className="mt-0.5 size-4 shrink-0 text-muted-foreground" aria-hidden="true" />
+                    <FileText
+                      className="mt-0.5 size-4 shrink-0 text-muted-foreground"
+                      aria-hidden="true"
+                    />
                     <div className="min-w-0 flex-1">
                       <div className="flex items-center gap-2">
-                        <span className="truncate text-sm font-medium">{item.title}</span>
-                        <span className="shrink-0 rounded-full border border-border px-1.5 text-[10px] uppercase tracking-wider text-muted-foreground">{item.type}</span>
+                        <span className="truncate text-sm font-medium">
+                          {item.title}
+                        </span>
+                        <span className="shrink-0 rounded-full border border-border px-1.5 text-[10px] uppercase tracking-wider text-muted-foreground">
+                          {item.type}
+                        </span>
                       </div>
-                      {item.snippet ? <p className="mt-0.5 line-clamp-2 text-xs text-muted-foreground">{item.snippet}</p> : null}
+                      {item.snippet ? (
+                        <p className="mt-0.5 line-clamp-2 text-xs text-muted-foreground">
+                          {item.snippet}
+                        </p>
+                      ) : null}
                     </div>
-                    <ArrowRight className={cn("mt-1 size-3.5 shrink-0 text-muted-foreground", i === activeIndex ? "opacity-100" : "opacity-0")} aria-hidden="true" />
+                    <ArrowRight
+                      className={cn(
+                        "mt-1 size-3.5 shrink-0 text-muted-foreground",
+                        i === activeIndex ? "opacity-100" : "opacity-0",
+                      )}
+                      aria-hidden="true"
+                    />
                   </li>
                 ))}
               </ul>
@@ -328,7 +512,8 @@ export function SearchDialog() {
           </div>
           <div className="hidden items-center justify-between border-t border-border px-3 py-1.5 text-[11px] text-muted-foreground sm:flex">
             <span>
-              <kbd>↑</kbd> <kbd>↓</kbd> to navigate · <kbd>Enter</kbd> to open · <kbd>Esc</kbd> to close
+              <kbd>↑</kbd> <kbd>↓</kbd> to navigate · <kbd>Enter</kbd> to open ·{" "}
+              <kbd>Esc</kbd> to close
             </span>
             <span>Content search only; your projects are not included.</span>
           </div>

@@ -13,7 +13,14 @@ export type TemplateCategory =
   | "landing-pages"
   | "mobile-first";
 
+/**
+ * Runtime frameworks. Templates may only use vite-react, static and node-express
+ * (the runner has prebuilt dependency sets for those); "nextjs" exists for the
+ * roadmap and for typing project rows, never for templates.
+ */
 export type Framework = "vite-react" | "static" | "node-express" | "nextjs";
+
+export type TemplateDifficulty = "beginner" | "intermediate" | "advanced";
 
 export type Template = {
   id: string;
@@ -30,7 +37,7 @@ export type Template = {
   /** Whether the runner has a prebuilt shared node_modules set for this framework. */
   prebuilt: boolean;
   featured?: boolean;
-  difficulty: "beginner" | "intermediate" | "advanced";
+  difficulty: TemplateDifficulty;
   /** Preview path to open after the dev server starts. */
   previewPath?: string;
 };

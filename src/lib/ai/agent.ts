@@ -14,6 +14,7 @@ import {
   cancelRun,
   createConversation,
   createRun,
+  finishRun,
   getConversation,
   getRunStatus,
   insertMessage,
@@ -97,7 +98,6 @@ export function validatePrompt(raw: unknown): string {
   const prompt = raw.replace(/\r\n/g, "\n").trim();
   if (!prompt) throw badRequest("Prompt must not be empty");
   if (prompt.length > LIMITS.promptMaxChars) throw badRequest(`Prompt is too long (max ${LIMITS.promptMaxChars} characters)`);
-  // eslint-disable-next-line no-control-regex
   if (/[\0]/.test(prompt)) throw badRequest("Prompt contains invalid characters");
   return prompt;
 }
@@ -162,7 +162,11 @@ export async function prepareRun(input: {
 // ---------------------------------------------------------------------------
 type ProviderTurn = { text: string; toolCalls: ToolCall[]; stop: StopReason; error: { message: string; code?: string; retryable?: boolean } | null; inputTokens: number; outputTokens: number };
 
-export async function executeRun(prepared: PreparedRun, handlers: { onEvent: (event: AgentEvent) => void }): Promise<Extract<AgentEvent, { type: "done" }>> {
+/**
+ * Run the agent loop. `onEvent` may return a promise; the loop awaits it so
+ * consumers (SSE writer, tests) can apply backpressure or act before the next step.
+ */
+export async function executeRun(prepared: PreparedRun, handlers: { onEvent: (event: AgentEvent) => void | Promise<void> }): Promise<Extract<AgentEvent, { type: "done" }>> {
   const { project, runId, mode, provider } = prepared;
   const startedAt = Date.now();
   const controller = new AbortController();
@@ -184,9 +188,9 @@ export async function executeRun(prepared: PreparedRun, handlers: { onEvent: (ev
   let stage = "queued";
   let persistTimer: NodeJS.Timeout | null = null;
 
-  const emit = (event: AgentEvent) => {
+  const emit = async (event: AgentEvent) => {
     try {
-      handlers.onEvent(event);
+      await handlers.onEvent(event);
     } catch (err) {
       logger.warn("ai event handler threw", { error: err instanceof Error ? err : String(err) });
     }
@@ -209,7 +213,7 @@ export async function executeRun(prepared: PreparedRun, handlers: { onEvent: (ev
     stage = next;
     currentText = null;
     parts.push({ type: "stage", stage: next, detail });
-    emit({ type: "stage", stage: next, detail });
+    await emit({ type: "stage", stage: next, detail });
     await updateRun(runId, { stage: next, status: "running" });
     schedulePersist();
   };
@@ -251,7 +255,7 @@ export async function executeRun(prepared: PreparedRun, handlers: { onEvent: (ev
             parts.push(currentText);
           }
           currentText.text += ev.text;
-          emit({ type: "text", delta: ev.text });
+          await emit({ type: "text", delta: ev.text });
         } else if (ev.type === "tool_call") {
           turn.toolCalls.push({ id: ev.id, name: ev.name, input: ev.input });
         } else if (ev.type === "usage") {
@@ -268,7 +272,7 @@ export async function executeRun(prepared: PreparedRun, handlers: { onEvent: (ev
       if (controller.signal.aborted || turn.stop === "cancelled") throw new AgentCancelled();
       if (turn.error && !turn.toolCalls.length) {
         if (turn.error.retryable && attempt < LIMITS.providerRetries && !turn.text) {
-          emit({ type: "stage", stage: stage, detail: `Provider error, retrying (${attempt + 1}/${LIMITS.providerRetries}): ${turn.error.message}` });
+          await emit({ type: "stage", stage: stage, detail: `Provider error, retrying (${attempt + 1}/${LIMITS.providerRetries}): ${turn.error.message}` });
           await new Promise((r) => setTimeout(r, 1000 * (attempt + 1)));
           continue;
         }
@@ -288,18 +292,18 @@ export async function executeRun(prepared: PreparedRun, handlers: { onEvent: (ev
       currentText = null;
       const uiInput = compactInput(call.input);
       parts.push({ type: "tool_call", id: call.id, name: call.name, input: uiInput });
-      emit({ type: "tool_call", id: call.id, name: call.name, input: uiInput, summary: summarizeToolInput(call.name, call.input) });
+      await emit({ type: "tool_call", id: call.id, name: call.name, input: uiInput, summary: summarizeToolInput(call.name, call.input) });
       const exec = await executeTool(ctxTools, call.name, call.input, toolNames);
       const uiOutput = truncateMiddle(exec.output, LIMITS.uiToolOutputChars);
       parts.push({ type: "tool_result", id: call.id, name: call.name, output: uiOutput, isError: exec.isError });
-      emit({ type: "tool_result", id: call.id, name: call.name, output: uiOutput, isError: exec.isError });
+      await emit({ type: "tool_result", id: call.id, name: call.name, output: uiOutput, isError: exec.isError });
       if (exec.fileChange) {
         const prev = changed.get(exec.fileChange.path);
         const action = prev?.action === "create" && exec.fileChange.action === "update" ? "create" : exec.fileChange.action;
         const fc: FileChange = { ...exec.fileChange, action };
         changed.set(fc.path, fc);
         parts.push({ type: "file_change", path: fc.path, action: fc.action, summary: fc.summary });
-        emit({ type: "file_change", path: fc.path, action: fc.action, summary: fc.summary });
+        await emit({ type: "file_change", path: fc.path, action: fc.action, summary: fc.summary });
       }
       if (exec.control?.type === "finish") {
         finished = true;
@@ -372,7 +376,7 @@ export async function executeRun(prepared: PreparedRun, handlers: { onEvent: (ev
 
   let done: Extract<AgentEvent, { type: "done" }>;
   try {
-    emit({ type: "run", runId, conversationId: prepared.conversationId, messageId: prepared.assistantMessageId, userMessageId: prepared.userMessageId, mode, provider: prepared.creds.provider, model: prepared.creds.model, mock: prepared.creds.mock });
+    await emit({ type: "run", runId, conversationId: prepared.conversationId, messageId: prepared.assistantMessageId, userMessageId: prepared.userMessageId, mode, provider: prepared.creds.provider, model: prepared.creds.model, mock: prepared.creds.mock });
     await updateRun(runId, { status: "running", stage: "loading_context", startedAt: new Date() });
     await setStage("loading_context", "Reading the project");
     const context: ProjectContext = await loadProjectContext(project);
@@ -398,7 +402,7 @@ export async function executeRun(prepared: PreparedRun, handlers: { onEvent: (ev
       }
       if (plan.length) {
         parts.push({ type: "plan", steps: plan });
-        emit({ type: "plan", steps: plan });
+        await emit({ type: "plan", steps: plan });
         messages.push({ role: "user", content: "Plan accepted. Implement it now using the tools. Call finish when you are done." });
       } else {
         messages.push({ role: "user", content: "No plan was recorded; proceed carefully with the implementation and call finish when done." });
@@ -430,7 +434,7 @@ export async function executeRun(prepared: PreparedRun, handlers: { onEvent: (ev
     const summary = finishSummary ?? (lastText.trim() || undefined);
     stage = "done";
     parts.push({ type: "stage", stage: "done", detail: validation && !validation.ok ? "Finished with validation errors" : undefined });
-    emit({ type: "stage", stage: "done", detail: validation && !validation.ok ? "Finished with validation errors" : undefined });
+    await emit({ type: "stage", stage: "done", detail: validation && !validation.ok ? "Finished with validation errors" : undefined });
     done = {
       type: "done",
       status: "succeeded",
@@ -440,17 +444,18 @@ export async function executeRun(prepared: PreparedRun, handlers: { onEvent: (ev
       nextSteps: finishNextSteps,
       validation,
     };
-    await updateRun(runId, {
+    const finished = await finishRun(runId, {
       status: "succeeded",
       stage: "done",
       finishedAt: new Date(),
       error: validation && !validation.ok ? `Validation (${validation.command}) failed after ${repairAttempts} repair attempt(s):\n${validation.output ?? ""}`.slice(0, 20_000) : null,
     });
+    if (!finished) throw new AgentCancelled(); // cancelled concurrently after the last check
   } catch (err) {
     if (err instanceof AgentCancelled) {
       stage = "cancelled";
       parts.push({ type: "stage", stage: "cancelled" });
-      emit({ type: "stage", stage: "cancelled" });
+      await emit({ type: "stage", stage: "cancelled" });
       await cancelRun(project.id, runId);
       done = { type: "done", status: "cancelled", runId, changedFiles: [...changed.values()], summary: finishSummary };
     } else {
@@ -460,9 +465,9 @@ export async function executeRun(prepared: PreparedRun, handlers: { onEvent: (ev
       stage = "failed";
       parts.push({ type: "error", message });
       parts.push({ type: "stage", stage: "failed" });
-      emit({ type: "error", message, code });
-      emit({ type: "stage", stage: "failed" });
-      await updateRun(runId, { status: "failed", stage: "failed", error: message.slice(0, 20_000), finishedAt: new Date() });
+      await emit({ type: "error", message, code });
+      await emit({ type: "stage", stage: "failed" });
+      await finishRun(runId, { status: "failed", stage: "failed", error: message.slice(0, 20_000), finishedAt: new Date() });
       done = { type: "done", status: "failed", runId, changedFiles: [...changed.values()], error: message };
     }
   } finally {
@@ -484,8 +489,8 @@ export async function executeRun(prepared: PreparedRun, handlers: { onEvent: (ev
       logActivity(project.id, prepared.userId, "ai.run", `AI ${mode} run changed ${changed.size} file(s)`, { runId, files: [...changed.keys()].slice(0, 50) }).catch(() => {});
     }
   }
-  emit({ type: "usage", inputTokens: tokensIn, outputTokens: tokensOut });
-  emit(done);
+  await emit({ type: "usage", inputTokens: tokensIn, outputTokens: tokensOut });
+  await emit(done);
   return done;
 }
 

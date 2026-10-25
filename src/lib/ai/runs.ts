@@ -1,5 +1,5 @@
 import "server-only";
-import { and, asc, desc, eq } from "drizzle-orm";
+import { and, asc, desc, eq, inArray, isNotNull } from "drizzle-orm";
 import { db } from "@/db";
 import { conversations, generationRuns, messages, type GenerationRun, type MessagePart } from "@/db/schema";
 
@@ -69,6 +69,19 @@ export async function updateRun(runId: string, patch: Partial<Omit<GenerationRun
   return row ?? null;
 }
 
+/**
+ * Mark a run finished, but only if it is still queued/running. Returns null when
+ * the run was cancelled concurrently so the caller does not overwrite that state.
+ */
+export async function finishRun(runId: string, patch: { status: "succeeded" | "failed"; stage: string; error?: string | null; finishedAt: Date }) {
+  const [row] = await db
+    .update(generationRuns)
+    .set(patch)
+    .where(and(eq(generationRuns.id, runId), inArray(generationRuns.status, ["queued", "running"])))
+    .returning();
+  return row ?? null;
+}
+
 export async function getRun(projectId: string, runId: string) {
   const rows = await db
     .select()
@@ -76,6 +89,17 @@ export async function getRun(projectId: string, runId: string) {
     .where(and(eq(generationRuns.projectId, projectId), eq(generationRuns.id, runId)))
     .limit(1);
   return rows[0] ?? null;
+}
+
+/** Error text of the most recent run that recorded one (used to prefill Fix mode and the agent context). */
+export async function getLastRunError(projectId: string): Promise<string | null> {
+  const rows = await db
+    .select({ error: generationRuns.error })
+    .from(generationRuns)
+    .where(and(eq(generationRuns.projectId, projectId), isNotNull(generationRuns.error)))
+    .orderBy(desc(generationRuns.createdAt))
+    .limit(1);
+  return rows[0]?.error ?? null;
 }
 
 export async function getRunStatus(runId: string): Promise<GenerationRun["status"] | null> {

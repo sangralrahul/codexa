@@ -1,95 +1,10 @@
 import type { Template } from "./types";
+import { VITE_DEPS, VITE_SETTINGS, viteBase } from "./shared";
 
-const base = {
-  "package.json": JSON.stringify(
-    {
-      name: "codexa-app",
-      private: true,
-      version: "0.1.0",
-      type: "module",
-      scripts: { dev: "vite --host 0.0.0.0 --port $PORT", build: "tsc -b && vite build", preview: "vite preview --host 0.0.0.0 --port $PORT" },
-      dependencies: { react: "^19.1.0", "react-dom": "^19.1.0" },
-      devDependencies: {
-        "@types/react": "^19.1.0",
-        "@types/react-dom": "^19.1.0",
-        "@vitejs/plugin-react": "^4.4.0",
-        "@tailwindcss/vite": "^4.1.0",
-        tailwindcss: "^4.1.0",
-        typescript: "^5.8.0",
-        vite: "^6.3.0",
-      },
-    },
-    null,
-    2,
-  ),
-  "vite.config.ts": `import { defineConfig } from "vite";
-import react from "@vitejs/plugin-react";
-import tailwindcss from "@tailwindcss/vite";
-
-export default defineConfig({
-  plugins: [react(), tailwindcss()],
-  server: {
-    host: true,
-    port: Number(process.env.PORT) || 5173,
-    strictPort: true,
-    allowedHosts: true,
-    hmr: process.env.CODEXA_PREVIEW_HOST
-      ? { host: process.env.CODEXA_PREVIEW_HOST, clientPort: Number(process.env.CODEXA_PREVIEW_PORT) || 80, protocol: "ws" }
-      : undefined,
-  },
-});
-`,
-  "tsconfig.json": JSON.stringify(
-    {
-      compilerOptions: {
-        target: "ES2022",
-        lib: ["ES2022", "DOM", "DOM.Iterable"],
-        module: "ESNext",
-        moduleResolution: "bundler",
-        jsx: "react-jsx",
-        strict: true,
-        noEmit: true,
-        skipLibCheck: true,
-        isolatedModules: true,
-        allowImportingTsExtensions: true,
-        types: ["vite/client"],
-      },
-      include: ["src"],
-    },
-    null,
-    2,
-  ),
-  "index.html": `<!doctype html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Codexa App</title>
-  </head>
-  <body>
-    <div id="root"></div>
-    <script type="module" src="/src/main.tsx"></script>
-  </body>
-</html>
-`,
-  "src/main.tsx": `import { StrictMode } from "react";
-import { createRoot } from "react-dom/client";
-import "./index.css";
-import App from "./App";
-
-createRoot(document.getElementById("root")!).render(
-  <StrictMode>
-    <App />
-  </StrictMode>,
-);
-`,
-  "src/index.css": `@import "tailwindcss";
-
-:root {
-  font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
-}
-`,
-  "README.md": `# Codexa app
+const base = viteBase({
+  name: "codexa-app",
+  title: "Codexa App",
+  readme: `# Codexa app
 
 Generated with Codexa. Run locally:
 
@@ -98,17 +13,22 @@ npm install
 npm run dev
 \`\`\`
 `,
-  ".gitignore": `node_modules\ndist\n.env\n`,
-};
+});
 
-const settings = { devCommand: "npm run dev", buildCommand: "npm run build", installCommand: "npm install", outputDir: "dist", port: 5173 };
-const deps = { react: "^19.1.0", "react-dom": "^19.1.0", vite: "^6.3.0", tailwindcss: "^4.1.0", typescript: "^5.8.0" };
+const settings = VITE_SETTINGS;
+const deps = VITE_DEPS;
 
+/**
+ * The first template here defines the prebuilt dependency set the runner
+ * installs for every vite-react project (services/runner/prepare.ts).
+ */
 export const viteReactTemplates: Template[] = [
   {
     id: "vite-react-starter",
     name: "React starter",
     description: "A clean React + TypeScript + Tailwind single-page app. The default target for AI generation.",
+    longDescription:
+      "The smallest useful starting point: one App component, Tailwind CSS v4 wired through the Vite plugin, strict TypeScript, and nothing else to delete. Most AI generation runs start here because the agent can add pages, state and components without fighting an opinionated structure.",
     category: "web-apps",
     tags: ["react", "typescript", "tailwind", "vite", "spa"],
     framework: "vite-react",
@@ -117,6 +37,7 @@ export const viteReactTemplates: Template[] = [
     prebuilt: true,
     featured: true,
     difficulty: "beginner",
+    previewPath: "/",
     files: {
       ...base,
       "src/App.tsx": `import { useState } from "react";
@@ -147,6 +68,8 @@ export default function App() {
     id: "vite-react-dashboard",
     name: "Analytics dashboard",
     description: "A responsive dashboard layout with sidebar navigation, stat cards, and a data table.",
+    longDescription:
+      "A sidebar + content dashboard shell with three stat cards and a searchable customer table backed by an in-memory array. Swap the array for a fetch call to your API and the table keeps working. Uses CSS grid for the responsive layout, so it collapses to a single column on phones.",
     category: "dashboards",
     tags: ["react", "dashboard", "tailwind", "table"],
     framework: "vite-react",
@@ -155,6 +78,7 @@ export default function App() {
     prebuilt: true,
     featured: true,
     difficulty: "intermediate",
+    previewPath: "/",
     files: {
       ...base,
       "src/App.tsx": `import { useMemo, useState } from "react";
@@ -231,6 +155,8 @@ export default function App() {
     id: "vite-react-landing",
     name: "Product landing page",
     description: "A conversion-focused landing page with hero, features, pricing, and FAQ sections.",
+    longDescription:
+      "A single-file React landing page with header, hero, three feature cards, a three-tier pricing grid and a footer. All copy is placeholder text you replace by prompting Codexa. Good for trying the AI agent on layout and tone changes.",
     category: "landing-pages",
     tags: ["react", "landing", "marketing", "tailwind"],
     framework: "vite-react",
@@ -238,6 +164,7 @@ export default function App() {
     settings,
     prebuilt: true,
     difficulty: "beginner",
+    previewPath: "/",
     files: {
       ...base,
       "src/App.tsx": `export default function App() {

@@ -8,6 +8,24 @@ import { fuzzyScore } from "@/lib/client/workspace/paths";
 import type { FileEntry } from "@/lib/client/workspace/types";
 
 export function QuickOpen({ open, onOpenChange, files, onPick }: { open: boolean; onOpenChange: (o: boolean) => void; files: FileEntry[]; onPick: (path: string) => void }) {
+  return (
+    <RD.Root open={open} onOpenChange={onOpenChange}>
+      <RD.Portal>
+        <RD.Overlay className="fixed inset-0 z-50 bg-black/40 data-[state=open]:animate-fade-in" />
+        {/* The body unmounts when the dialog closes, so query/selection reset on every open. */}
+        <Body
+          files={files}
+          onPick={(p) => {
+            onPick(p);
+            onOpenChange(false);
+          }}
+        />
+      </RD.Portal>
+    </RD.Root>
+  );
+}
+
+function Body({ files, onPick }: { files: FileEntry[]; onPick: (path: string) => void }) {
   const [query, setQuery] = useState("");
   const [index, setIndex] = useState(0);
   const listRef = useRef<HTMLUListElement>(null);
@@ -22,25 +40,12 @@ export function QuickOpen({ open, onOpenChange, files, onPick }: { open: boolean
   }, [files, query]);
 
   useEffect(() => {
-    if (open) {
-      setQuery("");
-      setIndex(0);
-    }
-  }, [open]);
-  useEffect(() => setIndex(0), [query]);
-  useEffect(() => {
     listRef.current?.querySelector<HTMLElement>(`[data-index="${index}"]`)?.scrollIntoView({ block: "nearest" });
   }, [index]);
 
-  const pick = (path: string) => {
-    onPick(path);
-    onOpenChange(false);
-  };
+  const pick = onPick;
 
   return (
-    <RD.Root open={open} onOpenChange={onOpenChange}>
-      <RD.Portal>
-        <RD.Overlay className="fixed inset-0 z-50 bg-black/40 data-[state=open]:animate-fade-in" />
         <RD.Content
           className="fixed left-1/2 top-[12vh] z-50 w-[calc(100%-2rem)] max-w-xl -translate-x-1/2 overflow-hidden rounded-xl border border-border bg-card shadow-lg focus:outline-none data-[state=open]:animate-fade-in"
           onKeyDown={(e) => {
@@ -64,7 +69,10 @@ export function QuickOpen({ open, onOpenChange, files, onPick }: { open: boolean
             <input
               autoFocus
               value={query}
-              onChange={(e) => setQuery(e.target.value)}
+              onChange={(e) => {
+                setQuery(e.target.value);
+                setIndex(0);
+              }}
               placeholder="Search files by name…"
               aria-label="Search files"
               role="combobox"
@@ -93,7 +101,5 @@ export function QuickOpen({ open, onOpenChange, files, onPick }: { open: boolean
             ))}
           </ul>
         </RD.Content>
-      </RD.Portal>
-    </RD.Root>
   );
 }

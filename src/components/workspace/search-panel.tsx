@@ -21,14 +21,10 @@ export function SearchPanel({ projectId, onOpen, focusKey }: { projectId: string
 
   useEffect(() => {
     const q = query.trim();
-    if (!q) {
-      setResults(null);
-      setError(null);
-      return;
-    }
+    if (!q) return;
     let cancelled = false;
-    setLoading(true);
     const t = setTimeout(async () => {
+      setLoading(true);
       try {
         const res = await filesApi.search(projectId, q);
         if (!cancelled) {
@@ -62,7 +58,19 @@ export function SearchPanel({ projectId, onOpen, focusKey }: { projectId: string
         </label>
         <div className="relative">
           <Search className="pointer-events-none absolute left-2.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" aria-hidden="true" />
-          <Input id="ws-search" ref={inputRef} value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Search across files…" className="h-9 pl-8 text-[13px]" />
+          <Input
+            id="ws-search"
+            ref={inputRef}
+            value={query}
+            onChange={(e) => {
+              setQuery(e.target.value);
+              if (!e.target.value.trim()) {
+                setResults(null);
+                setError(null);
+                setLoading(false);
+              }
+            }}
+            placeholder="Search across files…" className="h-9 pl-8 text-[13px]" />
         </div>
       </div>
       <div className="min-h-0 flex-1 overflow-auto scrollbar-thin" aria-live="polite">

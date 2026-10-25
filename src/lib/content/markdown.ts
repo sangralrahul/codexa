@@ -21,8 +21,8 @@ export function slugifyHeading(text: string): string {
     .trim()
     .replace(/<[^>]+>/g, "")
     .replace(/[`*_~]/g, "")
-    .replace(/[^\p{L}\p{N}\s-]/gu, "")
-    .replace(/\s+/g, "-");
+    .replace(/[^\p{L}\p{N} -]/gu, "")
+    .replace(/ /g, "-");
 }
 
 /** Produce unique ids the way github-slugger does: foo, foo-1, foo-2 ... */
@@ -84,6 +84,11 @@ export type ParsedContent = { frontmatter: Frontmatter; body: string };
  */
 export function parseContent(raw: string, id: string): ParsedContent {
   const { data, content } = matter(raw);
+  // YAML parses unquoted dates (2026-10-24) as Date objects; normalise them back to YYYY-MM-DD.
+  for (const key of ["date", "updated"]) {
+    const v = (data as Record<string, unknown>)[key];
+    if (v instanceof Date && !Number.isNaN(v.getTime())) (data as Record<string, unknown>)[key] = v.toISOString().slice(0, 10);
+  }
   const result = frontmatterSchema.safeParse(data);
   if (!result.success) {
     const issues = result.error.issues.map((i) => `${i.path.join(".") || "(root)"}: ${i.message}`).join("; ");

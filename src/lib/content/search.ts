@@ -69,6 +69,8 @@ export function createSearchIndex(documents: SearchDocument[]): SearchIndex {
       prefix: true,
       fuzzy: (term) => (term.length > 4 ? 0.2 : false),
       combineWith: "AND",
+      // Reference documentation is the canonical answer; rank it above guides and help on ties.
+      boostDocument: (_id, _term, stored) => (stored?.type === "docs" ? 1.6 : 1),
     },
   });
   mini.addAll(documents);

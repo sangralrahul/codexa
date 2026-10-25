@@ -1,10 +1,9 @@
 import "server-only";
-import { and, desc, eq, isNotNull } from "drizzle-orm";
-import { db } from "@/db";
-import { generationRuns, type Project } from "@/db/schema";
+import type { Project } from "@/db/schema";
 import { listFiles, readFile } from "@/lib/services/projects";
 import { getRuntimeLogs, getRuntimeStatus } from "@/lib/runtime/exec";
 import { FRAMEWORKS } from "@/templates";
+import { getLastRunError } from "./runs";
 import { isSecretPath } from "./tools/paths";
 import { truncateMiddle, truncateTail } from "./tools/truncate";
 
@@ -44,12 +43,7 @@ export async function loadProjectContext(project: Project): Promise<ProjectConte
     budget -= content.length;
   }
 
-  const [lastFailed] = await db
-    .select({ error: generationRuns.error })
-    .from(generationRuns)
-    .where(and(eq(generationRuns.projectId, project.id), isNotNull(generationRuns.error)))
-    .orderBy(desc(generationRuns.createdAt))
-    .limit(1);
+  const lastError = await getLastRunError(project.id);
 
   const runtime = await getRuntimeStatus(project.id);
   let recentLogs: string | null = null;
@@ -66,7 +60,7 @@ export async function loadProjectContext(project: Project): Promise<ProjectConte
     tree: treeLines.join("\n"),
     fileCount: visible.length,
     excerpts,
-    lastError: lastFailed?.error ?? null,
+    lastError,
     runtime: { available: runtime.available, status: runtime.status, previewUrl: runtime.previewUrl },
     recentLogs,
   };

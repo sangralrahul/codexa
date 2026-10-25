@@ -18,6 +18,8 @@ export type Doc = {
   error: string | null;
   /** Set when the file changed remotely while there were unsaved local edits. */
   conflict: { remote: string; at: string } | null;
+  /** Incremented when `draft` was replaced from outside the editor (load, reload, conflict resolution). */
+  rev: number;
 };
 
 export type SaveStatus = "saved" | "saving" | "unsaved" | "error";
@@ -36,33 +38,20 @@ export function useEditorState(projectId: string, initialFiles: FileEntry[], can
   const [hydrated, setHydrated] = useState(false);
 
   const timers = useRef<Map<string, ReturnType<typeof setTimeout>>>(new Map());
+  // "Latest value" refs so stable callbacks (timers, event listeners) see current state.
   const docsRef = useRef(docs);
-  docsRef.current = docs;
   const filesRef = useRef(files);
-  filesRef.current = files;
   const tabsRef = useRef(tabs);
-  tabsRef.current = tabs;
-
-  // ---- persistence of tabs ------------------------------------------------
   useEffect(() => {
-    const p = readLocal<Persisted>(wsKey(projectId, "tabs"), { tabs: [], active: null });
-    const known = new Set(initialFiles.map((f) => f.path));
-    const t = p.tabs.filter((x) => known.has(x));
-    setTabs(t);
-    setActive(p.active && known.has(p.active) ? p.active : (t[0] ?? null));
-    setHydrated(true);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [projectId]);
-
-  useEffect(() => {
-    if (!hydrated) return;
-    writeLocal(wsKey(projectId, "tabs"), { tabs, active } satisfies Persisted);
-  }, [projectId, tabs, active, hydrated]);
+    docsRef.current = docs;
+    filesRef.current = files;
+    tabsRef.current = tabs;
+  }, [docs, files, tabs]);
 
   // ---- docs ---------------------------------------------------------------
   const patchDoc = useCallback((path: string, patch: Partial<Doc> | ((d: Doc) => Partial<Doc>)) => {
     setDocs((prev) => {
-      const cur = prev[path] ?? { saved: "", draft: "", updatedAt: null, loading: false, error: null, conflict: null };
+      const cur = prev[path] ?? { saved: "", draft: "", updatedAt: null, loading: false, error: null, conflict: null, rev: 0 };
       const p = typeof patch === "function" ? patch(cur) : patch;
       return { ...prev, [path]: { ...cur, ...p } };
     });
@@ -81,7 +70,7 @@ export function useEditorState(projectId: string, initialFiles: FileEntry[], can
             // Remote change while editing: keep the local draft, surface a conflict banner.
             return { saved: res.content, updatedAt: res.updatedAt, loading: false, conflict: { remote: res.content, at: res.updatedAt } };
           }
-          return { saved: res.content, draft: res.content, updatedAt: res.updatedAt, loading: false, conflict: null };
+          return { saved: res.content, draft: res.content, updatedAt: res.updatedAt, loading: false, conflict: null, rev: d.rev + 1 };
         });
       } catch (err) {
         patchDoc(path, { loading: false, error: err instanceof Error ? err.message : "Failed to load file" });
@@ -89,6 +78,26 @@ export function useEditorState(projectId: string, initialFiles: FileEntry[], can
     },
     [projectId, patchDoc],
   );
+
+  // ---- persistence of tabs ------------------------------------------------
+  useEffect(() => {
+    // localStorage is only readable after mount; restoring tabs here keeps SSR and the first client render identical.
+    const p = readLocal<Persisted>(wsKey(projectId, "tabs"), { tabs: [], active: null });
+    const known = new Set(initialFiles.map((f) => f.path));
+    const t = p.tabs.filter((x) => known.has(x));
+    const a = p.active && known.has(p.active) ? p.active : (t[0] ?? null);
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- one-time hydration from browser storage
+    setTabs(t);
+    setActive(a);
+    setHydrated(true);
+    if (a) void loadDoc(a);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [projectId]);
+
+  useEffect(() => {
+    if (!hydrated) return;
+    writeLocal(wsKey(projectId, "tabs"), { tabs, active } satisfies Persisted);
+  }, [projectId, tabs, active, hydrated]);
 
   const refreshFiles = useCallback(async () => {
     try {
@@ -228,7 +237,7 @@ export function useEditorState(projectId: string, initialFiles: FileEntry[], can
     (path: string, choice: "remote" | "mine") => {
       const d = docsRef.current[path];
       if (!d?.conflict) return;
-      if (choice === "remote") patchDoc(path, { draft: d.conflict.remote, saved: d.conflict.remote, conflict: null });
+      if (choice === "remote") patchDoc(path, { draft: d.conflict.remote, saved: d.conflict.remote, conflict: null, rev: d.rev + 1 });
       else {
         patchDoc(path, { conflict: null });
         scheduleSave(path);
@@ -243,7 +252,7 @@ export function useEditorState(projectId: string, initialFiles: FileEntry[], can
       const res = await filesApi.write(projectId, path, content);
       setFiles((fs) => [...fs.filter((f) => f.path !== path), { path, size: res.file.size, isBinary: false, updatedAt: res.file.updatedAt }].sort((a, b) => a.path.localeCompare(b.path)));
       setExtraFolders((f) => f.filter((folder) => !path.startsWith(folder + "/")));
-      patchDoc(path, { saved: content, draft: content, updatedAt: res.file.updatedAt, loading: false, conflict: null, error: null });
+      patchDoc(path, (d) => ({ saved: content, draft: content, updatedAt: res.file.updatedAt, loading: false, conflict: null, error: null, rev: d.rev + 1 }));
       emit("codexa:files-changed", { paths: [path], source: "editor" });
       openFile(path);
     },
@@ -308,7 +317,8 @@ export function useEditorState(projectId: string, initialFiles: FileEntry[], can
       void refreshFiles().then((list) => {
         const known = new Set((list ?? filesRef.current).map((f) => f.path));
         const open = Object.keys(docsRef.current);
-        const affected = detail.paths?.length ? open.filter((p) => detail.paths.includes(p)) : open;
+        // Snapshot restores replace every file, so re-check every open doc; otherwise only the listed paths.
+        const affected = detail.paths?.length && detail.source !== "snapshot" ? open.filter((p) => detail.paths.includes(p)) : open;
         for (const p of affected) {
           if (!known.has(p)) {
             // Deleted remotely: keep the tab only if there are unsaved edits.
@@ -326,10 +336,14 @@ export function useEditorState(projectId: string, initialFiles: FileEntry[], can
     };
   }, [refreshFiles, loadDoc, openFile, closeTab, patchDoc]);
 
-  // Load the active doc on hydration.
-  useEffect(() => {
-    if (active) void loadDoc(active);
-  }, [active, loadDoc]);
+  /** Switch to an already-open tab (loads its content if it was restored from storage). */
+  const activate = useCallback(
+    (path: string) => {
+      setActive(path);
+      void loadDoc(path);
+    },
+    [loadDoc],
+  );
 
   const dirtyPaths = useMemo(() => Object.entries(docs).filter(([, d]) => d.updatedAt !== null && d.draft !== d.saved).map(([p]) => p), [docs]);
   const errorPaths = useMemo(() => Object.entries(docs).filter(([, d]) => d.error).map(([p]) => p), [docs]);
@@ -355,7 +369,7 @@ export function useEditorState(projectId: string, initialFiles: FileEntry[], can
     docs,
     tabs,
     active,
-    setActive,
+    setActive: activate,
     reveal,
     status,
     dirtyPaths,

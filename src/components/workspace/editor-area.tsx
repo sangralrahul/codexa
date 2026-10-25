@@ -145,6 +145,7 @@ export function EditorArea({
             path={active}
             language={language}
             value={doc?.draft ?? ""}
+            revision={doc?.rev ?? 0}
             readOnly={!canEdit || !doc || doc.loading}
             onChange={(v) => updateDraft(active, v)}
             onMount={(h) => {

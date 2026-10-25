@@ -56,7 +56,9 @@ function defineThemes(monaco: Monaco) {
   };
   monaco.languages.typescript.typescriptDefaults.setCompilerOptions(compiler);
   monaco.languages.typescript.javascriptDefaults.setCompilerOptions(compiler);
-  const diag = { diagnosticCodesToIgnore: [2307, 2792, 7016, 2503, 2580, 2304] }; // cannot find module / name
+  // The browser has none of the project's node_modules types, so semantic checks would flag every
+  // import and JSX element. Keep syntax validation (real errors) and leave type-checking to the runner.
+  const diag = { noSemanticValidation: true, noSyntaxValidation: false, noSuggestionDiagnostics: true };
   monaco.languages.typescript.typescriptDefaults.setDiagnosticsOptions(diag);
   monaco.languages.typescript.javascriptDefaults.setDiagnosticsOptions(diag);
 }
@@ -78,6 +80,12 @@ export type CodeEditorProps = {
   onQuickOpen?: () => void;
   onSearchAll?: () => void;
   revealLine?: number | null;
+  /**
+   * Bumped whenever `value` changed outside the editor (file loaded/reloaded, conflict resolved,
+   * snapshot restored). Typing never re-pushes `value` into Monaco, which avoids the dropped-keystroke
+   * race of a fully controlled editor when React state lags behind fast input.
+   */
+  revision?: number;
 };
 
 const Loading = () => (
@@ -86,12 +94,14 @@ const Loading = () => (
   </div>
 );
 
-export function MonacoCodeEditor({ path, language, value, readOnly, onChange, onMount, onSave, onQuickOpen, onSearchAll, revealLine }: CodeEditorProps) {
+export function MonacoCodeEditor({ path, language, value, readOnly, onChange, onMount, onSave, onQuickOpen, onSearchAll, revealLine, revision = 0 }: CodeEditorProps) {
   const { resolved } = useTheme();
   const theme = resolved === "dark" ? "codexa-dark" : "codexa-light";
   const editorRef = useRef<MonacoEditorNs.IStandaloneCodeEditor | null>(null);
   const cbs = useRef({ onSave, onQuickOpen, onSearchAll });
-  cbs.current = { onSave, onQuickOpen, onSearchAll };
+  useEffect(() => {
+    cbs.current = { onSave, onQuickOpen, onSearchAll };
+  }, [onSave, onQuickOpen, onSearchAll]);
 
   const handleMount = useCallback<OnMount>(
     (editor, monaco) => {
@@ -106,6 +116,21 @@ export function MonacoCodeEditor({ path, language, value, readOnly, onChange, on
     [onMount],
   );
 
+  // Apply external content changes. Models are keyed by path, so switching tabs keeps each file's
+  // in-editor text; this only writes when the external value genuinely differs.
+  useEffect(() => {
+    const ed = editorRef.current;
+    const model = ed?.getModel();
+    if (!ed || !model || model.getValue() === value) return;
+    const pos = ed.getPosition();
+    ed.executeEdits("external", [{ range: model.getFullModelRange(), text: value, forceMoveMarkers: true }]);
+    ed.pushUndoStop();
+    if (pos) ed.setPosition(pos);
+    // `value` is intentionally not a dependency: it changes on every keystroke and must never be
+    // written back into the editor; only an explicit revision bump (or a path switch) does that.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [revision, path]);
+
   useEffect(() => {
     if (!revealLine || !editorRef.current) return;
     const ed = editorRef.current;
@@ -118,7 +143,7 @@ export function MonacoCodeEditor({ path, language, value, readOnly, onChange, on
     <Editor
       path={`file:///${path}`}
       language={language}
-      value={value}
+      defaultValue={value}
       theme={theme}
       loading={<Loading />}
       beforeMount={defineThemes}
@@ -147,15 +172,22 @@ export function MonacoCodeEditor({ path, language, value, readOnly, onChange, on
   );
 }
 
-export function MonacoDiff({ original, modified, language, path }: { original: string; modified: string; language: string; path: string }) {
+/**
+ * Read-only side-by-side diff. `modelKey` scopes the Monaco models (e.g. to a snapshot id) so a
+ * file's diff never shows stale text from a previous comparison. Models are kept on unmount:
+ * disposing them before the widget resets throws inside Monaco, and they are tiny.
+ */
+export function MonacoDiff({ original, modified, language, path, modelKey = "diff" }: { original: string; modified: string; language: string; path: string; modelKey?: string }) {
   const { resolved } = useTheme();
   return (
     <DiffEditor
       original={original}
       modified={modified}
       language={language}
-      originalModelPath={`diff-original:///${path}`}
-      modifiedModelPath={`diff-modified:///${path}`}
+      originalModelPath={`diff-original:///${modelKey}/${path}`}
+      modifiedModelPath={`diff-modified:///${modelKey}/${path}`}
+      keepCurrentOriginalModel
+      keepCurrentModifiedModel
       theme={resolved === "dark" ? "codexa-dark" : "codexa-light"}
       loading={<Loading />}
       beforeMount={defineThemes}
