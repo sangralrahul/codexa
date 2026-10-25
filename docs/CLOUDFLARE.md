@@ -15,6 +15,19 @@ Everything in Codexa runs on Cloudflare except email, which goes through Custome
 You don't create the database, bucket or containers by hand. `npm run cf:deploy` creates them the
 first time.
 
+## The easy way: one command
+
+After `npm install`, run:
+
+```bash
+npm run setup
+```
+
+It checks Docker, logs you in to Cloudflare, asks for your Anthropic key, Customer.io key and email,
+makes the secret keys itself, saves everything in Cloudflare, deploys, and creates the database
+tables. Running it again later just deploys the latest code and keeps your keys. The steps below
+are what it does, for when you want to do them by hand.
+
 ## What you need
 
 1. A Cloudflare account on the **Workers Paid** plan. The Worker is more than 3 MB, and containers

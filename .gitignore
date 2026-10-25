@@ -56,3 +56,6 @@ next-env.d.ts
 
 # container build output
 /containers/runner/dist/
+
+# keys backed up by `npm run setup` (never commit)
+codexa-secrets-backup.txt

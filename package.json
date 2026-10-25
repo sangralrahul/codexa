@@ -30,6 +30,7 @@
     "cf:build": "npm run container:build && opennextjs-cloudflare build",
     "cf:preview": "npm run cf:build && wrangler dev",
     "cf:deploy": "npm run cf:build && opennextjs-cloudflare deploy",
+    "setup": "node scripts/setup-cloudflare.mjs",
     "db:migrate:remote": "wrangler d1 migrations apply codexa --remote",
     "db:migrate:test": "wrangler d1 migrations apply codexa --local --persist-to .wrangler/test-state",
     "container:build": "node containers/runner/build.mjs"
