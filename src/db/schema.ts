@@ -220,6 +220,10 @@ export type ProjectSettings = {
   outputDir?: string;
   port?: number;
   nodeVersion?: string;
+  /** Server-managed GitHub sync state. */
+  githubLastTreeSha?: string;
+  githubLastCommitSha?: string;
+  githubLastSyncAt?: string;
 };
 
 export const projectFiles = pgTable(
@@ -279,7 +283,7 @@ export const projectActivity = pgTable(
     projectId: text("project_id")
       .notNull()
       .references(() => projects.id, { onDelete: "cascade" }),
-    actorId: text("actor_id").references(() => users.id),
+    actorId: text("actor_id").references(() => users.id, { onDelete: "set null" }),
     kind: text("kind").notNull(),
     message: text("message").notNull(),
     metadata: jsonb("metadata").$type<Record<string, unknown>>().notNull().default({}),
@@ -416,7 +420,7 @@ export const deployments = pgTable(
     buildLog: text("build_log").notNull().default(""),
     error: text("error"),
     config: jsonb("config").$type<Record<string, unknown>>().notNull().default({}),
-    createdBy: text("created_by").references(() => users.id),
+    createdBy: text("created_by").references(() => users.id, { onDelete: "set null" }),
     createdAt: createdAt(),
     finishedAt: timestamp("finished_at", { withTimezone: true }),
   },

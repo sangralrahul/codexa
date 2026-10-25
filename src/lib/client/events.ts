@@ -7,6 +7,10 @@ export type CodexaEvents = {
   "codexa:runtime-status": { status: "starting" | "running" | "stopped" | "error" | "unavailable"; previewUrl?: string | null; error?: string | null };
   "codexa:run-command": { command: "start" | "stop" | "restart" | "install" | "build" };
   "codexa:ai-run": { runId: string; status: "running" | "succeeded" | "failed" | "cancelled" };
+  /** Emitted by the preview panel's "Ask AI to fix" button. */
+  "codexa:ai-fix-request": { error: string; logs?: string[] };
+  /** Emitted by panels that want the chat to ask something (e.g. explain a SQL error). */
+  "codexa:ai-ask": { text: string };
 };
 
 export function emit<K extends keyof CodexaEvents>(name: K, detail: CodexaEvents[K]) {

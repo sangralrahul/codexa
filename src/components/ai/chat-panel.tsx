@@ -4,7 +4,7 @@ import * as React from "react";
 import Link from "next/link";
 import { Bot, ChevronDown, FlaskConical, KeyRound, MessageSquarePlus, RefreshCw, Sparkles, User } from "lucide-react";
 import { api, ClientApiError } from "@/lib/client/api";
-import { emit } from "@/lib/client/events";
+import { emit, on as subscribeEvent } from "@/lib/client/events";
 import { INITIAL_PROMPT_KEY } from "@/lib/client/workspace/storage";
 import { cn } from "@/lib/utils";
 import { Alert, Badge, Button, DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger, EmptyState, Skeleton, Spinner } from "@/components/ui";
@@ -254,6 +254,26 @@ export function ChatPanel({ projectId, conversationId: initialConversationId }: 
     },
     [projectId, activeId, running, updateStreaming, loadConversations, loadMessages, loadStatus],
   );
+
+  // Other panels can ask the chat to run a fix or a question.
+  React.useEffect(() => {
+    const offFix = subscribeEvent("codexa:ai-fix-request", ({ error, logs }) => {
+      const tail = logs?.length ? `\n\nRecent logs:\n${logs.slice(-40).join("\n")}` : "";
+      const prompt = `Fix this error:\n${error}${tail}`;
+      setMode("fix");
+      setDraft(prompt);
+      if (status?.configured && !running) void send(prompt, "fix");
+    });
+    const offAsk = subscribeEvent("codexa:ai-ask", ({ text }) => {
+      setMode("ask");
+      setDraft(text);
+      if (status?.configured && !running) void send(text, "ask");
+    });
+    return () => {
+      offFix();
+      offAsk();
+    };
+  }, [status, running, send]);
 
   // Auto-send the dashboard prompt once the status says AI is available.
   React.useEffect(() => {

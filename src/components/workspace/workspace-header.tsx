@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Tooltip } from "@/components/ui/tooltip";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown";
 import { ChangedFiles } from "./changed-files";
+import { Presence } from "./presence";
 
 export type WorkspaceTool = "history" | "share" | "settings" | "deploy" | "github" | "database" | "activity";
 export type RuntimeStatus = CodexaEvents["codexa:runtime-status"]["status"] | "unknown";
@@ -158,6 +159,7 @@ export function WorkspaceHeader({
       </div>
 
       <div className="flex shrink-0 items-center gap-1.5">
+        <Presence projectId={projectId} compact />
         <ChangedFiles projectId={projectId} version={changesVersion} onOpenFile={onOpenFile} onOpenHistory={() => openTool("history")} />
         <Tooltip content={runtime.error ?? `Preview: ${runLabel}`}>
           {running ? (
