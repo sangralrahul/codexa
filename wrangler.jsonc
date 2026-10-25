@@ -1,0 +1,33 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  // The Worker's name in your Cloudflare account. Change it if you like;
+  // keep it in sync with WORKER_SELF_REFERENCE below.
+  "name": "codexa",
+  "main": ".open-next/worker.js",
+  "compatibility_date": "2026-10-01",
+  "compatibility_flags": ["nodejs_compat", "global_fetch_strictly_public"],
+  "assets": {
+    "directory": ".open-next/assets",
+    "binding": "ASSETS"
+  },
+  "services": [
+    {
+      "binding": "WORKER_SELF_REFERENCE",
+      "service": "codexa"
+    }
+  ],
+  "observability": {
+    "enabled": true
+  },
+  // Plain (non-secret) settings. Secrets go in with `npx wrangler secret put`.
+  "vars": {
+    "NODE_ENV": "production"
+  }
+  // Recommended: connect to Postgres through Hyperdrive (connection pooling
+  // close to your database). Create it with
+  //   npx wrangler hyperdrive create codexa-db --connection-string="postgres://..."
+  // then uncomment and paste the id it prints:
+  // ,"hyperdrive": [
+  //   { "binding": "HYPERDRIVE", "id": "<your-hyperdrive-id>" }
+  // ]
+}

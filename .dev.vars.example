@@ -1,0 +1,11 @@
+# Copy to .dev.vars for `npm run cf:preview` (local Cloudflare runtime).
+# On Cloudflare itself, set these as Worker secrets/variables instead.
+DATABASE_URL=postgres://codexa:codexa@127.0.0.1:5432/codexa
+SESSION_SECRET=
+ENCRYPTION_KEY=
+APP_URL=http://localhost:8787
+NEXT_PUBLIC_APP_URL=http://localhost:8787
+ANTHROPIC_API_KEY=
+CUSTOMERIO_APP_API_KEY=
+CUSTOMERIO_REGION=us
+EMAIL_FROM="Codexa <no-reply@example.com>"

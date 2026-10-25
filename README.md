@@ -78,6 +78,8 @@ otherwise renders an explicit "not configured" state): `ANTHROPIC_API_KEY`, `OPE
 
 ## Deployment
 
+- **Cloudflare Workers** (website and app, no previews): follow `docs/CLOUDFLARE.md`. Uses the OpenNext
+  adapter, Hyperdrive for Postgres, and `npm run cf:deploy`.
 - **Vercel** (website and app, no previews): follow `docs/VERCEL.md`. Import the repo, add a Postgres
   database and three secrets, deploy, then run the serverless smoke test.
 

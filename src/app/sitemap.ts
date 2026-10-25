@@ -2,6 +2,10 @@ import type { MetadataRoute } from "next";
 import { PUBLIC_ROUTES } from "@/config/routes";
 import { site } from "@/config/site";
 
+// Rendered per request: these are cheap, and serving them from the prerender
+// cache makes the Cloudflare Worker try to rewrite a read-only cache.
+export const dynamic = "force-dynamic";
+
 const abs = (path: string) => new URL(path, site.url).toString();
 
 /** Markdown content sections (docs, guides, blog, ...) owned by the docs team; skipped if the module is unavailable. */

@@ -74,7 +74,9 @@ export const env: Env = load();
 export function runnerUrl(): string | null {
   if (env.RUNNER_URL) return env.RUNNER_URL;
   // Local development defaults to the runner started by `npm run runner:dev`.
-  return process.env.VERCEL || env.NODE_ENV === "production" ? null : "http://127.0.0.1:4000";
+  // Serverless hosts (Vercel, Cloudflare Workers) and production have no local runner.
+  const onWorkers = typeof navigator !== "undefined" && navigator.userAgent === "Cloudflare-Workers";
+  return process.env.VERCEL || onWorkers || env.NODE_ENV === "production" ? null : "http://127.0.0.1:4000";
 }
 
 const nonEmpty = (v?: string) => typeof v === "string" && v.trim().length > 0;

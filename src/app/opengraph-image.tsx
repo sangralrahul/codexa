@@ -1,6 +1,10 @@
 import { ImageResponse } from "next/og";
 import { site } from "@/config/site";
 
+// Rendered per request: these are cheap, and serving them from the prerender
+// cache makes the Cloudflare Worker try to rewrite a read-only cache.
+export const dynamic = "force-dynamic";
+
 export const alt = `${site.name} — ${site.tagline}`;
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";

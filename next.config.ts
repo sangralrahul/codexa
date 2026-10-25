@@ -14,10 +14,11 @@ const nextConfig: NextConfig = {
   reactStrictMode: true,
   poweredByHeader: false,
   serverExternalPackages: ["pg", "ws", "http-proxy", "tar"],
-  // Docs, guides, blog, help and changelog are markdown files read at request
-  // time; include them in every server trace so serverless hosts ship them.
+  // pg loads its Cloudflare socket adapter only on Workers, so file tracing
+  // does not see it; include it so the OpenNext bundle can resolve it.
+  // (Docs content ships inside the bundle as JSON, see src/lib/content.)
   outputFileTracingIncludes: {
-    "/**": ["./content/**/*"],
+    "/**": ["./node_modules/pg-cloudflare/**/*"],
   },
   // `NEXT_OUTPUT=standalone npm run build` produces a self-contained server
   // (used by the Docker image and to simulate serverless file tracing locally).
