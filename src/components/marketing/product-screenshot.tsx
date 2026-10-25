@@ -42,7 +42,7 @@ export function ProductScreenshot({ className, caption, animated = false }: { cl
   const frame = (
       <div
         aria-hidden="true"
-        className={cn("overflow-hidden bg-card text-left [font-size:11px] sm:[font-size:12px]", animated ? "glow-border__inner shadow-2xl" : "rounded-xl border border-border shadow-lg")}
+        className={cn("overflow-hidden bg-card text-left [font-size:11px] sm:[font-size:12px]", animated ? "comet-border__inner shadow-2xl" : "rounded-xl border border-border shadow-lg")}
       >
         <div className="flex items-center justify-between gap-3 border-b border-border bg-surface px-3 py-2">
           <div className="flex items-center gap-2">
@@ -58,7 +58,7 @@ export function ProductScreenshot({ className, caption, animated = false }: { cl
             <span className="inline-flex items-center gap-1 rounded-md border border-border px-2 py-1">
               <Play className="size-3" /> Run
             </span>
-            <span className={cn("inline-flex items-center gap-1 rounded-md px-2 py-1", animated ? "btn-glow" : "bg-primary text-primary-foreground")}>Deploy</span>
+            <span className={cn("inline-flex items-center gap-1 rounded-md px-2 py-1", animated ? "btn-solid" : "bg-primary text-primary-foreground")}>Deploy</span>
           </div>
         </div>
         <div className="grid min-h-[320px] grid-cols-[minmax(0,1fr)] md:grid-cols-[150px_minmax(0,1.3fr)_minmax(0,1fr)]">
@@ -121,11 +121,10 @@ export function ProductScreenshot({ className, caption, animated = false }: { cl
                 Build
               </Badge>
             </div>
-            <ul className={cn("flex-1 space-y-2 p-3", animated && "seq")}>
+            <ul className="flex-1 space-y-2 p-3">
               {chat.map((m, i) => (
                 <li
                   key={i}
-                  style={{ "--i": i } as React.CSSProperties}
                   className={cn(
                     "rounded-lg px-2.5 py-1.5",
                     m.role === "user" && "ml-6 bg-primary/10",
@@ -149,7 +148,7 @@ export function ProductScreenshot({ className, caption, animated = false }: { cl
   );
   return (
     <figure className={cn("mx-auto w-full max-w-5xl", className)}>
-      {animated ? <div className="glow-border">{frame}</div> : frame}
+      {animated ? <div className="comet-border">{frame}</div> : frame}
       <figcaption className="mt-3 text-center text-xs text-muted-foreground">
         <Badge variant="outline" className="mr-2 align-middle">
           Interface preview

@@ -31,10 +31,10 @@ export function Steps({ steps, className, orientation = "horizontal" }: { steps:
             className="group relative flex gap-4 sm:flex-col sm:gap-4"
           >
             <span
-              className="relative flex size-11 shrink-0 items-center justify-center rounded-full border border-border-strong bg-background text-sm font-semibold tabular-nums shadow-sm transition group-hover:border-transparent group-hover:shadow-[0_0_0_1px_var(--glow-2),0_0_24px_-4px_var(--glow-2)]"
+              className="relative flex size-11 shrink-0 items-center justify-center rounded-full border border-border-strong bg-background text-sm font-semibold tabular-nums shadow-sm transition group-hover:border-foreground/60"
               aria-hidden="true"
             >
-              <span className="text-gradient">{String(i + 1).padStart(2, "0")}</span>
+              <span className="font-mono text-xs text-muted-foreground transition-colors group-hover:text-foreground">{String(i + 1).padStart(2, "0")}</span>
             </span>
             <div>
               <h3 className="text-base font-semibold tracking-tight">

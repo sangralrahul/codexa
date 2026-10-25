@@ -1,11 +1,11 @@
 import Link from "next/link";
 import { Logo } from "@/components/logo";
-import { Aurora } from "@/components/marketing/aurora";
+import { Backdrop } from "@/components/marketing/backdrop";
 
 export default function AuthLayout({ children }: { children: React.ReactNode }) {
   return (
     <div className="relative isolate flex min-h-screen flex-col overflow-hidden bg-background">
-      <Aurora className="-z-10" />
+      <Backdrop className="-z-10" />
       <header className="container-x flex h-16 items-center justify-between">
         <Logo />
         <Link href="/" className="text-sm text-muted-foreground hover:text-foreground">

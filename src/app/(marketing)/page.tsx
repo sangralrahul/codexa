@@ -12,9 +12,10 @@ import { Steps } from "@/components/marketing/steps";
 import { FAQ } from "@/components/marketing/faq";
 import { CTABand } from "@/components/marketing/cta-band";
 import { PricingTable } from "@/components/marketing/pricing-table";
-import { ProductScreenshot } from "@/components/marketing/product-screenshot";
+import { LiveDemo } from "@/components/marketing/live-demo";
+import { WordSwap } from "@/components/marketing/word-swap";
 import { PromptBox } from "@/components/marketing/prompt-box";
-import { Eyebrow } from "@/components/marketing/aurora";
+import { Eyebrow } from "@/components/marketing/backdrop";
 import { cn } from "@/lib/utils";
 
 export const metadata = routeMetadata("/");
@@ -89,21 +90,23 @@ export default async function HomePage() {
           <div data-reveal>
             <Eyebrow>AI-native software development</Eyebrow>
           </div>
-          <h1 data-reveal style={{ "--reveal-delay": "80ms" } as React.CSSProperties} className="mx-auto mt-7 max-w-5xl text-balance text-5xl font-semibold leading-[1.02] tracking-tight sm:text-6xl lg:text-7xl">
-            Build software at the <span className="text-gradient">speed of thought.</span>
+          <h1 data-reveal style={{ "--reveal-delay": "80ms" } as React.CSSProperties} className="mx-auto mt-7 max-w-5xl text-5xl font-semibold leading-[1.02] tracking-[-0.035em] sm:text-6xl lg:text-[5.5rem]">
+            Turn ideas into
+            <br />
+            <WordSwap label="working software." words={["working software.", "SaaS products.", "internal tools.", "REST APIs.", "landing pages."]} />
           </h1>
           <p data-reveal style={{ "--reveal-delay": "160ms" } as React.CSSProperties} className="mx-auto mt-6 max-w-2xl text-pretty text-lg text-muted-foreground sm:text-xl">
-            Describe your idea. Codexa helps you create, refine, test, and deploy real applications.
+            Build software at the speed of thought. Describe your idea; Codexa helps you create, refine, test, and deploy a real application you own.
           </p>
           <div data-reveal style={{ "--reveal-delay": "240ms" } as React.CSSProperties} className="mt-10">
             <PromptBox signedIn={signedIn} />
           </div>
           <div data-reveal style={{ "--reveal-delay": "320ms" } as React.CSSProperties} className="mt-8 flex flex-col justify-center gap-3 sm:flex-row">
-            <Link href="/signup" className={cn(buttonClasses("primary", "lg"), "btn-glow rounded-xl")}>
+            <Link href="/signup" className={cn(buttonClasses("secondary", "lg"), "btn-solid rounded-full px-6")}>
               Start Building Free
               <ArrowRight className="size-4" aria-hidden="true" />
             </Link>
-            <Link href="/product" className={cn(buttonClasses("ghost", "lg"), "glass rounded-xl border border-border-strong")}>
+            <Link href="/product" className={cn(buttonClasses("ghost", "lg"), "glass rounded-full border border-border-strong px-6")}>
               Explore the Platform
             </Link>
           </div>
@@ -111,25 +114,21 @@ export default async function HomePage() {
             Free plan, no card required. AI generation requires an API key configured by your operator; the editor, runtime, and deployment work without one.
           </p>
 
-          <div className="relative mt-16 sm:mt-20">
-            {/* Glow pooled under the product preview. */}
-            <div aria-hidden="true" className="absolute inset-x-[10%] top-[8%] -z-10 h-[70%] rounded-full bg-gradient-to-r from-glow-1/40 via-glow-2/40 to-glow-3/30 blur-3xl" />
-            <div data-reveal className="tilt-in">
-              <ProductScreenshot animated />
-            </div>
+          <div data-reveal className="tilt-in relative mt-16 sm:mt-24">
+            <LiveDemo />
           </div>
         </div>
       </section>
 
       <section aria-labelledby="integrations-strip" className="relative border-y border-border/60 py-10">
-        <h2 id="integrations-strip" className="text-center text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">
+        <h2 id="integrations-strip" className="text-center font-mono text-[11px] font-medium uppercase tracking-[0.18em] text-muted-foreground">
           Integrates with the tools you already use
         </h2>
         <div className="marquee mt-6 overflow-hidden">
-          <ul className="marquee__track gap-3 pr-3">
+          <ul className="marquee__track">
             {[...integrationNames, ...integrationNames].map((n, i) => (
-              <li key={i} aria-hidden={i >= integrationNames.length || undefined} className="glass flex shrink-0 items-center gap-2 rounded-full border border-border px-4 py-2 text-sm font-medium text-foreground/80">
-                <n.icon className="size-4 text-primary" aria-hidden="true" />
+              <li key={i} aria-hidden={i >= integrationNames.length || undefined} className="flex shrink-0 items-center gap-2.5 px-6 text-lg font-semibold tracking-tight text-muted-foreground/80 transition-colors hover:text-foreground">
+                <n.icon className="size-5" aria-hidden="true" />
                 {n.name}
               </li>
             ))}
@@ -142,7 +141,7 @@ export default async function HomePage() {
         <ul className="mt-12 grid gap-4 md:grid-cols-3">
           {positioning.map((p, i) => (
             <li key={p.title} data-reveal style={{ "--reveal-delay": `${i * 90}ms` } as React.CSSProperties} className="glow-card group rounded-2xl border border-border p-7">
-              <span className="icon-tile inline-flex size-11 items-center justify-center rounded-xl text-primary transition-transform duration-300 group-hover:scale-110 group-hover:-rotate-3">
+              <span className="icon-tile inline-flex size-11 items-center justify-center rounded-xl transition-transform duration-300 group-hover:scale-110 group-hover:-rotate-3">
                 <p.icon className="size-5" aria-hidden="true" />
               </span>
               <h3 className="mt-5 text-lg font-semibold tracking-tight">{p.title}</h3>
@@ -176,7 +175,7 @@ export default async function HomePage() {
         <SectionHeader eyebrow="Editor and preview" title="A real editor next to a running preview" description="Monaco with tabs, file explorer, search and replace, diagnostics, and diff view on one side; your app running in an isolated sandbox on the other." align="center" />
         <div className="mt-10 grid gap-4 md:grid-cols-2">
           <Link href="/code-editor" data-reveal className="glow-card group rounded-2xl border border-border p-7">
-            <span className="icon-tile inline-flex size-11 items-center justify-center rounded-xl text-primary">
+            <span className="icon-tile inline-flex size-11 items-center justify-center rounded-xl">
               <Code2 className="size-5" aria-hidden="true" />
             </span>
             <h3 className="mt-5 text-lg font-semibold tracking-tight">Code editor</h3>
@@ -186,7 +185,7 @@ export default async function HomePage() {
             </span>
           </Link>
           <Link href="/visual-editor" data-reveal style={{ "--reveal-delay": "90ms" } as React.CSSProperties} className="glow-card group rounded-2xl border border-border p-7">
-            <span className="icon-tile inline-flex size-11 items-center justify-center rounded-xl text-primary">
+            <span className="icon-tile inline-flex size-11 items-center justify-center rounded-xl">
               <Globe className="size-5" aria-hidden="true" />
             </span>
             <h3 className="mt-5 text-lg font-semibold tracking-tight">Live preview</h3>
@@ -203,7 +202,7 @@ export default async function HomePage() {
         <ul className="mt-8 grid gap-4 md:grid-cols-3">
           {backend.map((b, i) => (
             <li key={b.title} data-reveal style={{ "--reveal-delay": `${i * 90}ms` } as React.CSSProperties} className="glow-card group rounded-2xl border border-border p-7">
-              <span className="icon-tile inline-flex size-11 items-center justify-center rounded-xl text-primary transition-transform duration-300 group-hover:scale-110 group-hover:-rotate-3">
+              <span className="icon-tile inline-flex size-11 items-center justify-center rounded-xl transition-transform duration-300 group-hover:scale-110 group-hover:-rotate-3">
                 <b.icon className="size-5" aria-hidden="true" />
               </span>
               <h3 className="mt-5 text-lg font-semibold tracking-tight">{b.title}</h3>
@@ -231,7 +230,7 @@ export default async function HomePage() {
       <Section>
         <div className="grid gap-6 md:grid-cols-2">
           <Link href="/templates" data-reveal className="glow-card group rounded-2xl border border-border p-8">
-            <span className="icon-tile inline-flex size-12 items-center justify-center rounded-xl text-primary"><LayoutTemplate className="size-6" aria-hidden="true" /></span>
+            <span className="icon-tile inline-flex size-12 items-center justify-center rounded-xl"><LayoutTemplate className="size-6" aria-hidden="true" /></span>
             <h2 className="mt-5 text-2xl font-semibold tracking-tight">Starter templates</h2>
             <p className="mt-2 text-sm leading-relaxed text-muted-foreground">React + Vite + TypeScript + Tailwind single-page apps, static HTML/CSS/JS sites, and Node + Express REST APIs. Real files with documented dependencies.</p>
             <span className="mt-4 inline-flex items-center gap-1 text-sm font-medium text-primary">
@@ -239,7 +238,7 @@ export default async function HomePage() {
             </span>
           </Link>
           <Link href="/integrations" data-reveal style={{ "--reveal-delay": "90ms" } as React.CSSProperties} className="glow-card group rounded-2xl border border-border p-8">
-            <span className="icon-tile inline-flex size-12 items-center justify-center rounded-xl text-primary"><Plug className="size-6" aria-hidden="true" /></span>
+            <span className="icon-tile inline-flex size-12 items-center justify-center rounded-xl"><Plug className="size-6" aria-hidden="true" /></span>
             <h2 className="mt-5 text-2xl font-semibold tracking-tight">Integrations</h2>
             <p className="mt-2 text-sm leading-relaxed text-muted-foreground">GitHub, PostgreSQL and Supabase, Anthropic and OpenAI, Stripe, Razorpay, Resend, and Vercel. Workspace-level connections with connection tests; each is active only when configured.</p>
             <span className="mt-4 inline-flex items-center gap-1 text-sm font-medium text-primary">
@@ -254,7 +253,7 @@ export default async function HomePage() {
         <ul className="mt-8 grid gap-4 md:grid-cols-3">
           {india.map((b, i) => (
             <li key={b.title} data-reveal style={{ "--reveal-delay": `${i * 90}ms` } as React.CSSProperties} className="glow-card group rounded-2xl border border-border p-7">
-              <span className="icon-tile inline-flex size-11 items-center justify-center rounded-xl text-primary transition-transform duration-300 group-hover:scale-110 group-hover:-rotate-3">
+              <span className="icon-tile inline-flex size-11 items-center justify-center rounded-xl transition-transform duration-300 group-hover:scale-110 group-hover:-rotate-3">
                 <b.icon className="size-5" aria-hidden="true" />
               </span>
               <h3 className="mt-5 text-lg font-semibold tracking-tight">{b.title}</h3>

@@ -5,12 +5,13 @@ import { useEffect, useId, useState, type FormEvent } from "react";
 import { ArrowRight, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
-const examples = [
-  "An invoice tracker for freelancers with GST totals and Razorpay payment links",
-  "A landing page for a Bengaluru coffee subscription with a waitlist form",
-  "A REST API for a library with members, books, and due-date reminders",
-  "A kanban board for a small agency with drag and drop and dark mode",
+const ideas = [
+  { label: "Invoice tracker", prompt: "An invoice tracker for freelancers with GST totals and Razorpay payment links" },
+  { label: "Coffee landing page", prompt: "A landing page for a Bengaluru coffee subscription with a waitlist form" },
+  { label: "Library REST API", prompt: "A REST API for a library with members, books, and due-date reminders" },
+  { label: "Agency kanban board", prompt: "A kanban board for a small agency with drag and drop and dark mode" },
 ];
+const examples = ideas.map((i) => i.prompt);
 
 const MAX = 2000;
 const STATIC_PLACEHOLDER = "Describe what you want to build. For example: a CRM for a two-person sales team with a pipeline view and email reminders.";
@@ -69,8 +70,8 @@ export function PromptBox({ signedIn }: { signedIn: boolean }) {
 
   return (
     <form onSubmit={onSubmit} className="mx-auto w-full max-w-2xl text-left" aria-labelledby={`${id}-label`}>
-      <div className="glow-border shadow-2xl">
-        <div className="glow-border__inner p-2.5">
+      <div className="comet-border shadow-[0_30px_80px_-30px_rgba(0,0,0,0.45)]">
+        <div className="comet-border__inner p-2.5">
           <label id={`${id}-label`} htmlFor={`${id}-prompt`} className="sr-only">
             Describe the application you want to build
           </label>
@@ -92,7 +93,7 @@ export function PromptBox({ signedIn }: { signedIn: boolean }) {
             <p id={`${id}-hint`} className="text-xs text-muted-foreground">
               {signedIn ? "Continues in your dashboard." : "Creates a free account first; your idea is carried over."}
             </p>
-            <Button type="submit" loading={submitting} className="btn-glow rounded-lg">
+            <Button type="submit" variant="secondary" loading={submitting} className="btn-solid rounded-full px-5">
               <Sparkles className="size-4" aria-hidden="true" />
               Build it
               <ArrowRight className="size-4" aria-hidden="true" />
@@ -105,18 +106,20 @@ export function PromptBox({ signedIn }: { signedIn: boolean }) {
           {error}
         </p>
       ) : null}
-      <ul className="mt-5 flex flex-wrap justify-center gap-2" aria-label="Example ideas">
-        {examples.map((ex) => (
-          <li key={ex}>
+      <ul className="mt-5 flex flex-wrap items-center justify-center gap-2" aria-label="Example ideas">
+        <li className="mr-1 text-xs text-muted-foreground">Try:</li>
+        {ideas.map((idea) => (
+          <li key={idea.label}>
             <button
               type="button"
+              title={idea.prompt}
               onClick={() => {
-                setValue(ex);
+                setValue(idea.prompt);
                 setError(null);
               }}
               className="glass rounded-full border border-border px-3 py-1.5 text-xs text-muted-foreground transition hover:-translate-y-0.5 hover:border-border-strong hover:text-foreground"
             >
-              {ex}
+              {idea.label}
             </button>
           </li>
         ))}

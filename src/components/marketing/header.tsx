@@ -135,7 +135,7 @@ export function MarketingHeader({ signedIn }: { signedIn: boolean }) {
         )}
       >
         {/* Gradient hairline that fades in once the page scrolls. */}
-        <div aria-hidden="true" className={cn("pointer-events-none absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-glow-2/60 to-transparent transition-opacity duration-300", scrolled ? "opacity-100" : "opacity-0")} />
+        <div aria-hidden="true" className={cn("pointer-events-none absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-foreground/15 to-transparent transition-opacity duration-300", scrolled ? "opacity-100" : "opacity-0")} />
         <div className="container-x flex h-16 items-center justify-between gap-4">
           <div className="flex items-center gap-6">
             <Logo />
@@ -178,7 +178,7 @@ export function MarketingHeader({ signedIn }: { signedIn: boolean }) {
                 <Link href="/login" className={buttonClasses("ghost", "sm")}>
                   Sign In
                 </Link>
-                <Link href="/signup" className={cn(buttonClasses("primary", "sm"), "btn-glow rounded-lg")}>
+                <Link href="/signup" className={cn(buttonClasses("secondary", "sm"), "btn-solid rounded-full px-4")}>
                   Start Building Free
                 </Link>
               </>
@@ -257,7 +257,7 @@ export function MarketingHeader({ signedIn }: { signedIn: boolean }) {
                 <>
                   <Link
                     href="/signup"
-                    className={cn(buttonClasses("primary", "lg"), "btn-glow rounded-xl")}
+                    className={cn(buttonClasses("secondary", "lg"), "btn-solid rounded-full px-6")}
                   >
                     Start Building Free
                   </Link>

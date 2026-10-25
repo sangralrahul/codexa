@@ -13,7 +13,7 @@ export function FeatureGrid({ features, columns = 3, className }: { features: Fe
         const body = (
           <>
             {Icon ? (
-              <span className="icon-tile mb-5 inline-flex size-11 items-center justify-center rounded-xl text-primary transition-transform duration-300 group-hover:scale-110 group-hover:-rotate-3">
+              <span className="icon-tile mb-5 inline-flex size-11 items-center justify-center rounded-xl transition-transform duration-300 group-hover:scale-110 group-hover:-rotate-3">
                 <Icon className="size-5" aria-hidden="true" />
               </span>
             ) : null}

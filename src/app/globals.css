@@ -37,13 +37,15 @@
   --shadow-lg: 0 12px 40px rgba(11, 12, 15, 0.12);
   --radius: 0.625rem;
   /* Marketing glow palette (aurora backgrounds, gradient text, glowing borders) */
-  --glow-1: #2f6bff;
-  --glow-2: #8b5cf6;
-  --glow-3: #ec4899;
-  --glow-4: #06b6d4;
-  --glow-strength: 0.32;
-  --grid-line: rgba(11, 12, 15, 0.06);
-  --glass: rgba(255, 255, 255, 0.65);
+  /* "Silk" palette for the live gradient backdrop: ink, cobalt, coral, amber. */
+  --silk-0: #eef1ff;
+  --silk-1: #7d97ff;
+  --silk-2: #ff8f73;
+  --silk-3: #ffd28e;
+  --silk-opacity: 0.75;
+  --signal: #f2542d;
+  --hairline: rgba(11, 12, 15, 0.08);
+  --glass: rgba(255, 255, 255, 0.72);
   color-scheme: light;
 }
 
@@ -76,13 +78,14 @@
   --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4);
   --shadow-md: 0 4px 14px rgba(0, 0, 0, 0.45);
   --shadow-lg: 0 12px 40px rgba(0, 0, 0, 0.55);
-  --glow-1: #3b6dff;
-  --glow-2: #8b5cf6;
-  --glow-3: #e9479b;
-  --glow-4: #10c4e0;
-  --glow-strength: 0.55;
-  --grid-line: rgba(255, 255, 255, 0.055);
-  --glass: rgba(17, 19, 24, 0.6);
+  --silk-0: #07081a;
+  --silk-1: #2140d9;
+  --silk-2: #e8553a;
+  --silk-3: #f0a43a;
+  --silk-opacity: 0.8;
+  --signal: #ff6a45;
+  --hairline: rgba(255, 255, 255, 0.08);
+  --glass: rgba(14, 15, 19, 0.66);
   color-scheme: dark;
 }
 
@@ -111,13 +114,12 @@
   --color-info: var(--info);
   --color-code-bg: var(--code-bg);
   --color-code-fg: var(--code-fg);
-  --color-glow-1: var(--glow-1);
-  --color-glow-2: var(--glow-2);
-  --color-glow-3: var(--glow-3);
-  --color-glow-4: var(--glow-4);
+  --color-signal: var(--signal);
+  --color-hairline: var(--hairline);
   --color-glass: var(--glass);
   --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
   --font-mono: var(--font-geist-mono), ui-monospace, SFMono-Regular, Menlo, monospace;
+  --font-serif: var(--font-instrument-serif), ui-serif, Georgia, serif;
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
@@ -265,197 +267,166 @@
 
 @layer components {
 /* ------------------------------------------------------------------------
-   Marketing motion system. Everything here is transform/opacity based (GPU
-   friendly) and is switched off by the prefers-reduced-motion rule above.
+   Marketing visual system. Motion is transform/opacity (or one WebGL canvas,
+   see components/marketing/silk.tsx) and stops under prefers-reduced-motion.
    ------------------------------------------------------------------------ */
 
-/* Aurora: slowly drifting, blurred colour fields behind heroes and CTAs. */
-.aurora {
+/* Live gradient backdrop container: the canvas fades into the page. */
+.backdrop {
   position: absolute;
   inset: 0;
   overflow: hidden;
   pointer-events: none;
-  isolation: isolate;
 }
-.aurora__blob {
+.backdrop__canvas {
   position: absolute;
-  width: 46vmax;
-  height: 46vmax;
-  border-radius: 9999px;
-  filter: blur(70px);
-  opacity: var(--glow-strength);
-  mix-blend-mode: normal;
-  will-change: transform;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  opacity: var(--silk-opacity);
+  /* Static fallback until (or if) WebGL draws. */
+  background:
+    radial-gradient(60% 80% at 20% 10%, var(--silk-1), transparent 70%),
+    radial-gradient(50% 70% at 80% 0%, var(--silk-2), transparent 70%),
+    radial-gradient(40% 60% at 60% 40%, var(--silk-3), transparent 70%),
+    var(--silk-0);
+  mask-image: linear-gradient(to bottom, #000 0%, rgba(0, 0, 0, 0.85) 40%, transparent 100%);
 }
-.dark .aurora__blob { mix-blend-mode: screen; }
-.aurora__blob--1 { background: radial-gradient(circle at 30% 30%, var(--glow-1), transparent 62%); top: -22vmax; left: -8vmax; animation: aurora-a 22s ease-in-out infinite alternate; }
-.aurora__blob--2 { background: radial-gradient(circle at 60% 40%, var(--glow-2), transparent 62%); top: -18vmax; right: -12vmax; animation: aurora-b 26s ease-in-out infinite alternate; }
-.aurora__blob--3 { background: radial-gradient(circle at 50% 50%, var(--glow-3), transparent 62%); top: 6vmax; left: 28%; width: 34vmax; height: 34vmax; opacity: calc(var(--glow-strength) * 0.7); animation: aurora-c 30s ease-in-out infinite alternate; }
-.aurora__blob--4 { background: radial-gradient(circle at 50% 50%, var(--glow-4), transparent 62%); bottom: -26vmax; right: 18%; width: 36vmax; height: 36vmax; opacity: calc(var(--glow-strength) * 0.6); animation: aurora-a 34s ease-in-out infinite alternate-reverse; }
-@keyframes aurora-a { 0% { transform: translate3d(0, 0, 0) scale(1); } 50% { transform: translate3d(8vmax, 4vmax, 0) scale(1.12); } 100% { transform: translate3d(-4vmax, 8vmax, 0) scale(0.95); } }
-@keyframes aurora-b { 0% { transform: translate3d(0, 0, 0) scale(1.05); } 50% { transform: translate3d(-10vmax, 6vmax, 0) scale(0.92); } 100% { transform: translate3d(-2vmax, -3vmax, 0) scale(1.1); } }
-@keyframes aurora-c { 0% { transform: translate3d(0, 0, 0) rotate(0deg); } 100% { transform: translate3d(-12vmax, -4vmax, 0) rotate(40deg); } }
-
-/* Fine line grid that fades out towards the edges. */
-.bg-grid {
-  background-image: linear-gradient(to right, var(--grid-line) 1px, transparent 1px), linear-gradient(to bottom, var(--grid-line) 1px, transparent 1px);
-  background-size: 56px 56px;
-  mask-image: radial-gradient(ellipse 70% 60% at 50% 0%, #000 40%, transparent 100%);
+.backdrop__veil {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(65% 50% at 50% 45%, color-mix(in oklab, var(--background) 80%, transparent), color-mix(in oklab, var(--background) 25%, transparent) 70%, transparent 100%);
 }
-/* Film grain so gradients don't band. */
 .bg-noise {
   background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/></filter><rect width='100%' height='100%' filter='url(%23n)' opacity='0.5'/></svg>");
-  opacity: 0.05;
+  opacity: 0.06;
   mix-blend-mode: overlay;
 }
 
-/* Gradient text with a slow shimmer. */
-.text-gradient {
-  background: linear-gradient(100deg, var(--glow-1), var(--glow-2) 30%, var(--glow-3) 55%, var(--glow-4) 80%, var(--glow-1));
-  background-size: 250% 100%;
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
-  animation: gradient-pan 9s linear infinite;
+/* Editorial accent: italic serif words inside sans headlines. */
+.serif-accent {
+  font-family: var(--font-serif);
+  font-style: italic;
+  font-weight: 400;
+  letter-spacing: -0.01em;
 }
-@keyframes gradient-pan { from { background-position: 0% 50%; } to { background-position: 250% 50%; } }
 
-/* Pill eyebrow with a travelling shine. */
-.shine-pill {
-  position: relative;
-  overflow: hidden;
-  background: color-mix(in oklab, var(--card) 70%, transparent);
-  backdrop-filter: blur(8px);
+/* Eyebrow pill. */
+.eyebrow-pill {
+  background: color-mix(in oklab, var(--background) 60%, transparent);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
 }
-.shine-pill::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(110deg, transparent 30%, color-mix(in oklab, var(--foreground) 14%, transparent) 50%, transparent 70%);
-  transform: translateX(-120%);
-  animation: shine 4.5s ease-in-out infinite;
-}
-@keyframes shine { 0%, 55% { transform: translateX(-120%); } 100% { transform: translateX(120%); } }
 
-/* Animated conic border: wrap content in .glow-border > .glow-border__inner. */
-.glow-border {
+/* Border with a single comet of light travelling around it:
+   wrap content in .comet-border > .comet-border__inner. */
+.comet-border {
   position: relative;
-  border-radius: var(--radius-2xl, 1.25rem);
+  border-radius: 1.25rem;
   padding: 1px;
-  background: conic-gradient(from var(--angle), color-mix(in oklab, var(--glow-1) 80%, transparent), color-mix(in oklab, var(--glow-2) 80%, transparent), color-mix(in oklab, var(--glow-3) 70%, transparent), color-mix(in oklab, var(--glow-4) 80%, transparent), color-mix(in oklab, var(--glow-1) 80%, transparent));
-  animation: spin-angle 6s linear infinite;
+  background:
+    conic-gradient(from var(--angle), transparent 0deg, transparent 280deg, color-mix(in oklab, var(--signal) 85%, transparent) 330deg, color-mix(in oklab, var(--foreground) 90%, transparent) 350deg, transparent 360deg),
+    linear-gradient(var(--border-strong), var(--border-strong));
+  animation: spin-angle 7s linear infinite;
 }
-.glow-border::before {
-  content: "";
-  position: absolute;
-  inset: -1px;
-  z-index: -1;
-  border-radius: inherit;
-  background: inherit;
-  filter: blur(18px);
-  opacity: 0.45;
-}
-.glow-border__inner { position: relative; border-radius: calc(var(--radius-2xl, 1.25rem) - 1px); background: var(--card); }
+.comet-border__inner { position: relative; border-radius: calc(1.25rem - 1px); background: var(--card); }
 @keyframes spin-angle { to { --angle: 360deg; } }
 
-/* Cards with a soft light that follows the pointer (see SpotlightEffects). */
+/* Refined cards: hairline border, inner top highlight, soft pointer light. */
 .glow-card {
   position: relative;
   isolation: isolate;
   overflow: hidden;
-  background: linear-gradient(180deg, color-mix(in oklab, var(--card) 92%, var(--foreground) 2%), var(--card));
-  transition: transform 300ms cubic-bezier(0.2, 0.8, 0.2, 1), border-color 300ms, box-shadow 300ms;
+  background: var(--card);
+  box-shadow: inset 0 1px 0 0 var(--hairline), var(--shadow-sm);
+  transition: transform 400ms cubic-bezier(0.2, 0.8, 0.2, 1), border-color 300ms, box-shadow 400ms;
 }
 .glow-card::before {
   content: "";
   position: absolute;
   inset: 0;
   z-index: -1;
-  background: radial-gradient(420px circle at var(--mx, 50%) var(--my, -20%), color-mix(in oklab, var(--glow-1) 16%, transparent), transparent 60%);
+  background: radial-gradient(360px circle at var(--mx, 50%) var(--my, -30%), color-mix(in oklab, var(--foreground) 6%, transparent), transparent 65%);
   opacity: 0;
-  transition: opacity 300ms;
+  transition: opacity 400ms;
 }
-.glow-card::after {
+.glow-card:hover { transform: translateY(-2px); border-color: var(--border-strong); box-shadow: inset 0 1px 0 0 var(--hairline), var(--shadow-lg); }
+.glow-card:hover::before, .glow-card:focus-within::before { opacity: 1; }
+
+.icon-tile {
+  background: linear-gradient(180deg, var(--surface), var(--card));
+  box-shadow: inset 0 0 0 1px var(--border), inset 0 1px 0 0 var(--hairline);
+  color: var(--foreground);
+}
+
+/* Primary call to action: solid, high contrast, with a light sweep on hover. */
+.btn-solid {
+  position: relative;
+  overflow: hidden;
+  background: var(--foreground);
+  color: var(--background);
+  box-shadow: 0 1px 0 0 rgba(255, 255, 255, 0.12) inset, 0 10px 30px -12px color-mix(in oklab, var(--foreground) 60%, transparent);
+  transition: transform 200ms ease, box-shadow 300ms ease, opacity 200ms;
+}
+.btn-solid::after {
   content: "";
   position: absolute;
   inset: 0;
-  border-radius: inherit;
-  padding: 1px;
-  background: radial-gradient(300px circle at var(--mx, 50%) var(--my, -20%), color-mix(in oklab, var(--glow-2) 70%, transparent), transparent 60%);
-  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
-  -webkit-mask-composite: xor;
-  mask-composite: exclude;
-  opacity: 0;
-  transition: opacity 300ms;
-  pointer-events: none;
+  background: linear-gradient(110deg, transparent 35%, color-mix(in oklab, var(--background) 35%, transparent) 50%, transparent 65%);
+  transform: translateX(-100%);
+  transition: transform 700ms cubic-bezier(0.2, 0.8, 0.2, 1);
 }
-.glow-card:hover { transform: translateY(-3px); box-shadow: var(--shadow-lg); }
-.glow-card:hover::before, .glow-card:hover::after, .glow-card:focus-within::before, .glow-card:focus-within::after { opacity: 1; }
+.btn-solid:hover { transform: translateY(-1px); }
+.btn-solid:hover::after { transform: translateX(100%); }
 
-/* Gradient icon tile. */
-.icon-tile {
-  background: linear-gradient(135deg, color-mix(in oklab, var(--glow-1) 22%, transparent), color-mix(in oklab, var(--glow-2) 22%, transparent));
-  box-shadow: inset 0 0 0 1px color-mix(in oklab, var(--glow-1) 30%, transparent);
-}
-
-/* Glowing primary call to action. */
-.btn-glow {
-  position: relative;
-  background-image: linear-gradient(120deg, var(--glow-1), var(--glow-2) 60%, var(--glow-3));
-  background-size: 200% 100%;
-  color: #fff;
-  box-shadow: 0 8px 30px -8px color-mix(in oklab, var(--glow-2) 70%, transparent), inset 0 1px 0 rgba(255, 255, 255, 0.25);
-  transition: background-position 600ms ease, transform 200ms ease, box-shadow 300ms ease;
-}
-.btn-glow:hover { background-position: 100% 0; transform: translateY(-1px); box-shadow: 0 12px 40px -8px color-mix(in oklab, var(--glow-2) 85%, transparent), inset 0 1px 0 rgba(255, 255, 255, 0.3); }
-
-/* Glass panels. */
 .glass {
   background: var(--glass);
   backdrop-filter: blur(14px) saturate(140%);
   -webkit-backdrop-filter: blur(14px) saturate(140%);
 }
 
-/* Infinite marquee (duplicate the track content once). */
+/* Infinite marquee (track holds the items twice). */
 .marquee { mask-image: linear-gradient(to right, transparent, #000 12%, #000 88%, transparent); }
-.marquee__track { display: flex; width: max-content; animation: marquee 38s linear infinite; }
+.marquee__track { display: flex; width: max-content; animation: marquee 42s linear infinite; }
 .marquee:hover .marquee__track { animation-play-state: paused; }
 @keyframes marquee { to { transform: translateX(-50%); } }
 
-/* Floating and tilting product preview. */
-.float-slow { animation: float 8s ease-in-out infinite; }
-@keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
-.tilt-in { transform: perspective(1600px) rotateX(10deg) scale(0.98); transform-origin: 50% 0; transition: transform 1200ms cubic-bezier(0.2, 0.8, 0.2, 1); }
-.tilt-in.is-visible { transform: perspective(1600px) rotateX(0deg) scale(1); }
+/* Product preview rises into place. */
+.tilt-in { transform: perspective(1800px) rotateX(12deg) translateY(24px) scale(0.97); transform-origin: 50% 0; transition: transform 1400ms cubic-bezier(0.2, 0.8, 0.2, 1); }
+.tilt-in.is-visible { transform: none; }
 
-/* Sequenced appearance inside a revealed block (chat bubbles, steps). */
-.seq > * { opacity: 0; transform: translateY(6px); }
-.is-visible .seq > *, .seq.is-visible > * { animation: seq-in 500ms cubic-bezier(0.2, 0.8, 0.2, 1) forwards; animation-delay: calc(var(--i, 0) * 420ms + 300ms); }
-@keyframes seq-in { to { opacity: 1; transform: none; } }
-.no-js .seq > * { opacity: 1; transform: none; }
+/* Rotating headline word. */
+.word-swap { display: inline-grid; justify-items: center; vertical-align: bottom; overflow: hidden; height: 1.18em; padding-inline: 0.06em; }
+.word-swap > span { grid-area: 1 / 1; transition: transform 700ms cubic-bezier(0.7, 0, 0.2, 1), opacity 500ms; }
+.word-swap > [data-state="in"] { transform: translateY(0); opacity: 1; }
+.word-swap > [data-state="out"] { transform: translateY(-100%); opacity: 0; }
+.word-swap > [data-state="next"] { transform: translateY(100%); opacity: 0; transition: none; }
 
-/* Blinking caret for the typed prompt. */
-.caret::after { content: ""; display: inline-block; width: 2px; height: 1.1em; margin-left: 2px; vertical-align: -0.2em; background: var(--primary); animation: caret 1s steps(1) infinite; }
+/* Blinking caret. */
+.caret::after { content: ""; display: inline-block; width: 2px; height: 1.05em; margin-left: 1px; vertical-align: -0.18em; background: var(--signal); animation: caret 1s steps(1) infinite; }
 @keyframes caret { 50% { opacity: 0; } }
 
 /* Travelling light along the steps line. */
 .beam { position: relative; overflow: hidden; }
-.beam::after { content: ""; position: absolute; inset: 0; background: linear-gradient(90deg, transparent, var(--glow-2), var(--glow-3), transparent); width: 40%; animation: beam 3.6s ease-in-out infinite; }
-@keyframes beam { from { transform: translateX(-100%); } to { transform: translateX(260%); } }
+.beam::after { content: ""; position: absolute; inset: 0; width: 30%; background: linear-gradient(90deg, transparent, var(--signal), transparent); animation: beam 4s cubic-bezier(0.6, 0, 0.4, 1) infinite; }
+@keyframes beam { from { transform: translateX(-100%); } to { transform: translateX(340%); } }
 
-/* Scroll reveal: hidden only once JS has marked the page (so content never disappears without JS). */
+/* Small spinner used in the live demo. */
+.spin { animation: spin 0.9s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.pop-in { animation: pop-in 500ms cubic-bezier(0.2, 0.8, 0.2, 1) both; }
+@keyframes pop-in { from { opacity: 0; transform: translateY(6px) scale(0.98); } to { opacity: 1; transform: none; } }
+
+/* Scroll reveal: hidden only once JS has marked the page. */
 .js [data-reveal] {
   opacity: 0;
-  transform: translateY(18px);
-  filter: blur(6px);
-  transition: opacity 800ms cubic-bezier(0.2, 0.8, 0.2, 1), transform 800ms cubic-bezier(0.2, 0.8, 0.2, 1), filter 800ms cubic-bezier(0.2, 0.8, 0.2, 1);
+  transform: translateY(16px);
+  transition: opacity 900ms cubic-bezier(0.2, 0.8, 0.2, 1), transform 900ms cubic-bezier(0.2, 0.8, 0.2, 1);
   transition-delay: var(--reveal-delay, 0ms);
 }
-.js [data-reveal].is-visible { opacity: 1; transform: none; filter: none; }
+.js [data-reveal].is-visible { opacity: 1; transform: none; }
 @media (prefers-reduced-motion: reduce) {
-  .js [data-reveal] { opacity: 1; transform: none; filter: none; }
-  .seq > * { opacity: 1; transform: none; }
+  .js [data-reveal] { opacity: 1; transform: none; }
   .tilt-in { transform: none; }
 }
-
 }

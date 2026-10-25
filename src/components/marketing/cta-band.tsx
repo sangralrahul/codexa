@@ -2,7 +2,7 @@ import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import { buttonClasses } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { Aurora } from "./aurora";
+import { Backdrop } from "./backdrop";
 
 export function CTABand({
   title = "Start building with Codexa",
@@ -16,24 +16,22 @@ export function CTABand({
   secondary?: { label: string; href: string } | null;
 }) {
   return (
-    <section className="relative isolate overflow-hidden border-t border-border py-20 sm:py-28">
-      <Aurora intensity="soft" />
-      <div className="container-x relative">
-        <div data-reveal className="glow-border mx-auto max-w-4xl">
-          <div className="glow-border__inner glass px-6 py-12 text-center sm:px-12 sm:py-16">
-            <h2 className="text-balance text-3xl font-semibold tracking-tight sm:text-4xl lg:text-5xl">{title}</h2>
-            <p className="mx-auto mt-4 max-w-xl text-pretty text-base text-muted-foreground sm:text-lg">{description}</p>
-            <div className="mt-8 flex flex-col justify-center gap-3 sm:flex-row">
-              <Link href={primary.href} className={cn(buttonClasses("primary", "lg"), "btn-glow rounded-xl")}>
-                {primary.label}
-                <ArrowRight className="size-4" aria-hidden="true" />
+    <section className="px-4 py-16 sm:px-6 sm:py-24 lg:px-8">
+      <div data-reveal className="relative isolate mx-auto max-w-6xl overflow-hidden rounded-[2rem] border border-border">
+        <Backdrop className="[&_.backdrop__canvas]:[mask-image:none]" />
+        <div className="relative px-6 py-16 text-center sm:px-12 sm:py-24">
+          <h2 className="mx-auto max-w-3xl text-balance text-4xl font-semibold tracking-tight sm:text-5xl lg:text-6xl">{title}</h2>
+          <p className="mx-auto mt-5 max-w-xl text-pretty text-base text-foreground/75 sm:text-lg">{description}</p>
+          <div className="mt-9 flex flex-col justify-center gap-3 sm:flex-row">
+            <Link href={primary.href} className={cn(buttonClasses("secondary", "lg"), "btn-solid rounded-full px-7")}>
+              {primary.label}
+              <ArrowRight className="size-4" aria-hidden="true" />
+            </Link>
+            {secondary ? (
+              <Link href={secondary.href} className={cn(buttonClasses("ghost", "lg"), "glass rounded-full border border-border-strong px-7")}>
+                {secondary.label}
               </Link>
-              {secondary ? (
-                <Link href={secondary.href} className={cn(buttonClasses("ghost", "lg"), "glass rounded-xl border border-border-strong")}>
-                  {secondary.label}
-                </Link>
-              ) : null}
-            </div>
+            ) : null}
           </div>
         </div>
       </div>
