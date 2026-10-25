@@ -20,7 +20,7 @@
     "runner:prepare": "tsx services/runner/prepare.ts",
     "realtime:dev": "tsx watch services/realtime/index.ts",
     "realtime:start": "tsx services/realtime/index.ts",
-    "postinstall": "node scripts/copy-monaco.mjs",
+    "postinstall": "node scripts/copy-monaco.mjs && node scripts/patch-opennext-windows.mjs",
     "check": "npm run lint && npm run typecheck && npm run test && npm run build",
     "prebuild": "tsx scripts/generate-api-manifest.ts && tsx scripts/generate-content-bundle.ts",
     "api:manifest": "tsx scripts/generate-api-manifest.ts",

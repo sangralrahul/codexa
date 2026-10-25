@@ -153,9 +153,18 @@ if (names.length) {
 
 // 5. Deploy
 step(5, "Building and uploading Codexa (this takes a few minutes)");
-if (!run("npm run cf:deploy").ok) {
+// Make sure the Windows-safe build patch is in place even if postinstall was skipped.
+run("node scripts/patch-opennext-windows.mjs");
+if (!run("npm run cf:build").ok) {
+  fail(
+    process.platform === "win32"
+      ? 'The build failed. If the error mentions "EPERM" and "symlink", turn on Windows Developer Mode (press Windows+R, type ms-settings:developers, switch Developer Mode on), open a new Command Prompt and run this again. Otherwise, take a screenshot of the red error above and ask for help.'
+      : "The build failed. Take a screenshot of the red error above and ask for help.",
+  );
+}
+if (!run("npx opennextjs-cloudflare deploy").ok) {
   // Cloudflare sometimes finishes the Worker but not the container settings ("Re-run the same
-  // wrangler deploy command"). Retry the upload alone; the build output is reused, no rebuild.
+  // wrangler deploy command"). Retry the upload alone; the build output is reused.
   say("\nThe upload didn't fully finish. Trying the upload again (no rebuild needed)...");
   if (!run("npx opennextjs-cloudflare deploy").ok) fail("The upload failed. Take a screenshot of the red error above and ask for help.");
 }
