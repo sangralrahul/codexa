@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ArrowRight, ArrowUpRight, Bot, Cloud, Code2, CreditCard, Database, GitBranch, Globe, History, IndianRupee, LayoutTemplate, Mail, Plug, Rocket, Server, ShieldCheck, Sparkles } from "lucide-react";
+import { ArrowRight, ArrowUpRight, Bot, Cloud, Code2, CreditCard, Database, GitBranch, History, IndianRupee, Mail, Rocket, ShieldCheck, Sparkles } from "lucide-react";
 import { routeMetadata, jsonLd } from "@/lib/seo";
 import { site } from "@/config/site";
 import { PLANS } from "@/config/plans";
@@ -9,6 +9,7 @@ import { buttonClasses } from "@/components/ui/button";
 import { Section, SectionHeader } from "@/components/marketing/section";
 import { FeatureGrid } from "@/components/marketing/feature-grid";
 import { Steps } from "@/components/marketing/steps";
+import { PlatformBento } from "@/components/marketing/platform-bento";
 import { FAQ } from "@/components/marketing/faq";
 import { CTABand } from "@/components/marketing/cta-band";
 import { PricingTable } from "@/components/marketing/pricing-table";
@@ -26,6 +27,9 @@ const positioning = [
   { icon: History, title: "Reversible by default", body: "A snapshot is taken before every AI run. Review per-file diffs and restore with one click." },
 ];
 
+// Covered by the bento tiles above the feature list.
+const BENTO_COVERED = new Set(["AI agent", "AI app builder", "Snapshots and diffs", "Isolated runtimes", "Deployment", "Databases"]);
+
 const integrationNames = [
   { name: "GitHub", icon: GitBranch },
   { name: "PostgreSQL", icon: Database },
@@ -40,11 +44,6 @@ const integrationNames = [
   { name: "Cloudflare", icon: Cloud },
 ];
 
-const backend = [
-  { icon: Database, title: "PostgreSQL and Supabase", body: "Connect a database, browse the schema, and run SQL from the workspace. Destructive statements ask for confirmation." },
-  { icon: Server, title: "Node + Express APIs", body: "Generate REST APIs as a starter template, run them in the sandbox, and read streamed logs." },
-  { icon: Plug, title: "Encrypted environment variables", body: "Secrets are encrypted at rest, masked in the UI, and injected into previews and deployments." },
-];
 
 const deploySteps = [
   { title: "Build in the sandbox", description: "The same isolated runtime that previews your app produces the production build." },
@@ -53,11 +52,6 @@ const deploySteps = [
   { title: "Point your domain", description: "CNAME instructions for custom domains are provided; automatic verification is planned." },
 ];
 
-const india = [
-  { icon: IndianRupee, title: "INR and USD pricing", body: "Plans are listed in both currencies with monthly and annual billing. Taxes are added at checkout." },
-  { icon: Globe, title: "Razorpay and Stripe", body: "Indian customers pay through Razorpay (UPI, cards, net banking); international customers through Stripe." },
-  { icon: Rocket, title: "Built for distributed teams", body: "Timestamps are shown in your timezone, activity history is shared, and roles keep client work separated." },
-];
 
 export default async function HomePage() {
   const user = await getCurrentUser();
@@ -136,135 +130,97 @@ export default async function HomePage() {
         </div>
       </section>
 
-      <Section className="bg-transparent">
-        <SectionHeader eyebrow="Why Codexa" title="An AI builder that behaves like a development platform" description="Codexa is for people who want the speed of generation without giving up the code, the tooling, or the ability to undo." align="center" />
-        <ul className="mt-12 grid gap-4 md:grid-cols-3">
-          {positioning.map((p, i) => (
-            <li key={p.title} data-reveal style={{ "--reveal-delay": `${i * 90}ms` } as React.CSSProperties} className="glow-card group rounded-2xl border border-border p-7">
-              <span className="icon-tile inline-flex size-11 items-center justify-center rounded-xl transition-transform duration-300 group-hover:scale-110 group-hover:-rotate-3">
-                <p.icon className="size-5" aria-hidden="true" />
-              </span>
-              <h3 className="mt-5 text-lg font-semibold tracking-tight">{p.title}</h3>
-              <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{p.body}</p>
-            </li>
-          ))}
-        </ul>
+      <Section>
+        <div className="grid gap-12 lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)] lg:gap-20">
+          <SectionHeader
+            eyebrow="Why Codexa"
+            title="An AI builder that behaves like a development platform"
+            highlight="a development platform"
+            description="For people who want the speed of generation without giving up the code, the tooling, or the ability to undo."
+            className="lg:sticky lg:top-28 lg:self-start"
+          />
+          <ol className="divide-y divide-border border-y border-border">
+            {positioning.map((p, i) => (
+              <li key={p.title} data-reveal style={{ "--reveal-delay": `${i * 90}ms` } as React.CSSProperties} className="group grid grid-cols-[3.5rem_minmax(0,1fr)] gap-4 py-8">
+                <span className="serif-accent text-4xl leading-none text-muted-foreground transition-colors group-hover:text-signal">{String(i + 1).padStart(2, "0")}</span>
+                <div>
+                  <h3 className="text-xl font-semibold tracking-tight">{p.title}</h3>
+                  <p className="mt-2 leading-relaxed text-muted-foreground">{p.body}</p>
+                </div>
+              </li>
+            ))}
+          </ol>
+        </div>
       </Section>
 
-      <Section tone="surface">
-        <SectionHeader eyebrow="Platform" title="Everything from the first prompt to the live URL" description="Each feature below is implemented in the product today. Where something depends on operator configuration, the page says so." />
-        <FeatureGrid features={PLATFORM_FEATURES} columns={4} className="mt-8" />
-        <p className="mt-6 text-sm">
-          <Link href="/features" className="group inline-flex items-center gap-1 font-medium text-primary underline-offset-4 hover:underline">
+      <Section>
+        <SectionHeader
+          eyebrow="Platform"
+          title="Everything from the first prompt to the live URL"
+          highlight="the live URL"
+          description="Each part below is implemented in the product today. Where something depends on operator configuration, the page says so."
+        />
+        <div className="mt-12">
+          <PlatformBento />
+        </div>
+        <FeatureGrid features={PLATFORM_FEATURES.filter((f) => !BENTO_COVERED.has(f.title))} columns={3} className="mt-14" />
+        <p className="mt-8 text-sm">
+          <Link href="/features" className="group inline-flex items-center gap-1 font-medium underline-offset-4 hover:underline">
             See the full feature list <ArrowUpRight className="size-3.5 transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5" aria-hidden="true" />
           </Link>
         </p>
       </Section>
 
-      <Section>
-        <SectionHeader eyebrow="How it works" title="Plan, generate, validate, run, ship" description="The agent works in bounded, observable steps. You can watch every tool call, cancel a run, and revert the result." />
-        <Steps steps={HOW_IT_WORKS_STEPS} className="mt-8" />
-        <p className="mt-6 text-sm">
-          <Link href="/how-it-works" className="group inline-flex items-center gap-1 font-medium text-primary underline-offset-4 hover:underline">
+      <Section tone="surface">
+        <SectionHeader eyebrow="How it works" title="Plan, generate, validate, run, ship" highlight="ship" description="The agent works in bounded, observable steps. You can watch every tool call, cancel a run, and revert the result." />
+        <Steps steps={HOW_IT_WORKS_STEPS} className="mt-12" />
+        <p className="mt-10 text-sm">
+          <Link href="/how-it-works" className="group inline-flex items-center gap-1 font-medium underline-offset-4 hover:underline">
             Read the detailed walkthrough <ArrowUpRight className="size-3.5 transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5" aria-hidden="true" />
           </Link>
         </p>
       </Section>
 
-      <Section tone="surface">
-        <SectionHeader eyebrow="Editor and preview" title="A real editor next to a running preview" description="Monaco with tabs, file explorer, search and replace, diagnostics, and diff view on one side; your app running in an isolated sandbox on the other." align="center" />
-        <div className="mt-10 grid gap-4 md:grid-cols-2">
-          <Link href="/code-editor" data-reveal className="glow-card group rounded-2xl border border-border p-7">
-            <span className="icon-tile inline-flex size-11 items-center justify-center rounded-xl">
-              <Code2 className="size-5" aria-hidden="true" />
-            </span>
-            <h3 className="mt-5 text-lg font-semibold tracking-tight">Code editor</h3>
-            <p className="mt-2 text-sm leading-relaxed text-muted-foreground">Edit generated code by hand with the same editor that powers VS Code. Every AI change shows up as a reviewable diff.</p>
-            <span className="mt-5 inline-flex items-center gap-1 text-sm font-medium text-primary">
-              Explore the editor <ArrowUpRight className="size-3.5 transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5" aria-hidden="true" />
-            </span>
-          </Link>
-          <Link href="/visual-editor" data-reveal style={{ "--reveal-delay": "90ms" } as React.CSSProperties} className="glow-card group rounded-2xl border border-border p-7">
-            <span className="icon-tile inline-flex size-11 items-center justify-center rounded-xl">
-              <Globe className="size-5" aria-hidden="true" />
-            </span>
-            <h3 className="mt-5 text-lg font-semibold tracking-tight">Live preview</h3>
-            <p className="mt-2 text-sm leading-relaxed text-muted-foreground">Your app runs in its own isolated sandbox with hot reload, device sizes, and streamed logs while you work.</p>
-            <span className="mt-5 inline-flex items-center gap-1 text-sm font-medium text-primary">
-              Preview and visual editor <ArrowUpRight className="size-3.5 transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5" aria-hidden="true" />
-            </span>
-          </Link>
+      <Section>
+        <SectionHeader eyebrow="Deployment" title="From preview to production without leaving the workspace" highlight="without leaving the workspace" />
+        <Steps steps={deploySteps} className="mt-12" />
+      </Section>
+
+      <Section className="pt-0 sm:pt-0 lg:pt-0">
+        <div className="grid gap-px overflow-hidden rounded-3xl border border-border bg-border md:grid-cols-2">
+          {[
+            { href: "/templates", kicker: "Templates", title: "Start from a", accent: "real project.", body: "React + Vite + TypeScript + Tailwind apps, static sites and Node + Express APIs. Real files with documented dependencies." },
+            { href: "/integrations", kicker: "Integrations", title: "Connect what your", accent: "app needs.", body: "GitHub, PostgreSQL and Supabase, Anthropic and OpenAI, Stripe, Razorpay and more, each tested before it is saved." },
+          ].map((c, i) => (
+            <Link key={c.href} href={c.href} data-reveal style={{ "--reveal-delay": `${i * 90}ms` } as React.CSSProperties} className="group bg-background p-8 transition-colors duration-300 hover:bg-surface sm:p-12">
+              <p className="font-mono text-[11px] uppercase tracking-[0.18em] text-muted-foreground">{c.kicker}</p>
+              <h2 className="mt-6 text-3xl font-semibold tracking-[-0.025em] sm:text-4xl">
+                {c.title} <span className="serif-accent">{c.accent}</span>
+              </h2>
+              <p className="mt-4 max-w-md leading-relaxed text-muted-foreground">{c.body}</p>
+              <span className="mt-8 inline-flex size-11 items-center justify-center rounded-full border border-border-strong transition-all duration-300 group-hover:border-foreground group-hover:bg-foreground group-hover:text-background">
+                <ArrowUpRight className="size-4" aria-hidden="true" />
+              </span>
+            </Link>
+          ))}
+        </div>
+      </Section>
+
+      <Section className="py-10 sm:py-12 lg:py-14">
+        <div data-reveal className="flex flex-col gap-6 border-y border-border py-8 md:flex-row md:items-center md:justify-between">
+          <p className="text-2xl font-semibold tracking-tight">
+            Priced and billed <span className="serif-accent">for where you are.</span>
+          </p>
+          <ul className="flex flex-wrap gap-x-8 gap-y-2 text-sm text-muted-foreground">
+            <li>INR and USD plans, monthly or annual</li>
+            <li>Razorpay: UPI, cards, net banking</li>
+            <li>Stripe internationally</li>
+          </ul>
         </div>
       </Section>
 
       <Section>
-        <SectionHeader eyebrow="Backend and data" title="Not just a frontend generator" />
-        <ul className="mt-8 grid gap-4 md:grid-cols-3">
-          {backend.map((b, i) => (
-            <li key={b.title} data-reveal style={{ "--reveal-delay": `${i * 90}ms` } as React.CSSProperties} className="glow-card group rounded-2xl border border-border p-7">
-              <span className="icon-tile inline-flex size-11 items-center justify-center rounded-xl transition-transform duration-300 group-hover:scale-110 group-hover:-rotate-3">
-                <b.icon className="size-5" aria-hidden="true" />
-              </span>
-              <h3 className="mt-5 text-lg font-semibold tracking-tight">{b.title}</h3>
-              <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{b.body}</p>
-            </li>
-          ))}
-        </ul>
-        <p className="mt-6 text-sm">
-          <Link href="/full-stack-development" className="group inline-flex items-center gap-1 font-medium text-primary underline-offset-4 hover:underline">
-            Full-stack development in Codexa <ArrowUpRight className="size-3.5 transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5" aria-hidden="true" />
-          </Link>
-        </p>
-      </Section>
-
-      <Section tone="surface">
-        <SectionHeader eyebrow="Deployment" title="From preview to production without leaving the workspace" />
-        <Steps steps={deploySteps} className="mt-8" />
-        <p className="mt-6 text-sm">
-          <Link href="/app-deployment" className="group inline-flex items-center gap-1 font-medium text-primary underline-offset-4 hover:underline">
-            How deployment works <ArrowUpRight className="size-3.5 transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5" aria-hidden="true" />
-          </Link>
-        </p>
-      </Section>
-
-      <Section>
-        <div className="grid gap-6 md:grid-cols-2">
-          <Link href="/templates" data-reveal className="glow-card group rounded-2xl border border-border p-8">
-            <span className="icon-tile inline-flex size-12 items-center justify-center rounded-xl"><LayoutTemplate className="size-6" aria-hidden="true" /></span>
-            <h2 className="mt-5 text-2xl font-semibold tracking-tight">Starter templates</h2>
-            <p className="mt-2 text-sm leading-relaxed text-muted-foreground">React + Vite + TypeScript + Tailwind single-page apps, static HTML/CSS/JS sites, and Node + Express REST APIs. Real files with documented dependencies.</p>
-            <span className="mt-4 inline-flex items-center gap-1 text-sm font-medium text-primary">
-              Browse templates <ArrowUpRight className="size-3.5 transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5" aria-hidden="true" />
-            </span>
-          </Link>
-          <Link href="/integrations" data-reveal style={{ "--reveal-delay": "90ms" } as React.CSSProperties} className="glow-card group rounded-2xl border border-border p-8">
-            <span className="icon-tile inline-flex size-12 items-center justify-center rounded-xl"><Plug className="size-6" aria-hidden="true" /></span>
-            <h2 className="mt-5 text-2xl font-semibold tracking-tight">Integrations</h2>
-            <p className="mt-2 text-sm leading-relaxed text-muted-foreground">GitHub, PostgreSQL and Supabase, Anthropic and OpenAI, Stripe, Razorpay, Resend, and Vercel. Workspace-level connections with connection tests; each is active only when configured.</p>
-            <span className="mt-4 inline-flex items-center gap-1 text-sm font-medium text-primary">
-              See integrations <ArrowUpRight className="size-3.5 transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5" aria-hidden="true" />
-            </span>
-          </Link>
-        </div>
-      </Section>
-
-      <Section tone="surface">
-        <SectionHeader eyebrow="India and worldwide" title="Priced and billed for where you are" description="Codexa is built by a small team in India for builders everywhere." />
-        <ul className="mt-8 grid gap-4 md:grid-cols-3">
-          {india.map((b, i) => (
-            <li key={b.title} data-reveal style={{ "--reveal-delay": `${i * 90}ms` } as React.CSSProperties} className="glow-card group rounded-2xl border border-border p-7">
-              <span className="icon-tile inline-flex size-11 items-center justify-center rounded-xl transition-transform duration-300 group-hover:scale-110 group-hover:-rotate-3">
-                <b.icon className="size-5" aria-hidden="true" />
-              </span>
-              <h3 className="mt-5 text-lg font-semibold tracking-tight">{b.title}</h3>
-              <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{b.body}</p>
-            </li>
-          ))}
-        </ul>
-      </Section>
-
-      <Section>
-        <SectionHeader eyebrow="Pricing" title="Start free, upgrade when you need more" description="Limits are enforced on the server for AI requests and tokens, runtime minutes, deployments, storage, projects, and members." align="center" />
+        <SectionHeader eyebrow="Pricing" title="Start free, upgrade when you need more" highlight="when you need more" description="Limits are enforced on the server for AI requests and tokens, runtime minutes, deployments, storage, projects, and members." align="center" />
         <div className="mt-8">
           <PricingTable compact planIds={previewPlans} />
         </div>

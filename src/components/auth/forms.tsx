@@ -3,13 +3,55 @@
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { useEffect, useState, type FormEvent } from "react";
-import { Button } from "@/components/ui/button";
+import { Eye, EyeOff, GitBranch } from "lucide-react";
+import { Button, buttonClasses } from "@/components/ui/button";
 import { Field, Input } from "@/components/ui/input";
 import { Alert } from "@/components/ui/misc";
 import { api, ClientApiError } from "@/lib/client/api";
+import { cn } from "@/lib/utils";
 
 function safeNext(next: string | null, fallback: string) {
   return next && next.startsWith("/") && !next.startsWith("//") ? next : fallback;
+}
+
+/** Password field with a show/hide toggle. */
+function PasswordInput(props: React.InputHTMLAttributes<HTMLInputElement> & { id: string }) {
+  const [shown, setShown] = useState(false);
+  return (
+    <div className="relative">
+      <Input {...props} type={shown ? "text" : "password"} className="h-11 pr-11" />
+      <button
+        type="button"
+        onClick={() => setShown((v) => !v)}
+        aria-label={shown ? "Hide" : "Show"}
+        aria-controls={props.id}
+        aria-pressed={shown}
+        title={shown ? "Hide password" : "Show password"}
+        className="absolute inset-y-0 right-1 my-auto inline-flex size-9 items-center justify-center rounded-full text-muted-foreground transition-colors hover:text-foreground"
+      >
+        {shown ? <EyeOff className="size-4" aria-hidden="true" /> : <Eye className="size-4" aria-hidden="true" />}
+      </button>
+    </div>
+  );
+}
+
+function OrDivider() {
+  return (
+    <div className="flex items-center gap-3 text-xs text-muted-foreground" aria-hidden="true">
+      <span className="h-px flex-1 bg-border" />
+      or
+      <span className="h-px flex-1 bg-border" />
+    </div>
+  );
+}
+
+function GitHubButton({ href }: { href: string }) {
+  return (
+    <a href={href} className={cn(buttonClasses("outline", "lg"), "w-full text-sm")}>
+      <GitBranch className="size-4" aria-hidden="true" />
+      Continue with GitHub
+    </a>
+  );
 }
 
 export function SignupForm({ githubEnabled }: { githubEnabled: boolean }) {
@@ -43,28 +85,29 @@ export function SignupForm({ githubEnabled }: { githubEnabled: boolean }) {
   }
 
   return (
-    <form onSubmit={onSubmit} className="space-y-4" noValidate>
+    <form onSubmit={onSubmit} className="space-y-5" noValidate>
       {error ? <Alert variant="danger">{error}</Alert> : null}
       <Field label="Name" htmlFor="name">
-        <Input id="name" name="name" autoComplete="name" placeholder="Your name" maxLength={100} />
+        <Input id="name" name="name" autoComplete="name" placeholder="Your name" maxLength={100} className="h-11" />
       </Field>
       <Field label="Email" htmlFor="email" error={fields.email}>
-        <Input id="email" name="email" type="email" autoComplete="email" required placeholder="you@company.com" defaultValue={params.get("email") ?? ""} aria-invalid={Boolean(fields.email)} />
+        <Input id="email" name="email" type="email" autoComplete="email" required placeholder="you@company.com" defaultValue={params.get("email") ?? ""} aria-invalid={Boolean(fields.email)} className="h-11" />
       </Field>
       <Field label="Password" htmlFor="password" hint="At least 8 characters with a letter and a number." error={fields.password}>
-        <Input id="password" name="password" type="password" autoComplete="new-password" required minLength={8} aria-invalid={Boolean(fields.password)} />
+        <PasswordInput id="password" name="password" autoComplete="new-password" required minLength={8} aria-invalid={Boolean(fields.password)} />
       </Field>
-      <Button type="submit" className="w-full" loading={loading}>
+      <Button type="submit" size="lg" className="w-full text-sm" loading={loading}>
         Create account
       </Button>
       {githubEnabled ? (
-        <a href="/api/auth/github/start?next=/onboarding" className="flex h-10 w-full items-center justify-center rounded-lg border border-border-strong text-sm font-medium hover:bg-muted">
-          Continue with GitHub
-        </a>
+        <>
+          <OrDivider />
+          <GitHubButton href="/api/auth/github/start?next=/onboarding" />
+        </>
       ) : null}
       <p className="text-center text-sm text-muted-foreground">
         Already have an account?{" "}
-        <Link href="/login" className="font-medium text-foreground underline">
+        <Link href="/login" className="font-medium text-foreground underline underline-offset-4">
           Sign in
         </Link>
       </p>
@@ -95,30 +138,34 @@ export function LoginForm({ githubEnabled }: { githubEnabled: boolean }) {
   }
 
   return (
-    <form onSubmit={onSubmit} className="space-y-4" noValidate>
+    <form onSubmit={onSubmit} className="space-y-5" noValidate>
       {error ? <Alert variant="danger">{error}</Alert> : null}
       <Field label="Email" htmlFor="email">
-        <Input id="email" name="email" type="email" autoComplete="email" required placeholder="you@company.com" />
+        <Input id="email" name="email" type="email" autoComplete="email" required placeholder="you@company.com" className="h-11" />
       </Field>
-      <Field label="Password" htmlFor="password">
-        <Input id="password" name="password" type="password" autoComplete="current-password" required />
-      </Field>
-      <div className="flex items-center justify-between text-sm">
-        <Link href="/forgot-password" className="text-muted-foreground underline hover:text-foreground">
-          Forgot password?
-        </Link>
+      <div className="space-y-1.5">
+        <div className="flex items-center justify-between">
+          <label htmlFor="password" className="text-sm font-medium leading-none">
+            Password
+          </label>
+          <Link href="/forgot-password" className="text-xs text-muted-foreground underline-offset-4 hover:text-foreground hover:underline">
+            Forgot password?
+          </Link>
+        </div>
+        <PasswordInput id="password" name="password" autoComplete="current-password" required />
       </div>
-      <Button type="submit" className="w-full" loading={loading}>
+      <Button type="submit" size="lg" className="w-full text-sm" loading={loading}>
         Sign in
       </Button>
       {githubEnabled ? (
-        <a href={`/api/auth/github/start?next=${encodeURIComponent(safeNext(params.get("next"), "/dashboard"))}`} className="flex h-10 w-full items-center justify-center rounded-lg border border-border-strong text-sm font-medium hover:bg-muted">
-          Continue with GitHub
-        </a>
+        <>
+          <OrDivider />
+          <GitHubButton href={`/api/auth/github/start?next=${encodeURIComponent(safeNext(params.get("next"), "/dashboard"))}`} />
+        </>
       ) : null}
       <p className="text-center text-sm text-muted-foreground">
         New to Codexa?{" "}
-        <Link href="/signup" className="font-medium text-foreground underline">
+        <Link href="/signup" className="font-medium text-foreground underline underline-offset-4">
           Create an account
         </Link>
       </p>
@@ -146,12 +193,12 @@ export function ForgotPasswordForm() {
   }
   if (done) return <Alert variant="success" title="Check your email">If an account exists for that address, we sent a password reset link. It expires in one hour.</Alert>;
   return (
-    <form onSubmit={onSubmit} className="space-y-4" noValidate>
+    <form onSubmit={onSubmit} className="space-y-5" noValidate>
       {error ? <Alert variant="danger">{error}</Alert> : null}
       <Field label="Email" htmlFor="email">
-        <Input id="email" name="email" type="email" autoComplete="email" required />
+        <Input id="email" name="email" type="email" autoComplete="email" required className="h-11" />
       </Field>
-      <Button type="submit" className="w-full" loading={loading}>
+      <Button type="submit" size="lg" className="w-full text-sm" loading={loading}>
         Send reset link
       </Button>
     </form>
@@ -181,15 +228,15 @@ export function ResetPasswordForm({ token }: { token: string }) {
     }
   }
   return (
-    <form onSubmit={onSubmit} className="space-y-4" noValidate>
+    <form onSubmit={onSubmit} className="space-y-5" noValidate>
       {error ? <Alert variant="danger">{error}</Alert> : null}
       <Field label="New password" htmlFor="password" hint="At least 8 characters with a letter and a number.">
-        <Input id="password" name="password" type="password" autoComplete="new-password" required minLength={8} />
+        <PasswordInput id="password" name="password" autoComplete="new-password" required minLength={8} />
       </Field>
       <Field label="Confirm password" htmlFor="confirm">
-        <Input id="confirm" name="confirm" type="password" autoComplete="new-password" required minLength={8} />
+        <PasswordInput id="confirm" name="confirm" autoComplete="new-password" required minLength={8} />
       </Field>
-      <Button type="submit" className="w-full" loading={loading}>
+      <Button type="submit" size="lg" className="w-full text-sm" loading={loading}>
         Update password
       </Button>
     </form>

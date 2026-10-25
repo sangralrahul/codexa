@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { AlertCircle, Lightbulb } from "lucide-react";
+import { AlertCircle } from "lucide-react";
 import type { Solution } from "@/content/marketing/solutions";
 import { Hero } from "./hero";
 import { Section, SectionHeader } from "./section";
@@ -35,14 +35,14 @@ export function SolutionPageTemplate({ solution }: { solution: Solution }) {
 
       <Section>
         <SectionHeader title="Example project ideas" description="Starting prompts you can paste into Codexa. Each one maps to a starter template and produces real, editable code." />
-        <ul className="mt-8 grid gap-3 sm:grid-cols-2">
-          {solution.ideas.map((idea) => (
-            <li key={idea} data-reveal className="glow-card flex gap-3 rounded-xl border border-border p-5 text-sm">
-              <Lightbulb className="mt-0.5 size-4 shrink-0 text-primary" aria-hidden="true" />
+        <ol className="mt-10 grid gap-x-10 sm:grid-cols-2">
+          {solution.ideas.map((idea, i) => (
+            <li key={idea} data-reveal style={{ "--reveal-delay": `${(i % 2) * 70}ms` } as React.CSSProperties} className="group flex gap-4 border-t border-border py-5 text-sm leading-relaxed">
+              <span className="serif-accent w-7 shrink-0 text-xl leading-none text-muted-foreground transition-colors group-hover:text-signal">{String(i + 1).padStart(2, "0")}</span>
               <span>{idea}</span>
             </li>
           ))}
-        </ul>
+        </ol>
       </Section>
 
       <Section tone="surface" className="py-12 sm:py-14">

@@ -1,5 +1,6 @@
 import * as React from "react";
 import { cn } from "@/lib/utils";
+import { Highlight } from "./backdrop";
 
 type Tone = "default" | "surface" | "contrast";
 const tones: Record<Tone, string> = {
@@ -26,6 +27,7 @@ export function Section({
 export function SectionHeader({
   eyebrow,
   title,
+  highlight,
   description,
   align = "left",
   as: Heading = "h2",
@@ -33,6 +35,8 @@ export function SectionHeader({
 }: {
   eyebrow?: string;
   title: string;
+  /** Part of the title set in the italic serif accent. */
+  highlight?: string;
   description?: string;
   align?: "left" | "center";
   as?: "h1" | "h2" | "h3";
@@ -46,7 +50,9 @@ export function SectionHeader({
           {eyebrow}
         </p>
       ) : null}
-      <Heading className={cn("text-balance font-semibold tracking-[-0.025em]", Heading === "h1" ? "text-4xl sm:text-5xl lg:text-6xl" : "text-3xl sm:text-4xl lg:text-[2.75rem] lg:leading-[1.1]")}>{title}</Heading>
+      <Heading className={cn("text-balance font-semibold tracking-[-0.025em]", Heading === "h1" ? "text-4xl sm:text-5xl lg:text-6xl" : "text-3xl sm:text-4xl lg:text-[2.75rem] lg:leading-[1.1]")}>
+        <Highlight text={title} highlight={highlight} />
+      </Heading>
       {description ? <p className="mt-4 text-pretty text-base text-muted-foreground sm:text-lg">{description}</p> : null}
     </div>
   );
