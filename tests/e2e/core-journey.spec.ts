@@ -27,7 +27,7 @@ async function signUp(page: Page) {
 
 test.describe.configure({ mode: "serial" });
 
-test("sign up, create, generate, edit, preview, deploy", async ({ page, request, context }) => {
+test("sign up, create, generate, edit, preview, deploy", async ({ page, context }) => {
   test.setTimeout(240_000);
   await signUp(page);
 
