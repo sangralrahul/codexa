@@ -15,3 +15,7 @@ export async function execInProject(_projectId: string, _command: ExecCommand, _
 export async function getRuntimeStatus(_projectId: string): Promise<{ available: boolean; status: "running" | "stopped" | "starting" | "error" | "unavailable"; previewUrl: string | null }> {
   return { available: false, status: "unavailable", previewUrl: null };
 }
+
+export async function getRuntimeLogs(_projectId: string, _opts?: { lines?: number }): Promise<{ available: boolean; lines: { ts: string; stream: "stdout" | "stderr" | "system"; line: string }[] }> {
+  return { available: false, lines: [] };
+}
