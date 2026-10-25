@@ -1,13 +1,13 @@
 import { defineConfig } from "drizzle-kit";
-import "dotenv/config";
 
+// Codexa's database is Cloudflare D1 (SQLite). drizzle-kit only generates the
+// SQL migrations in ./drizzle; Wrangler applies them:
+//   npx wrangler d1 migrations apply codexa --local    (development)
+//   npx wrangler d1 migrations apply codexa --remote   (production)
 export default defineConfig({
   schema: "./src/db/schema.ts",
   out: "./drizzle",
-  dialect: "postgresql",
-  dbCredentials: {
-    url: process.env.DATABASE_URL ?? "postgres://codexa:codexa@127.0.0.1:5432/codexa",
-  },
+  dialect: "sqlite",
   strict: true,
   verbose: false,
 });

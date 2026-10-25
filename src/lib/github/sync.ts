@@ -1,10 +1,7 @@
 import "server-only";
 import type { Project, ProjectSettings } from "@/db/schema";
 import { ApiError, badRequest } from "@/lib/api";
-import { createProject, createSnapshot, getAllFiles, listFiles, logActivity, updateProject, writeFiles } from "@/lib/services/projects";
-import { db } from "@/db";
-import { projectFiles, projects } from "@/db/schema";
-import { eq } from "drizzle-orm";
+import { createProject, createSnapshot, getAllFiles, listFiles, logActivity, replaceAllFiles, updateProject } from "@/lib/services/projects";
 import { GitHubError, parseRepoFullName, type GitHubClient, type ImportedRepo } from "./client";
 
 /** Extra keys we keep inside project.settings (requested as proper fields in the schema; see docs/INTEGRATIONS.md). */
@@ -81,11 +78,7 @@ export async function pullIntoProject(input: { client: GitHubClient; project: Pr
   const data = await readRepository(input.client, repoName, input.branch ?? input.project.githubBranch);
   await createSnapshot(input.project.id, { name: "Before pull", kind: "manual", message: `Before pulling ${repoName}@${data.branch}`, createdBy: input.userId });
   const current = await listFiles(input.project.id);
-  await db.transaction(async (tx) => {
-    await tx.delete(projectFiles).where(eq(projectFiles.projectId, input.project.id));
-    await tx.update(projects).set({ updatedAt: new Date() }).where(eq(projects.id, input.project.id));
-  });
-  await writeFiles(input.project.id, data.files);
+  await replaceAllFiles(input.project.id, data.files);
   const settings: GithubSyncSettings = { ...input.project.settings, githubLastTreeSha: data.treeSha, githubLastCommitSha: data.commitSha, githubLastSyncAt: new Date().toISOString() };
   const updated = await updateProject(input.project.id, { githubRepo: repoName, githubBranch: data.branch, settings: settings as ProjectSettings });
   await logActivity(input.project.id, input.userId, "github.pulled", `Pulled ${Object.keys(data.files).length} files from ${repoName}@${data.branch}`, {

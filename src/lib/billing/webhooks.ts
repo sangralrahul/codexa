@@ -139,7 +139,7 @@ async function setSubscriptionStatus(provider: BillingProvider, providerSubscrip
     .set({
       status,
       updatedAt: new Date(),
-      ...(periodEnd ? { currentPeriodEnd: sql`greatest(coalesce(${subscriptions.currentPeriodEnd}, ${periodEnd}), ${periodEnd})` } : {}),
+      ...(periodEnd ? { currentPeriodEnd: sql`max(coalesce(${subscriptions.currentPeriodEnd}, ${periodEnd.getTime()}), ${periodEnd.getTime()})` } : {}),
     })
     .where(and(eq(subscriptions.provider, provider), eq(subscriptions.providerSubscriptionId, providerSubscriptionId)))
     .returning({ workspaceId: subscriptions.workspaceId });

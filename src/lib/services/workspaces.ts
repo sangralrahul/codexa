@@ -1,7 +1,7 @@
 import "server-only";
 import { and, desc, eq, isNull } from "drizzle-orm";
-import { db } from "@/db";
-import { workspaceMembers, workspaces, users, workspaceInvites, type WorkspaceRole } from "@/db/schema";
+import { db, runBatch } from "@/db";
+import { workspaceMembers, workspaces, users, workspaceInvites, type WorkspaceRole, type Workspace } from "@/db/schema";
 import { hashToken, randomToken } from "@/lib/crypto";
 import { slugify } from "@/lib/utils";
 
@@ -23,11 +23,12 @@ export async function createWorkspace(ownerId: string, name: string) {
   let slug = slugify(name);
   const existing = await db.select({ id: workspaces.id }).from(workspaces).where(eq(workspaces.slug, slug)).limit(1);
   if (existing.length) slug = `${slug}-${randomToken(3).toLowerCase().replace(/[^a-z0-9]/g, "").slice(0, 5)}`;
-  return db.transaction(async (tx) => {
-    const [ws] = await tx.insert(workspaces).values({ slug, name, ownerId }).returning();
-    await tx.insert(workspaceMembers).values({ workspaceId: ws.id, userId: ownerId, role: "owner" });
-    return ws;
-  });
+  const id = crypto.randomUUID();
+  const [inserted] = await runBatch([
+    db.insert(workspaces).values({ id, slug, name, ownerId }).returning(),
+    db.insert(workspaceMembers).values({ workspaceId: id, userId: ownerId, role: "owner" }),
+  ]);
+  return (inserted as Workspace[])[0];
 }
 
 export async function listMembers(workspaceId: string) {
@@ -79,13 +80,13 @@ export async function acceptInvite(token: string, userId: string, userEmail: str
   if (invite.acceptedAt) return { ok: false as const, reason: "Invitation already used" };
   if (invite.expiresAt < new Date()) return { ok: false as const, reason: "Invitation expired" };
   if (invite.email !== userEmail.toLowerCase()) return { ok: false as const, reason: "This invitation was sent to a different email address" };
-  await db.transaction(async (tx) => {
-    await tx
+  await runBatch([
+    db
       .insert(workspaceMembers)
       .values({ workspaceId: invite.workspaceId, userId, role: invite.role })
-      .onConflictDoUpdate({ target: [workspaceMembers.workspaceId, workspaceMembers.userId], set: { role: invite.role } });
-    await tx.update(workspaceInvites).set({ acceptedAt: new Date() }).where(eq(workspaceInvites.id, invite.id));
-  });
+      .onConflictDoUpdate({ target: [workspaceMembers.workspaceId, workspaceMembers.userId], set: { role: invite.role } }),
+    db.update(workspaceInvites).set({ acceptedAt: new Date() }).where(eq(workspaceInvites.id, invite.id)),
+  ]);
   return { ok: true as const, workspace };
 }
 

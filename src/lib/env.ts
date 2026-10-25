@@ -15,7 +15,6 @@ function defaultAppUrl() {
 const schema = z.object({
   NODE_ENV: z.enum(["development", "test", "production"]).default("development"),
   APP_URL: z.string().url().default(defaultAppUrl()),
-  DATABASE_URL: z.string().min(1),
   SESSION_SECRET: z.string().min(16),
   ENCRYPTION_KEY: z.string().min(16),
 

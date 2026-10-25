@@ -1,10 +1,10 @@
 import "server-only";
 import { and, desc, eq } from "drizzle-orm";
-import { db } from "@/db";
-import { deployments, projects, projectSnapshots, type Deployment, type Project, type User, type Workspace } from "@/db/schema";
+import { db, runBatch } from "@/db";
+import { deployments, projects, type Deployment, type Project, type User, type Workspace } from "@/db/schema";
 import { ApiError, badRequest, conflict, forbidden, notFound } from "@/lib/api";
 import { logger } from "@/lib/logger";
-import { createSnapshot, logActivity } from "@/lib/services/projects";
+import { createSnapshot, logActivity, getSnapshot } from "@/lib/services/projects";
 import { getEnvVarsDecrypted } from "@/lib/services/env-vars";
 import { assertQuota, recordUsage } from "@/lib/services/usage";
 import { DeployError, getDeployProvider, listDeployProviders, type DeployProviderId } from "@/lib/deploy";
@@ -117,8 +117,8 @@ export async function runDeployment(deploymentId: string): Promise<Deployment> {
   const slug = String(row.config.slug ?? "");
   await db.update(deployments).set({ status: "building", buildLog: "Build started\n" }).where(eq(deployments.id, row.id));
   try {
-    const snapRows = row.snapshotId ? await db.select({ files: projectSnapshots.files }).from(projectSnapshots).where(eq(projectSnapshots.id, row.snapshotId)).limit(1) : [];
-    const files = snapRows[0]?.files;
+    const snapshot = row.snapshotId ? await getSnapshot(project.id, row.snapshotId) : null;
+    const files = snapshot?.files;
     if (!files) throw new DeployError("The deployment snapshot is missing", "", "bad_request");
     const envVars = await getEnvVarsDecrypted(project.id);
     const outcome = await provider.deploy({ deploymentId: row.id, project, slug, files, env: envVars });
@@ -155,10 +155,10 @@ export async function rollbackDeployment(project: Project, deploymentId: string,
   const provider = getDeployProvider(target.provider as DeployProviderId);
   const slug = String(target.config.slug ?? "");
   const { url } = await provider.rollback({ project, slug, providerDeploymentId: target.providerDeploymentId, deploymentId: target.id });
-  await db.transaction(async (tx) => {
-    if (current) await tx.update(deployments).set({ status: "rolled_back" }).where(eq(deployments.id, current.id));
-    await tx.update(deployments).set({ status: "live", url, error: null }).where(eq(deployments.id, target.id));
-  });
+  await runBatch([
+    ...(current ? [db.update(deployments).set({ status: "rolled_back" }).where(eq(deployments.id, current.id))] : []),
+    db.update(deployments).set({ status: "live", url, error: null }).where(eq(deployments.id, target.id)),
+  ]);
   await logActivity(project.id, user.id, "deployment.rolled_back", `Rolled back to deployment ${target.id.slice(0, 8)}`, { deploymentId: target.id, from: current?.id ?? null });
   return (await getDeployment(project.id, target.id)) ?? target;
 }

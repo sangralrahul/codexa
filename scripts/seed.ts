@@ -1,10 +1,10 @@
 /**
- * Development seed: creates an admin user, a demo user, default feature flags.
- * Never run against production. Usage: npm run db:seed
+ * Development seed for the local D1 database: an admin user, a demo user and
+ * default feature flags. Usage: npm run db:seed
  */
-import "dotenv/config";
 import { eq } from "drizzle-orm";
-import { db, pool } from "../src/db";
+import { initLocalBindings, disposeLocalBindings } from "../src/lib/cloudflare/local";
+import { db } from "../src/db";
 import { users, featureFlags } from "../src/db/schema";
 import { createUserWithWorkspace } from "../src/lib/auth/users";
 
@@ -20,7 +20,7 @@ async function ensureUser(email: string, password: string, name: string, role: "
 }
 
 async function main() {
-  if (process.env.NODE_ENV === "production") throw new Error("Refusing to seed in production");
+  await initLocalBindings();
   const admin = await ensureUser("admin@codexa.local", "admin12345", "Codexa Admin", "admin");
   const demo = await ensureUser("demo@codexa.local", "demo12345", "Demo User", "user");
   const flags = [
@@ -28,13 +28,11 @@ async function main() {
     { key: "deploy.vercel", enabled: false, description: "Expose the Vercel deployment provider" },
     { key: "showcase.submissions", enabled: true, description: "Allow community showcase submissions" },
   ];
-  for (const f of flags) {
-    await db.insert(featureFlags).values(f).onConflictDoNothing();
-  }
-  console.log("Seeded:");
+  for (const f of flags) await db.insert(featureFlags).values(f).onConflictDoNothing();
+  console.log("Seeded local database:");
   console.log(`  admin: ${admin.email} / admin12345`);
   console.log(`  demo:  ${demo.email} / demo12345`);
-  await pool.end();
+  await disposeLocalBindings();
 }
 
 main().catch((e) => {

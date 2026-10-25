@@ -3,7 +3,8 @@
  */
 import "server-only";
 import { and, eq, isNull } from "drizzle-orm";
-import { db } from "@/db";
+import { db, runBatch } from "@/db";
+import type { BatchItem } from "drizzle-orm/batch";
 import { workspaceInvites, workspaceMembers, workspaces, users, type User, type Workspace, type WorkspaceRole } from "@/db/schema";
 import { ApiError, badRequest, conflict, notFound } from "@/lib/api";
 import { audit } from "@/lib/audit";
@@ -117,15 +118,16 @@ export async function changeMemberRole(input: { workspace: Workspace; actor: Act
   const rule = canChangeRole({ userId: actor.id, role: input.actorRole }, { userId: target.userId, role: target.role }, input.role, members);
   if (!rule.ok) throw new ApiError(rule.status, rule.message, rule.status === 403 ? "forbidden" : "bad_request");
   if (target.role === input.role) return { userId: target.userId, role: target.role };
-  await db.transaction(async (tx) => {
-    await tx.update(workspaceMembers).set({ role: input.role }).where(and(eq(workspaceMembers.workspaceId, workspace.id), eq(workspaceMembers.userId, target.userId)));
-    // Ownership transfer: the workspace's ownerId follows the (new) owner.
-    if (input.role === "owner") await tx.update(workspaces).set({ ownerId: target.userId, updatedAt: new Date() }).where(eq(workspaces.id, workspace.id));
-    else if (workspace.ownerId === target.userId) {
-      const other = members.find((m) => m.role === "owner" && m.userId !== target.userId);
-      if (other) await tx.update(workspaces).set({ ownerId: other.userId, updatedAt: new Date() }).where(eq(workspaces.id, workspace.id));
-    }
-  });
+  const statements: BatchItem<"sqlite">[] = [
+    db.update(workspaceMembers).set({ role: input.role }).where(and(eq(workspaceMembers.workspaceId, workspace.id), eq(workspaceMembers.userId, target.userId))),
+  ];
+  // Ownership transfer: the workspace's ownerId follows the (new) owner.
+  if (input.role === "owner") statements.push(db.update(workspaces).set({ ownerId: target.userId, updatedAt: new Date() }).where(eq(workspaces.id, workspace.id)));
+  else if (workspace.ownerId === target.userId) {
+    const other = members.find((m) => m.role === "owner" && m.userId !== target.userId);
+    if (other) statements.push(db.update(workspaces).set({ ownerId: other.userId, updatedAt: new Date() }).where(eq(workspaces.id, workspace.id)));
+  }
+  await runBatch(statements);
   await audit({ actorId: actor.id, workspaceId: workspace.id, action: input.role === "owner" ? "team.ownership_transferred" : "team.role_changed", targetType: "user", targetId: target.userId, metadata: { from: target.role, to: input.role } });
   return { userId: target.userId, role: input.role };
 }

@@ -1,5 +1,5 @@
 import "server-only";
-import { and, eq, sql } from "drizzle-orm";
+import { and, eq, count } from "drizzle-orm";
 import { db } from "@/db";
 import { projectEnvVars } from "@/db/schema";
 import { decryptSecret, encryptSecret } from "@/lib/crypto";
@@ -61,11 +61,11 @@ export async function upsertEnvVar(projectId: string, input: { key: string; valu
     .where(and(eq(projectEnvVars.projectId, projectId), eq(projectEnvVars.key, key)))
     .limit(1);
   if (!existing.length) {
-    const [{ count }] = await db
-      .select({ count: sql<number>`count(*)::int` })
+    const [{ total }] = await db
+      .select({ total: count() })
       .from(projectEnvVars)
       .where(eq(projectEnvVars.projectId, projectId));
-    if (count >= MAX_ENV_VARS) throw badRequest(`Projects are limited to ${MAX_ENV_VARS} environment variables`);
+    if (total >= MAX_ENV_VARS) throw badRequest(`Projects are limited to ${MAX_ENV_VARS} environment variables`);
   }
   const valueEnc = encryptSecret(input.value);
   const [row] = await db

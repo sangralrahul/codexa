@@ -1,7 +1,7 @@
 import "server-only";
 import { eq } from "drizzle-orm";
-import { db } from "@/db";
-import { users, workspaces, workspaceMembers, type User } from "@/db/schema";
+import { db, runBatch } from "@/db";
+import { users, workspaces, workspaceMembers, type User, type Workspace } from "@/db/schema";
 import { hashPassword } from "@/lib/crypto";
 import { slugify } from "@/lib/utils";
 import { adminEmails } from "@/lib/env";
@@ -48,10 +48,13 @@ export async function createUserWithWorkspace(input: {
   const name = input.name?.trim() || email.split("@")[0];
   const slug = await uniqueWorkspaceSlug(name);
 
-  return db.transaction(async (tx) => {
-    const [user] = await tx
+  const userId = crypto.randomUUID();
+  const workspaceId = crypto.randomUUID();
+  const [insertedUsers, insertedWorkspaces] = await runBatch([
+    db
       .insert(users)
       .values({
+        id: userId,
         email,
         passwordHash,
         name,
@@ -59,12 +62,9 @@ export async function createUserWithWorkspace(input: {
         role,
         emailVerifiedAt: input.emailVerified ? new Date() : null,
       })
-      .returning();
-    const [ws] = await tx
-      .insert(workspaces)
-      .values({ slug, name: `${name}'s workspace`, ownerId: user.id })
-      .returning();
-    await tx.insert(workspaceMembers).values({ workspaceId: ws.id, userId: user.id, role: "owner" });
-    return { user, workspace: ws };
-  });
+      .returning(),
+    db.insert(workspaces).values({ id: workspaceId, slug, name: `${name}'s workspace`, ownerId: userId }).returning(),
+    db.insert(workspaceMembers).values({ workspaceId, userId, role: "owner" }),
+  ]);
+  return { user: (insertedUsers as User[])[0], workspace: (insertedWorkspaces as Workspace[])[0] };
 }

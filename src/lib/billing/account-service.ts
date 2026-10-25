@@ -3,7 +3,8 @@
  */
 import "server-only";
 import { and, desc, eq, inArray, isNull, ne } from "drizzle-orm";
-import { db } from "@/db";
+import { db, runBatch } from "@/db";
+import type { BatchItem } from "drizzle-orm/batch";
 import { authTokens, oauthAccounts, projectFiles, projects, sessions, users, workspaceMembers, workspaces, type User } from "@/db/schema";
 import { ApiError, badRequest } from "@/lib/api";
 import { audit } from "@/lib/audit";
@@ -129,32 +130,34 @@ export async function deleteAccount(user: User, password: string, ip?: string | 
   const memberships = await listUserWorkspaces(user.id);
   const transferred: string[] = [];
   const deleted: string[] = [];
-  await db.transaction(async (tx) => {
-    for (const m of memberships) {
-      const wsId = m.workspace.id;
-      if (m.role === "owner") {
-        const others = await tx
-          .select({ userId: workspaceMembers.userId, role: workspaceMembers.role, joined: workspaceMembers.createdAt })
-          .from(workspaceMembers)
-          .where(and(eq(workspaceMembers.workspaceId, wsId), ne(workspaceMembers.userId, user.id)))
-          .orderBy(workspaceMembers.createdAt);
-        if (others.length === 0) {
-          await tx.update(workspaces).set({ deletedAt: new Date(), updatedAt: new Date() }).where(eq(workspaces.id, wsId));
-          deleted.push(wsId);
-        } else {
-          const rank = { owner: 3, admin: 2, editor: 1, viewer: 0 } as const;
-          const heir = [...others].sort((a, b) => rank[b.role] - rank[a.role] || a.joined.getTime() - b.joined.getTime())[0];
-          await tx.update(workspaceMembers).set({ role: "owner" }).where(and(eq(workspaceMembers.workspaceId, wsId), eq(workspaceMembers.userId, heir.userId)));
-          await tx.update(workspaces).set({ ownerId: heir.userId, updatedAt: new Date() }).where(eq(workspaces.id, wsId));
-          transferred.push(wsId);
-        }
+  // Read first, then apply every change in one atomic batch (D1 has no interactive transactions).
+  const statements: BatchItem<"sqlite">[] = [];
+  for (const m of memberships) {
+    const wsId = m.workspace.id;
+    if (m.role === "owner") {
+      const others = await db
+        .select({ userId: workspaceMembers.userId, role: workspaceMembers.role, joined: workspaceMembers.createdAt })
+        .from(workspaceMembers)
+        .where(and(eq(workspaceMembers.workspaceId, wsId), ne(workspaceMembers.userId, user.id)))
+        .orderBy(workspaceMembers.createdAt);
+      if (others.length === 0) {
+        statements.push(db.update(workspaces).set({ deletedAt: new Date(), updatedAt: new Date() }).where(eq(workspaces.id, wsId)));
+        deleted.push(wsId);
+      } else {
+        const rank = { owner: 3, admin: 2, editor: 1, viewer: 0 } as const;
+        const heir = [...others].sort((a, b) => rank[b.role] - rank[a.role] || a.joined.getTime() - b.joined.getTime())[0];
+        statements.push(db.update(workspaceMembers).set({ role: "owner" }).where(and(eq(workspaceMembers.workspaceId, wsId), eq(workspaceMembers.userId, heir.userId))));
+        statements.push(db.update(workspaces).set({ ownerId: heir.userId, updatedAt: new Date() }).where(eq(workspaces.id, wsId)));
+        transferred.push(wsId);
       }
-      await tx.delete(workspaceMembers).where(and(eq(workspaceMembers.workspaceId, wsId), eq(workspaceMembers.userId, user.id)));
     }
-    await tx.delete(sessions).where(eq(sessions.userId, user.id));
-    await tx.delete(authTokens).where(eq(authTokens.userId, user.id));
-    await tx.delete(oauthAccounts).where(eq(oauthAccounts.userId, user.id));
-    await tx
+    statements.push(db.delete(workspaceMembers).where(and(eq(workspaceMembers.workspaceId, wsId), eq(workspaceMembers.userId, user.id))));
+  }
+  statements.push(
+    db.delete(sessions).where(eq(sessions.userId, user.id)),
+    db.delete(authTokens).where(eq(authTokens.userId, user.id)),
+    db.delete(oauthAccounts).where(eq(oauthAccounts.userId, user.id)),
+    db
       .update(users)
       .set({
         email: `deleted+${user.id}@invalid`,
@@ -165,8 +168,9 @@ export async function deleteAccount(user: User, password: string, ip?: string | 
         deletedAt: new Date(),
         updatedAt: new Date(),
       })
-      .where(eq(users.id, user.id));
-  });
+      .where(eq(users.id, user.id)),
+  );
+  await runBatch(statements);
   await audit({ actorId: user.id, action: "account.deleted", targetType: "user", targetId: user.id, metadata: { transferredWorkspaces: transferred, deletedWorkspaces: deleted }, ip });
   return { transferred, deleted };
 }

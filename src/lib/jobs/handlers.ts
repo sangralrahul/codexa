@@ -1,10 +1,10 @@
 /**
  * Job handlers. Keep these free of Next.js-only modules ("server-only", next/headers):
- * the worker runs under tsx outside Next.js.
+ * they run from the Worker's cron trigger (src/lib/jobs/run.ts).
  */
 import { and, eq, inArray, lt, lte, ne, or, sql } from "drizzle-orm";
 import { db } from "@/db";
-import { authTokens, emailOutbox, rateLimits, sessions, usageEvents, workspaceInvites } from "@/db/schema";
+import { authTokens, emailOutbox, jobs, rateLimits, sessions, usageEvents, workspaceInvites } from "@/db/schema";
 import { env, runnerUrl } from "@/lib/env";
 import { activeEmailProvider, deliverEmail } from "@/lib/email/providers";
 import { enqueue, type JobKind } from "@/lib/jobs";
@@ -105,15 +105,22 @@ export const handlers: Record<string, Handler> = {
 export async function scheduleNext(kind: JobKind) {
   const every = RECURRING[kind];
   if (!every) return null;
-  const existing = await db.execute<{ id: string }>(sql`SELECT id FROM jobs WHERE kind = ${kind} AND status IN ('queued','running') LIMIT 1`);
-  if (existing.rows.length) return null;
+  const existing = await db
+    .select({ id: jobs.id })
+    .from(jobs)
+    .where(and(eq(jobs.kind, kind), inArray(jobs.status, ["queued", "running"])))
+    .limit(1);
+  if (existing.length) return null;
   return enqueue(kind, {}, { runAt: new Date(Date.now() + every), maxAttempts: 3 });
 }
 
 export async function ensureRecurringSeeded() {
   const kinds = Object.keys(RECURRING);
-  const rows = await db.execute<{ kind: string }>(sql`SELECT DISTINCT kind FROM jobs WHERE status IN ('queued','running') AND kind IN (${sql.join(kinds.map((k) => sql`${k}`), sql`, `)})`);
-  const present = new Set(rows.rows.map((r) => r.kind));
+  const rows = await db
+    .selectDistinct({ kind: jobs.kind })
+    .from(jobs)
+    .where(and(inArray(jobs.status, ["queued", "running"]), inArray(jobs.kind, kinds)));
+  const present = new Set(rows.map((r) => r.kind));
   const seeded: string[] = [];
   for (const k of kinds) {
     if (!present.has(k)) {

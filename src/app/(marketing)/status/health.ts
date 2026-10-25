@@ -34,7 +34,7 @@ function withTimeout<T>(p: Promise<T>, ms: number): Promise<T> {
 }
 
 async function checkDatabase(): Promise<ComponentStatus> {
-  const r = await timed(() => withTimeout(db.execute(sql`select 1`), TIMEOUT_MS));
+  const r = await timed(() => withTimeout(db.run(sql`select 1`), TIMEOUT_MS));
   return r.ok
     ? { id: "database", name: "Database", state: "operational", detail: "PostgreSQL answered a test query.", latencyMs: r.ms }
     : { id: "database", name: "Database", state: "down", detail: "PostgreSQL did not answer within the timeout.", latencyMs: r.ms };

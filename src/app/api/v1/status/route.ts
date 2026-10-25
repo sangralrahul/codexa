@@ -30,7 +30,7 @@ export const GET = handler(async () => {
 async function checkDatabase(): Promise<ComponentStatus> {
   const start = Date.now();
   try {
-    await Promise.race([db.execute(sql`select 1`), new Promise((_, reject) => setTimeout(() => reject(new Error("timeout")), 2000))]);
+    await Promise.race([db.run(sql`select 1`), new Promise((_, reject) => setTimeout(() => reject(new Error("timeout")), 2000))]);
     return { id: "database", name: "Database", state: "operational", detail: "PostgreSQL answered a test query.", latencyMs: Date.now() - start };
   } catch {
     return { id: "database", name: "Database", state: "down", detail: "PostgreSQL did not answer within 2 seconds.", latencyMs: Date.now() - start };

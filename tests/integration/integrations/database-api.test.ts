@@ -3,6 +3,7 @@
  * The stored connection points at the test database itself (TEST_DATABASE_URL), so the schema
  * inspection and query execution are exercised for real. requireApiUser() is mocked per request.
  */
+import pg from "pg";
 import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
 vi.mock("server-only", () => ({}));
 
@@ -35,7 +36,8 @@ import * as queryRoute from "@/app/api/v1/projects/[id]/database/query/route";
 import * as tokenRoute from "@/app/api/v1/projects/[id]/realtime-token/route";
 import { verifyRealtimeToken } from "@/lib/integrations/realtime-token";
 
-const DB_URL = process.env.DATABASE_URL!;
+// An external PostgreSQL database the feature connects to (not Codexa's own D1 database).
+const DB_URL = process.env.TEST_DATABASE_URL ?? "postgres://codexa:codexa@127.0.0.1:5432/codexa_test";
 const suffix = Date.now().toString(36);
 let owner: User;
 let ws: Workspace;
@@ -63,7 +65,10 @@ beforeAll(async () => {
 });
 
 afterAll(async () => {
-  await db.execute(`drop table if exists "${TABLE}"`);
+  const client = new pg.Client({ connectionString: DB_URL });
+  await client.connect();
+  await client.query(`drop table if exists "${TABLE}"`);
+  await client.end();
   for (const u of [owner, stranger]) if (u) await cleanupUser(u);
 });
 

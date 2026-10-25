@@ -4,7 +4,7 @@
  * - retries with exponential backoff until maxAttempts, then status "failed"
  * - no "server-only" import: this module is shared by Next.js and services/worker (tsx)
  */
-import { and, asc, count, desc, eq, inArray, isNotNull, lte, or, sql } from "drizzle-orm";
+import { and, asc, count, desc, eq, inArray, isNotNull, lt, lte, or, sql } from "drizzle-orm";
 import { db } from "@/db";
 import { jobs, type Job } from "@/db/schema";
 
@@ -33,33 +33,27 @@ export async function enqueueUnique(kind: JobKind, payload: Record<string, unkno
 }
 
 /**
- * Claim the next runnable job for `workerId`. Runs in a transaction so the row lock
- * from FOR UPDATE SKIP LOCKED is held until the status flips to running.
- * Also reclaims jobs whose lock is older than `staleAfterMs` (crashed worker).
+ * Claim the next runnable job for `workerId` in a single UPDATE ... RETURNING
+ * statement. SQLite (D1) executes it atomically, so two claimers can never get
+ * the same row. Also reclaims jobs whose lock is older than `staleAfterMs`
+ * (a crashed run).
  */
 export async function claimNext(workerId: string, opts: { kinds?: string[]; staleAfterMs?: number } = {}): Promise<Job | null> {
-  const stale = new Date(Date.now() - (opts.staleAfterMs ?? 10 * 60_000));
-  return db.transaction(async (tx) => {
-    const kindFilter = opts.kinds?.length ? sql`AND kind IN (${sql.join(opts.kinds.map((k) => sql`${k}`), sql`, `)})` : sql``;
-    const res = await tx.execute<{ id: string }>(sql`
-      SELECT id FROM jobs
-      WHERE (
-        (status = 'queued' AND run_at <= now())
-        OR (status = 'running' AND locked_at IS NOT NULL AND locked_at < ${stale})
-      ) ${kindFilter}
-      ORDER BY run_at ASC
-      LIMIT 1
-      FOR UPDATE SKIP LOCKED
-    `);
-    const id = res.rows[0]?.id;
-    if (!id) return null;
-    const [row] = await tx
-      .update(jobs)
-      .set({ status: "running", lockedAt: new Date(), lockedBy: workerId, attempts: sql`${jobs.attempts} + 1`, updatedAt: new Date() })
-      .where(eq(jobs.id, id))
-      .returning();
-    return row ?? null;
-  });
+  const now = new Date();
+  const stale = new Date(now.getTime() - (opts.staleAfterMs ?? 10 * 60_000));
+  const runnable = or(and(eq(jobs.status, "queued"), lte(jobs.runAt, now)), and(eq(jobs.status, "running"), isNotNull(jobs.lockedAt), lt(jobs.lockedAt, stale)));
+  const next = db
+    .select({ id: jobs.id })
+    .from(jobs)
+    .where(opts.kinds?.length ? and(runnable, inArray(jobs.kind, opts.kinds)) : runnable)
+    .orderBy(asc(jobs.runAt))
+    .limit(1);
+  const [row] = await db
+    .update(jobs)
+    .set({ status: "running", lockedAt: now, lockedBy: workerId, attempts: sql`${jobs.attempts} + 1`, updatedAt: now })
+    .where(and(inArray(jobs.id, next), runnable))
+    .returning();
+  return row ?? null;
 }
 
 export async function completeJob(id: string, result?: unknown) {

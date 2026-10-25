@@ -4,19 +4,16 @@ import { expect, test, type Page } from "@playwright/test";
 /**
  * Smoke test for a serverless deployment (e.g. Vercel) where the runner and
  * realtime services are not configured. Run against any deployment:
- *   E2E_NO_SERVER=1 E2E_BASE_URL=https://<app> E2E_DATABASE_URL=<db url> npx playwright test tests/e2e/serverless-smoke.spec.ts --project=desktop
- * E2E_DATABASE_URL is used only to mark the new test user as verified and admin
- * through `npm run user:admin` (needed when no email provider is configured).
+ *   E2E_NO_SERVER=1 E2E_BASE_URL=https://<app> E2E_D1=remote npx playwright test tests/e2e/serverless-smoke.spec.ts --project=desktop
+ * E2E_D1 (local | remote) selects which D1 database `npm run user:admin` updates
+ * to mark the new test user as verified and admin (needed without an email provider).
  */
 
-const dbUrl = process.env.E2E_DATABASE_URL;
+const d1Target = process.env.E2E_D1 === "remote" ? "remote" : process.env.E2E_D1 === "local" ? "local" : null;
 const email = `smoke-${Date.now().toString(36)}@example.com`;
 
 function userAdmin(command: "verify" | "make-admin") {
-  execFileSync("npx", ["tsx", "scripts/user-admin.ts", command, email], {
-    env: { ...process.env, DATABASE_URL: dbUrl },
-    stdio: "pipe",
-  });
+  execFileSync("npx", ["tsx", "scripts/user-admin.ts", command, email, ...(d1Target === "remote" ? ["--remote"] : [])], { stdio: "pipe" });
 }
 
 async function collectErrors(page: Page) {
@@ -88,7 +85,7 @@ test("sign up, create a project, edit in Monaco, snapshot, and see honest states
 });
 
 test("verified users reach settings and admin; deployments explain the missing runner", async ({ page }) => {
-  test.skip(!dbUrl, "E2E_DATABASE_URL not set");
+  test.skip(!d1Target, "E2E_D1 not set");
   userAdmin("verify");
   userAdmin("make-admin");
   await page.goto("/login");

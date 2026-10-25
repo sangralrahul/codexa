@@ -3,7 +3,7 @@
  * Lists are offset-paginated and ordered on indexed columns.
  */
 import "server-only";
-import { and, count, desc, eq, gte, ilike, isNull, or, sql, type SQL } from "drizzle-orm";
+import { and, count, desc, eq, gte, like, isNull, or, sql, type SQL } from "drizzle-orm";
 import { db } from "@/db";
 import {
   abuseReports,
@@ -13,6 +13,7 @@ import {
   generationRuns,
   projects,
   runtimeSessions,
+  sessions,
   showcaseEntries,
   subscriptions,
   supportTickets,
@@ -64,7 +65,7 @@ export async function overview() {
 // --- Users ------------------------------------------------------------------
 export async function listUsers(opts: { q?: string; page?: number; role?: User["role"] }) {
   const conds: SQL[] = [];
-  if (opts.q) conds.push(or(ilike(users.email, `%${opts.q}%`), ilike(users.name, `%${opts.q}%`)) as SQL);
+  if (opts.q) conds.push(or(like(users.email, `%${opts.q}%`), like(users.name, `%${opts.q}%`)) as SQL);
   if (opts.role) conds.push(eq(users.role, opts.role));
   const where = conds.length ? and(...conds) : undefined;
   const [rows, [{ n }]] = await Promise.all([
@@ -89,7 +90,7 @@ export async function updateUser(actor: User, userId: string, patch: { role?: Us
   if (patch.role !== undefined) set.role = patch.role;
   if (patch.suspended !== undefined) set.deletedAt = patch.suspended ? new Date() : null;
   const [row] = await db.update(users).set(set).where(eq(users.id, userId)).returning();
-  if (patch.suspended) await db.execute(sql`DELETE FROM sessions WHERE user_id = ${userId}`);
+  if (patch.suspended) await db.delete(sessions).where(eq(sessions.userId, userId));
   await audit({ actorId: actor.id, action: "admin.user_updated", targetType: "user", targetId: userId, metadata: patch });
   return { id: row.id, email: row.email, name: row.name, role: row.role, deletedAt: row.deletedAt };
 }
@@ -97,7 +98,7 @@ export async function updateUser(actor: User, userId: string, patch: { role?: Us
 // --- Workspaces -------------------------------------------------------------
 export async function listWorkspacesAdmin(opts: { q?: string; page?: number; plan?: Plan }) {
   const conds: SQL[] = [isNull(workspaces.deletedAt)];
-  if (opts.q) conds.push(or(ilike(workspaces.name, `%${opts.q}%`), ilike(workspaces.slug, `%${opts.q}%`)) as SQL);
+  if (opts.q) conds.push(or(like(workspaces.name, `%${opts.q}%`), like(workspaces.slug, `%${opts.q}%`)) as SQL);
   if (opts.plan) conds.push(eq(workspaces.plan, opts.plan));
   const where = and(...conds);
   const members = db.select({ wsId: workspaceMembers.workspaceId, n: count().as("n") }).from(workspaceMembers).groupBy(workspaceMembers.workspaceId).as("m");
@@ -254,7 +255,7 @@ export async function setAbuseStatus(actor: User, id: string, status: TicketStat
 // --- Audit logs -------------------------------------------------------------
 export async function listAuditLogs(opts: { action?: string; workspaceId?: string; actorId?: string; page?: number }) {
   const conds: SQL[] = [];
-  if (opts.action) conds.push(ilike(auditLogs.action, `${opts.action}%`));
+  if (opts.action) conds.push(like(auditLogs.action, `${opts.action}%`));
   if (opts.workspaceId) conds.push(eq(auditLogs.workspaceId, opts.workspaceId));
   if (opts.actorId) conds.push(eq(auditLogs.actorId, opts.actorId));
   const where = conds.length ? and(...conds) : undefined;

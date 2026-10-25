@@ -1,7 +1,7 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
-  // The Worker's name in your Cloudflare account. Change it if you like;
-  // keep it in sync with WORKER_SELF_REFERENCE below.
+  // The Worker's name in your Cloudflare account. Keep it in sync with
+  // WORKER_SELF_REFERENCE below.
   "name": "codexa",
   "main": ".open-next/worker.js",
   "compatibility_date": "2026-10-01",
@@ -16,6 +16,23 @@
       "service": "codexa"
     }
   ],
+  // Codexa's database. Wrangler creates it on the first deploy; migrations
+  // live in ./drizzle and are applied with
+  //   npx wrangler d1 migrations apply codexa --remote
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "codexa",
+      "migrations_dir": "drizzle"
+    }
+  ],
+  // Project snapshots and Codexa-hosted sites. Created on the first deploy.
+  "r2_buckets": [
+    {
+      "binding": "STORAGE",
+      "bucket_name": "codexa-storage"
+    }
+  ],
   "observability": {
     "enabled": true
   },
@@ -23,11 +40,4 @@
   "vars": {
     "NODE_ENV": "production"
   }
-  // Recommended: connect to Postgres through Hyperdrive (connection pooling
-  // close to your database). Create it with
-  //   npx wrangler hyperdrive create codexa-db --connection-string="postgres://..."
-  // then uncomment and paste the id it prints:
-  // ,"hyperdrive": [
-  //   { "binding": "HYPERDRIVE", "id": "<your-hyperdrive-id>" }
-  // ]
 }

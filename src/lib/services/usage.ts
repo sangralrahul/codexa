@@ -41,7 +41,7 @@ export async function getEffectivePlan(workspace: Pick<Workspace, "id" | "plan">
 export async function getUsageSummary(workspaceId: string) {
   const since = periodStart();
   const rows = await db
-    .select({ kind: usageEvents.kind, total: sql<number>`coalesce(sum(${usageEvents.quantity}), 0)::bigint` })
+    .select({ kind: usageEvents.kind, total: sql<number>`coalesce(sum(${usageEvents.quantity}), 0)` })
     .from(usageEvents)
     .where(and(eq(usageEvents.workspaceId, workspaceId), gte(usageEvents.createdAt, since)))
     .groupBy(usageEvents.kind);

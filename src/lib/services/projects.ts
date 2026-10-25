@@ -1,6 +1,8 @@
 import "server-only";
-import { and, desc, eq, isNull, sql, inArray } from "drizzle-orm";
-import { db } from "@/db";
+import { and, count, desc, eq, isNull, sql, inArray } from "drizzle-orm";
+import type { BatchItem } from "drizzle-orm/batch";
+import { db, chunkedBySize, runBatch, likeEscape } from "@/db";
+import { deleteObjects, getJson, putJson, snapshotKey } from "@/lib/storage";
 import {
   projectActivity,
   projectFiles,
@@ -45,7 +47,7 @@ export async function listRecentProjectsForUser(workspaceIds: string[], limit = 
 
 export async function countProjects(workspaceId: string) {
   const [row] = await db
-    .select({ count: sql<number>`count(*)::int` })
+    .select({ count: count() })
     .from(projects)
     .where(and(eq(projects.workspaceId, workspaceId), isNull(projects.deletedAt)));
   return row?.count ?? 0;
@@ -80,10 +82,17 @@ export async function createProject(input: {
   const files = input.files ?? template.files;
   const settings: ProjectSettings = { ...template.settings };
 
-  return db.transaction(async (tx) => {
-    const [project] = await tx
+  const projectId = crypto.randomUUID();
+  const snapshotId = crypto.randomUUID();
+  const fileRows = fileRowsFor(projectId, files);
+  const key = snapshotKey(projectId, snapshotId);
+  const sizeBytes = await putJson(key, files);
+  try {
+    const [inserted] = await runBatch([
+      db
       .insert(projects)
       .values({
+        id: projectId,
         workspaceId: input.workspaceId,
         name: input.name.trim().slice(0, 100),
         slug,
@@ -95,34 +104,47 @@ export async function createProject(input: {
         settings,
         lastOpenedAt: new Date(),
       })
-      .returning();
-    const entries = Object.entries(files);
-    if (entries.length) {
-      await tx.insert(projectFiles).values(
-        entries.map(([path, content]) => ({
-          projectId: project.id,
-          path: normalizePath(path),
-          content,
-          size: Buffer.byteLength(content, "utf8"),
-        })),
-      );
-    }
-    await tx.insert(projectSnapshots).values({
-      projectId: project.id,
-      name: "Initial",
-      kind: "auto",
-      message: `Created from template ${template.name}`,
-      files,
-      createdBy: input.createdBy,
-    });
-    await tx.insert(projectActivity).values({
-      projectId: project.id,
-      actorId: input.createdBy,
-      kind: "project.created",
-      message: `Project created from template "${template.name}"`,
-    });
-    return project;
-  });
+      .returning(),
+      ...insertFileStatements(fileRows),
+      db.insert(projectSnapshots).values({
+        id: snapshotId,
+        projectId,
+        name: "Initial",
+        kind: "auto",
+        message: `Created from template ${template.name}`,
+        storageKey: key,
+        fileCount: fileRows.length,
+        sizeBytes,
+        createdBy: input.createdBy,
+      }),
+      db.insert(projectActivity).values({
+        projectId,
+        actorId: input.createdBy,
+        kind: "project.created",
+        message: `Project created from template "${template.name}"`,
+      }),
+    ]);
+    return (inserted as Project[])[0];
+  } catch (err) {
+    await deleteObjects([key]).catch(() => {});
+    throw err;
+  }
+}
+
+type FileRow = { projectId: string; path: string; content: string; size: number };
+
+function fileRowsFor(projectId: string, files: Record<string, string>): FileRow[] {
+  return Object.entries(files).map(([path, content]) => ({
+    projectId,
+    path: normalizePath(path),
+    content,
+    size: Buffer.byteLength(content, "utf8"),
+  }));
+}
+
+/** Multi-row inserts split to respect D1's parameter and payload limits. */
+function insertFileStatements(rows: FileRow[]): BatchItem<"sqlite">[] {
+  return chunkedBySize(rows, (r) => r.size + r.path.length).map((chunk) => db.insert(projectFiles).values(chunk));
 }
 
 export async function updateProject(
@@ -194,20 +216,34 @@ export async function writeFile(projectId: string, path: string, content: string
 export async function writeFiles(projectId: string, files: Record<string, string>) {
   const entries = Object.entries(files);
   if (!entries.length) return;
-  const count = await db.select({ c: sql<number>`count(*)::int` }).from(projectFiles).where(eq(projectFiles.projectId, projectId));
-  if ((count[0]?.c ?? 0) + entries.length > MAX_FILES_PER_PROJECT) throw badRequest("Project file limit reached");
-  await db.transaction(async (tx) => {
-    for (const [path, content] of entries) {
-      const p = normalizePath(path);
-      const size = Buffer.byteLength(content, "utf8");
-      if (size > MAX_FILE_SIZE) throw badRequest(`File ${p} exceeds ${MAX_FILE_SIZE} bytes`);
-      await tx
+  const existing = await db.select({ c: count() }).from(projectFiles).where(eq(projectFiles.projectId, projectId));
+  if ((existing[0]?.c ?? 0) + entries.length > MAX_FILES_PER_PROJECT) throw badRequest("Project file limit reached");
+  const statements: BatchItem<"sqlite">[] = [];
+  for (const [path, content] of entries) {
+    const p = normalizePath(path);
+    const size = Buffer.byteLength(content, "utf8");
+    if (size > MAX_FILE_SIZE) throw badRequest(`File ${p} exceeds ${MAX_FILE_SIZE} bytes`);
+    statements.push(
+      db
         .insert(projectFiles)
         .values({ projectId, path: p, content, size })
-        .onConflictDoUpdate({ target: [projectFiles.projectId, projectFiles.path], set: { content, size, updatedAt: new Date() } });
-    }
-    await tx.update(projects).set({ updatedAt: new Date() }).where(eq(projects.id, projectId));
-  });
+        .onConflictDoUpdate({ target: [projectFiles.projectId, projectFiles.path], set: { content, size, updatedAt: new Date() } }),
+    );
+  }
+  statements.push(db.update(projects).set({ updatedAt: new Date() }).where(eq(projects.id, projectId)));
+  await runBatch(statements);
+}
+
+/** Atomically replace every file in a project (used by GitHub pull). */
+export async function replaceAllFiles(projectId: string, files: Record<string, string>) {
+  const rows = fileRowsFor(projectId, files);
+  if (rows.length > MAX_FILES_PER_PROJECT) throw badRequest("Project file limit reached");
+  for (const r of rows) if (r.size > MAX_FILE_SIZE) throw badRequest(`File ${r.path} exceeds ${MAX_FILE_SIZE} bytes`);
+  await runBatch([
+    db.delete(projectFiles).where(eq(projectFiles.projectId, projectId)),
+    ...insertFileStatements(rows),
+    db.update(projects).set({ updatedAt: new Date() }).where(eq(projects.id, projectId)),
+  ]);
 }
 
 export async function deleteFile(projectId: string, path: string) {
@@ -223,7 +259,7 @@ export async function deleteFolder(projectId: string, folder: string) {
   const p = normalizePath(folder);
   const rows = await db
     .delete(projectFiles)
-    .where(and(eq(projectFiles.projectId, projectId), sql`${projectFiles.path} LIKE ${p + "/%"}`))
+    .where(and(eq(projectFiles.projectId, projectId), sql`${projectFiles.path} LIKE ${likeEscape(p) + "/%"} ESCAPE '\\'`))
     .returning({ path: projectFiles.path });
   return rows.length;
 }
@@ -247,12 +283,8 @@ export async function renameFolder(projectId: string, from: string, to: string) 
   const rows = await db
     .select({ id: projectFiles.id, path: projectFiles.path })
     .from(projectFiles)
-    .where(and(eq(projectFiles.projectId, projectId), sql`${projectFiles.path} LIKE ${f + "/%"}`));
-  await db.transaction(async (tx) => {
-    for (const r of rows) {
-      await tx.update(projectFiles).set({ path: t + r.path.slice(f.length), updatedAt: new Date() }).where(eq(projectFiles.id, r.id));
-    }
-  });
+    .where(and(eq(projectFiles.projectId, projectId), sql`${projectFiles.path} LIKE ${likeEscape(f) + "/%"} ESCAPE '\\'`));
+  await runBatch(rows.map((r) => db.update(projectFiles).set({ path: t + r.path.slice(f.length), updatedAt: new Date() }).where(eq(projectFiles.id, r.id))));
   return rows.length;
 }
 
@@ -262,7 +294,7 @@ export async function searchFiles(projectId: string, query: string, limit = 50) 
   const rows = await db
     .select({ path: projectFiles.path, content: projectFiles.content })
     .from(projectFiles)
-    .where(and(eq(projectFiles.projectId, projectId), eq(projectFiles.isBinary, false), sql`${projectFiles.content} ILIKE ${"%" + q + "%"}`))
+    .where(and(eq(projectFiles.projectId, projectId), eq(projectFiles.isBinary, false), sql`${projectFiles.content} LIKE ${"%" + likeEscape(q) + "%"} ESCAPE '\\'`))
     .limit(200);
   const results: { path: string; line: number; text: string }[] = [];
   const needle = q.toLowerCase();
@@ -281,11 +313,19 @@ export async function searchFiles(projectId: string, query: string, limit = 50) 
 // ---------------------------------------------------------------------------
 export async function createSnapshot(projectId: string, input: { name: string; kind?: string; message?: string; createdBy?: string | null }) {
   const files = await getAllFiles(projectId);
-  const [snap] = await db
-    .insert(projectSnapshots)
-    .values({ projectId, name: input.name.slice(0, 100), kind: input.kind ?? "manual", message: input.message ?? null, files, createdBy: input.createdBy ?? null })
-    .returning({ id: projectSnapshots.id, name: projectSnapshots.name, kind: projectSnapshots.kind, createdAt: projectSnapshots.createdAt });
-  return snap;
+  const id = crypto.randomUUID();
+  const storageKey = snapshotKey(projectId, id);
+  const sizeBytes = await putJson(storageKey, files);
+  try {
+    const [snap] = await db
+      .insert(projectSnapshots)
+      .values({ id, projectId, name: input.name.slice(0, 100), kind: input.kind ?? "manual", message: input.message ?? null, storageKey, fileCount: Object.keys(files).length, sizeBytes, createdBy: input.createdBy ?? null })
+      .returning({ id: projectSnapshots.id, name: projectSnapshots.name, kind: projectSnapshots.kind, createdAt: projectSnapshots.createdAt });
+    return snap;
+  } catch (err) {
+    await deleteObjects([storageKey]).catch(() => {});
+    throw err;
+  }
 }
 
 export async function listSnapshots(projectId: string, limit = 50) {
@@ -297,7 +337,7 @@ export async function listSnapshots(projectId: string, limit = 50) {
       message: projectSnapshots.message,
       createdBy: projectSnapshots.createdBy,
       createdAt: projectSnapshots.createdAt,
-      fileCount: sql<number>`(select count(*) from jsonb_object_keys(${projectSnapshots.files}))::int`,
+      fileCount: projectSnapshots.fileCount,
     })
     .from(projectSnapshots)
     .where(eq(projectSnapshots.projectId, projectId))
@@ -305,13 +345,17 @@ export async function listSnapshots(projectId: string, limit = 50) {
     .limit(limit);
 }
 
+/** Snapshot metadata plus its files (loaded from R2). */
 export async function getSnapshot(projectId: string, snapshotId: string) {
   const rows = await db
     .select()
     .from(projectSnapshots)
     .where(and(eq(projectSnapshots.projectId, projectId), eq(projectSnapshots.id, snapshotId)))
     .limit(1);
-  return rows[0] ?? null;
+  const row = rows[0];
+  if (!row) return null;
+  const files = (await getJson<Record<string, string>>(row.storageKey)) ?? {};
+  return { ...row, files };
 }
 
 /** Restore a snapshot: creates a safety snapshot first, then replaces all files. */
@@ -319,17 +363,12 @@ export async function restoreSnapshot(projectId: string, snapshotId: string, act
   const snap = await getSnapshot(projectId, snapshotId);
   if (!snap) throw badRequest("Snapshot not found");
   await createSnapshot(projectId, { name: `Before restoring "${snap.name}"`, kind: "restore", createdBy: actorId });
-  await db.transaction(async (tx) => {
-    await tx.delete(projectFiles).where(eq(projectFiles.projectId, projectId));
-    const entries = Object.entries(snap.files);
-    if (entries.length) {
-      await tx.insert(projectFiles).values(
-        entries.map(([path, content]) => ({ projectId, path, content, size: Buffer.byteLength(content, "utf8") })),
-      );
-    }
-    await tx.update(projects).set({ updatedAt: new Date() }).where(eq(projects.id, projectId));
-    await tx.insert(projectActivity).values({ projectId, actorId, kind: "snapshot.restored", message: `Restored snapshot "${snap.name}"`, metadata: { snapshotId } });
-  });
+  await runBatch([
+    db.delete(projectFiles).where(eq(projectFiles.projectId, projectId)),
+    ...insertFileStatements(fileRowsFor(projectId, snap.files)),
+    db.update(projects).set({ updatedAt: new Date() }).where(eq(projects.id, projectId)),
+    db.insert(projectActivity).values({ projectId, actorId, kind: "snapshot.restored", message: `Restored snapshot "${snap.name}"`, metadata: { snapshotId } }),
+  ]);
   return snap;
 }
 

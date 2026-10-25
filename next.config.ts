@@ -1,4 +1,9 @@
 import type { NextConfig } from "next";
+import { initOpenNextCloudflareForDev } from "@opennextjs/cloudflare";
+
+// `next dev` gets the same Cloudflare bindings as production (local D1, R2,
+// Durable Objects) from wrangler.jsonc, persisted in .wrangler/state.
+if (process.env.NODE_ENV === "development") void initOpenNextCloudflareForDev();
 
 const securityHeaders = [
   { key: "X-Content-Type-Options", value: "nosniff" },
@@ -13,7 +18,7 @@ const nextConfig: NextConfig = {
   cacheComponents: false,
   reactStrictMode: true,
   poweredByHeader: false,
-  serverExternalPackages: ["pg", "ws", "http-proxy", "tar"],
+  serverExternalPackages: ["pg", "ws", "http-proxy", "tar", "wrangler"],
   // pg loads its Cloudflare socket adapter only on Workers, so file tracing
   // does not see it; include it so the OpenNext bundle can resolve it.
   // (Docs content ships inside the bundle as JSON, see src/lib/content.)

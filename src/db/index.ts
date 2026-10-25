@@ -1,90 +1,89 @@
-import { drizzle, type NodePgDatabase } from "drizzle-orm/node-postgres";
-import { Pool } from "pg";
+import { drizzle, type DrizzleD1Database } from "drizzle-orm/d1";
+import type { D1Database } from "@cloudflare/workers-types";
+import type { BatchItem } from "drizzle-orm/batch";
+import { requireBinding } from "@/lib/cloudflare/bindings";
 import * as schema from "./schema";
 
 /*
- * Database access.
+ * Database access: Cloudflare D1 through the `DB` binding.
  *
- * Node.js (next dev/start, Vercel, Docker, worker, tests): one shared pool.
+ * The binding comes from the current Cloudflare context (deployed Worker,
+ * `next dev` via OpenNext, or local bindings in tests and scripts). `db` is a
+ * proxy that resolves the client on every access, so callers write
+ * `db.select()...` everywhere.
  *
- * Cloudflare Workers: a socket opened while handling one request cannot be
- * used by another, so each request gets its own small pool, cached for the
- * lifetime of that request. Workers drop the request's sockets when it ends;
- * Hyperdrive keeps the database-side connections pooled. The connection string
- * comes from a Hyperdrive binding named HYPERDRIVE when present (recommended),
- * otherwise DATABASE_URL.
- *
- * `db` is a proxy that resolves the right instance on every access, so
- * callers keep writing `db.select()...` everywhere.
+ * D1 has no interactive transactions: use `db.batch([...])` for writes that
+ * must succeed or fail together (generate ids up front when later statements
+ * need them). A query may bind at most 100 parameters; use chunked() for
+ * large multi-row inserts.
  */
 
-export type Db = NodePgDatabase<typeof schema>;
+export type Db = DrizzleD1Database<typeof schema>;
 
-type CloudflareRequestContext = {
-  env?: { HYPERDRIVE?: { connectionString?: string } } & Record<string, unknown>;
-  ctx?: { waitUntil(promise: Promise<unknown>): void };
-};
-
-declare global {
-  var __codexaPool: Pool | undefined;
-}
-
-const CF_CONTEXT = Symbol.for("__cloudflare-context__");
-
-/** The per-request Cloudflare context set by the OpenNext worker, or undefined on Node.js. */
-function cloudflareContext(): CloudflareRequestContext | undefined {
-  try {
-    return (globalThis as Record<symbol, CloudflareRequestContext | undefined>)[CF_CONTEXT];
-  } catch {
-    return undefined;
-  }
-}
-
-function connectionString(cf?: CloudflareRequestContext) {
-  const url = cf?.env?.HYPERDRIVE?.connectionString || process.env.DATABASE_URL;
-  if (!url) throw new Error("DATABASE_URL is not set (or bind Hyperdrive as HYPERDRIVE on Cloudflare)");
-  return url;
-}
-
-function nodePool(): Pool {
-  if (!globalThis.__codexaPool) {
-    globalThis.__codexaPool = new Pool({
-      connectionString: connectionString(),
-      max: Number(process.env.DATABASE_POOL_MAX ?? 10),
-      idleTimeoutMillis: 30_000,
-    });
-  }
-  return globalThis.__codexaPool;
-}
-
-let nodeDb: Db | undefined;
-const requestDbs = new WeakMap<object, Db>();
+const clients = new WeakMap<object, Db>();
 
 export function getDb(): Db {
-  const cf = cloudflareContext();
-  if (cf?.ctx) {
-    const existing = requestDbs.get(cf.ctx);
-    if (existing) return existing;
-    const pool = new Pool({ connectionString: connectionString(cf), max: 3, idleTimeoutMillis: 5_000 });
-    const instance = drizzle(pool, { schema });
-    requestDbs.set(cf.ctx, instance);
-    return instance;
+  const binding = requireBinding("DB") as D1Database;
+  let client = clients.get(binding);
+  if (!client) {
+    client = drizzle(binding as unknown as Parameters<typeof drizzle>[0], { schema });
+    clients.set(binding, client);
   }
-  if (!nodeDb) nodeDb = drizzle(nodePool(), { schema });
-  return nodeDb;
+  return client;
 }
 
-function lazy<T extends object>(resolve: () => T): T {
-  return new Proxy({} as T, {
-    get(_target, prop) {
-      const real = resolve();
-      const value = Reflect.get(real, prop, real);
-      return typeof value === "function" ? value.bind(real) : value;
-    },
-  });
+export const db: Db = new Proxy({} as Db, {
+  get(_target, prop) {
+    const real = getDb();
+    const value = Reflect.get(real, prop, real);
+    return typeof value === "function" ? value.bind(real) : value;
+  },
+});
+
+/** Split rows so each insert stays under D1's 100 bound-parameter limit. */
+export function chunked<T extends Record<string, unknown>>(rows: T[], maxParams = 90): T[][] {
+  if (!rows.length) return [];
+  const perRow = Math.max(1, Object.keys(rows[0]).length + 4); // +4 for generated id/timestamps
+  const size = Math.max(1, Math.floor(maxParams / perRow));
+  const out: T[][] = [];
+  for (let i = 0; i < rows.length; i += size) out.push(rows.slice(i, i + size));
+  return out;
 }
 
-export const db: Db = lazy(getDb);
-/** The shared Node.js pool (scripts and the worker use it to shut down cleanly). */
-export const pool: Pool = lazy(nodePool);
+/** Split rows by size too: keep each statement's bound values well under D1's payload limits. */
+export function chunkedBySize<T extends Record<string, unknown>>(rows: T[], sizeOf: (row: T) => number, opts: { maxParams?: number; maxBytes?: number } = {}): T[][] {
+  const maxBytes = opts.maxBytes ?? 900_000;
+  const out: T[][] = [];
+  for (const group of chunked(rows, opts.maxParams)) {
+    let current: T[] = [];
+    let bytes = 0;
+    for (const row of group) {
+      const n = sizeOf(row);
+      if (current.length && bytes + n > maxBytes) {
+        out.push(current);
+        current = [];
+        bytes = 0;
+      }
+      current.push(row);
+      bytes += n;
+    }
+    if (current.length) out.push(current);
+  }
+  return out;
+}
+
+/**
+ * Run statements atomically. D1 executes a batch as one implicit
+ * transaction: every statement succeeds or none do.
+ */
+export async function runBatch(items: BatchItem<"sqlite">[]) {
+  if (!items.length) return [];
+  return getDb().batch(items as unknown as [BatchItem<"sqlite">, ...BatchItem<"sqlite">[]]);
+}
+
+/** Escape a value for use inside a LIKE pattern with ESCAPE '\\'. */
+export function likeEscape(value: string) {
+  return value.replace(/[\\%_]/g, (c) => "\\" + c);
+}
+
 export { schema };
