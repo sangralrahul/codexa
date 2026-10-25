@@ -79,3 +79,14 @@ describe("runner and app URL configuration", () => {
     expect(p.env.APP_URL).toBe("https://codexa.vercel.app");
   });
 });
+
+describe("secrets during `next build`", () => {
+  it("uses placeholders while building, so a machine without the real secrets can build", async () => {
+    const m = await load({ SESSION_SECRET: undefined, ENCRYPTION_KEY: undefined, NEXT_PHASE: "phase-production-build" });
+    expect(m.env.SESSION_SECRET).toBe("build-time-placeholder-not-a-secret");
+  });
+
+  it("still refuses to start at runtime without them", async () => {
+    await expect(load({ SESSION_SECRET: undefined, ENCRYPTION_KEY: undefined, NEXT_PHASE: undefined })).rejects.toThrow(/SESSION_SECRET/);
+  });
+});

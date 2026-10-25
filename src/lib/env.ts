@@ -61,8 +61,21 @@ const schema = z.object({
 
 export type Env = z.infer<typeof schema>;
 
+/**
+ * `next build` evaluates route modules to collect their config, but the real
+ * secrets exist only at runtime (Worker secrets on Cloudflare), so the build
+ * gets placeholders. NEXT_PHASE is never set at runtime, where missing
+ * secrets still fail loudly.
+ */
+const BUILD_PLACEHOLDER = "build-time-placeholder-not-a-secret";
+
 function load(): Env {
-  const parsed = schema.safeParse(process.env);
+  const source: Record<string, string | undefined> = { ...process.env };
+  if (process.env.NEXT_PHASE === "phase-production-build") {
+    source.SESSION_SECRET ||= BUILD_PLACEHOLDER;
+    source.ENCRYPTION_KEY ||= BUILD_PLACEHOLDER;
+  }
+  const parsed = schema.safeParse(source);
   if (!parsed.success) {
     const issues = parsed.error.issues.map((i) => `${i.path.join(".")}: ${i.message}`).join("\n  ");
     throw new Error(`Invalid environment configuration:\n  ${issues}\nSee .env.example for required variables.`);
