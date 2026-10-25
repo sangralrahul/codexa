@@ -11,12 +11,15 @@ is present. Docker has no daemon.
 
 ## Stack decisions
 - Next.js 16 App Router (Turbopack), React 19, TypeScript strict, Tailwind v4 CSS-first tokens.
-- Drizzle ORM + PostgreSQL; SQL migrations in `drizzle/`.
+- Drizzle ORM + Cloudflare D1 (SQLite); SQL migrations in `drizzle/`. Snapshots and hosted sites in R2.
+  (Originally PostgreSQL; moved to D1 so everything except email runs on Cloudflare. See docs/CLOUDFLARE.md.)
 - Custom cookie-session auth (scrypt passwords, hashed session/auth tokens) — no external auth provider is
   reachable from this environment and the flows must be verifiable.
 - Monaco served from our origin (`/monaco/vs`) because CDNs are blocked and self-hosting is more reliable.
-- Separate `services/runner` process for sandboxed execution + preview proxy (never in the Next.js process).
-- `services/realtime` (WebSocket presence) and `services/worker` (Postgres-backed job queue).
+- `services/runner` for sandboxed execution + preview proxy (never in the Next.js process). On Cloudflare it
+  runs inside one Container per project, owned by the `ProjectSandbox` Durable Object.
+- Realtime presence: `services/realtime` locally, the `PresenceRoom` Durable Object on Cloudflare.
+- Background jobs: D1 `jobs` table drained by the Worker's Cron Trigger (`src/lib/jobs/run.ts`).
 
 ## Phase 1 — Foundation ✅
 Env validation, schema (33 tables), migrations, crypto, auth flows + API + pages, email transport (Resend or

@@ -38,6 +38,18 @@ import { verifyRealtimeToken } from "@/lib/integrations/realtime-token";
 
 // An external PostgreSQL database the feature connects to (not Codexa's own D1 database).
 const DB_URL = process.env.TEST_DATABASE_URL ?? "postgres://codexa:codexa@127.0.0.1:5432/codexa_test";
+// Without a reachable Postgres server (it's only needed for this feature) the file is skipped; CI provides one.
+const pgReachable = await (async () => {
+  const client = new pg.Client({ connectionString: DB_URL, connectionTimeoutMillis: 2000 });
+  try {
+    await client.connect();
+    return true;
+  } catch {
+    return false;
+  } finally {
+    await client.end().catch(() => {});
+  }
+})();
 const suffix = Date.now().toString(36);
 let owner: User;
 let ws: Workspace;
@@ -65,10 +77,12 @@ beforeAll(async () => {
 });
 
 afterAll(async () => {
-  const client = new pg.Client({ connectionString: DB_URL });
-  await client.connect();
-  await client.query(`drop table if exists "${TABLE}"`);
-  await client.end();
+  if (pgReachable) {
+    const client = new pg.Client({ connectionString: DB_URL });
+    await client.connect();
+    await client.query(`drop table if exists "${TABLE}"`);
+    await client.end();
+  }
   for (const u of [owner, stranger]) if (u) await cleanupUser(u);
 });
 
@@ -78,7 +92,7 @@ async function cleanupUser(u: User) {
   await db.delete(users).where(eq(users.id, u.id));
 }
 
-describe("postgres adapter (real connection)", () => {
+describe.skipIf(!pgReachable)("postgres adapter (real connection)", () => {
   it("connects to the test database and reports version/user", async () => {
     const r = await testPostgres(DB_URL, false);
     expect(r.ok).toBe(true);
@@ -99,7 +113,7 @@ describe("postgres adapter (real connection)", () => {
   });
 });
 
-describe("workspace connections API", () => {
+describe.skipIf(!pgReachable)("workspace connections API", () => {
   it("lists providers with platform flags and no connections for a fresh workspace", async () => {
     as(owner);
     const { status, body } = await j(await directoryRoute.GET(req("GET", `/integrations?workspaceId=${ws.id}`), {}));
@@ -161,7 +175,7 @@ describe("workspace connections API", () => {
   });
 });
 
-describe("project database endpoints", () => {
+describe.skipIf(!pgReachable)("project database endpoints", () => {
   it("creates a table through the query endpoint (write, no confirmation needed)", async () => {
     as(owner);
     const { status, body } = await j(

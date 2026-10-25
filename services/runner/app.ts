@@ -103,6 +103,36 @@ export async function createRunner(overrides: Partial<RunnerConfig> = {}): Promi
     clearInterval(statusTimer);
   });
 
+  // Built files of a deployment, for hosts that serve sites from object
+  // storage (Cloudflare R2). Paths are relative to the site root.
+  router.add("GET", "/deployments/:id/files", async ({ params }) => {
+    if (!/^[A-Za-z0-9_-]{1,80}$/.test(params.id)) throw new HttpError(400, "Invalid deployment id", "bad_request");
+    const root = deployments.siteDir(params.id);
+    const out: { path: string; contentBase64: string; size: number }[] = [];
+    let total = 0;
+    const MAX_TOTAL = 80 * 1024 * 1024;
+    async function walk(dir: string, rel: string) {
+      for (const entry of await fs.readdir(dir, { withFileTypes: true })) {
+        const abs = path.join(dir, entry.name);
+        const r = rel ? `${rel}/${entry.name}` : entry.name;
+        if (entry.isDirectory()) await walk(abs, r);
+        else if (entry.isFile()) {
+          const buf = await fs.readFile(abs);
+          total += buf.byteLength;
+          if (total > MAX_TOTAL) throw new HttpError(413, "Build output is larger than 80 MB", "too_large");
+          out.push({ path: r, contentBase64: buf.toString("base64"), size: buf.byteLength });
+        }
+      }
+    }
+    try {
+      await walk(root, "");
+    } catch (err) {
+      if ((err as NodeJS.ErrnoException).code === "ENOENT") throw new HttpError(404, "Deployment output not found", "not_found");
+      throw err;
+    }
+    return { files: out, totalBytes: total };
+  });
+
   router.add("DELETE", "/sessions/:id", async ({ params }) => {
     const ok = await sessions.stop(params.id);
     if (!ok) throw new HttpError(404, "Session not found", "not_found");

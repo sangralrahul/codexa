@@ -5,12 +5,17 @@ This file is the contract every contributor and subagent follows. Keep changes c
 
 ## Stack (do not change)
 - Next.js 16.4 App Router, React 19, TypeScript strict, Tailwind CSS v4 (CSS-first config in `src/app/globals.css`).
-- Drizzle ORM + PostgreSQL (`src/db/schema.ts`, migrations in `drizzle/`). Run `npm run db:generate && npm run db:migrate` after schema changes.
+- Hosting: Cloudflare for everything except email (Customer.io). Workers via `@opennextjs/cloudflare` (entry `worker/index.ts`), D1, R2, Containers, Durable Objects, Cron Triggers. Config in `wrangler.jsonc`; operator guide in `docs/CLOUDFLARE.md`.
+- Drizzle ORM + Cloudflare D1/SQLite (`src/db/schema.ts`, migrations in `drizzle/`). Run `npm run db:generate && npm run db:migrate` after schema changes.
+- D1 rules: no interactive transactions (use `runBatch()` from `src/db` with IDs generated up front); at most 100 bound parameters per statement (use `chunked()`); rows are capped at 2 MB (large blobs go to R2 via `src/lib/storage.ts`). No Postgres-only SQL (`::casts`, `ilike`, `FOR UPDATE`).
+- Bindings: read Cloudflare bindings through `src/lib/cloudflare/bindings.ts` (`bindings()`, `requireBinding()`), never from globals.
 - Custom session auth (`src/lib/auth`). No Clerk/Supabase Auth. Sessions are httpOnly cookies; tokens are hashed at rest.
 - UI primitives in `src/components/ui` (Button, Input/Textarea/Select/Field, Card, Badge, Alert, Dialog, DropdownMenu, Tabs, Tooltip, EmptyState, Skeleton). Icons: `lucide-react`. Radix via the `radix-ui` umbrella package.
 - Monaco is served from `/monaco/vs` (copied by postinstall). Never load it from a CDN.
 - Tests: Vitest (`tests/unit`, `tests/integration`), Playwright 1.63 (`tests/e2e`). Playwright is preinstalled; never run `playwright install`.
-- Services: `services/runner` (sandboxed execution + preview proxy), `services/realtime` (WebSocket presence), `services/worker` (job queue). They run with `tsx`, outside Next.js.
+- Runtime: `services/runner` (sandboxed execution + preview proxy). On Cloudflare it runs inside one Container per project, owned by the `ProjectSandbox` Durable Object (`worker/sandbox.ts`, image in `containers/runner/`); locally it runs with `tsx`. Always talk to it through `runnerFor(projectId)` in `src/lib/runtime/client.ts`.
+- Realtime presence: `PresenceRoom` Durable Object (`worker/presence.ts`) on Cloudflare, `services/realtime` locally. Same protocol in both.
+- Background jobs: `src/lib/jobs` (handlers in `handlers.ts`), drained by the Worker's Cron Trigger through `/api/internal/cron`.
 
 ## Next.js 16 rules (breaking vs older versions)
 - `cacheComponents` is OFF. Use the classic model: pages that read cookies/DB are dynamic automatically. Do not use `"use cache"`.
@@ -38,4 +43,5 @@ This file is the contract every contributor and subagent follows. Keep changes c
 
 ## Commands
 - `npm run dev` (web), `npm run runner:dev`, `npm run realtime:dev`, `npm run dev:all`
+- `npm run cf:preview` (production build in local workerd with real containers; needs Docker), `npm run cf:deploy`, `npm run db:migrate:remote`
 - `npm run lint`, `npm run typecheck`, `npm run test`, `npm run test:e2e`, `npm run build`

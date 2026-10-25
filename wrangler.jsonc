@@ -3,7 +3,9 @@
   // The Worker's name in your Cloudflare account. Keep it in sync with
   // WORKER_SELF_REFERENCE below.
   "name": "codexa",
-  "main": ".open-next/worker.js",
+  // worker/index.ts wraps the Next.js app built by OpenNext (.open-next/) and
+  // adds previews, hosted sites, realtime presence and cron jobs.
+  "main": "worker/index.ts",
   "compatibility_date": "2026-10-01",
   "compatibility_flags": ["nodejs_compat", "global_fetch_strictly_public"],
   "assets": {
@@ -17,8 +19,7 @@
     }
   ],
   // Codexa's database. Wrangler creates it on the first deploy; migrations
-  // live in ./drizzle and are applied with
-  //   npx wrangler d1 migrations apply codexa --remote
+  // live in ./drizzle and are applied with `npm run db:migrate:remote`.
   "d1_databases": [
     {
       "binding": "DB",
@@ -33,11 +34,54 @@
       "bucket_name": "codexa-storage"
     }
   ],
+  // One Durable Object per project for its container (SANDBOX) and its
+  // realtime presence room (PRESENCE).
+  "durable_objects": {
+    "bindings": [
+      { "name": "SANDBOX", "class_name": "ProjectSandbox" },
+      { "name": "PRESENCE", "class_name": "PresenceRoom" }
+    ]
+  },
+  "migrations": [
+    { "tag": "v1", "new_sqlite_classes": ["ProjectSandbox", "PresenceRoom"] }
+  ],
+  // Each project's previews, builds and commands run in its own container
+  // (instance size is chosen in worker/sandbox.ts). Wrangler builds the image
+  // with Docker on deploy.
+  "containers": [
+    {
+      "name": "codexa-runner",
+      "class_name": "ProjectSandbox",
+      "scheduling_policy": "durable_object",
+      "images": {
+        "runner": { "dockerfile": "./containers/runner/Dockerfile", "build_context": "." }
+      }
+    }
+  ],
+  // Background jobs (email retries, cleanup) every 5 minutes.
+  "triggers": {
+    "crons": ["*/5 * * * *"]
+  },
   "observability": {
     "enabled": true
   },
+  // Your domain. Uncomment and replace example.com with your domain (it must
+  // be a zone in your Cloudflare account). See docs/CLOUDFLARE.md, step 2.
+  // "routes": [
+  //   { "pattern": "codexa.example.com", "custom_domain": true },
+  //   { "pattern": "*.preview.example.com/*", "zone_name": "example.com" },
+  //   { "pattern": "*.sites.example.com/*", "zone_name": "example.com" }
+  // ],
   // Plain (non-secret) settings. Secrets go in with `npx wrangler secret put`.
+  // The values below are for `npm run cf:preview` on your computer; for the
+  // real site change them to match the routes above, e.g.
+  //   APP_URL https://codexa.example.com, PREVIEW_HOST preview.example.com,
+  //   DEPLOY_HOST sites.example.com, PREVIEW_PROTOCOL https
   "vars": {
-    "NODE_ENV": "production"
+    "NODE_ENV": "production",
+    "APP_URL": "http://localhost:8787",
+    "PREVIEW_HOST": "preview.localhost",
+    "DEPLOY_HOST": "sites.localhost",
+    "PREVIEW_PROTOCOL": "http"
   }
 }

@@ -2,7 +2,7 @@
  * Job handlers. Keep these free of Next.js-only modules ("server-only", next/headers):
  * they run from the Worker's cron trigger (src/lib/jobs/run.ts).
  */
-import { and, eq, inArray, lt, lte, ne, or, sql } from "drizzle-orm";
+import { and, eq, gte, inArray, lt, lte, ne, or, sql } from "drizzle-orm";
 import { db } from "@/db";
 import { authTokens, emailOutbox, jobs, rateLimits, sessions, usageEvents, workspaceInvites } from "@/db/schema";
 import { env, runnerUrl } from "@/lib/env";
@@ -79,7 +79,7 @@ export const handlers: Record<string, Handler> = {
     const rows = await db
       .select({ kind: usageEvents.kind, total: sql<number>`coalesce(sum(${usageEvents.quantity}), 0)` })
       .from(usageEvents)
-      .where(sql`${usageEvents.createdAt} >= ${since}`)
+      .where(gte(usageEvents.createdAt, since))
       .groupBy(usageEvents.kind);
     const totals: Record<string, number> = {};
     for (const r of rows) totals[r.kind] = Number(r.total);

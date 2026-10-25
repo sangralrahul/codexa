@@ -1,8 +1,8 @@
 /**
- * Postgres-backed job queue over the `jobs` table.
- * - claim: SELECT ... FOR UPDATE SKIP LOCKED so several workers can poll safely
+ * Job queue over the D1 `jobs` table, drained by the Worker's Cron Trigger
+ * (src/lib/jobs/run.ts via /api/internal/cron).
+ * - claim: one atomic UPDATE ... RETURNING, so overlapping runs never take the same job
  * - retries with exponential backoff until maxAttempts, then status "failed"
- * - no "server-only" import: this module is shared by Next.js and services/worker (tsx)
  */
 import { and, asc, count, desc, eq, inArray, isNotNull, lt, lte, or, sql } from "drizzle-orm";
 import { db } from "@/db";

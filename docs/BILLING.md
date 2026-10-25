@@ -18,8 +18,8 @@ teams, account settings, the staff admin area and the background worker.
 | Account operations (profile, password, sessions, export, delete) | `src/lib/billing/account-service.ts` |
 | Admin queries and mutations | `src/lib/billing/admin-service.ts` |
 | Feature flags helper for any module | `src/lib/billing/flags.ts` → `isFlagEnabled(key)` |
-| Job queue (SKIP LOCKED, retries with backoff) | `src/lib/jobs/index.ts` |
-| Worker process | `services/worker/index.ts`, `services/worker/handlers.ts` (`npm run worker:start`) |
+| Job queue (atomic claim, retries with backoff) | `src/lib/jobs/index.ts` |
+| Job handlers and runner | `src/lib/jobs/handlers.ts`, `src/lib/jobs/run.ts` (Cron Trigger → `/api/internal/cron`) |
 | Settings UI | `src/app/(app)/settings/**`, `src/components/settings/**` |
 | Admin UI | `src/app/admin/**`, `src/components/admin/**` |
 | Invite acceptance page | `src/app/(auth)/invite/[token]/page.tsx` |
@@ -153,13 +153,13 @@ runtimes, deployments (failures with build log tail), support tickets and abuse 
 workflow), audit logs (filters), feature flags (CRUD) and showcase approvals.
 Lists are offset-paginated (25/page) on indexed columns.
 
-## Worker
+## Background jobs
 
-```
-npm run worker:start      # polls every 5s (WORKER_POLL_MS), graceful SIGTERM/SIGINT
-```
+The Worker's Cron Trigger (every 5 minutes, `wrangler.jsonc` → `triggers`) calls the signed
+internal route `/api/internal/cron`, which runs due jobs within a time budget. Locally, trigger a
+run with `curl "http://127.0.0.1:8787/__scheduled?cron=*/5+*+*+*+*"` while `npm run cf:preview` is running.
 
-Job kinds: `email.retry` (resends failed outbox mail when Resend is configured),
+Job kinds: `email.retry` (resends failed outbox mail when Customer.io or Resend is configured),
 `cleanup.sessions`, `cleanup.expired_tokens` (tokens, stale invites, rate-limit windows),
 `usage.rollup` (placeholder: reports 24h totals), `runtime.sweep` (pings the runner; no-op
 when absent). Recurring jobs re-enqueue their next run on completion. Other modules enqueue with

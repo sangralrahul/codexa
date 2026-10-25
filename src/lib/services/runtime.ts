@@ -10,7 +10,7 @@ import { logger } from "@/lib/logger";
 import { getAllFiles, logActivity, readFile } from "@/lib/services/projects";
 import { getEnvVarsDecrypted } from "@/lib/services/env-vars";
 import { assertQuota, getEffectivePlan, recordUsage } from "@/lib/services/usage";
-import { runner, runnerHealth, RunnerRequestError, RunnerUnavailableError } from "@/lib/runtime/client";
+import { runnerFor, runnerHealth, RunnerRequestError, RunnerUnavailableError } from "@/lib/runtime/client";
 import type { ExecCommand, RunnerExecResult, RunnerSessionView, RuntimeSessionDto, RuntimeStateDto } from "@/lib/runtime/types";
 
 /**
@@ -137,7 +137,7 @@ export async function startRuntime({ project, workspace, user }: StartRuntimeInp
     .returning();
   try {
     const [files, envVars] = await Promise.all([getAllFiles(project.id), getEnvVarsDecrypted(project.id)]);
-    const created = await runner.createSession({
+    const created = await runnerFor(project.id).createSession({
       projectId: project.id,
       framework: project.framework,
       settings: project.settings ?? {},
@@ -170,7 +170,7 @@ async function reconcile(row: RuntimeSession, workspaceId: string): Promise<Runt
   const health = await runnerHealth();
   if (!health.ok) return row; // leave as-is; the caller reports runnerAvailable=false
   try {
-    const { session } = await runner.getSession(row.runnerSessionId, true);
+    const { session } = await runnerFor(row.projectId).getSession(row.runnerSessionId, true);
     const mapped = mapRunnerStatus(session);
     if (mapped.status === "starting" || mapped.status === "running") {
       const accrued = await accrueMinutes(row, workspaceId, false);
@@ -206,7 +206,7 @@ export async function stopRuntime(project: Pick<Project, "id" | "workspaceId">, 
   if (!active) return null;
   if (active.runnerSessionId) {
     try {
-      await runner.stopSession(active.runnerSessionId);
+      await runnerFor(project.id).stopSession(active.runnerSessionId);
     } catch (err) {
       if (!(err instanceof RunnerUnavailableError) && !(err instanceof RunnerRequestError && err.status === 404)) throw err;
     }
@@ -231,7 +231,7 @@ export async function syncRuntime(project: Pick<Project, "id" | "workspaceId">, 
   } else {
     files = await getAllFiles(project.id);
   }
-  const res = await runner.syncFiles(active.runnerSessionId, files, deletes);
+  const res = await runnerFor(project.id).syncFiles(active.runnerSessionId, files, deletes);
   return { ...res, session: active };
 }
 
@@ -239,7 +239,7 @@ export async function execRuntime(project: Pick<Project, "id" | "workspaceId">, 
   const active = await getActiveSession(project.id);
   if (!active?.runnerSessionId) throw conflict("Start the preview runtime before running commands");
   try {
-    return await runner.exec(active.runnerSessionId, command, opts.timeoutMs);
+    return await runnerFor(project.id).exec(active.runnerSessionId, command, opts.timeoutMs);
   } catch (err) {
     if (err instanceof RunnerRequestError && err.status === 404) {
       await markStopped(active, project.workspaceId, { status: "stopped", error: "The sandbox was stopped by the runner" });
@@ -252,13 +252,13 @@ export async function execRuntime(project: Pick<Project, "id" | "workspaceId">, 
 export async function runtimeLogsTail(project: Pick<Project, "id">, lines = 200) {
   const active = await getActiveSession(project.id);
   if (!active?.runnerSessionId) return null;
-  return runner.logsTail(active.runnerSessionId, lines);
+  return runnerFor(project.id).logsTail(active.runnerSessionId, lines);
 }
 
 export async function runtimeLogsStream(project: Pick<Project, "id">, signal?: AbortSignal): Promise<Response | null> {
   const active = await getActiveSession(project.id);
   if (!active?.runnerSessionId) return null;
-  return runner.logsStream(active.runnerSessionId, signal);
+  return runnerFor(project.id).logsStream(active.runnerSessionId, signal);
 }
 
 /** Internal helper for server-side callers (AI engine) that only know the project id. */

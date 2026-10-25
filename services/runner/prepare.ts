@@ -90,7 +90,7 @@ async function main() {
     const pkg = { name: `codexa-base-${fw}`, private: true, version: "0.0.0", ...templatePackageJson(fw) };
     await fs.writeFile(path.join(dir, "package.json"), JSON.stringify(pkg, null, 2));
     console.log(`[prepare] installing base dependencies for ${fw} in ${dir}`);
-    const code = await run("npm", ["install", "--no-audit", "--no-fund", "--loglevel=warn"], dir);
+    const code = await run("npm", ["install", "--include=dev", "--no-audit", "--no-fund", "--loglevel=warn"], dir);
     if (code !== 0) throw new Error(`npm install for ${fw} failed with exit code ${code}`);
     await chownRecursive(dir, cfg.uid, cfg.gid);
     manifest[fw] = {

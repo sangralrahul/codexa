@@ -22,10 +22,19 @@ describe("runner and app URL configuration", () => {
     expect(m.capabilities.runner).toBe(true);
   });
 
-  it("reports no runner on Vercel when RUNNER_URL is unset", async () => {
+  it("reports no runtime on serverless hosts without RUNNER_URL or a container binding", async () => {
     const m = await load({ RUNNER_URL: undefined, VERCEL: "1" });
-    expect(m.runnerUrl()).toBeNull();
-    expect(m.capabilities.runner).toBe(false);
+    const { cloudflareContext, setCloudflareContext } = await import("@/lib/cloudflare/bindings");
+    const saved = cloudflareContext();
+    try {
+      setCloudflareContext({ env: {} });
+      expect(m.runnerUrl()).toBeNull();
+      expect(m.capabilities.runner).toBe(false);
+      setCloudflareContext({ env: { SANDBOX: {} as never } });
+      expect(m.capabilities.runner).toBe(true);
+    } finally {
+      setCloudflareContext(saved);
+    }
   });
 
   it("treats an empty RUNNER_URL as unset", async () => {

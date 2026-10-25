@@ -4,6 +4,7 @@ import { ZodError, type ZodType } from "zod";
 import { AuthError } from "@/lib/auth/guards";
 import { RateLimitError } from "@/lib/rate-limit";
 import { logger } from "@/lib/logger";
+import { env } from "@/lib/env";
 
 export class ApiError extends Error {
   status: number;
@@ -45,9 +46,30 @@ export async function parseBody<T>(req: Request, schema: ZodType<T>): Promise<T>
  * Wrap a route handler so thrown errors map to consistent JSON responses.
  * Usage: export const POST = handler(async (req) => { ... return json(...) })
  */
+const SAFE_METHODS = new Set(["GET", "HEAD", "OPTIONS"]);
+
+/**
+ * Browsers attach session cookies to same-site requests, and previews/hosted
+ * sites run user code on sibling subdomains (same site as the app). So a
+ * mutating request that carries a foreign Origin is rejected. Server-to-server
+ * callers (webhooks, cron) send no Origin and are unaffected.
+ */
+export function crossOriginRejected(req: Request): boolean {
+  if (SAFE_METHODS.has(req.method)) return false;
+  const origin = req.headers.get("origin");
+  if (!origin) return false;
+  if (origin === new URL(req.url).origin) return false;
+  try {
+    return origin !== new URL(env.APP_URL).origin;
+  } catch {
+    return true;
+  }
+}
+
 export function handler<Ctx = unknown>(fn: (req: Request, ctx: Ctx) => Promise<Response>) {
   return async (req: Request, ctx: Ctx): Promise<Response> => {
     try {
+      if (crossOriginRejected(req)) throw forbidden("Cross-origin request rejected");
       return await fn(req, ctx);
     } catch (err) {
       return errorResponse(err);

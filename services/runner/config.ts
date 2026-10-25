@@ -7,7 +7,7 @@
  */
 import path from "node:path";
 
-export type SandboxDriverName = "local" | "docker" | "e2b";
+export type SandboxDriverName = "local" | "docker" | "e2b" | "process";
 
 function int(name: string, fallback: number): number {
   const raw = process.env[name];
@@ -68,7 +68,7 @@ export function loadConfig(): RunnerConfig {
   const previewPort = int("RUNNER_PREVIEW_PORT", 4100);
   const m = previewHostRaw.match(/:(\d+)$/);
   const driver = (process.env.RUNNER_SANDBOX_DRIVER || "local") as SandboxDriverName;
-  if (!["local", "docker", "e2b"].includes(driver)) throw new Error(`Unknown RUNNER_SANDBOX_DRIVER "${driver}"`);
+  if (!["local", "docker", "e2b", "process"].includes(driver)) throw new Error(`Unknown RUNNER_SANDBOX_DRIVER "${driver}"`);
   const token = process.env.RUNNER_TOKEN || "";
   if (!token) throw new Error("RUNNER_TOKEN is required (the Next.js app authenticates to the runner with it)");
   return {

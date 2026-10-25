@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { bindings } from "@/lib/cloudflare/bindings";
 
 /**
  * Server-side environment configuration. Validated once at import time.
@@ -112,8 +113,9 @@ export const capabilities = {
   get vercel() {
     return nonEmpty(env.VERCEL_TOKEN);
   },
+  /** Previews, builds and Codexa hosting: a runner service (RUNNER_URL) or Cloudflare Containers (SANDBOX binding). */
   get runner() {
-    return runnerUrl() !== null;
+    return runnerUrl() !== null || Boolean(bindings().SANDBOX);
   },
   get e2b() {
     return nonEmpty(env.E2B_API_KEY);

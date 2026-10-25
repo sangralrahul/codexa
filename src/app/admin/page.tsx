@@ -54,7 +54,7 @@ export default async function AdminOverviewPage() {
             <Link href="/admin/jobs" className="mt-3 inline-block text-sm text-primary hover:underline">
               Manage jobs
             </Link>
-            {jobs.queued > 0 && jobs.running === 0 ? <p className="mt-2 text-xs text-muted-foreground">Jobs are queued but none are running. Make sure the worker is up: <code>npm run worker:start</code>.</p> : null}
+            {jobs.queued > 0 && jobs.running === 0 ? <p className="mt-2 text-xs text-muted-foreground">Jobs are queued but none are running. They run on the Worker&apos;s 5-minute Cron Trigger; check it is enabled.</p> : null}
           </CardContent>
         </Card>
         <Card>

@@ -55,7 +55,7 @@ export type ExecOptions = SpawnOptions & { timeoutMs: number };
 export type ExecResult = { exitCode: number; output: string; timedOut: boolean; durationMs: number };
 
 export interface SandboxDriver {
-  readonly name: "local" | "docker" | "e2b";
+  readonly name: "local" | "docker" | "e2b" | "process";
   /** Called once at startup; may throw to make the runner refuse to start. */
   init(): Promise<void>;
   /** Make a freshly materialised sandbox directory usable by the sandbox user. */

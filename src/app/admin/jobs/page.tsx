@@ -17,10 +17,10 @@ export default async function AdminJobsPage({ searchParams }: { searchParams: SP
   const due = stats.oldestDueAt ? fetchedAt.getTime() - new Date(stats.oldestDueAt).getTime() : 0;
   return (
     <div>
-      <AdminPageHeader title="Jobs" description="Postgres-backed queue processed by services/worker (npm run worker:start). Failed jobs can be re-queued here." actions={<RetryAllFailedButton count={stats.failed} />} />
+      <AdminPageHeader title="Jobs" description="Queue in the D1 jobs table, processed every 5 minutes by the Worker's Cron Trigger. Failed jobs can be re-queued here." actions={<RetryAllFailedButton count={stats.failed} />} />
       {due > 2 * 60_000 ? (
         <Alert variant="warning" title="Jobs are overdue" className="mb-4">
-          The oldest due job has waited {Math.round(due / 60_000)} minutes. The worker may not be running.
+          The oldest due job has waited {Math.round(due / 60_000)} minutes. Check that the Worker&apos;s Cron Trigger is enabled (wrangler.jsonc → triggers).
         </Alert>
       ) : null}
       <div className="mb-6 grid grid-cols-2 gap-3 sm:grid-cols-5">

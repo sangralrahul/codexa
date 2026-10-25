@@ -36,5 +36,5 @@ jobs:
       - run: npm run typecheck
       - run: npm run test
       - run: npm run build
-      - name: Build for Cloudflare Workers
-        run: npx opennextjs-cloudflare build
+      - name: Build for Cloudflare (Worker + container runner bundle)
+        run: npm run cf:build
