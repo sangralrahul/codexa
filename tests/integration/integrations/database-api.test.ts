@@ -57,6 +57,7 @@ let stranger: User;
 let projectId: string;
 let connectionId: string;
 const TABLE = `itest_people_${suffix}`;
+const PETS = `itest_pets_${suffix}`;
 
 const B = "http://test.local/api/v1";
 const ctx = <T extends Record<string, string>>(p: T) => ({ params: Promise.resolve(p) });
@@ -80,6 +81,7 @@ afterAll(async () => {
   if (pgReachable) {
     const client = new pg.Client({ connectionString: DB_URL });
     await client.connect();
+    await client.query(`drop table if exists "${PETS}"`);
     await client.query(`drop table if exists "${TABLE}"`);
     await client.end();
   }
@@ -96,7 +98,8 @@ describe.skipIf(!pgReachable)("postgres adapter (real connection)", () => {
   it("connects to the test database and reports version/user", async () => {
     const r = await testPostgres(DB_URL, false);
     expect(r.ok).toBe(true);
-    expect(r.message).toMatch(/Connected to codexa_test as codexa/);
+    const url = new URL(DB_URL);
+    expect(r.message).toContain(`Connected to ${url.pathname.slice(1)} as ${decodeURIComponent(url.username)}`);
     expect(r.details?.version).toMatch(/PostgreSQL/);
   });
   it("fails fast with a safe message for bad credentials", async () => {
@@ -179,7 +182,7 @@ describe.skipIf(!pgReachable)("project database endpoints", () => {
   it("creates a table through the query endpoint (write, no confirmation needed)", async () => {
     as(owner);
     const { status, body } = await j(
-      await queryRoute.POST(req("POST", `/projects/${projectId}/database/query`, { connectionId, sql: `create table "${TABLE}" (id serial primary key, name text not null, age int); insert into "${TABLE}" (name, age) values ('Ada', 36), ('Linus', 54)` }), ctx({ id: projectId })),
+      await queryRoute.POST(req("POST", `/projects/${projectId}/database/query`, { connectionId, sql: `create table "${TABLE}" (id serial primary key, name text not null, age int); create table "${PETS}" (id serial primary key, owner_id int references "${TABLE}"(id)); insert into "${TABLE}" (name, age) values ('Ada', 36), ('Linus', 54)` }), ctx({ id: projectId })),
     );
     expect(status).toBe(200);
     expect(body.readOnly).toBe(false);
@@ -197,8 +200,8 @@ describe.skipIf(!pgReachable)("project database endpoints", () => {
     expect(t.columns.map((c: { name: string }) => c.name)).toEqual(["id", "name", "age"]);
     expect(t.columns[0]).toMatchObject({ isPrimaryKey: true, type: "integer", nullable: false });
     expect(t.columns[1]).toMatchObject({ type: "text", nullable: false });
-    const projectsTable = body.tables.find((x: { name: string }) => x.name === "projects");
-    expect(projectsTable.columns.find((c: { name: string }) => c.name === "workspace_id").foreignKey).toEqual({ table: "workspaces", column: "id" });
+    const pets = body.tables.find((x: { name: string }) => x.name === PETS);
+    expect(pets.columns.find((c: { name: string }) => c.name === "owner_id").foreignKey).toEqual({ table: TABLE, column: "id" });
   });
   it("runs SELECTs read-only with fields/rows/duration", async () => {
     as(owner);
