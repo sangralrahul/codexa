@@ -1,0 +1,46 @@
+services:
+  db:
+    image: postgres:16
+    environment:
+      POSTGRES_USER: codexa
+      POSTGRES_PASSWORD: codexa
+      POSTGRES_DB: codexa
+    ports: ["5432:5432"]
+    volumes: ["pgdata:/var/lib/postgresql/data"]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U codexa"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  web:
+    build: .
+    depends_on:
+      db: { condition: service_healthy }
+    env_file: .env
+    environment:
+      DATABASE_URL: postgres://codexa:codexa@db:5432/codexa
+      RUNNER_URL: http://runner:4000
+    ports: ["3000:3000"]
+    command: sh -c "npx drizzle-kit migrate && npm run start"
+
+  # The runner requires user namespaces + cgroups. In Docker this needs a
+  # privileged container (or run it directly on the host). See docs/RUNTIME.md.
+  runner:
+    image: node:22-bookworm-slim
+    working_dir: /app
+    privileged: true
+    env_file: .env
+    environment:
+      RUNNER_PORT: "4000"
+      RUNNER_PREVIEW_PORT: "4100"
+      RUNNER_DATA_DIR: /var/codexa
+    volumes:
+      - ./:/app
+      - codexa-runner:/var/codexa
+    ports: ["4100:4100"]
+    command: sh -c "npm ci --no-audit --no-fund && npm run runner:prepare && npm run runner:start"
+
+volumes:
+  pgdata:
+  codexa-runner:
