@@ -47,19 +47,18 @@
   ],
   // Live previews and builds: each project runs in its own container
   // (instance size is chosen in worker/sandbox.ts). They need your own domain
-  // (see "routes" below), so they are off by default. To turn them on, remove
-  // the // in front of these lines. Docker must be running when you deploy:
-  // Wrangler builds the container image with it.
-  // "containers": [
-  //   {
-  //     "name": "codexa-runner",
-  //     "class_name": "ProjectSandbox",
-  //     "scheduling_policy": "durable_object",
-  //     "images": {
-  //       "runner": { "dockerfile": "./containers/runner/Dockerfile", "build_context": "." }
-  //     }
-  //   }
-  // ],
+  // (see "routes" below). Without one, put // in front of these lines.
+  // Docker must be running when you deploy: Wrangler builds the image with it.
+  "containers": [
+    {
+      "name": "codexa-runner",
+      "class_name": "ProjectSandbox",
+      "scheduling_policy": "durable_object",
+      "images": {
+        "runner": { "dockerfile": "./containers/runner/Dockerfile", "build_context": "." }
+      }
+    }
+  ],
   // Background jobs (email retries, cleanup) every 5 minutes.
   "triggers": {
     "crons": ["*/5 * * * *"]
@@ -67,25 +66,24 @@
   "observability": {
     "enabled": true
   },
-  // Your own domain (optional; without it Codexa runs at
-  // codexa.<your-subdomain>.workers.dev). Uncomment and replace example.com
-  // with your domain (it must be a zone in your Cloudflare account).
-  // See "Add your own domain" in docs/CLOUDFLARE.md.
-  // "routes": [
-  //   { "pattern": "codexa.example.com", "custom_domain": true },
-  //   { "pattern": "*-preview.example.com/*", "zone_name": "example.com" },
-  //   { "pattern": "*-sites.example.com/*", "zone_name": "example.com" }
-  // ],
+  // Your own domain (it must be a zone in your Cloudflare account). Without
+  // one, put // in front of these lines and empty PREVIEW_HOST/DEPLOY_HOST
+  // below; Codexa then runs at codexa.<your-subdomain>.workers.dev.
+  // See docs/CLOUDFLARE.md.
+  "routes": [
+    { "pattern": "codexa.creditvault.tech", "custom_domain": true },
+    { "pattern": "*-preview.creditvault.tech/*", "zone_name": "creditvault.tech" },
+    { "pattern": "*-sites.creditvault.tech/*", "zone_name": "creditvault.tech" }
+  ],
   // Plain (non-secret) settings. Secrets, and APP_URL (your site's address),
-  // go in with `npx wrangler secret put`. PREVIEW_HOST and DEPLOY_HOST stay
-  // empty until you add a domain; then set them to -preview.example.com and
-  // -sites.example.com (the leading dash gives abc-preview.example.com, which
-  // Cloudflare's free certificate covers). For `npm run cf:preview`,
-  // .dev.vars overrides these.
+  // go in with `npx wrangler secret put`. The leading dash in PREVIEW_HOST
+  // and DEPLOY_HOST gives abc-preview.creditvault.tech (one level deep, so
+  // Cloudflare's free certificate covers it). Without a domain, set both to "".
+  // For `npm run cf:preview`, .dev.vars overrides these.
   "vars": {
     "NODE_ENV": "production",
-    "PREVIEW_HOST": "",
-    "DEPLOY_HOST": "",
+    "PREVIEW_HOST": "-preview.creditvault.tech",
+    "DEPLOY_HOST": "-sites.creditvault.tech",
     "PREVIEW_PROTOCOL": "https"
   }
 }
