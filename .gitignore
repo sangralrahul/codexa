@@ -42,3 +42,8 @@ next-env.d.ts
 /public/monaco/
 
 !.env.example
+
+# playwright
+/test-results/
+/playwright-report/
+/blob-report/
