@@ -14,27 +14,10 @@ import { ProjectCard } from "@/components/projects/project-card";
 import { UsageCard } from "@/components/projects/usage-card";
 import { TemplateShowcase } from "@/components/projects/template-showcase";
 import { GettingStarted } from "@/components/projects/getting-started";
+import { DashboardTabs } from "@/components/projects/dashboard-tabs";
 import type { ProjectListItem, WorkspaceRole } from "@/lib/client/workspace/types";
 
 export const metadata = { title: "Dashboard", robots: { index: false } };
-
-function SectionHead({ id, title, description, href, linkLabel }: { id: string; title: string; description?: string; href?: string; linkLabel?: string }) {
-  return (
-    <div className="mb-5 flex items-end justify-between gap-4">
-      <div>
-        <h2 id={id} className="text-lg font-semibold tracking-tight">
-          {title}
-        </h2>
-        {description ? <p className="mt-0.5 text-sm text-muted-foreground">{description}</p> : null}
-      </div>
-      {href ? (
-        <Link href={href} className="group inline-flex shrink-0 items-center gap-1 text-[13px] text-muted-foreground transition-colors hover:text-foreground">
-          {linkLabel} <ArrowRight className="size-3.5 transition-transform group-hover:translate-x-0.5" aria-hidden="true" />
-        </Link>
-      ) : null}
-    </div>
-  );
-}
 
 /** Time-of-day greeting in the user's own time zone (set in their profile); plain "Welcome back" if it can't be resolved. */
 function greeting(timeZone: string) {
@@ -98,7 +81,7 @@ export default async function DashboardPage() {
       {/* Hero: the live silk gradient behind the composer, fading into the page. */}
       <div className="relative isolate overflow-hidden">
         <Backdrop className="-z-10 [mask-image:linear-gradient(to_bottom,#000_55%,transparent)]" />
-        <AppPage className="pb-14 pt-12 sm:pt-20">
+        <AppPage className="pb-24 pt-12 sm:pt-20">
           <section aria-labelledby="dash-title" className="mx-auto max-w-3xl text-center">
             <div data-reveal>
               <Eyebrow>{current ? hello : `Hi ${firstName}`}</Eyebrow>
@@ -129,72 +112,93 @@ export default async function DashboardPage() {
           <div className="ambient__orb" />
           <div className="ambient__orb" />
         </div>
-        <AppPage className="pt-4">
-          <section aria-labelledby="recent-title">
-            <SectionHead id="recent-title" title="Your projects" description={current ? `${projectCount} in ${current.workspace.name}` : undefined} href={items.length ? "/projects" : undefined} linkLabel="View all" />
-            {items.length === 0 ? (
-              <GettingStarted canCreate={canCreate} />
-            ) : (
-              <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-                {canCreate ? (
-                  <Link
-                    href="/new-project"
-                    data-reveal
-                    className="group flex min-h-[220px] flex-col items-center justify-center gap-3 rounded-xl border border-dashed border-border-strong bg-card/40 text-center backdrop-blur-sm transition-colors hover:border-foreground/40 hover:bg-card/70"
-                  >
-                    <span className="flex size-11 items-center justify-center rounded-full border border-border bg-surface transition-transform duration-300 group-hover:rotate-90 group-hover:scale-110">
-                      <Plus className="size-5" aria-hidden="true" />
-                    </span>
-                    <span>
-                      <span className="block text-sm font-medium">New project</span>
-                      <span className="mt-0.5 block text-xs text-muted-foreground">From a template or a description</span>
-                    </span>
-                  </Link>
-                ) : null}
-                {items.map((p, i) => (
-                  <div key={p.id} data-reveal style={{ "--reveal-delay": `${(i + 1) * 70}ms` } as React.CSSProperties}>
-                    <ProjectCard project={p} showWorkspace={all.length > 1} />
-                  </div>
-                ))}
-              </div>
-            )}
-          </section>
-
-          <section aria-labelledby="shortcuts-title" className="mt-20">
-            <SectionHead id="shortcuts-title" title="Start from a template" description="Runnable starters with real files. Pick one and ask the agent to change it." href="/dashboard/templates" linkLabel="All templates" />
-            <TemplateShowcase templates={templates.map((t) => ({ id: t.id, name: t.name, description: t.description, category: t.category, frameworkName: t.frameworkName }))} />
-          </section>
-
-          <div className="mt-20 grid gap-10 xl:grid-cols-2">
-            {current && entitlements ? (
-              <section aria-labelledby="usage-title" data-reveal>
-                <SectionHead id="usage-title" title="Usage this month" description={`${entitlements.plan.charAt(0).toUpperCase() + entitlements.plan.slice(1)} plan`} href="/settings/usage" linkLabel="Details" />
-                <UsageCard workspaceName={current.workspace.name} entitlements={entitlements} projectCount={projectCount} />
-              </section>
-            ) : null}
-            <section aria-labelledby="guides-title" data-reveal style={{ "--reveal-delay": "100ms" } as React.CSSProperties}>
-              <SectionHead id="guides-title" title="Learn Codexa" description="Short guides from the docs." href="/docs" linkLabel="All docs" />
-              <ul className="grid gap-3 sm:grid-cols-2">
-                {GUIDES.map((g) => (
-                  <li key={g.href}>
-                    <Link href={g.href} className="tilt-shine group flex h-full flex-col rounded-xl border border-border bg-card p-4 shadow-sm transition-[border-color,box-shadow] hover:border-border-strong hover:shadow-lg">
-                      <span className="flex items-center justify-between">
-                        <span className="flex size-9 items-center justify-center rounded-lg bg-gradient-to-br from-signal/25 to-signal/5 ring-1 ring-signal/20">
-                          <g.icon className="size-4 text-signal" aria-hidden="true" />
-                        </span>
-                        <ArrowUpRight className="size-4 text-muted-foreground transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5" aria-hidden="true" />
-                      </span>
-                      <span className="mt-3 block text-sm font-medium">{g.title}</span>
-                      <span className="mt-1 block text-xs leading-relaxed text-muted-foreground">{g.body}</span>
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-              <Link href="/help" className="mt-3 inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground">
-                <BookOpen className="size-3.5" aria-hidden="true" /> Help center
-              </Link>
-            </section>
-          </div>
+        <AppPage width="wide" className="-mt-8 pt-0">
+          <DashboardTabs
+            tabs={[
+              {
+                id: "projects",
+                label: "My projects",
+                count: projectCount,
+                href: items.length ? "/projects" : undefined,
+                hrefLabel: "All projects",
+                content:
+                  items.length === 0 ? (
+                    <GettingStarted canCreate={canCreate} />
+                  ) : (
+                    <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
+                      {items.map((p, i) => (
+                        <div key={p.id} className="pop-in" style={{ animationDelay: `${i * 60}ms` }}>
+                          <ProjectCard project={p} showWorkspace={all.length > 1} />
+                        </div>
+                      ))}
+                      {canCreate ? (
+                        <Link
+                          href="/new-project"
+                          className="group flex min-h-[260px] flex-col items-center justify-center gap-3 rounded-xl border border-dashed border-border-strong text-center transition-colors hover:border-foreground/40 hover:bg-foreground/[0.03]"
+                        >
+                          <span className="flex size-12 items-center justify-center rounded-full border border-border bg-surface shadow-sm transition-transform duration-300 group-hover:rotate-90 group-hover:scale-110">
+                            <Plus className="size-5" aria-hidden="true" />
+                          </span>
+                          <span>
+                            <span className="block text-sm font-medium">New project</span>
+                            <span className="mt-0.5 block text-xs text-muted-foreground">From a template or a description</span>
+                          </span>
+                        </Link>
+                      ) : null}
+                    </div>
+                  ),
+              },
+              {
+                id: "templates",
+                label: "Templates",
+                count: templates.length,
+                href: "/dashboard/templates",
+                hrefLabel: "Browse all",
+                content: <TemplateShowcase templates={templates.map((t) => ({ id: t.id, name: t.name, description: t.description, category: t.category, frameworkName: t.frameworkName }))} />,
+              },
+              ...(current && entitlements
+                ? [
+                    {
+                      id: "usage",
+                      label: "Usage",
+                      href: "/settings/usage",
+                      hrefLabel: "Details",
+                      content: <UsageCard workspaceName={current.workspace.name} entitlements={entitlements} projectCount={projectCount} />,
+                    },
+                  ]
+                : []),
+              {
+                id: "learn",
+                label: "Learn",
+                href: "/docs",
+                hrefLabel: "All docs",
+                content: (
+                  <ul className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+                    {GUIDES.map((g) => (
+                      <li key={g.href}>
+                        <Link href={g.href} className="tilt-shine group flex h-full flex-col rounded-xl border border-border bg-card p-4 shadow-sm transition-[border-color,box-shadow] hover:border-border-strong hover:shadow-lg">
+                          <span className="flex items-center justify-between">
+                            <span className="flex size-9 items-center justify-center rounded-lg bg-gradient-to-br from-signal/25 to-signal/5 ring-1 ring-signal/20">
+                              <g.icon className="size-4 text-signal" aria-hidden="true" />
+                            </span>
+                            <ArrowUpRight className="size-4 text-muted-foreground transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5" aria-hidden="true" />
+                          </span>
+                          <span className="mt-3 block text-sm font-medium">{g.title}</span>
+                          <span className="mt-1 block text-xs leading-relaxed text-muted-foreground">{g.body}</span>
+                        </Link>
+                      </li>
+                    ))}
+                  </ul>
+                ),
+              },
+            ]}
+          />
+          <p className="mt-6 text-center text-xs text-muted-foreground">
+            Need a hand?{" "}
+            <Link href="/help" className="inline-flex items-center gap-1 underline-offset-2 hover:text-foreground hover:underline">
+              <BookOpen className="size-3.5" aria-hidden="true" /> Help center
+            </Link>
+          </p>
         </AppPage>
       </div>
     </>

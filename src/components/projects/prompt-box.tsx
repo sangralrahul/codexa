@@ -8,7 +8,7 @@ import { projectsApi } from "@/lib/client/workspace/api";
 import { stashInitialPrompt } from "@/lib/client/workspace/storage";
 import { ClientApiError } from "@/lib/client/api";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger } from "@/components/ui/dropdown";
-import { TemplateThumb } from "@/components/templates/template-thumb";
+import { TemplatePreview } from "@/components/templates/template-preview";
 import { cn } from "@/lib/utils";
 
 export type PromptTemplate = { id: string; name: string; category: string; frameworkName: string };
@@ -133,7 +133,7 @@ export function PromptBox({
                     className="inline-flex h-8 min-w-0 items-center gap-2 rounded-full border border-border bg-background/70 pl-1 pr-2.5 text-xs text-muted-foreground transition-colors hover:border-border-strong hover:text-foreground data-[state=open]:border-border-strong data-[state=open]:text-foreground"
                     aria-label={`Template: ${template?.name ?? "React starter"}. Change template`}
                   >
-                    <TemplateThumb category={template?.category ?? "web-apps"} className="w-9 shrink-0 rounded-full [&>div:first-child]:hidden [&>div:last-child]:p-0.5" />
+                    <TemplatePreview id={template?.id ?? ""} category={template?.category ?? "web-apps"} className="w-9 shrink-0 rounded-full border-0 [&>*]:aspect-square" imgClassName="aspect-square" />
                     <span className="truncate font-medium">{template?.name ?? "React starter"}</span>
                     <ChevronDown className="size-3.5 shrink-0" aria-hidden="true" />
                   </button>
@@ -142,7 +142,7 @@ export function PromptBox({
                   <DropdownMenuLabel>Start from</DropdownMenuLabel>
                   {templates.map((t) => (
                     <DropdownMenuItem key={t.id} onSelect={() => setTemplateId(t.id)} className="gap-3">
-                      <TemplateThumb category={t.category} className="w-12 shrink-0 rounded-md [&>div:first-child]:hidden [&>div:last-child]:p-1" />
+                      <TemplatePreview id={t.id} category={t.category} className="w-16 shrink-0 rounded-md" />
                       <span className="min-w-0 flex-1">
                         <span className="block truncate text-[13px]">{t.name}</span>
                         <span className="block truncate text-[11px] text-muted-foreground">{t.frameworkName}</span>

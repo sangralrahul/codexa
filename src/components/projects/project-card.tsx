@@ -13,7 +13,7 @@ import { Dialog, DialogContent, DialogFooter } from "@/components/ui/dialog";
 import { Field, Input } from "@/components/ui/input";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown";
 import { ConfirmDialog } from "@/components/workspace/confirm-dialog";
-import { TemplateThumb } from "@/components/templates/template-thumb";
+import { TemplatePreview } from "@/components/templates/template-preview";
 import { frameworkLabel, relativeTime } from "./format";
 
 const VisibilityIcon = ({ v }: { v: ProjectListItem["visibility"] }) =>
@@ -24,11 +24,11 @@ const FRAMEWORK_CATEGORY: Record<string, string> = { "node-express": "apis", sta
 
 /** A stable tint per project so cards built from the same template are still easy to tell apart. */
 const TONES = [
-  { wash: "bg-signal/[0.08]", chip: "bg-signal text-background" },
-  { wash: "bg-success/[0.08]", chip: "bg-success text-background" },
-  { wash: "bg-warning/[0.09]", chip: "bg-warning text-background" },
-  { wash: "bg-primary/[0.06]", chip: "bg-foreground text-background" },
-  { wash: "bg-danger/[0.07]", chip: "bg-danger text-background" },
+  { wash: "bg-gradient-to-br from-signal/[0.22] via-surface to-warning/[0.12]", chip: "bg-signal text-background" },
+  { wash: "bg-gradient-to-br from-success/[0.20] via-surface to-info/[0.12]", chip: "bg-success text-background" },
+  { wash: "bg-gradient-to-br from-warning/[0.22] via-surface to-signal/[0.10]", chip: "bg-warning text-background" },
+  { wash: "bg-gradient-to-br from-info/[0.20] via-surface to-signal/[0.10]", chip: "bg-foreground text-background" },
+  { wash: "bg-gradient-to-br from-danger/[0.16] via-surface to-info/[0.12]", chip: "bg-danger text-background" },
 ];
 function toneFor(id: string) {
   let h = 0;
@@ -77,8 +77,8 @@ export function ProjectCard({ project, layout = "grid", showWorkspace }: { proje
 
   return (
     <article className="tilt-shine group relative flex flex-col rounded-xl border border-border bg-card shadow-sm transition-[border-color,box-shadow] hover:border-border-strong hover:shadow-lg" data-testid="project-card">
-      <div className={cn("relative overflow-hidden rounded-t-xl border-b border-border p-3 pb-0", tone.wash)}>
-        <TemplateThumb category={category} className="translate-y-1 rounded-b-none border-b-0 shadow-sm transition-transform duration-500 ease-out group-hover:-translate-y-0.5" />
+      <div className={cn("relative overflow-hidden rounded-t-xl border-b border-border px-5 pt-5", tone.wash)}>
+        <TemplatePreview id={project.templateId ?? ""} category={category} className="translate-y-1 rounded-b-none border-b-0 shadow-lg transition-transform duration-500 ease-out group-hover:-translate-y-0.5" />
         <div className="absolute right-2 top-2 opacity-0 transition-opacity focus-within:opacity-100 group-hover:opacity-100">
           <ProjectMenu project={project} canEdit={canEdit} canDelete={canDelete} floating />
         </div>

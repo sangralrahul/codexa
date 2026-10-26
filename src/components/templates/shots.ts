@@ -1,0 +1,2 @@
+/** Templates with a real screenshot in /public/templates/<id>.webp (built and captured from the template files). */
+export const TEMPLATE_SHOTS = new Set<string>(["static-blog", "static-landing", "static-portfolio", "static-site", "vite-react-admin", "vite-react-ai-chat", "vite-react-crm", "vite-react-dashboard", "vite-react-landing", "vite-react-mobile-shell", "vite-react-ops-dashboard", "vite-react-portfolio", "vite-react-saas", "vite-react-starter", "vite-react-storefront", "vite-react-tasks"]);

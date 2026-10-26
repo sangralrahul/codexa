@@ -4,7 +4,7 @@ import { buttonClasses } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { DifficultyBadge, FrameworkBadge } from "./badges";
 import type { TemplateCardData } from "./types";
-import { TemplateThumb } from "./template-thumb";
+import { TemplatePreview } from "./template-preview";
 
 export function templatePreviewHref(id: string) {
   return `/templates/preview/${id}`;
@@ -17,8 +17,10 @@ export function templatePreviewHref(id: string) {
 export function TemplateCard({ template, action }: { template: TemplateCardData; action: React.ReactNode }) {
   const t = template;
   return (
-    <li className="flex h-full flex-col glow-card rounded-2xl border border-border p-5 text-card-foreground">
-      <TemplateThumb category={t.category} className="mb-4" />
+    <li className="tilt-shine group flex h-full flex-col rounded-2xl border border-border bg-card p-4 text-card-foreground shadow-sm transition-[border-color,box-shadow] hover:border-border-strong hover:shadow-lg">
+      <div className="mb-4 overflow-hidden rounded-xl bg-gradient-to-br from-signal/[0.10] via-surface to-info/[0.10] px-4 pt-4">
+        <TemplatePreview id={t.id} category={t.category} className="translate-y-1 rounded-b-none border-b-0 transition-transform duration-500 group-hover:-translate-y-0.5" />
+      </div>
       <div className="flex items-start justify-between gap-3">
         <div className="flex flex-wrap items-center gap-1.5">
           <FrameworkBadge name={t.frameworkName} />

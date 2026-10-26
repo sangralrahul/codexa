@@ -5,7 +5,7 @@ import { Check, Zap } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { TemplateSummary } from "@/lib/client/workspace/types";
 import { Badge } from "@/components/ui/badge";
-import { TemplateThumb } from "@/components/templates/template-thumb";
+import { TemplatePreview } from "@/components/templates/template-preview";
 
 const CATEGORY_NAMES: Record<string, string> = {
   websites: "Websites",
@@ -70,7 +70,7 @@ export function TemplatePicker({ templates, value, onChange, compact }: { templa
                       selected ? "border-foreground ring-2 ring-foreground/80" : "border-border hover:border-border-strong",
                     )}
                   >
-                    <TemplateThumb category={t.category} className={cn("w-full transition-opacity", selected ? "opacity-100" : "opacity-90 group-hover:opacity-100")} />
+                    <TemplatePreview id={t.id} category={t.category} className={cn("w-full transition-opacity", selected ? "opacity-100" : "opacity-90 group-hover:opacity-100")} imgClassName="transition-transform duration-500 group-hover:scale-[1.03]" />
                     {selected ? (
                       <span className="pop-in absolute right-1.5 top-1.5 flex size-5 items-center justify-center rounded-full bg-foreground text-background shadow-sm">
                         <Check className="size-3" aria-hidden="true" />

@@ -3,7 +3,7 @@
 import { useMemo, useState } from "react";
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
-import { TemplateThumb } from "@/components/templates/template-thumb";
+import { TemplatePreview } from "@/components/templates/template-preview";
 import { cn } from "@/lib/utils";
 
 export type ShowcaseTemplate = { id: string; name: string; description: string; category: string; frameworkName: string };
@@ -20,6 +20,22 @@ const CATEGORY_NAMES: Record<string, string> = {
   crm: "CRM",
   "landing-pages": "Landing pages",
   "mobile-first": "Mobile",
+};
+
+/** Soft colour wash behind each template screenshot, by category (theme tokens only). */
+const WASH: Record<string, string> = {
+  default: "from-signal/[0.14] via-surface to-info/[0.12]",
+  dashboards: "from-info/[0.18] via-surface to-success/[0.10]",
+  ecommerce: "from-warning/[0.18] via-surface to-signal/[0.10]",
+  "ai-tools": "from-info/[0.16] via-surface to-signal/[0.14]",
+  portfolios: "from-foreground/[0.10] via-surface to-info/[0.10]",
+  "landing-pages": "from-signal/[0.18] via-surface to-warning/[0.10]",
+  websites: "from-success/[0.14] via-surface to-info/[0.10]",
+  saas: "from-info/[0.14] via-surface to-signal/[0.12]",
+  crm: "from-success/[0.16] via-surface to-warning/[0.10]",
+  "admin-panels": "from-foreground/[0.08] via-surface to-signal/[0.12]",
+  "mobile-first": "from-signal/[0.12] via-surface to-success/[0.12]",
+  "web-apps": "from-info/[0.12] via-surface to-signal/[0.12]",
 };
 
 /** Dashboard template strip: category chips filter a grid of template cards that open New project. */
@@ -54,8 +70,8 @@ export function TemplateShowcase({ templates, limit = 8 }: { templates: Showcase
             style={{ animationDelay: `${i * 50}ms` }}
             className="pop-in tilt-shine group flex flex-col rounded-xl border border-border bg-card shadow-sm transition-[border-color,box-shadow] hover:border-border-strong hover:shadow-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
           >
-            <div className="relative overflow-hidden rounded-t-xl border-b border-border bg-surface p-3">
-              <TemplateThumb category={t.category} className="transition-transform duration-500 ease-out group-hover:scale-[1.03]" />
+            <div className={cn("relative overflow-hidden rounded-t-xl border-b border-border bg-gradient-to-br px-5 pt-5", WASH[t.category] ?? WASH.default)}>
+              <TemplatePreview id={t.id} category={t.category} className="translate-y-1 rounded-b-none border-b-0 shadow-lg transition-transform duration-500 ease-out group-hover:-translate-y-1" />
               <span className="absolute inset-x-3 bottom-3 flex translate-y-2 items-center justify-center gap-1.5 rounded-lg bg-foreground py-1.5 text-xs font-medium text-background opacity-0 shadow-lg transition-all duration-300 group-hover:translate-y-0 group-hover:opacity-100">
                 Use template <ArrowRight className="size-3.5" aria-hidden="true" />
               </span>

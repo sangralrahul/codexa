@@ -10,7 +10,7 @@ import { Button, buttonClasses } from "@/components/ui/button";
 import { Field, Input, Select, Textarea } from "@/components/ui/input";
 import { Alert } from "@/components/ui/misc";
 import { TemplatePicker } from "./template-picker";
-import { TemplateThumb } from "@/components/templates/template-thumb";
+import { TemplatePreview } from "@/components/templates/template-preview";
 
 export type WorkspaceOption = { id: string; name: string; role: string; plan: string };
 
@@ -87,7 +87,7 @@ export function NewProjectForm({
           <div className="space-y-4 px-5 py-5">
             {selected ? (
               <div className="flex items-center gap-3 rounded-lg border border-border bg-surface/60 p-2">
-                <TemplateThumb category={selected.category} className="w-20 shrink-0" />
+                <TemplatePreview id={selected.id} category={selected.category} className="w-24 shrink-0 rounded-md" />
                 <div className="min-w-0">
                   <p className="text-[11px] uppercase tracking-wider text-muted-foreground">Starting from</p>
                   <p className="truncate text-sm font-medium">{selected.name}</p>
