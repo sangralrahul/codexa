@@ -11,8 +11,8 @@ export default async function Page() {
   const user = await getCurrentUser();
   return (
     <PageTemplate page={COMPANY_PAGES[PATH]} layout="form">
-      <section aria-labelledby="form-heading" className="glow-card rounded-2xl border border-border p-6">
-        <h2 id="form-heading" className="text-xl font-semibold tracking-tight">Send a message</h2>
+      <section aria-labelledby="form-heading" className="e3 rounded-[20px] p-6 sm:p-7">
+        <h2 id="form-heading" className="text-display-4">Send a message</h2>
         <SupportForm
           kind="contact"
           

@@ -1,13 +1,27 @@
 import { Bot, Bug, Cloud, Code2, Database, Eye, FileDiff, FolderTree, GitBranch, Globe, History, Keyboard, KeyRound, Layers, LayoutTemplate, ListChecks, Lock, MonitorSmartphone, Play, Rocket, RotateCcw, Search, Server, Share2, ShieldCheck, Sparkles, Terminal, Users, Wallet, Wrench } from "lucide-react";
 import type { ComparisonGroup } from "@/components/marketing/comparison-table";
-import type { ContentSection, FAQItem, Feature } from "./types";
+import type { ContentSection, FAQItem, Feature, VignetteId } from "./types";
 
-export type FeatureGroup = { id: string; title: string; description: string; features: Feature[]; note?: string };
+export type FeatureGroup = {
+  id: string;
+  title: string;
+  /** Short label for the index rail and the mobile chip bar. */
+  navLabel: string;
+  description: string;
+  /** Vignette the sticky stage shows while this group is in view. */
+  visual: VignetteId;
+  features: Feature[];
+  note?: string;
+  /** Roadmap items that are not shipped (rendered as a dashed "Not shipped yet" card). */
+  planned?: { title: string; detail: string }[];
+};
 
 export const FEATURE_GROUPS: FeatureGroup[] = [
   {
     id: "ai",
     title: "AI generation and the agent",
+    navLabel: "AI and the agent",
+    visual: "agent-run",
     description: "A provider abstraction for Anthropic and OpenAI models drives a tool-using agent that works on real files.",
     features: [
       { title: "Prompt to project", description: "Start from a sentence. The planner picks a starter template and writes a plan before editing.", icon: Sparkles, href: "/ai-app-builder" },
@@ -22,6 +36,8 @@ export const FEATURE_GROUPS: FeatureGroup[] = [
   {
     id: "editor",
     title: "Editor",
+    navLabel: "Editor",
+    visual: "editor-peek",
     description: "Monaco-based, served from the Codexa origin, with the tooling you expect from a desktop editor.",
     features: [
       { title: "Tabs and file explorer", description: "Open several files, create folders, rename and delete with confirmation.", icon: Code2, href: "/code-editor" },
@@ -34,9 +50,11 @@ export const FEATURE_GROUPS: FeatureGroup[] = [
   {
     id: "runtime",
     title: "Runtime and preview",
+    navLabel: "Runtime",
+    visual: "terminal-stream",
     description: "Projects run in a separate runner service, never inside the web application.",
     features: [
-      { title: "Isolated sandboxes", description: "Unprivileged user, Linux namespaces, cgroup memory and process limits, and timeouts. Docker and E2B drivers are available.", icon: ShieldCheck, href: "/security" },
+      { title: "Isolated sandboxes", description: "On Cloudflare, one Container per project; commands run as an unprivileged user with timeouts. Self-hosted runners use Linux namespaces and cgroup limits, or Docker and E2B drivers.", icon: ShieldCheck, href: "/security" },
       { title: "Live preview", description: "A host-based proxy serves the running app at a preview hostname.", icon: Eye, href: "/visual-editor" },
       { title: "Streamed logs", description: "stdout, stderr, and system lines stream to the workspace as they happen.", icon: Terminal },
       { title: "Responsive viewports", description: "Switch between desktop, tablet, and phone widths while previewing.", icon: MonitorSmartphone },
@@ -46,6 +64,8 @@ export const FEATURE_GROUPS: FeatureGroup[] = [
   {
     id: "data",
     title: "Backend, databases, and secrets",
+    navLabel: "Data and secrets",
+    visual: "sql-runner",
     description: "Full-stack projects need data and configuration; both are handled in the workspace.",
     features: [
       { title: "PostgreSQL and Supabase", description: "Workspace connections with a schema browser and a SQL runner that asks before destructive statements.", icon: Database, href: "/full-stack-development" },
@@ -56,6 +76,8 @@ export const FEATURE_GROUPS: FeatureGroup[] = [
   {
     id: "history",
     title: "Version history and sharing",
+    navLabel: "History",
+    visual: "diff-restore",
     description: "Every project keeps its own history inside Codexa, independent of Git.",
     features: [
       { title: "Named snapshots", description: "Create checkpoints by hand or automatically before AI runs.", icon: History },
@@ -68,6 +90,8 @@ export const FEATURE_GROUPS: FeatureGroup[] = [
   {
     id: "deploy",
     title: "Deployment",
+    navLabel: "Deployment",
+    visual: "deploy-history",
     description: "Codexa static hosting works out of the box; other targets are adapters.",
     features: [
       { title: "Codexa static hosting", description: "Build in the sandbox and serve at a subdomain, with history and rollback.", icon: Rocket, href: "/app-deployment" },
@@ -78,6 +102,8 @@ export const FEATURE_GROUPS: FeatureGroup[] = [
   {
     id: "teams",
     title: "Teams, billing, and administration",
+    navLabel: "Teams and billing",
+    visual: "presence-cursors",
     description: "Workspaces, roles, plans, and a staff-only admin area.",
     features: [
       { title: "Team workspaces", description: "Owner, admin, editor, and viewer roles with email invitations.", icon: Users, href: "/teams" },
@@ -86,14 +112,20 @@ export const FEATURE_GROUPS: FeatureGroup[] = [
       { title: "Server-side limits", description: "AI requests and tokens, runtime minutes, deployments, storage, projects, and members.", icon: Lock, href: "/usage" },
       { title: "Starter templates", description: "React + Vite SPA, static site, and Node + Express API.", icon: LayoutTemplate, href: "/templates" },
     ],
-    note: "Roadmap, not shipped: concurrent editing (CRDT), SDK and CLI, native mobile apps, SSO/SAML, and third-party security certifications.",
+    planned: [
+      { title: "Concurrent editing", detail: "Several people typing in one file (CRDT). Presence is shipped; this is not." },
+      { title: "SDK and CLI", detail: "Depend on personal API tokens, which are planned too." },
+      { title: "SSO / SAML", detail: "For Enterprise workspaces." },
+      { title: "Native mobile apps", detail: "The site and dashboard work on phones; there is no app." },
+      { title: "Third-party security certifications", detail: "No SOC 2 or ISO 27001 audit has been completed." },
+    ],
   },
 ];
 
 export const HOW_IT_WORKS_DETAIL: ContentSection[] = [
   {
     id: "plan",
-    heading: "1. Plan",
+    heading: "Plan",
     blocks: [
       { type: "paragraph", text: "The agent receives your prompt together with a listing of the project files and the contents of the files it decides to read. It writes a short plan: which files it will create or change and why. In Ask mode it stops here and answers without editing." },
       { type: "paragraph", text: "Before any edit, Codexa creates a snapshot of the project. That snapshot is what the per-file diff and the revert action compare against." },
@@ -101,29 +133,29 @@ export const HOW_IT_WORKS_DETAIL: ContentSection[] = [
   },
   {
     id: "generate",
-    heading: "2. Generate",
+    heading: "Generate",
     blocks: [
-      { type: "paragraph", text: "Edits happen through tools (read, write, rename, delete) against your real project files in PostgreSQL. Each tool call and each file change is streamed to the browser as it happens, so you can follow along or cancel." },
+      { type: "paragraph", text: "Edits happen through tools (read, write, rename, delete) against your real project files, stored by Codexa in Cloudflare D1 (snapshots go to R2). Each tool call and each file change is streamed to the browser as it happens, so you can follow along or cancel." },
       { type: "list", items: ["Starter templates: React + Vite + TypeScript + Tailwind, static HTML/CSS/JS, Node + Express.", "Imported GitHub repositories are edited in place.", "Usage (requests and tokens) is recorded per run and counted against your plan; see [credits](/credits)."] },
     ],
   },
   {
     id: "validate",
-    heading: "3. Validate",
+    heading: "Validate",
     blocks: [
       { type: "paragraph", text: "The changed project is synced into an isolated sandbox where type-check, build, and tests run as allowlisted commands. Output is read back by the agent. If there are errors it attempts a repair, at most twice, and then hands control back to you with the errors visible." },
     ],
   },
   {
     id: "run",
-    heading: "4. Run",
+    heading: "Run",
     blocks: [
-      { type: "paragraph", text: "Start a preview in the same sandbox. The runner service executes your project as an unprivileged user inside Linux namespaces with memory and process limits; a host-based proxy serves it at a preview hostname. Logs stream to the workspace and you can switch viewports to check responsive layouts." },
+      { type: "paragraph", text: "Start a preview in the same sandbox. On Cloudflare each project runs in its own Container and the runner executes it as an unprivileged user (self-hosted runners use Linux namespaces with memory and process limits); a host-based proxy serves it at a preview hostname on a separate origin. Logs stream to the workspace and you can switch viewports to check responsive layouts." },
     ],
   },
   {
     id: "ship",
-    heading: "5. Ship",
+    heading: "Ship",
     blocks: [
       { type: "paragraph", text: "Deploy to Codexa static hosting: the build runs in the sandbox, the output is served at a subdomain, and every deployment stays in history so you can roll back. The Vercel adapter is available when a token is configured. Custom domains get CNAME instructions today; verification is planned." },
       { type: "links", items: [{ label: "App deployment", href: "/app-deployment", description: "Hosting, history, rollback, and domains." }, { label: "Deployment docs", href: "/docs/deployment", description: "Step-by-step instructions." }] },
@@ -135,7 +167,7 @@ export const HOW_IT_WORKS_FAQ: FAQItem[] = [
   { question: "Can I stop a run half way?", answer: "Yes. Runs stream their progress and can be cancelled. Whatever was changed up to that point is visible in the diff and can be reverted." },
   { question: "What if validation keeps failing?", answer: "After two repair attempts the agent stops and shows the errors. You can fix them in the editor, ask the agent in Fix mode with a specific error, or revert the run." },
   { question: "Does the agent run my code on its own?", answer: "Only allowlisted commands (install, build, test, type-check) in the sandbox. Starting the preview is a separate action you trigger." },
-  { question: "Where is my code stored?", answer: "Project files are stored in PostgreSQL. Snapshots are stored alongside them. You can export to GitHub whenever GitHub OAuth is configured." },
+  { question: "Where is my code stored?", answer: "In Codexa's own storage: project files in Cloudflare D1 and snapshots in R2. You can export to GitHub whenever GitHub OAuth is configured, or download the files." },
 ];
 
 export const ALTERNATIVES_INTRO = "There are three common ways to get AI help building software: hosted AI builders that generate an app from a prompt, assistants inside your own IDE, and no-code tools with drag-and-drop editors. Codexa combines generation with a real editor and runtime, and accepts the trade-offs that come with that choice.";

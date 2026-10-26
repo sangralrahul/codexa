@@ -35,11 +35,11 @@ import type { FAQItem, Feature, ProductPage, Step } from "./types";
 export const AI_KEY_LIMIT = "AI features require an Anthropic or OpenAI API key configured by the operator of your Codexa instance. When no key is configured the agent shows an explicit \"not configured\" state instead of pretending to work.";
 
 export const HOW_IT_WORKS_STEPS: Step[] = [
-  { title: "Plan", description: "The agent reads your prompt and the project files, then writes a short plan of the files it will create or change." },
-  { title: "Generate", description: "It edits real files with tools (read, write, rename, delete). Every change is recorded, and a snapshot is taken first." },
-  { title: "Validate", description: "Type-check, build, and tests run in an isolated sandbox. Errors are read back and repaired, bounded to two attempts." },
-  { title: "Run", description: "Start a preview in the sandbox with streamed logs, viewport controls, and a share link." },
-  { title: "Ship", description: "Deploy to Codexa static hosting or Vercel, keep deployment history, and roll back in one click." },
+  { title: "Plan", description: "The agent reads your prompt and the project files, then writes a short plan of the files it will create or change.", visual: "agent-run" },
+  { title: "Generate", description: "It edits real files with tools (read, write, rename, delete). Every change is recorded, and a snapshot is taken first.", visual: "editor-peek" },
+  { title: "Validate", description: "Type-check, build, and tests run in an isolated sandbox. Errors are read back and repaired, bounded to two attempts.", visual: "terminal-stream" },
+  { title: "Run", description: "Start a preview in the sandbox with streamed logs, viewport controls, and a share link.", visual: "viewport-morph" },
+  { title: "Ship", description: "Deploy to Codexa static hosting or Vercel, keep deployment history, and roll back in one click.", visual: "deploy-history" },
 ];
 
 export const PLATFORM_FEATURES: Feature[] = [
@@ -62,7 +62,7 @@ export const PRODUCT_FAQ: FAQItem[] = [
   { question: "Which stacks are supported today?", answer: "Starter templates cover React + Vite + TypeScript + Tailwind single-page apps, static HTML/CSS/JS sites, and Node + Express REST APIs. You can import other repositories from GitHub, but the sandbox is tuned for these three." },
   { question: "Does the AI work out of the box?", answer: "Only when the operator of the Codexa instance has configured an Anthropic or OpenAI API key. Without one, AI features show a \"not configured\" state. Everything else (editor, runtime, deployment) works without AI." },
   { question: "What happens when the AI makes a mistake?", answer: "A snapshot is taken before every run, each run records its plan, tool calls, and changed files, and you can revert the run with one click. Validation (type-check, build, tests) runs in the sandbox and the agent repairs errors at most twice before handing control back." },
-  { question: "Where does my code run?", answer: "Never inside the web application. A separate runner service executes projects as an unprivileged user inside Linux namespaces with cgroup memory and process limits and timeouts. Docker and E2B drivers are available for operators who prefer them." },
+  { question: "Where does my code run?", answer: "Never inside the web application. On Cloudflare each project gets its own Container, started on demand, where the runner executes commands as an unprivileged user. Self-hosted runners use Linux namespaces with cgroup memory and process limits; Docker and E2B drivers are available for operators who prefer them." },
   { question: "Can my team edit the same file at the same time?", answer: "Not yet. Realtime presence shows who is viewing which file, and snapshots make it easy to merge work, but concurrent editing (CRDT) is on the roadmap." },
   { question: "How do you charge?", answer: "Free, Pro, Team, and Enterprise plans in INR or USD, monthly or annual. Limits (AI requests and tokens, runtime minutes, deployments, storage, projects, members) are enforced on the server. See [pricing](/pricing)." },
 ];
@@ -80,6 +80,10 @@ export const PRODUCT_PAGES: Record<string, ProductPage> = {
   "/ai-app-builder": {
     path: "/ai-app-builder",
     eyebrow: "AI app builder",
+    headline: "Describe it. Keep the code.",
+    mark: "Keep the code.",
+    visual: "agent-run",
+    bento: ["editor-peek", "diff-restore"],
     title: "Generate full-stack applications from a sentence, then keep the code.",
     subtitle: "Codexa turns a plain-language description into a real project with files you can read, a preview you can click, and a deployment you can roll back.",
     positioning: "Most AI builders stop at a demo. Codexa treats the generated app as a normal codebase: it lives in a real editor, runs in an isolated sandbox, is validated with a type-check and build, and ships through the same deployment pipeline you would use by hand.",
@@ -110,6 +114,10 @@ export const PRODUCT_PAGES: Record<string, ProductPage> = {
   "/ai-website-builder": {
     path: "/ai-website-builder",
     eyebrow: "AI website builder",
+    headline: "Websites that stay yours.",
+    mark: "stay yours.",
+    visual: "viewport-morph",
+    bento: ["editor-peek", "deploy-history"],
     title: "Build and deploy responsive websites from a prompt, with full code ownership.",
     subtitle: "Marketing sites, portfolios, and landing pages generated as static HTML/CSS/JS or React, previewed on every viewport, and hosted on a Codexa subdomain.",
     positioning: "A website builder that produces a codebase instead of a locked page editor. Edit the copy in the editor, ask the agent for layout changes, and move the site anywhere because it is just files.",
@@ -122,10 +130,10 @@ export const PRODUCT_PAGES: Record<string, ProductPage> = {
       { title: "SEO basics in the output", description: "Generated sites include titles, meta descriptions, and semantic headings you can edit.", icon: Search },
     ],
     steps: [
-      { title: "Describe the site", description: "Pages, audience, tone, and the single action you want visitors to take." },
-      { title: "Review the draft", description: "Open the preview, read the generated HTML or React, and request changes." },
-      { title: "Refine", description: "Edit text directly in the editor or ask for section-level changes." },
-      { title: "Publish", description: "Deploy to a Codexa subdomain and point your domain with a CNAME." },
+      { title: "Describe the site", description: "Pages, audience, tone, and the single action you want visitors to take.", visual: "agent-run" },
+      { title: "Review the draft", description: "Open the preview, read the generated HTML or React, and request changes.", visual: "viewport-morph" },
+      { title: "Refine", description: "Edit text directly in the editor or ask for section-level changes.", visual: "editor-peek" },
+      { title: "Publish", description: "Deploy to a Codexa subdomain and point your domain with a CNAME.", visual: "deploy-history" },
     ],
     limitations: [
       AI_KEY_LIMIT,
@@ -142,6 +150,10 @@ export const PRODUCT_PAGES: Record<string, ProductPage> = {
   "/ai-code-generator": {
     path: "/ai-code-generator",
     eyebrow: "AI code generator",
+    headline: "Code that fits your codebase.",
+    mark: "fits your codebase.",
+    visual: "editor-peek",
+    bento: ["terminal-stream", "diff-restore"],
     title: "Generate, refactor, test, and document code in TypeScript, React, Node, and SQL.",
     subtitle: "Ask for a component, an endpoint, a migration, or a test file. The agent writes it into the project, runs the type-check, and shows the diff.",
     positioning: "Code generation inside a project, not in a chat window. Because the agent reads the surrounding files and runs the compiler, generated code matches your imports, types, and conventions more often than pasted snippets do.",
@@ -154,10 +166,10 @@ export const PRODUCT_PAGES: Record<string, ProductPage> = {
       { title: "Explanations", description: "Ask mode explains existing code without changing anything.", icon: Eye },
     ],
     steps: [
-      { title: "Point at the code", description: "Open the file or describe the module." },
-      { title: "Ask", description: "Generate, refactor, test, or document, in Build or Ask mode." },
-      { title: "Validate", description: "The sandbox runs type-check, build, or tests and the agent repairs failures (max two attempts)." },
-      { title: "Review and keep", description: "Read the diff; revert the run if you disagree." },
+      { title: "Point at the code", description: "Open the file or describe the module.", visual: "editor-peek" },
+      { title: "Ask", description: "Generate, refactor, test, or document, in Build or Ask mode.", visual: "agent-run" },
+      { title: "Validate", description: "The sandbox runs type-check, build, or tests and the agent repairs failures (max two attempts).", visual: "terminal-stream" },
+      { title: "Review and keep", description: "Read the diff; revert the run if you disagree.", visual: "diff-restore" },
     ],
     limitations: [
       AI_KEY_LIMIT,
@@ -169,6 +181,10 @@ export const PRODUCT_PAGES: Record<string, ProductPage> = {
   "/ai-agent": {
     path: "/ai-agent",
     eyebrow: "AI agent",
+    headline: "The agent that shows its work.",
+    mark: "shows its work.",
+    visual: "agent-run",
+    bento: ["terminal-stream", "diff-restore"],
     title: "A bounded, tool-using agent that plans, edits files, runs builds, reads logs, and repairs errors.",
     subtitle: "Every step is visible: the plan, each tool call, the files it changed, the token usage, and the snapshot it took before starting.",
     positioning: "The agent is deliberately constrained. It can only touch files in your project, only run allow-listed commands (install, build, test, type-check) in the sandbox, and only retry a failing validation twice before stopping and explaining what it found.",
@@ -182,11 +198,11 @@ export const PRODUCT_PAGES: Record<string, ProductPage> = {
       { title: "Provider abstraction", description: "Anthropic and OpenAI models through one interface; the operator chooses the default provider and model.", icon: Layers },
     ],
     steps: [
-      { title: "Plan", description: "Reads the prompt and relevant files, emits a numbered plan." },
-      { title: "Edit", description: "Applies file changes with tools; each change is listed in the run." },
-      { title: "Validate", description: "Runs type-check, build, or tests in the sandbox." },
-      { title: "Repair", description: "Reads errors and fixes them, bounded to two attempts." },
-      { title: "Report", description: "Summarises what changed and what it could not do." },
+      { title: "Plan", description: "Reads the prompt and relevant files, emits a numbered plan.", visual: "agent-run" },
+      { title: "Edit", description: "Applies file changes with tools; each change is listed in the run.", visual: "editor-peek" },
+      { title: "Validate", description: "Runs type-check, build, or tests in the sandbox.", visual: "terminal-stream" },
+      { title: "Repair", description: "Reads errors and fixes them, bounded to two attempts. The snapshot taken first means a bad run is one click from undone.", visual: "diff-restore" },
+      { title: "Report", description: "Summarises what changed and what it could not do.", visual: "commit-list" },
     ],
     limitations: [
       AI_KEY_LIMIT,
@@ -203,6 +219,10 @@ export const PRODUCT_PAGES: Record<string, ProductPage> = {
   "/full-stack-development": {
     path: "/full-stack-development",
     eyebrow: "Full-stack development",
+    headline: "Frontend to database, one workspace.",
+    mark: "one workspace.",
+    visual: "sql-runner",
+    bento: ["env-vars", "terminal-stream"],
     title: "Frontend, backend, database, authentication, and APIs in one workspace.",
     subtitle: "React in the browser, Express on the server, PostgreSQL or Supabase for data, and environment variables that stay encrypted.",
     positioning: "Codexa does not hide the stack. A full-stack project is a React + Vite frontend and a Node + Express API with ordinary package.json files, which means anything you learn in Codexa transfers to any other environment.",
@@ -215,10 +235,10 @@ export const PRODUCT_PAGES: Record<string, ProductPage> = {
       { title: "Previews with logs", description: "Run both tiers in the sandbox and watch stdout and stderr streamed live.", icon: Play },
     ],
     steps: [
-      { title: "Generate both tiers", description: "Describe the data model and screens; the planner creates frontend and API files." },
-      { title: "Connect a database", description: "Add a connection and run migrations from the SQL runner." },
-      { title: "Run end to end", description: "Preview the frontend against the API in the sandbox." },
-      { title: "Deploy", description: "Frontend to Codexa static hosting; API to your infrastructure or Vercel." },
+      { title: "Generate both tiers", description: "Describe the data model and screens; the planner creates frontend and API files.", visual: "agent-run" },
+      { title: "Connect a database", description: "Add a connection and run migrations from the SQL runner.", visual: "sql-runner" },
+      { title: "Run end to end", description: "Preview the frontend against the API in the sandbox.", visual: "terminal-stream" },
+      { title: "Deploy", description: "Frontend to Codexa static hosting; API to your infrastructure or Vercel.", visual: "deploy-history" },
     ],
     limitations: [
       AI_KEY_LIMIT,
@@ -230,6 +250,10 @@ export const PRODUCT_PAGES: Record<string, ProductPage> = {
   "/visual-editor": {
     path: "/visual-editor",
     eyebrow: "Visual editor",
+    headline: "Preview every change, every size.",
+    mark: "every size.",
+    visual: "viewport-morph",
+    bento: ["terminal-stream", "diff-restore"],
     title: "Preview your application, inspect the rendered output, and request targeted UI changes.",
     subtitle: "The preview pane shows your running app at desktop, tablet, and phone widths. Describe what you want changed and the agent edits the code behind it.",
     positioning: "To be precise: this is a live preview with viewport controls and an agent that understands your layout, not a drag-and-drop canvas. Changes always land in code so there is nothing to export or un-lock later.",
@@ -241,6 +265,12 @@ export const PRODUCT_PAGES: Record<string, ProductPage> = {
       { title: "Share for feedback", description: "Create a view-only share link with an expiry.", icon: Share2 },
       { title: "Snapshots", description: "Name a checkpoint before trying a redesign; restore if it does not work out.", icon: History },
     ],
+    steps: [
+      { title: "Run the preview", description: "Start the app in its sandbox; logs stream beside the preview.", visual: "terminal-stream" },
+      { title: "Check every size", description: "Switch between desktop, tablet, and phone widths.", visual: "viewport-morph" },
+      { title: "Describe the change", description: "Ask for the layout or copy change; the agent edits the code behind it.", visual: "agent-run" },
+      { title: "Keep it or restore", description: "Review the diff, or restore the snapshot taken before the run.", visual: "diff-restore" },
+    ],
     limitations: [
       "There is no click-to-select element inspector or drag-and-drop editing yet. UI changes are made in code or by prompt.",
       AI_KEY_LIMIT,
@@ -251,6 +281,10 @@ export const PRODUCT_PAGES: Record<string, ProductPage> = {
   "/code-editor": {
     path: "/code-editor",
     eyebrow: "Code editor",
+    headline: "A real editor, not a canvas.",
+    mark: "not a canvas.",
+    visual: "editor-peek",
+    bento: ["diff-restore", "commit-list"],
     title: "A Monaco-based editor with tabs, search, diagnostics, diff view, and AI-assisted edits.",
     subtitle: "The same editor engine as VS Code, served from Codexa (never a CDN), with a file explorer, search and replace, autosave, and keyboard shortcuts.",
     positioning: "An editor you would use even without the AI. It is the primary surface for every project in Codexa, and the agent's changes appear in it as ordinary edits with diffs.",
@@ -263,6 +297,12 @@ export const PRODUCT_PAGES: Record<string, ProductPage> = {
       { title: "Autosave", description: "Changes are saved to the project automatically and synced to a running preview.", icon: Cloud },
       { title: "Keyboard shortcuts", description: "Familiar bindings for save, find, go to file, and toggling panels. See the [editor docs](/docs/editor).", icon: Keyboard },
     ],
+    steps: [
+      { title: "Open any file", description: "Tabs, an explorer, and project-wide search with replace.", visual: "editor-peek" },
+      { title: "Read the output", description: "Diagnostics inline, and the sandbox's build and run logs beside the editor.", visual: "terminal-stream" },
+      { title: "Compare with a snapshot", description: "Diff the working copy against any snapshot or AI run, and restore it.", visual: "diff-restore" },
+      { title: "Commit and push", description: "Push to GitHub from the workspace when GitHub OAuth is configured.", visual: "commit-list" },
+    ],
     limitations: [
       "Realtime presence shows who is viewing a file; simultaneous editing of the same file is not supported yet.",
       "Language intelligence covers JavaScript/TypeScript, HTML, CSS, JSON, and Markdown. Other languages get syntax highlighting only.",
@@ -273,6 +313,10 @@ export const PRODUCT_PAGES: Record<string, ProductPage> = {
   "/app-deployment": {
     path: "/app-deployment",
     eyebrow: "App deployment",
+    headline: "Ship it. Roll it back.",
+    mark: "Roll it back.",
+    visual: "deploy-history",
+    bento: ["terminal-stream", "env-vars"],
     title: "Build, deploy, and roll back applications with live logs and deployment history.",
     subtitle: "Codexa static hosting works out of the box: the build runs in the sandbox and the output is served at a subdomain. Every deployment is kept so you can roll back.",
     positioning: "Deployment is a first-class part of the workflow rather than a separate product. The same snapshot that you previewed is what gets built, and the build log is stored with the deployment.",
@@ -285,10 +329,10 @@ export const PRODUCT_PAGES: Record<string, ProductPage> = {
       { title: "Environment variables", description: "Encrypted values are injected at build time; secrets are never shown in logs.", icon: KeyRound },
     ],
     steps: [
-      { title: "Choose a target", description: "Codexa hosting (default) or Vercel (token required)." },
-      { title: "Build", description: "The sandbox runs your build command from project settings." },
-      { title: "Serve", description: "Static output is published to your subdomain." },
-      { title: "Roll back", description: "Pick any earlier deployment from the history." },
+      { title: "Choose a target", description: "Codexa hosting (default) or Vercel (token required). Encrypted variables are injected at build time.", visual: "env-vars" },
+      { title: "Build", description: "The sandbox runs your build command from project settings.", visual: "terminal-stream" },
+      { title: "Serve", description: "Static output is published to your subdomain.", visual: "viewport-morph" },
+      { title: "Roll back", description: "Pick any earlier deployment from the history.", visual: "deploy-history" },
     ],
     limitations: [
       "Codexa hosting serves static output only. Server-side code must be deployed to your own infrastructure or to Vercel.",

@@ -1,10 +1,18 @@
 import { Bot, Database, GitBranch, Globe, History, KeyRound, Lock, Rocket, Share2, ShieldCheck, Users, Wallet } from "lucide-react";
-import type { Feature, Step } from "./types";
+import type { Feature, Step, VignetteId } from "./types";
 
 export type Solution = {
   slug: string;
   name: string;
   audience: string;
+  /** Curated h1 (six words or fewer) with the audience word in `mark`. */
+  headline: string;
+  mark: string;
+  /** The workflow vignette beside the steps. */
+  visual: VignetteId;
+  /** Real starter templates (ids in src/templates) shown in the "Start from" rail. */
+  templates: string[];
+  /** The page's full sentence; the lede under the headline. */
   title: string;
   intro: string;
   workflowIntro: string;
@@ -41,6 +49,10 @@ const commonLimits = [
 export const SOLUTIONS: Solution[] = [
   {
     slug: "startups",
+    headline: "Built for startups that ship.",
+    mark: "startups",
+    visual: "agent-run",
+    templates: ["vite-react-saas", "vite-react-landing", "vite-react-dashboard"],
     name: "Startups",
     audience: "startups",
     title: "Ship an MVP in days and keep iterating with real code.",
@@ -65,6 +77,10 @@ export const SOLUTIONS: Solution[] = [
   },
   {
     slug: "indie-hackers",
+    headline: "Built for indie hackers.",
+    mark: "indie hackers",
+    visual: "deploy-history",
+    templates: ["static-landing", "vite-react-tasks", "vite-react-portfolio"],
     name: "Indie hackers",
     audience: "indie hackers",
     title: "Build and launch side projects without an ops team.",
@@ -88,6 +104,10 @@ export const SOLUTIONS: Solution[] = [
   },
   {
     slug: "developers",
+    headline: "Built for developers who read diffs.",
+    mark: "developers",
+    visual: "diff-restore",
+    templates: ["vite-react-admin", "vite-react-tasks", "vite-react-starter"],
     name: "Developers",
     audience: "developers",
     title: "An AI pair that edits real files, runs builds, and respects your code.",
@@ -111,6 +131,10 @@ export const SOLUTIONS: Solution[] = [
   },
   {
     slug: "students",
+    headline: "Built for students who build.",
+    mark: "students",
+    visual: "editor-peek",
+    templates: ["static-site", "vite-react-portfolio", "static-portfolio"],
     name: "Students",
     audience: "students",
     title: "Learn by building real applications with explanations at every step.",
@@ -134,6 +158,10 @@ export const SOLUTIONS: Solution[] = [
   },
   {
     slug: "founders",
+    headline: "Built for founders, not slides.",
+    mark: "founders",
+    visual: "viewport-morph",
+    templates: ["vite-react-landing", "vite-react-saas", "vite-react-crm"],
     name: "Founders",
     audience: "founders",
     title: "Validate ideas with working software, not slides.",
@@ -157,6 +185,10 @@ export const SOLUTIONS: Solution[] = [
   },
   {
     slug: "agencies",
+    headline: "Built for agencies on deadline.",
+    mark: "agencies",
+    visual: "deploy-history",
+    templates: ["vite-react-landing", "static-portfolio", "vite-react-storefront"],
     name: "Agencies",
     audience: "agencies",
     title: "Deliver client projects faster with shared workspaces and templates.",
@@ -181,6 +213,10 @@ export const SOLUTIONS: Solution[] = [
   },
   {
     slug: "enterprise",
+    headline: "Built for enterprise security reviews.",
+    mark: "enterprise",
+    visual: "env-vars",
+    templates: ["vite-react-admin", "vite-react-ops-dashboard", "vite-react-crm"],
     name: "Enterprise",
     audience: "enterprise",
     title: "Isolation, audit logs, roles, and custom limits for larger organizations.",
@@ -208,6 +244,10 @@ export const SOLUTIONS: Solution[] = [
   },
   {
     slug: "education",
+    headline: "Built for classrooms that ship.",
+    mark: "classrooms",
+    visual: "editor-peek",
+    templates: ["static-site", "vite-react-starter", "static-blog"],
     name: "Education",
     audience: "education",
     title: "Classrooms and bootcamps that teach with real projects.",
@@ -231,6 +271,10 @@ export const SOLUTIONS: Solution[] = [
   },
   {
     slug: "ecommerce",
+    headline: "Built for storefronts and carts.",
+    mark: "storefronts",
+    visual: "viewport-morph",
+    templates: ["vite-react-storefront", "static-landing", "vite-react-admin"],
     name: "Ecommerce",
     audience: "ecommerce",
     title: "Storefronts, catalogs, carts, and payment integrations.",
@@ -254,6 +298,10 @@ export const SOLUTIONS: Solution[] = [
   },
   {
     slug: "healthcare",
+    headline: "Built for careful healthcare prototypes.",
+    mark: "healthcare",
+    visual: "env-vars",
+    templates: ["vite-react-admin", "vite-react-mobile-shell", "vite-react-ops-dashboard"],
     name: "Healthcare",
     audience: "healthcare",
     title: "Internal tools and patient-facing prototypes, with clear compliance boundaries.",
@@ -280,6 +328,10 @@ export const SOLUTIONS: Solution[] = [
   },
   {
     slug: "fintech",
+    headline: "Built for fintech dashboards.",
+    mark: "fintech",
+    visual: "sql-runner",
+    templates: ["vite-react-dashboard", "vite-react-admin", "vite-react-ops-dashboard"],
     name: "Fintech",
     audience: "fintech",
     title: "Dashboards, onboarding flows, and payment integrations with server-side controls.",
@@ -307,6 +359,10 @@ export const SOLUTIONS: Solution[] = [
   },
   {
     slug: "saas",
+    headline: "Built for SaaS, tenants included.",
+    mark: "SaaS",
+    visual: "agent-run",
+    templates: ["vite-react-saas", "vite-react-admin", "vite-react-dashboard"],
     name: "SaaS",
     audience: "SaaS builders",
     title: "Multi-tenant apps with auth, billing, and admin panels.",
@@ -330,6 +386,10 @@ export const SOLUTIONS: Solution[] = [
   },
   {
     slug: "internal-tools",
+    headline: "Built for internal tools.",
+    mark: "internal tools",
+    visual: "sql-runner",
+    templates: ["vite-react-admin", "vite-react-crm", "vite-react-ops-dashboard"],
     name: "Internal tools",
     audience: "internal tools",
     title: "Admin panels, dashboards, and workflow tools in hours.",
@@ -353,6 +413,10 @@ export const SOLUTIONS: Solution[] = [
   },
   {
     slug: "nonprofits",
+    headline: "Built for nonprofits on budgets.",
+    mark: "nonprofits",
+    visual: "deploy-history",
+    templates: ["static-landing", "static-blog", "static-site"],
     name: "Nonprofits",
     audience: "nonprofits",
     title: "Donation pages, volunteer tools, and program sites.",

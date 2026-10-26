@@ -9,17 +9,26 @@ const sup = site.company.supportEmail;
 export const TRUST_PAGES: Record<string, ContentPage> = {
   "/security": {
     path: "/security",
-    eyebrow: "Trust",
+    eyebrow: "Security",
+    variant: "landing",
+    tone: "trust",
+    headline: "Security you can read.",
+    mark: "you can read.",
     title: "Security at Codexa",
     intro: "How the platform isolates generated code, protects secrets, and handles accounts. This page describes what is implemented in the codebase today; it is not a certification and we do not hold any third-party attestations yet.",
     review: "security",
     updated: UPDATED,
     sections: [
       {
+        id: "request-path",
+        heading: "The request path",
+        navLabel: "Request path",
+        blocks: [{ type: "diagram", name: "request-path" }],
+      },
+      {
         id: "summary",
         heading: "Summary",
         blocks: [
-          { type: "note", variant: "warning", title: "No third-party certifications yet", text: "Codexa has not completed SOC 2, ISO 27001, HIPAA, PCI DSS, or any other third-party audit. We describe our controls here so you can assess them yourself. Enterprise customers can request a security questionnaire through [contact sales](/contact-sales)." },
           { type: "list", items: ["Generated and user code never runs inside the web application process.", "Secrets (environment variables, integration credentials) are encrypted at rest and never returned to the browser.", "Sessions use httpOnly cookies; session tokens are hashed at rest.", "Public and sensitive endpoints are rate limited.", "Security-relevant actions are written to an audit log."] },
         ],
       },
@@ -27,8 +36,8 @@ export const TRUST_PAGES: Record<string, ContentPage> = {
         id: "sandboxing",
         heading: "Sandboxing and runtime isolation",
         blocks: [
-          { type: "paragraph", text: "Projects run in a separate runner service. The default driver executes each project as an unprivileged Linux user inside its own user, PID, mount, and network namespaces, with cgroup memory and process limits and a wall-clock timeout. Only allowlisted commands (install, build, test, type-check, start) can be executed; there is no arbitrary shell endpoint." },
-          { type: "paragraph", text: "Operators can choose Docker or E2B drivers instead of the namespace driver. Previews are served through a host-based proxy so that a running project is never on the same origin as the Codexa application." },
+          { type: "paragraph", text: "Projects run in a separate runner service, never inside the web application. On Cloudflare, each project gets its own ProjectSandbox Durable Object, which starts that project's own Container on demand and stops it after 30 minutes without requests; inside it, the runner executes commands as an unprivileged user. Self-hosted runners use the namespace driver instead: an unprivileged Linux user in its own user, PID and mount namespaces, with cgroup memory and process limits and a wall-clock timeout." },
+          { type: "paragraph", text: "Only allowlisted commands (install, build, test, type-check, start) can be executed; there is no arbitrary shell endpoint. Operators can choose Docker or E2B drivers. Previews are served through a host-based proxy on a separate origin, so a running project is never on the same origin as the Codexa application." },
         ],
       },
       {
@@ -50,7 +59,7 @@ export const TRUST_PAGES: Record<string, ContentPage> = {
         id: "rate-limiting",
         heading: "Rate limiting and abuse controls",
         blocks: [
-          { type: "paragraph", text: "Login, signup, password reset, AI generation, and public forms are rate limited per IP or per workspace using a fixed-window limiter in PostgreSQL. Usage limits (AI requests and tokens, runtime minutes, deployments, storage) are enforced server-side per workspace. Abuse reports can be filed through [support](/support) and are handled in the staff admin area." },
+          { type: "paragraph", text: "Login, signup, password reset, AI generation, and public forms are rate limited per IP or per workspace using a fixed-window limiter stored in the database (Cloudflare D1), shared by every Worker instance. Usage limits (AI requests and tokens, runtime minutes, deployments, storage) are enforced server-side per workspace. Abuse reports can be filed through [support](/support) and are handled in the staff admin area." },
         ],
       },
       {
@@ -97,7 +106,12 @@ export const TRUST_PAGES: Record<string, ContentPage> = {
 
   "/trust-center": {
     path: "/trust-center",
-    eyebrow: "Trust",
+    eyebrow: "Trust center",
+    variant: "landing",
+    tone: "trust",
+    headline: "Every policy, in one place.",
+    mark: "in one place.",
+    visual: "env-vars",
     title: "Trust center",
     intro: "Every policy and practice document in one place, with the people to contact when you have a question.",
     updated: UPDATED,

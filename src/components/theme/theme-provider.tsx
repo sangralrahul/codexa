@@ -1,6 +1,7 @@
 "use client";
 
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
+import { withViewTransition } from "@/lib/client/view-transition";
 
 export type Theme = "light" | "dark" | "system";
 
@@ -12,26 +13,39 @@ function systemTheme(): "light" | "dark" {
   return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
 }
 
+function applyTheme(t: Theme): "light" | "dark" {
+  const r = t === "system" ? systemTheme() : t;
+  document.documentElement.classList.toggle("dark", r === "dark");
+  document.documentElement.style.colorScheme = r;
+  return r;
+}
+
 export function ThemeProvider({ initialTheme, children }: { initialTheme: Theme; children: React.ReactNode }) {
   const [theme, setThemeState] = useState<Theme>(initialTheme);
   const [resolved, setResolved] = useState<"light" | "dark">(initialTheme === "system" ? "light" : initialTheme);
 
   useEffect(() => {
-    const apply = () => {
-      const r = theme === "system" ? systemTheme() : theme;
-      setResolved(r);
-      document.documentElement.classList.toggle("dark", r === "dark");
-      document.documentElement.style.colorScheme = r;
-    };
-    apply();
+    const apply = () => setResolved(applyTheme(theme));
+    const id = requestAnimationFrame(apply);
     const mq = window.matchMedia("(prefers-color-scheme: dark)");
     mq.addEventListener("change", apply);
-    return () => mq.removeEventListener("change", apply);
+    return () => {
+      cancelAnimationFrame(id);
+      mq.removeEventListener("change", apply);
+    };
   }, [theme]);
 
+  // Switching theme crossfades the whole page (View Transitions; instant when calm or unsupported).
   const setTheme = useCallback((t: Theme) => {
-    setThemeState(t);
-    document.cookie = `codexa_theme=${t}; path=/; max-age=31536000; samesite=lax`;
+    try {
+      document.cookie = `codexa_theme=${t}; path=/; max-age=31536000; samesite=lax`;
+    } catch {
+      /* cookies blocked: the theme still applies for this visit */
+    }
+    withViewTransition(() => {
+      setResolved(applyTheme(t));
+      setThemeState(t);
+    });
   }, []);
 
   const value = useMemo(() => ({ theme, resolved, setTheme }), [theme, resolved, setTheme]);

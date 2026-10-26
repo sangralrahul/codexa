@@ -2,284 +2,497 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect, useId, useRef, useState } from "react";
-import { ChevronDown, Menu, X } from "lucide-react";
+import * as React from "react";
+import {
+  Activity,
+  ArrowRight,
+  BookOpen,
+  Bot,
+  Briefcase,
+  Building2,
+  ChevronDown,
+  Code2,
+  Compass,
+  GraduationCap,
+  Info,
+  LayoutTemplate,
+  Lightbulb,
+  Mail,
+  Menu,
+  Newspaper,
+  Plug,
+  Rocket,
+  ScrollText,
+  Search,
+  ShieldCheck,
+  Sparkles,
+  Terminal,
+  Users,
+  X,
+  type LucideIcon,
+} from "lucide-react";
 import { Logo } from "@/components/logo";
-import { NAV } from "@/config/routes";
+import { NAV, type NavItem } from "@/config/routes";
 import { buttonClasses } from "@/components/ui/button";
+import { Kbd } from "@/components/ui/misc";
 import { ThemeToggle } from "@/components/theme/theme-toggle";
-import { SearchTrigger } from "@/components/search/search-dialog";
+import { MotionToggle } from "@/components/motion/motion-toggle";
+import { GlideIndicator, useGlide } from "@/components/motion/glide";
+import { SearchDialog, openSearch } from "@/components/search/search-dialog";
+import { usePlatformMod } from "@/lib/client/platform";
 import { cn } from "@/lib/utils";
 
-type Item = { label: string; href: string; description?: string };
-const groups: { key: string; label: string; items: readonly Item[] }[] = [
-  { key: "product", label: "Product", items: NAV.product },
-  { key: "solutions", label: "Solutions", items: NAV.solutions },
-  { key: "resources", label: "Resources", items: NAV.resources },
-  { key: "company", label: "Company", items: NAV.company },
+type GroupKey = keyof typeof NAV;
+type Group = { key: GroupKey; label: string; items: readonly NavItem[]; footer: { label: string; href: string }[] };
+
+const GROUPS: Group[] = [
+  { key: "product", label: "Product", items: NAV.product, footer: [{ label: "All features", href: "/features" }, { label: "How it works", href: "/how-it-works" }] },
+  { key: "solutions", label: "Solutions", items: NAV.solutions, footer: [{ label: "All solutions", href: "/solutions" }, { label: "Templates", href: "/templates" }] },
+  { key: "resources", label: "Resources", items: NAV.resources, footer: [{ label: "Learn hub", href: "/learn" }, { label: "Help center", href: "/help" }] },
+  { key: "company", label: "Company", items: NAV.company, footer: [{ label: "Mission", href: "/mission" }, { label: "Trust center", href: "/trust-center" }] },
+];
+const LINKS = [
+  { label: "Pricing", href: "/pricing" },
+  { label: "Docs", href: "/docs" },
 ];
 
-function DesktopMenu({
-  group,
-  active,
-}: {
-  group: (typeof groups)[number];
-  active: boolean;
-}) {
-  const [open, setOpen] = useState(false);
-  const ref = useRef<HTMLDivElement>(null);
-  const id = useId();
+const ICONS: Record<string, LucideIcon> = {
+  "/ai-app-builder": Sparkles,
+  "/ai-agent": Bot,
+  "/code-editor": Code2,
+  "/app-deployment": Rocket,
+  "/integrations": Plug,
+  "/solutions/startups": Rocket,
+  "/solutions/founders": Lightbulb,
+  "/solutions/developers": Terminal,
+  "/solutions/students": GraduationCap,
+  "/solutions/agencies": Briefcase,
+  "/solutions/enterprise": Building2,
+  "/docs": BookOpen,
+  "/templates": LayoutTemplate,
+  "/guides": Compass,
+  "/changelog": ScrollText,
+  "/blog": Newspaper,
+  "/community": Users,
+  "/about": Info,
+  "/security": ShieldCheck,
+  "/status": Activity,
+  "/careers": Briefcase,
+  "/contact": Mail,
+};
 
-  useEffect(() => {
-    if (!open) return;
-    const onKey = (e: KeyboardEvent) => e.key === "Escape" && setOpen(false);
-    const onClick = (e: MouseEvent) => {
-      if (ref.current && !ref.current.contains(e.target as Node))
-        setOpen(false);
-    };
-    document.addEventListener("keydown", onKey);
-    document.addEventListener("mousedown", onClick);
-    return () => {
-      document.removeEventListener("keydown", onKey);
-      document.removeEventListener("mousedown", onClick);
-    };
-  }, [open]);
+const OPEN_DELAY = 100;
+const CLOSE_GRACE = 200;
 
+const isActivePath = (pathname: string, href: string) => pathname === href || pathname.startsWith(href + "/");
+
+/** Platform-aware "Search ⌘K" pill. Opens the site search (the dialog is mounted once in the header). */
+function SearchPill({ className, iconOnlyBelow = "xl" }: { className?: string; iconOnlyBelow?: "xl" | "never" }) {
+  const mod = usePlatformMod();
   return (
-    <div
-      ref={ref}
-      className="relative"
-      onMouseEnter={() => setOpen(true)}
-      onMouseLeave={() => setOpen(false)}
+    <button
+      type="button"
+      onClick={openSearch}
+      aria-label="Search documentation"
+      aria-keyshortcuts={mod === "⌘" ? "Meta+K" : "Control+K"}
+      data-no-ripple
+      className={cn(
+        "group inline-flex h-9 shrink-0 items-center gap-2 rounded-full border border-border bg-background/50 text-[13px] text-muted-foreground shadow-[inset_0_1px_0_var(--hairline)] transition-[color,border-color,background-color] duration-200 hover:border-border-strong hover:text-foreground",
+        iconOnlyBelow === "xl" ? "w-9 justify-center xl:w-auto xl:justify-start xl:pl-3 xl:pr-1.5" : "pl-3 pr-1.5",
+        className,
+      )}
     >
-      <button
-        type="button"
-        aria-expanded={open}
-        aria-controls={id}
-        aria-haspopup="true"
-        onClick={() => setOpen((o) => !o)}
-        className={cn(
-          "inline-flex items-center gap-1 rounded-md px-2.5 py-2 text-sm font-medium text-muted-foreground transition hover:text-foreground xl:px-3",
-          (open || active) && "text-foreground",
-        )}
-      >
-        {group.label}
-        <ChevronDown
-          className={cn("size-3.5 transition-transform", open && "rotate-180")}
-          aria-hidden="true"
-        />
-      </button>
-      <div
-        id={id}
-        role="menu"
-        aria-label={group.label}
-        hidden={!open}
-        className="absolute left-0 top-full z-40 w-72 pt-2"
-      >
-        <div className="glass rounded-2xl border border-border p-2 shadow-lg animate-fade-in">
-          {group.items.map((item) => (
-            <Link
-              key={item.href}
-              role="menuitem"
-              href={item.href}
-              onClick={() => setOpen(false)}
-              className="block rounded-lg px-3 py-2 text-sm hover:bg-muted focus-visible:bg-muted"
-            >
-              <span className="font-medium text-foreground">{item.label}</span>
-              {item.description ? (
-                <span className="mt-0.5 block text-xs text-muted-foreground">
-                  {item.description}
-                </span>
-              ) : null}
-            </Link>
-          ))}
-        </div>
-      </div>
-    </div>
+      <Search className="size-4" aria-hidden="true" />
+      <span className={cn(iconOnlyBelow === "xl" && "hidden xl:inline")}>Search</span>
+      <Kbd mod className={cn("ml-1 border-0 bg-muted px-1.5 shadow-[inset_0_0_0_1px_var(--border)]", iconOnlyBelow === "xl" && "hidden xl:inline-flex")}>
+        K
+      </Kbd>
+    </button>
   );
 }
 
-export function MarketingHeader({ signedIn }: { signedIn: boolean }) {
+export function MarketingHeader({ signedIn, wells }: { signedIn: boolean; wells?: Partial<Record<string, React.ReactNode>> }) {
   const pathname = usePathname();
-  const [mobileOpen, setMobileOpen] = useState(false);
-  const [lastPath, setLastPath] = useState(pathname);
+  const [open, setOpen] = React.useState<GroupKey | null>(null);
+  const [focusItem, setFocusItem] = React.useState<Record<GroupKey, number>>({ product: 0, solutions: 0, resources: 0, company: 0 });
+  const [mobileOpen, setMobileOpen] = React.useState(false);
+  const [scrolled, setScrolled] = React.useState(false);
+  const [lastPath, setLastPath] = React.useState(pathname);
   if (lastPath !== pathname) {
-    // Close the mobile menu on navigation (state adjustment during render).
+    // Route changed: close every menu (state adjustment during render).
     setLastPath(pathname);
+    setOpen(null);
     setMobileOpen(false);
   }
-  const [scrolled, setScrolled] = useState(false);
-  useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 8);
-    onScroll();
-    window.addEventListener("scroll", onScroll, { passive: true });
-    return () => window.removeEventListener("scroll", onScroll);
+
+  const headerRef = React.useRef<HTMLElement>(null);
+  const sentinelRef = React.useRef<HTMLSpanElement>(null);
+  const navRef = React.useRef<HTMLDivElement>(null);
+  const triggerRefs = React.useRef<Partial<Record<GroupKey, HTMLButtonElement | null>>>({});
+  const panelRefs = React.useRef<Partial<Record<GroupKey, HTMLDivElement | null>>>({});
+  const bgRef = React.useRef<HTMLDivElement>(null);
+  const openTimer = React.useRef<ReturnType<typeof setTimeout> | null>(null);
+  const closeTimer = React.useRef<ReturnType<typeof setTimeout> | null>(null);
+  /** How the open menu was opened: a click right after a hover-open should not close it again. */
+  const openedBy = React.useRef<"hover" | "click">("click");
+  const glide = useGlide(navRef, { hover: true, selector: '[data-active="true"]', itemSelector: "[data-nav-trigger]" });
+
+  // Condense into the capsule once the page has scrolled 24px (sentinel, no scroll listener).
+  React.useEffect(() => {
+    const el = sentinelRef.current;
+    if (!el) return;
+    const io = new IntersectionObserver(([e]) => setScrolled(!e.isIntersecting), { threshold: 0 });
+    io.observe(el);
+    return () => io.disconnect();
   }, []);
-  useEffect(() => {
-    document.body.style.overflow = mobileOpen ? "hidden" : "";
+
+  // Mobile sheet: lock the page behind it; Escape closes it.
+  React.useEffect(() => {
+    if (!mobileOpen) return;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    const onKey = (e: KeyboardEvent) => e.key === "Escape" && setMobileOpen(false);
+    document.addEventListener("keydown", onKey);
     return () => {
-      document.body.style.overflow = "";
+      document.body.style.overflow = prev;
+      document.removeEventListener("keydown", onKey);
     };
   }, [mobileOpen]);
 
-  const isActive = (items: readonly Item[]) =>
-    items.some((i) => pathname === i.href || pathname.startsWith(i.href + "/"));
+  // Mega menus: Escape closes (focus back on the trigger), a press outside the header closes.
+  React.useEffect(() => {
+    if (!open) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key !== "Escape") return;
+      const t = triggerRefs.current[open];
+      setOpen(null);
+      t?.focus();
+    };
+    const onDown = (e: PointerEvent) => {
+      if (headerRef.current && !headerRef.current.contains(e.target as Node)) setOpen(null);
+    };
+    document.addEventListener("keydown", onKey);
+    document.addEventListener("pointerdown", onDown);
+    return () => {
+      document.removeEventListener("keydown", onKey);
+      document.removeEventListener("pointerdown", onDown);
+    };
+  }, [open]);
+
+  // The shared panel background takes the height of the open panel.
+  React.useLayoutEffect(() => {
+    if (!open) return;
+    const panel = panelRefs.current[open];
+    const bg = bgRef.current;
+    if (!panel || !bg) return;
+    const sync = () => bg.style.setProperty("--mk-h", `${panel.offsetHeight}px`);
+    sync();
+    const ro = new ResizeObserver(sync);
+    ro.observe(panel);
+    return () => ro.disconnect();
+  }, [open]);
+
+  React.useEffect(
+    () => () => {
+      if (openTimer.current) clearTimeout(openTimer.current);
+      if (closeTimer.current) clearTimeout(closeTimer.current);
+    },
+    [],
+  );
+
+  const clearTimers = () => {
+    if (openTimer.current) clearTimeout(openTimer.current);
+    if (closeTimer.current) clearTimeout(closeTimer.current);
+    openTimer.current = closeTimer.current = null;
+  };
+  const hoverOpen = (key: GroupKey) => {
+    clearTimers();
+    // Moving between triggers while a menu is open switches immediately; otherwise wait for intent.
+    openedBy.current = "hover";
+    if (open) setOpen(key);
+    else openTimer.current = setTimeout(() => setOpen(key), OPEN_DELAY);
+  };
+  const scheduleClose = () => {
+    if (openTimer.current) clearTimeout(openTimer.current);
+    closeTimer.current = setTimeout(() => setOpen(null), CLOSE_GRACE);
+  };
+  const keepOpen = () => {
+    if (closeTimer.current) clearTimeout(closeTimer.current);
+  };
+
+  const openIndex = open ? GROUPS.findIndex((g) => g.key === open) : -1;
 
   return (
-    <header className="sticky top-0 z-50">
-      {/* The blur lives on an inner bar: backdrop-filter would otherwise make the header the containing block for the fixed mobile panel. */}
-      <div
-        className={cn(
-          "relative border-b transition-[background-color,border-color,box-shadow] duration-300",
-          scrolled || mobileOpen ? "glass border-border shadow-[0_8px_30px_-12px_rgba(0,0,0,0.25)]" : "border-transparent bg-transparent",
-        )}
+    <>
+      {/* 24px below the top of the page: once it leaves the viewport the bar condenses. */}
+      <span ref={sentinelRef} aria-hidden="true" className="pointer-events-none absolute left-0 top-6 h-px w-px" />
+      <header
+        ref={headerRef}
+        className="mk-header"
+        data-scrolled={scrolled ? "" : undefined}
+        data-mega={open ? "" : undefined}
+        data-sheet={mobileOpen ? "" : undefined}
       >
-        {/* Gradient hairline that fades in once the page scrolls. */}
-        <div aria-hidden="true" className={cn("pointer-events-none absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-foreground/15 to-transparent transition-opacity duration-300", scrolled ? "opacity-100" : "opacity-0")} />
-        <div className="container-x flex h-16 items-center justify-between gap-4">
-          <div className="flex items-center gap-4 xl:gap-6">
-            <Logo />
-            <nav aria-label="Main" className="hidden items-center lg:flex">
-              {groups.map((g) => (
-                <DesktopMenu key={g.key} group={g} active={isActive(g.items)} />
-              ))}
-              <Link
-                href="/pricing"
-                className={cn(
-                  "rounded-md px-2.5 py-2 text-sm font-medium text-muted-foreground hover:text-foreground xl:px-3",
-                  pathname.startsWith("/pricing") && "text-foreground",
-                )}
-              >
-                Pricing
-              </Link>
-              <Link
-                href="/docs"
-                className={cn(
-                  "rounded-md px-2.5 py-2 text-sm font-medium text-muted-foreground hover:text-foreground xl:px-3",
-                  pathname.startsWith("/docs") && "text-foreground",
-                )}
-              >
-                Docs
-              </Link>
-            </nav>
-          </div>
-          <div className="hidden items-center gap-2 lg:flex">
-            <SearchTrigger compact />
-            {/* On narrower desktops the bar is full; the theme switch is still in the footer. */}
-            <div className="hidden xl:block">
-              <ThemeToggle />
-            </div>
-            {signedIn ? (
-              <Link
-                href="/dashboard"
-                className={buttonClasses("primary", "sm")}
-              >
-                Open dashboard
-              </Link>
-            ) : (
-              <>
-                <Link href="/login" className={buttonClasses("ghost", "sm")}>
-                  Sign In
-                </Link>
-                <Link href="/signup" className={cn(buttonClasses("secondary", "sm"), "btn-solid rounded-full px-4")}>
-                  Start Building Free
-                </Link>
-              </>
-            )}
-          </div>
-          <button
-            type="button"
-            className="inline-flex size-10 items-center justify-center rounded-md hover:bg-muted lg:hidden"
-            aria-label={mobileOpen ? "Close menu" : "Open menu"}
-            aria-expanded={mobileOpen}
-            aria-controls="mobile-nav"
-            onClick={() => setMobileOpen((o) => !o)}
-          >
-            {mobileOpen ? (
-              <X className="size-5" />
-            ) : (
-              <Menu className="size-5" />
-            )}
-          </button>
-        </div>
-      </div>
-      {mobileOpen ? (
-        <div
-          id="mobile-nav"
-          className="fixed inset-x-0 top-16 bottom-0 z-40 overflow-y-auto border-t border-border bg-background lg:hidden"
-        >
-          <nav aria-label="Mobile" className="container-x py-4">
-            {groups.map((g) => (
-              <details
-                key={g.key}
-                className="group border-b border-border py-2"
-                open={isActive(g.items)}
-              >
-                <summary className="flex cursor-pointer list-none items-center justify-between py-2 text-base font-medium">
-                  {g.label}
-                  <ChevronDown
-                    className="size-4 transition-transform group-open:rotate-180"
-                    aria-hidden="true"
-                  />
-                </summary>
-                <ul className="pb-2">
-                  {g.items.map((i) => (
-                    <li key={i.href}>
-                      <Link
-                        href={i.href}
-                        className="block rounded-md px-2 py-2 text-sm text-muted-foreground hover:bg-muted hover:text-foreground"
+        <div className="mk-bar">
+          <div aria-hidden="true" className="mk-bar__glass" />
+          <div className="relative flex h-full items-center justify-between gap-3">
+            <div className="flex min-w-0 items-center gap-3 xl:gap-5">
+              <Logo />
+              <nav aria-label="Main" className="hidden lg:block" onPointerLeave={scheduleClose} onPointerEnter={keepOpen}>
+                <div ref={navRef} className="relative">
+                <GlideIndicator ref={glide} className="inset-y-0 rounded-full bg-foreground/[0.065] shadow-none" />
+                <ul className="flex items-center">
+                  {GROUPS.map((g, gi) => {
+                    const expanded = open === g.key;
+                    const current = g.items.some((i) => isActivePath(pathname, i.href));
+                    const panelId = `mega-${g.key}`;
+                    return (
+                      <li
+                        key={g.key}
+                        onBlur={(e) => {
+                          if (expanded && !e.currentTarget.contains(e.relatedTarget as Node | null)) setOpen(null);
+                        }}
                       >
-                        {i.label}
+                        <button
+                          ref={(el) => {
+                            triggerRefs.current[g.key] = el;
+                          }}
+                          type="button"
+                          data-nav-trigger
+                          data-active={expanded ? "true" : undefined}
+                          aria-expanded={expanded}
+                          aria-controls={panelId}
+                          data-no-ripple
+                          onPointerEnter={(e) => e.pointerType !== "touch" && hoverOpen(g.key)}
+                          onClick={() => {
+                            clearTimers();
+                            if (open === g.key && openedBy.current === "hover") {
+                              // Opened by hovering a moment ago: the click confirms it rather than closing it.
+                              openedBy.current = "click";
+                              return;
+                            }
+                            openedBy.current = "click";
+                            setOpen((o) => (o === g.key ? null : g.key));
+                          }}
+                          className={cn(
+                            "relative z-[1] inline-flex h-9 items-center gap-1 rounded-full px-3 text-[13.5px] font-medium transition-colors duration-200",
+                            expanded || current ? "text-foreground" : "text-muted-foreground hover:text-foreground",
+                          )}
+                        >
+                          {g.label}
+                          <ChevronDown className={cn("size-3.5 opacity-60 transition-transform duration-300 ease-snap", expanded && "rotate-180")} aria-hidden="true" />
+                        </button>
+                        <div
+                          id={panelId}
+                          ref={(el) => {
+                            panelRefs.current[g.key] = el;
+                          }}
+                          className="mk-mega"
+                          data-open={expanded ? "" : undefined}
+                          style={{ "--mk-shift": openIndex < 0 || expanded ? "0px" : gi < openIndex ? "-18px" : "18px" } as React.CSSProperties}
+                          onPointerEnter={keepOpen}
+                        >
+                          <div className="grid grid-cols-[minmax(0,1fr)_260px] gap-2 p-2">
+                            <ul className="flex flex-col">
+                              {g.items.map((item, ii) => {
+                                const Icon = ICONS[item.href] ?? ArrowRight;
+                                const on = focusItem[g.key] === ii;
+                                return (
+                                  <li key={item.href}>
+                                    <Link
+                                      href={item.href}
+                                      aria-current={isActivePath(pathname, item.href) ? "page" : undefined}
+                                      onPointerEnter={() => setFocusItem((f) => ({ ...f, [g.key]: ii }))}
+                                      onFocus={() => setFocusItem((f) => ({ ...f, [g.key]: ii }))}
+                                      onClick={() => setOpen(null)}
+                                      data-on={on ? "" : undefined}
+                                      className="group/item flex items-start gap-3 rounded-[12px] px-3 py-2.5 outline-offset-[-2px] transition-colors duration-150 data-[on]:bg-foreground/[0.05]"
+                                    >
+                                      <Icon className="mt-0.5 size-4 shrink-0 text-muted-foreground transition-colors duration-150 group-data-[on]/item:text-signal-ink" aria-hidden="true" />
+                                      <span className="min-w-0">
+                                        <span className="flex items-center gap-1.5 text-[14px] font-medium text-foreground">
+                                          {item.label}
+                                          <ArrowRight className="size-3 -translate-x-1 opacity-0 transition-[translate,opacity] duration-200 group-data-[on]/item:translate-x-0 group-data-[on]/item:opacity-60" aria-hidden="true" />
+                                        </span>
+                                        <span className="mt-0.5 block text-[12.5px] leading-snug text-muted-foreground">{item.description}</span>
+                                      </span>
+                                    </Link>
+                                  </li>
+                                );
+                              })}
+                            </ul>
+                            <div className="flex flex-col gap-2">
+                              <div aria-hidden="true" className="mk-wells">
+                                {g.items.map((item, ii) => (
+                                  <div key={item.href} className="mk-well" data-on={focusItem[g.key] === ii && expanded ? "" : undefined}>
+                                    {wells?.[item.href] ?? null}
+                                  </div>
+                                ))}
+                              </div>
+                              <div className="mt-auto flex flex-wrap gap-1 px-1 pb-1">
+                                {g.footer.map((f) => (
+                                  <Link
+                                    key={f.href}
+                                    href={f.href}
+                                    onClick={() => setOpen(null)}
+                                    className="inline-flex h-7 items-center gap-1 rounded-full px-2.5 text-[12.5px] font-medium text-muted-foreground transition-colors hover:bg-foreground/[0.05] hover:text-foreground"
+                                  >
+                                    {f.label}
+                                    <ArrowRight className="size-3" aria-hidden="true" />
+                                  </Link>
+                                ))}
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </li>
+                    );
+                  })}
+                  {LINKS.map((l) => (
+                    <li key={l.href}>
+                      <Link
+                        href={l.href}
+                        data-nav-trigger
+                        aria-current={isActivePath(pathname, l.href) ? "page" : undefined}
+                        onPointerEnter={() => {
+                          clearTimers();
+                          if (open) closeTimer.current = setTimeout(() => setOpen(null), CLOSE_GRACE);
+                        }}
+                        className={cn(
+                          "relative z-[1] inline-flex h-9 items-center rounded-full px-3 text-[13.5px] font-medium transition-colors duration-200",
+                          isActivePath(pathname, l.href) ? "text-foreground" : "text-muted-foreground hover:text-foreground",
+                        )}
+                      >
+                        {l.label}
                       </Link>
                     </li>
                   ))}
                 </ul>
-              </details>
-            ))}
-            <Link
-              href="/pricing"
-              className="block border-b border-border py-4 text-base font-medium"
-            >
-              Pricing
-            </Link>
-            <Link
-              href="/docs"
-              className="block border-b border-border py-4 text-base font-medium"
-            >
-              Docs
-            </Link>
-            <div className="mt-4 flex flex-col gap-2">
+                </div>
+                <div ref={bgRef} aria-hidden="true" className="mk-mega-bg" />
+              </nav>
+            </div>
+            <div className="hidden items-center gap-1.5 lg:flex">
+              <SearchPill />
               {signedIn ? (
-                <Link
-                  href="/dashboard"
-                  className={buttonClasses("primary", "lg")}
-                >
+                <Link href="/dashboard" data-magnetic className={buttonClasses("secondary", "sm", "ml-1 h-9 px-4")}>
                   Open dashboard
+                  <ArrowRight className="size-3.5" aria-hidden="true" />
                 </Link>
               ) : (
                 <>
-                  <Link
-                    href="/signup"
-                    className={cn(buttonClasses("secondary", "lg"), "btn-solid rounded-full px-6")}
-                  >
-                    Start Building Free
+                  <Link href="/login" className={buttonClasses("ghost", "sm", "h-9 px-3.5 text-muted-foreground hover:text-foreground")}>
+                    Sign in
                   </Link>
-                  <Link
-                    href="/login"
-                    className={buttonClasses("outline", "lg")}
-                  >
-                    Sign In
+                  <Link href="/signup" data-spark data-magnetic className={buttonClasses("secondary", "sm", "h-9 px-4")}>
+                    Start building
+                    <ArrowRight data-spark-icon className="size-3.5" aria-hidden="true" />
                   </Link>
                 </>
               )}
-              <div className="mt-2 flex items-center justify-center gap-3">
-                <SearchTrigger className="inline-flex size-9 items-center justify-center rounded-md border border-border text-muted-foreground hover:bg-muted hover:text-foreground" />
-                <ThemeToggle />
-              </div>
             </div>
-          </nav>
+            <div className="flex items-center gap-1 lg:hidden">
+              <SearchPill iconOnlyBelow="xl" className="border-transparent bg-transparent shadow-none" />
+              <button
+                type="button"
+                className="inline-flex size-10 items-center justify-center rounded-full text-foreground transition-colors hover:bg-foreground/[0.06]"
+                aria-label={mobileOpen ? "Close menu" : "Open menu"}
+                aria-expanded={mobileOpen}
+                aria-controls="mobile-nav"
+                data-no-ripple
+                onClick={() => setMobileOpen((o) => !o)}
+              >
+                <span className="relative size-5">
+                  <Menu className={cn("absolute inset-0 size-5 transition-[opacity,rotate,scale] duration-300 ease-snap", mobileOpen ? "rotate-90 scale-75 opacity-0" : "opacity-100")} aria-hidden="true" />
+                  <X className={cn("absolute inset-0 size-5 transition-[opacity,rotate,scale] duration-300 ease-snap", mobileOpen ? "opacity-100" : "-rotate-90 scale-75 opacity-0")} aria-hidden="true" />
+                </span>
+              </button>
+            </div>
+          </div>
         </div>
-      ) : null}
-    </header>
+        <SearchDialog />
+      </header>
+      {mobileOpen ? <MobileSheet signedIn={signedIn} pathname={pathname} onClose={() => setMobileOpen(false)} /> : null}
+    </>
+  );
+}
+
+/** Full-screen mobile navigation: big rows that rise in, CTAs at the bottom, theme and motion settings. */
+function MobileSheet({ signedIn, pathname, onClose }: { signedIn: boolean; pathname: string; onClose: () => void }) {
+  let row = 0;
+  const next = () => ({ "--i": row++ }) as React.CSSProperties;
+  return (
+    <div id="mobile-nav" className="mk-sheet fixed inset-0 z-40 overflow-y-auto overscroll-contain bg-background lg:hidden">
+      <div aria-hidden="true" className="bg-blueprint pointer-events-none absolute inset-x-0 top-0 h-80 opacity-60" />
+      <nav aria-label="Mobile" className="container-x relative flex min-h-full flex-col pb-8 pt-24">
+        <ul className="flex flex-col">
+          {GROUPS.map((g) => (
+            <li key={g.key} className="mk-sheet__row border-b border-border" style={next()}>
+              <details className="group" open={g.items.some((i) => isActivePath(pathname, i.href))}>
+                <summary className="text-display-4 flex cursor-pointer list-none items-center justify-between py-4 [&::-webkit-details-marker]:hidden">
+                  {g.label}
+                  <span aria-hidden="true" className="relative inline-flex size-8 items-center justify-center rounded-full border border-border text-muted-foreground transition-colors group-open:border-border-strong group-open:text-foreground">
+                    <span className="absolute h-px w-3 bg-current" />
+                    <span className="absolute h-3 w-px bg-current transition-transform duration-300 ease-snap group-open:scale-y-0" />
+                  </span>
+                </summary>
+                <ul className="grid gap-0.5 pb-4">
+                  {g.items.map((i) => {
+                    const Icon = ICONS[i.href] ?? ArrowRight;
+                    return (
+                      <li key={i.href}>
+                        <Link
+                          href={i.href}
+                          onClick={onClose}
+                          aria-current={isActivePath(pathname, i.href) ? "page" : undefined}
+                          className="flex items-center gap-3 rounded-xl px-2 py-2.5 transition-colors hover:bg-muted aria-[current=page]:bg-muted"
+                        >
+                          <Icon className="size-4 shrink-0 text-muted-foreground" aria-hidden="true" />
+                          <span className="min-w-0">
+                            <span className="block text-[15px] font-medium">{i.label}</span>
+                            <span className="block truncate text-[13px] text-muted-foreground">{i.description}</span>
+                          </span>
+                        </Link>
+                      </li>
+                    );
+                  })}
+                </ul>
+              </details>
+            </li>
+          ))}
+          {LINKS.map((l) => (
+            <li key={l.href} className="mk-sheet__row border-b border-border" style={next()}>
+              <Link href={l.href} onClick={onClose} aria-current={isActivePath(pathname, l.href) ? "page" : undefined} className="text-display-4 flex items-center justify-between py-4">
+                {l.label}
+                <ArrowRight className="size-5 text-muted-foreground" aria-hidden="true" />
+              </Link>
+            </li>
+          ))}
+        </ul>
+        <div className="mk-sheet__row mt-auto flex flex-col gap-2.5 pt-10" style={next()}>
+          {signedIn ? (
+            <Link href="/dashboard" onClick={onClose} className={buttonClasses("secondary", "lg", "w-full")}>
+              Open dashboard
+              <ArrowRight className="size-4" aria-hidden="true" />
+            </Link>
+          ) : (
+            <>
+              <Link href="/signup" onClick={onClose} className={buttonClasses("secondary", "lg", "w-full")}>
+                Start building
+                <ArrowRight className="size-4" aria-hidden="true" />
+              </Link>
+              <Link href="/login" onClick={onClose} className={buttonClasses("outline", "lg", "w-full")}>
+                Sign in
+              </Link>
+            </>
+          )}
+          <SearchPill iconOnlyBelow="never" className="h-11 w-full justify-start rounded-full px-4 [&>kbd]:ml-auto" />
+        </div>
+        <div className="mk-sheet__row mt-6 flex flex-wrap items-center justify-between gap-3 border-t border-border pt-5" style={next()}>
+          <ThemeToggle />
+          <MotionToggle />
+        </div>
+      </nav>
+    </div>
   );
 }

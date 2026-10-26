@@ -1,50 +1,66 @@
+import "@/components/marketing/marketing.css";
 import Link from "next/link";
-import { Search } from "lucide-react";
+import { ArrowUpRight } from "lucide-react";
 import { pageMetadata } from "@/lib/seo";
 import { getRoute } from "@/config/routes";
-import { buttonClasses } from "@/components/ui/button";
 import { MarketingHeader } from "@/components/marketing/header";
 import { MarketingFooter } from "@/components/marketing/footer";
+import { Backdrop } from "@/components/marketing/backdrop";
+import { PromptBox } from "@/components/marketing/prompt-box";
+import { Kicker } from "@/components/marketing/page-header";
+import { getChromeData } from "@/components/marketing/chrome-data";
+import { buildHeaderWells } from "@/components/marketing/header-wells";
 import { getCurrentUser } from "@/lib/auth/session";
 
 export const metadata = pageMetadata({ title: "Page not found", description: "The page you were looking for does not exist.", path: "/404", noindex: true });
 
-const popular = ["/", "/product", "/pricing", "/docs", "/templates", "/how-it-works", "/support", "/status"];
+const LINKS = [
+  { href: "/docs", body: "Guides and reference for every feature." },
+  { href: "/templates", body: "Starters with real files and screenshots." },
+  { href: "/pricing", body: "Free, Pro, Team and Enterprise." },
+];
 
 export default async function NotFound() {
-  const user = await getCurrentUser();
+  const [user, chrome] = await Promise.all([getCurrentUser(), getChromeData()]);
+  const signedIn = Boolean(user);
   return (
-    <>
-      <MarketingHeader signedIn={Boolean(user)} />
+    <div className="site-shell relative isolate flex flex-1 flex-col">
+      <Backdrop variant="wash" still className="site-backdrop" />
+      <MarketingHeader signedIn={signedIn} wells={buildHeaderWells(chrome)} />
       <main id="main" className="flex-1">
-        <section className="container-x flex min-h-[60vh] flex-col items-center justify-center py-16 text-center">
-          <p className="text-xs font-semibold uppercase tracking-[0.14em] text-primary">404</p>
-          <h1 className="mt-3 text-3xl font-semibold tracking-tight sm:text-4xl">Page not found</h1>
-          <p className="mt-3 max-w-md text-muted-foreground">The page may have moved, or the link was mistyped. Try searching, or pick one of the pages below.</p>
-          <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-            <Link href="/docs" className={buttonClasses("primary", "md")}>
-              <Search className="size-4" aria-hidden="true" />
-              Search the docs
-            </Link>
-            <Link href="/" className={buttonClasses("outline", "md")}>
-              Back to homepage
-            </Link>
+        <section className="relative overflow-hidden">
+          <div aria-hidden="true" className="bg-blueprint pointer-events-none absolute inset-0 -z-10" />
+          <div className="container-x flex flex-col items-center pb-20 pt-16 text-center sm:pt-24">
+            <p aria-hidden="true" className="mk-num select-none font-display text-[clamp(6rem,4rem+10vw,12rem)] font-extrabold leading-none tracking-[-0.06em] text-foreground/[0.07] [font-stretch:120%]">
+              404
+            </p>
+            <Kicker className="-mt-6 justify-center sm:-mt-10">Not found</Kicker>
+            <h1 className="text-display-2 mt-5 max-w-[16ch]">
+              This page doesn&apos;t exist <span className="mark-select">yet.</span>
+            </h1>
+            <p className="text-lead mx-auto mt-5">The link may be old or mistyped. Or describe the page you were hoping for, and build it.</p>
+            <div className="mt-10 w-full max-w-2xl text-left">
+              <PromptBox signedIn={signedIn} />
+            </div>
+            <nav aria-label="Popular pages" className="mt-14 w-full max-w-3xl">
+              <ul className="grid gap-3 text-left sm:grid-cols-3">
+                {LINKS.map((l) => (
+                  <li key={l.href}>
+                    <Link href={l.href} className="glow-card group flex h-full items-start justify-between gap-3 rounded-[16px] border border-border p-5">
+                      <span>
+                        <span className="block font-medium">{getRoute(l.href)?.navLabel ?? l.href}</span>
+                        <span className="mt-1 block text-[13.5px] leading-snug text-muted-foreground">{l.body}</span>
+                      </span>
+                      <ArrowUpRight className="mt-0.5 size-4 shrink-0 text-muted-foreground transition-[translate,color] duration-300 group-hover:-translate-y-0.5 group-hover:translate-x-0.5 group-hover:text-foreground" aria-hidden="true" />
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </nav>
           </div>
-          <nav aria-label="Popular pages" className="mt-10">
-            <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Popular pages</p>
-            <ul className="mt-3 flex flex-wrap justify-center gap-2">
-              {popular.map((p) => (
-                <li key={p}>
-                  <Link href={p} className="inline-flex rounded-full border border-border bg-card px-3 py-1.5 text-sm hover:bg-muted">
-                    {p === "/" ? "Home" : (getRoute(p)?.title ?? p)}
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </nav>
         </section>
       </main>
       <MarketingFooter />
-    </>
+    </div>
   );
 }

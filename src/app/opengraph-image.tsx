@@ -5,43 +5,55 @@ import { site } from "@/config/site";
 // cache makes the Cloudflare Worker try to rewrite a read-only cache.
 export const dynamic = "force-dynamic";
 
-export const alt = `${site.name} — ${site.tagline}`;
+export const alt = `${site.name}: ${site.tagline}`;
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 
-/** Social preview: wordmark and tagline on charcoal, matching the dark theme tokens. */
+// The image renderer cannot read CSS variables, so the dark-theme tokens from globals.css are
+// repeated here as rgb(): ink background, foreground, muted, signal (ember), signal-2 (amber), silk-1 (cobalt).
+const INK = "rgb(8 9 11)";
+const FG = "rgb(243 243 240)";
+const MUTED = "rgb(149 155 166)";
+const SIGNAL = "rgb(255 95 58)";
+const AMBER = "rgb(255 178 62)";
+const COBALT = "rgb(43 69 214)";
+
+/** Social preview: the wordmark, the tagline and the horizon light rising behind it. */
 export default function OpenGraphImage() {
   return new ImageResponse(
     (
-      <div
-        style={{
-          width: "100%",
-          height: "100%",
-          display: "flex",
-          flexDirection: "column",
-          justifyContent: "space-between",
-          padding: 72,
-          background: "#0b0c0f",
-          color: "#f2f3f5",
-          fontFamily: "sans-serif",
-        }}
-      >
-        <div style={{ display: "flex", alignItems: "center", gap: 20 }}>
-          <div style={{ display: "flex", width: 72, height: 72, borderRadius: 18, background: "#f2f3f5", alignItems: "center", justifyContent: "center" }}>
-            <svg width="48" height="48" viewBox="0 0 32 32" fill="none">
-              <path d="M21 10H13a4 4 0 0 0-4 4v4a4 4 0 0 0 4 4h8" stroke="#0b0c0f" strokeWidth="3" strokeLinecap="round" />
-              <rect x="18" y="14.5" width="6" height="3" rx="1.5" fill="#4d80ff" />
-            </svg>
+      <div style={{ width: "100%", height: "100%", display: "flex", position: "relative", background: INK, color: FG, fontFamily: "sans-serif", overflow: "hidden" }}>
+        <div
+          style={{
+            position: "absolute",
+            left: -200,
+            right: -200,
+            bottom: -420,
+            height: 760,
+            display: "flex",
+            background: `radial-gradient(45% 60% at 50% 100%, ${SIGNAL}, transparent 70%), radial-gradient(40% 55% at 22% 100%, ${COBALT}, transparent 70%), radial-gradient(35% 50% at 80% 100%, ${AMBER}, transparent 70%)`,
+            opacity: 0.55,
+          }}
+        />
+        <div style={{ position: "absolute", left: 0, right: 0, top: 452, height: 1, display: "flex", background: `linear-gradient(90deg, transparent, ${SIGNAL}, ${COBALT}, transparent)` }} />
+        <div style={{ display: "flex", flexDirection: "column", justifyContent: "space-between", padding: 72, width: "100%", position: "relative" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 20 }}>
+            <div style={{ display: "flex", width: 64, height: 64, borderRadius: 16, background: FG, alignItems: "center", justifyContent: "center" }}>
+              <svg width="44" height="44" viewBox="0 0 32 32" fill="none">
+                <path d="M21 10H13a4 4 0 0 0-4 4v4a4 4 0 0 0 4 4h8" stroke={INK} strokeWidth="3" strokeLinecap="round" />
+                <rect x="18" y="14.5" width="6" height="3" rx="1.5" fill={SIGNAL} />
+              </svg>
+            </div>
+            <div style={{ fontSize: 34, fontWeight: 600, letterSpacing: "0.18em" }}>CODEXA</div>
           </div>
-          <div style={{ fontSize: 40, fontWeight: 600, letterSpacing: "0.18em" }}>CODEXA</div>
-        </div>
-        <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
-          <div style={{ fontSize: 68, fontWeight: 600, lineHeight: 1.05, letterSpacing: "-0.02em", maxWidth: 1000 }}>Build software at the speed of thought.</div>
-          <div style={{ fontSize: 30, color: "#9aa3b2", maxWidth: 1000 }}>Describe your idea. Codexa helps you create, refine, test, and deploy real applications.</div>
-        </div>
-        <div style={{ display: "flex", justifyContent: "space-between", fontSize: 24, color: "#9aa3b2" }}>
-          <span>{site.url.replace(/^https?:\/\//, "")}</span>
-          <span>Prompt → app → edit → run → deploy</span>
+          <div style={{ display: "flex", flexDirection: "column", gap: 18 }}>
+            <div style={{ fontSize: 84, fontWeight: 700, lineHeight: 1, letterSpacing: "-0.04em", maxWidth: 980 }}>Turn ideas into working software.</div>
+            <div style={{ fontSize: 28, color: MUTED, maxWidth: 940 }}>Describe it, read the code, run it in a sandbox and ship it, in one workspace.</div>
+          </div>
+          <div style={{ display: "flex", justifyContent: "space-between", fontSize: 22, color: MUTED }}>
+            <span>{site.url.replace(/^https?:\/\//, "")}</span>
+            <span>Prompt · code · preview · deploy</span>
+          </div>
         </div>
       </div>
     ),

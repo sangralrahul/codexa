@@ -1,10 +1,19 @@
+import { Building2, FileText, GitBranch, History, KeyRound, LifeBuoy, Lock, Mail, ShieldCheck, Share2, Users, Wallet } from "lucide-react";
 import type { ContentPage, FAQItem } from "./types";
 import { site } from "@/config/site";
+import { PLANS, PLAN_ORDER, isUnlimited } from "@/config/plans";
 
 const sup = site.company.supportEmail;
 
+/** Plan numbers for copy, read from PLANS so the text cannot drift from what the server enforces. */
+const n = (v: number) => (isUnlimited(v) ? "Custom" : new Intl.NumberFormat("en-US").format(v));
+const hours = (min: number) => (isUnlimited(min) ? "Custom" : `${n(min / 60)} hours`);
+const gb = (mb: number) => (isUnlimited(mb) ? "Custom" : mb >= 1000 ? `${mb / 1000} GB` : `${mb} MB`);
+const FREE = PLANS.free.limits;
+const TEAM = PLANS.team.limits;
+
 export const PRICING_FAQ: FAQItem[] = [
-  { question: "Is the Free plan really free?", answer: "Yes. No card is required. It is limited to 3 projects, 50 AI requests and 500,000 tokens a month, 5 hours of preview runtime, 5 deployments, and 250 MB of storage." },
+  { question: "Is the Free plan really free?", answer: `Yes. No card is required. It is limited to ${n(FREE.projects)} projects, ${n(FREE.aiRequestsPerMonth)} AI requests and ${n(FREE.aiTokensPerMonth)} tokens a month, ${hours(FREE.runtimeMinutesPerMonth)} of preview runtime, ${n(FREE.deploymentsPerMonth)} deployments, and ${gb(FREE.storageMb)} of storage.` },
   { question: "What counts as an AI request?", answer: "One generation run (Build, Ask, or Fix). Tokens are the input and output tokens the provider reports for that run. See [credits](/credits)." },
   { question: "What happens when I hit a limit?", answer: "The server rejects the action with a clear message and the usage page shows what is used. Nothing is deleted. Upgrade or wait for the next monthly period, which starts on the first of the month (UTC)." },
   { question: "Can I pay in INR?", answer: "Yes. INR prices are billed through Razorpay (UPI, cards, net banking). USD prices are billed through Stripe. GST or local taxes are added at checkout." },
@@ -27,7 +36,7 @@ export const PRICING_PAGES: Record<string, ContentPage> = {
         id: "limits",
         heading: "What each plan includes",
         blocks: [
-          { type: "table", caption: "AI limits per month", columns: ["Plan", "AI requests", "AI tokens"], rows: [["Free", "50", "500,000"], ["Pro", "1,000", "10,000,000"], ["Team", "5,000", "50,000,000"], ["Enterprise", "Custom", "Custom"]] },
+          { type: "table", caption: "AI limits per month", columns: ["Plan", "AI requests", "AI tokens"], rows: PLAN_ORDER.map((id) => [PLANS[id].name, n(PLANS[id].limits.aiRequestsPerMonth), n(PLANS[id].limits.aiTokensPerMonth)]) },
           { type: "paragraph", text: "Limits apply per workspace, not per user. In a Team workspace all members share the pool." },
         ],
       },
@@ -68,20 +77,39 @@ export const PRICING_PAGES: Record<string, ContentPage> = {
 
   "/students": {
     path: "/students",
-    eyebrow: "Pricing",
+    eyebrow: "Students",
+    variant: "landing",
+    headline: "Learn by shipping real apps.",
+    mark: "real apps.",
+    visual: "editor-peek",
     title: "Codexa for students",
     intro: "The Free plan is designed to be enough for coursework and first projects. A dedicated student discount is in review; here is what exists today.",
     sections: [
-      { id: "free", heading: "What the Free plan gives you", blocks: [{ type: "list", items: ["3 projects, each with real files you can push to GitHub.", "50 AI requests and 500,000 tokens a month when the operator has configured an AI provider.", "5 hours of sandbox runtime and 5 deployments a month.", "The full editor, snapshots, diffs, and share links."] }] },
+      {
+        id: "free",
+        heading: "What the Free plan gives you",
+        blocks: [
+          { type: "facts", source: "From the Free plan in src/config/plans.ts", items: [
+            { label: "Projects", value: n(FREE.projects), note: "Real files you can push to GitHub" },
+            { label: "AI requests / month", value: n(FREE.aiRequestsPerMonth), note: "When an AI provider is configured" },
+            { label: "Preview runtime", value: hours(FREE.runtimeMinutesPerMonth), note: "Each month, in the sandbox" },
+            { label: "Deployments / month", value: n(FREE.deploymentsPerMonth), note: "With history and rollback" },
+          ] },
+          { type: "paragraph", text: "The full editor, snapshots, diffs, and share links are included on every plan." },
+        ],
+      },
       { id: "discount", heading: "Student discount", blocks: [{ type: "note", variant: "info", title: "In review", text: "We have not launched a student discount or verification process yet. When we do, it will be announced in the [changelog](/changelog). Until then there is no student-specific pricing, and we would rather say so than invent a percentage." }] },
       { id: "learn", heading: "Learning with Codexa", blocks: [{ type: "paragraph", text: "Ask mode explains code without changing it, every AI run shows its plan and diff, and the [guides](/guides) walk through complete projects. See [Codexa for students](/solutions/students) and [education](/solutions/education)." }] },
     ],
-    cta: { title: "Start with the Free plan", primary: { label: "Start Building Free", href: "/signup" }, secondary: { label: "Guides", href: "/guides" } },
+    cta: { title: "Start with the Free plan", primary: { label: "Start building", href: "/signup" }, secondary: { label: "Guides", href: "/guides" } },
   },
 
   "/startup-program": {
     path: "/startup-program",
-    eyebrow: "Pricing",
+    eyebrow: "Startup programme",
+    variant: "landing",
+    headline: "A startup programme, in review.",
+    mark: "in review.",
     title: "Startup programme",
     intro: "A programme for early-stage startups is in review. There are no credits or discounts to claim yet; register interest and we will tell you when it opens.",
     sections: [
@@ -92,27 +120,75 @@ export const PRICING_PAGES: Record<string, ContentPage> = {
 
   "/teams": {
     path: "/teams",
-    eyebrow: "Pricing",
+    eyebrow: "Teams",
+    variant: "landing",
+    headline: "Build together. Keep control.",
+    mark: "Keep control.",
+    visual: "presence-cursors",
     title: "Codexa for teams",
     intro: "Team workspaces add members, roles, shared projects, activity history, and priority support on top of everything in Pro.",
     sections: [
-      { id: "roles", heading: "Roles", blocks: [{ type: "definitions", items: [{ term: "Owner", detail: "Billing, members, deletion, and everything below." }, { term: "Admin", detail: "Manage members, integrations, and project settings." }, { term: "Editor", detail: "Create and edit projects, run the agent, deploy." }, { term: "Viewer", detail: "Read projects, previews, and history." }] }] },
-      { id: "collab", heading: "Working together", blocks: [{ type: "list", items: ["Email invitations with a role; members accept with their own account.", "Realtime presence shows who is viewing which file.", "Activity history per project records who changed what.", "Share links for people outside the workspace.", "Concurrent editing of one file by several people is on the roadmap, not shipped."] }] },
-      { id: "limits", heading: "Team plan limits", blocks: [{ type: "table", caption: "Team plan", columns: ["Limit", "Team"], rows: [["Members", "10"], ["Projects", "100"], ["AI requests / month", "5,000"], ["AI tokens / month", "50,000,000"], ["Runtime", "500 hours / month"], ["Deployments / month", "500"], ["Storage", "25 GB"], ["Custom domains", "20"]] }] },
-      { id: "more", heading: "Need more than 10 members?", blocks: [{ type: "paragraph", text: "[Enterprise](/enterprise) has custom limits, invoice billing, and security questionnaire support." }] },
+      { id: "roles", heading: "Four roles, enforced on the server", blocks: [{ type: "definitions", items: [{ term: "Owner", detail: "Billing, members, deletion, and everything below." }, { term: "Admin", detail: "Manage members, integrations, and project settings." }, { term: "Editor", detail: "Create and edit projects, run the agent, deploy." }, { term: "Viewer", detail: "Read projects, previews, and history." }] }] },
+      {
+        id: "collab",
+        heading: "Working together",
+        blocks: [
+          { type: "features", items: [
+            { title: "Email invitations", description: "Invite with a role; members accept with their own account.", icon: Mail },
+            { title: "Realtime presence", description: "See who is viewing which file. Several people typing in one file is on the roadmap, not shipped.", icon: Users },
+            { title: "Activity history", description: "Each project records who changed what, and when.", icon: History },
+            { title: "Share links", description: "View-only or edit links for people outside the workspace, with an expiry.", icon: Share2 },
+            { title: "GitHub push", description: "Commit and push from the workspace when GitHub OAuth is configured.", icon: GitBranch },
+            { title: "Priority support", description: "Team workspaces are answered first.", icon: LifeBuoy },
+          ] },
+        ],
+      },
+      {
+        id: "limits",
+        heading: "Team plan limits",
+        blocks: [
+          { type: "facts", source: "From the Team plan in src/config/plans.ts", items: [
+            { label: "Members", value: n(TEAM.members) },
+            { label: "Projects", value: n(TEAM.projects) },
+            { label: "AI requests / month", value: n(TEAM.aiRequestsPerMonth) },
+            { label: "Preview runtime", value: hours(TEAM.runtimeMinutesPerMonth), note: "Each month" },
+            { label: "Deployments / month", value: n(TEAM.deploymentsPerMonth) },
+            { label: "AI tokens / month", value: n(TEAM.aiTokensPerMonth) },
+            { label: "Storage", value: gb(TEAM.storageMb) },
+            { label: "Custom domains", value: n(TEAM.customDomains) },
+          ] },
+        ],
+      },
+      { id: "more", heading: "More than ten people?", blocks: [{ type: "cta", title: `Need more than ${n(TEAM.members)} members?`, description: "Enterprise has custom limits, invoice billing, and security questionnaire support.", primary: { label: "Enterprise", href: "/enterprise" }, secondary: { label: "Compare plans", href: "/pricing/compare-plans" } }] },
     ],
     cta: { title: "Start a Team workspace", primary: { label: "Start a Team", href: "/signup?plan=team" }, secondary: { label: "Compare plans", href: "/pricing/compare-plans" } },
   },
 
   "/enterprise": {
     path: "/enterprise",
-    eyebrow: "Pricing",
+    eyebrow: "Enterprise",
+    variant: "landing",
+    headline: "Custom limits. Straight answers.",
+    mark: "Straight answers.",
     title: "Codexa for enterprise",
     intro: "Custom usage limits, dedicated environments, invoice billing, and support for your security review. Priced per agreement.",
     sections: [
-      { id: "included", heading: "What Enterprise adds", blocks: [{ type: "list", items: ["Custom limits for projects, members, AI requests and tokens, runtime, deployments, and storage.", "Dedicated environments (a separate Codexa instance with its own database and runner).", "Audit log export on request.", "Security questionnaire support and a signed data processing agreement.", "Invoice billing in INR or USD."] }] },
-      { id: "not-yet", heading: "Not available yet", blocks: [{ type: "note", variant: "warning", title: "Say so up front", text: "SSO/SAML is on the roadmap and not shipped. We hold no third-party certifications (SOC 2, ISO 27001). See the [security page](/security) for what is implemented." }] },
-      { id: "process", heading: "How it works", blocks: [{ type: "list", ordered: true, items: ["Tell us about your team and requirements with the form below.", "We reply by email to arrange a call and a demo.", "We agree limits, environment, and terms, then provision the workspace."] }] },
+      {
+        id: "included",
+        heading: "What Enterprise adds",
+        blocks: [
+          { type: "features", items: [
+            { title: "Custom limits", description: "Projects, members, AI requests and tokens, runtime, deployments, and storage set per agreement.", icon: Building2 },
+            { title: "Dedicated environments", description: "A separate Codexa instance with its own database and runner.", icon: ShieldCheck },
+            { title: "Audit log export", description: "Sign-ins, role changes, integrations and deployments, exported on request.", icon: FileText },
+            { title: "Security review support", description: "Questionnaire answers and a signed data processing agreement.", icon: Lock },
+            { title: "Invoice billing", description: "Billed by invoice in INR or USD.", icon: Wallet },
+            { title: "Your own AI keys", description: "Bring Anthropic or OpenAI keys; they are encrypted at rest.", icon: KeyRound },
+          ] },
+        ],
+      },
+      { id: "not-yet", heading: "Not available yet", blocks: [{ type: "note", variant: "warning", title: "Said up front", text: "SSO/SAML is on the roadmap and not shipped. We hold no third-party certifications (SOC 2, ISO 27001). See the [security page](/security) for what is implemented." }] },
+      { id: "process", heading: "How it works", blocks: [{ type: "steps", items: [{ title: "Tell us", description: "Your team, requirements and timeline, in the form above." }, { title: "Talk", description: "We reply by email to arrange a call and a demo." }, { title: "Agree and provision", description: "We agree limits, environment and terms, then set up the workspace." }] }] },
     ],
   },
 
@@ -150,7 +226,10 @@ export const PRICING_PAGES: Record<string, ContentPage> = {
   },
   "/contact-sales": {
     path: "/contact-sales",
-    eyebrow: "Pricing",
+    eyebrow: "Contact sales",
+    variant: "landing",
+    headline: "Tell us what you need.",
+    mark: "what you need.",
     title: "Contact sales",
     intro: "Talk to us about Team and Enterprise plans, custom limits, invoice billing, or a security review. We reply by email, usually within two business days.",
     sections: [
