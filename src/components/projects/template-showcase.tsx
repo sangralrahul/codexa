@@ -52,7 +52,7 @@ export function TemplateShowcase({ templates, limit = 8 }: { templates: Showcase
             key={`${category}-${t.id}`}
             href={`/new-project?template=${encodeURIComponent(t.id)}`}
             style={{ animationDelay: `${i * 50}ms` }}
-            className="pop-in glow-card group flex flex-col rounded-xl border border-border focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            className="pop-in tilt-shine group flex flex-col rounded-xl border border-border bg-card shadow-sm transition-[border-color,box-shadow] hover:border-border-strong hover:shadow-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
           >
             <div className="relative overflow-hidden rounded-t-xl border-b border-border bg-surface p-3">
               <TemplateThumb category={t.category} className="transition-transform duration-500 ease-out group-hover:scale-[1.03]" />

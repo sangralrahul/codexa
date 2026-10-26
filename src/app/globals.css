@@ -489,6 +489,50 @@ input:is([type="checkbox"], [type="radio"]):checked { animation: check-pop 260ms
 }
 @keyframes skeleton-sweep { to { transform: translateX(100%); } }
 
+/* Ambient light: slow drifting blobs in the silk colours behind long app pages. */
+.ambient { position: absolute; inset: 0; overflow: hidden; pointer-events: none; z-index: -1; }
+.ambient__orb {
+  position: absolute;
+  width: 46vw;
+  max-width: 720px;
+  aspect-ratio: 1;
+  border-radius: 9999px;
+  filter: blur(90px);
+  opacity: calc(var(--silk-opacity) * 0.32);
+  animation: orb-drift 26s ease-in-out infinite alternate;
+}
+.ambient__orb:nth-child(1) { background: var(--silk-1); left: -12%; top: 8%; }
+.ambient__orb:nth-child(2) { background: var(--silk-2); right: -14%; top: 38%; animation-duration: 32s; animation-delay: -8s; }
+.ambient__orb:nth-child(3) { background: var(--silk-3); left: 22%; bottom: -10%; animation-duration: 38s; animation-delay: -16s; }
+@keyframes orb-drift {
+  0% { transform: translate3d(0, 0, 0) scale(1); }
+  50% { transform: translate3d(6%, -5%, 0) scale(1.08); }
+  100% { transform: translate3d(-5%, 6%, 0) scale(0.95); }
+}
+
+/* Cards that tilt toward the pointer slightly and catch a sheen on hover. */
+.tilt-shine { position: relative; transform-style: preserve-3d; transition: transform 500ms cubic-bezier(0.2, 0.8, 0.2, 1); }
+.tilt-shine::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  background: linear-gradient(115deg, transparent 30%, color-mix(in oklab, var(--foreground) 9%, transparent) 48%, transparent 66%);
+  background-size: 250% 100%;
+  background-position: 120% 0;
+  transition: background-position 900ms cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+.tilt-shine:hover { transform: perspective(900px) rotateX(3deg) translateY(-4px); }
+.tilt-shine:hover::after { background-position: -20% 0; }
+
+/* Step visuals on the getting-started panel. */
+.typing-line { overflow: hidden; white-space: nowrap; width: 0; animation: typing 3.2s steps(34) infinite; }
+@keyframes typing { 0%, 8% { width: 0; } 55%, 85% { width: 100%; } 100% { width: 100%; } }
+.tick-in { opacity: 0; animation: tick-in 4s ease-out infinite; }
+@keyframes tick-in { 0%, 10% { opacity: 0; transform: translateX(-4px); } 20%, 90% { opacity: 1; transform: none; } 100% { opacity: 0; } }
+.ring-fill { transition: stroke-dashoffset 1400ms cubic-bezier(0.2, 0.8, 0.2, 1); }
+
 /* Accordions (native <details>) open and close smoothly where the browser supports it. */
 :root { interpolate-size: allow-keywords; }
 details::details-content { block-size: 0; overflow: hidden; transition: block-size 320ms cubic-bezier(0.2, 0.8, 0.2, 1), content-visibility 320ms allow-discrete; }
@@ -522,7 +566,10 @@ details[open]::details-content { block-size: auto; }
 @media (prefers-reduced-motion: reduce) {
   .js [data-reveal] { opacity: 1; transform: none; }
   .tilt-in { transform: none; }
-  .page-enter, .value-flip, .nav-progress[data-state], input:checked, .nav-item::before, .skeleton::after { animation: none; }
+  .page-enter, .value-flip, .nav-progress[data-state], input:checked, .nav-item::before, .skeleton::after, .ambient__orb, .typing-line, .tick-in { animation: none; }
+  .typing-line { width: 100%; }
+  .tick-in { opacity: 1; }
+  .tilt-shine:hover { transform: none; }
   details::details-content, .segmented__pill { transition: none; }
 }
 }

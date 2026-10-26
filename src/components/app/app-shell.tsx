@@ -4,13 +4,13 @@ import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { LifeBuoy, Mail, Menu, Plus, X } from "lucide-react";
-import { AppSidebar, type SidebarUsage, type SidebarUser, type SidebarWorkspace } from "./sidebar";
+import { AppSidebar, type SidebarProject, type SidebarUpsell, type SidebarUsage, type SidebarUser, type SidebarWorkspace } from "./sidebar";
 import { LogoMark } from "@/components/logo";
 import { Alert } from "@/components/ui/misc";
 import { buttonClasses } from "@/components/ui/button";
 import { ResendVerificationButton } from "@/components/auth/forms";
 import { Backdrop } from "@/components/marketing/backdrop";
-import { SearchTrigger } from "@/components/search/search-dialog";
+import { SearchDialog } from "@/components/search/search-dialog";
 import { cn } from "@/lib/utils";
 
 /** Page name shown in the top bar breadcrumb, by path prefix (most specific first). */
@@ -28,8 +28,8 @@ const TITLES: [string, string][] = [
   ["/settings", "Settings"],
 ];
 
-/** The project workspace is a full-screen IDE with its own top bar. */
-const isFocusRoute = (path: string) => /^\/projects\/[^/]+/.test(path);
+/** Full-screen routes with their own chrome: the project IDE and first-run onboarding. */
+const isFocusRoute = (path: string) => /^\/projects\/[^/]+/.test(path) || path === "/onboarding";
 
 export function AppShell({
   user,
@@ -38,6 +38,9 @@ export function AppShell({
   isStaff,
   emailVerified,
   usage,
+  recent,
+  upsell,
+  initialCollapsed,
   children,
 }: {
   user: SidebarUser;
@@ -46,9 +49,19 @@ export function AppShell({
   isStaff: boolean;
   emailVerified: boolean;
   usage: SidebarUsage | null;
+  recent: SidebarProject[];
+  upsell: SidebarUpsell;
+  initialCollapsed: boolean;
   children: React.ReactNode;
 }) {
   const [open, setOpen] = useState(false);
+  const [collapsed, setCollapsed] = useState(initialCollapsed);
+  const toggle = () =>
+    setCollapsed((c) => {
+      // Remembered in a cookie so the server renders the same width (no jump on load).
+      document.cookie = `codexa_sidebar=${c ? "expanded" : "collapsed"}; path=/; max-age=31536000; samesite=lax`;
+      return !c;
+    });
   const pathname = usePathname();
   if (isFocusRoute(pathname)) {
     return (
@@ -59,12 +72,26 @@ export function AppShell({
   }
   const title = TITLES.find(([p]) => pathname === p || pathname.startsWith(p + "/"))?.[1];
   const workspace = workspaces.find((w) => w.id === currentWorkspaceId) ?? workspaces[0];
-  const sidebar = (onNavigate?: () => void) => <AppSidebar workspaces={workspaces} currentId={currentWorkspaceId} isStaff={isStaff} user={user} usage={usage} onNavigate={onNavigate} />;
+  const sidebar = (mobile: boolean) => (
+    <AppSidebar
+      workspaces={workspaces}
+      currentId={currentWorkspaceId}
+      isStaff={isStaff}
+      user={user}
+      usage={usage}
+      recent={recent}
+      upsell={upsell}
+      collapsed={mobile ? false : collapsed}
+      onToggle={mobile ? undefined : toggle}
+      onNavigate={mobile ? () => setOpen(false) : undefined}
+    />
+  );
 
   return (
     <div className="flex min-h-screen bg-background">
-      <aside className="hidden w-60 shrink-0 border-r border-border bg-surface lg:block">
-        <div className="sticky top-0 h-screen">{sidebar()}</div>
+      <SearchDialog />
+      <aside className={cn("hidden shrink-0 border-r border-border bg-surface transition-[width] duration-300 ease-[cubic-bezier(0.2,0.8,0.2,1)] lg:block", collapsed ? "w-[60px]" : "w-64")}>
+        <div className="sticky top-0 h-screen overflow-hidden">{sidebar(false)}</div>
       </aside>
       {open ? (
         <div className="fixed inset-0 z-50 lg:hidden" role="dialog" aria-modal="true" aria-label="Navigation">
@@ -73,7 +100,7 @@ export function AppShell({
             <button type="button" onClick={() => setOpen(false)} className="absolute -right-11 top-3 rounded-md bg-surface p-2 shadow-md hover:bg-muted" aria-label="Close navigation">
               <X className="size-4" />
             </button>
-            {sidebar(() => setOpen(false))}
+            {sidebar(true)}
           </div>
         </div>
       ) : null}
@@ -109,7 +136,6 @@ export function AppShell({
             </ol>
           </nav>
           <div className="flex items-center gap-1.5">
-            <SearchTrigger compact />
             <Link href="/support" className={cn(buttonClasses("ghost", "sm"), "hidden rounded-md text-muted-foreground md:inline-flex")}>
               <LifeBuoy className="size-4" aria-hidden="true" /> Help
             </Link>

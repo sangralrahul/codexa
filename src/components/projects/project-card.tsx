@@ -76,7 +76,7 @@ export function ProjectCard({ project, layout = "grid", showWorkspace }: { proje
   }
 
   return (
-    <article className="glow-card group relative flex flex-col rounded-xl border border-border" data-testid="project-card">
+    <article className="tilt-shine group relative flex flex-col rounded-xl border border-border bg-card shadow-sm transition-[border-color,box-shadow] hover:border-border-strong hover:shadow-lg" data-testid="project-card">
       <div className={cn("relative overflow-hidden rounded-t-xl border-b border-border p-3 pb-0", tone.wash)}>
         <TemplateThumb category={category} className="translate-y-1 rounded-b-none border-b-0 shadow-sm transition-transform duration-500 ease-out group-hover:-translate-y-0.5" />
         <div className="absolute right-2 top-2 opacity-0 transition-opacity focus-within:opacity-100 group-hover:opacity-100">

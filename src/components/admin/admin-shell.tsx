@@ -19,8 +19,7 @@ import {
   Sparkles,
   Star,
   Users,
-  X,
-} from "lucide-react";
+  X, Mail } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Logo } from "@/components/logo";
 import { ThemeToggle } from "@/components/theme/theme-toggle";
@@ -33,6 +32,7 @@ export const ADMIN_NAV = [
   { href: "/admin/workspaces", label: "Workspaces", icon: Briefcase },
   { href: "/admin/subscriptions", label: "Subscriptions", icon: CreditCard },
   { href: "/admin/ai-health", label: "AI health", icon: Sparkles },
+  { href: "/admin/email", label: "Email", icon: Mail },
   { href: "/admin/jobs", label: "Jobs", icon: ListChecks },
   { href: "/admin/runtimes", label: "Runtimes", icon: Activity },
   { href: "/admin/deployments", label: "Deployments", icon: Rocket },

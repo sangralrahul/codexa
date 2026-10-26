@@ -13,6 +13,7 @@ import { PromptBox, type PromptPreset } from "@/components/projects/prompt-box";
 import { ProjectCard } from "@/components/projects/project-card";
 import { UsageCard } from "@/components/projects/usage-card";
 import { TemplateShowcase } from "@/components/projects/template-showcase";
+import { GettingStarted } from "@/components/projects/getting-started";
 import type { ProjectListItem, WorkspaceRole } from "@/lib/client/workspace/types";
 
 export const metadata = { title: "Dashboard", robots: { index: false } };
@@ -121,70 +122,81 @@ export default async function DashboardPage() {
         </AppPage>
       </div>
 
-      <AppPage className="pt-4">
-        <section aria-labelledby="recent-title">
-          <SectionHead id="recent-title" title="Your projects" description={current ? `${projectCount} in ${current.workspace.name}` : undefined} href="/projects" linkLabel="View all" />
-          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-            {canCreate ? (
-              <Link
-                href="/new-project"
-                data-reveal
-                className="group flex min-h-[220px] flex-col items-center justify-center gap-3 rounded-xl border border-dashed border-border-strong text-center transition-colors hover:border-foreground/40 hover:bg-muted/30"
-              >
-                <span className="flex size-11 items-center justify-center rounded-full border border-border bg-surface transition-transform duration-300 group-hover:rotate-90 group-hover:scale-110">
-                  <Plus className="size-5" aria-hidden="true" />
-                </span>
-                <span>
-                  <span className="block text-sm font-medium">New project</span>
-                  <span className="mt-0.5 block text-xs text-muted-foreground">From a template or a description</span>
-                </span>
-              </Link>
-            ) : null}
-            {items.map((p, i) => (
-              <div key={p.id} data-reveal style={{ "--reveal-delay": `${(i + 1) * 70}ms` } as React.CSSProperties}>
-                <ProjectCard project={p} showWorkspace={all.length > 1} />
-              </div>
-            ))}
-          </div>
-          {items.length === 0 ? <p className="mt-4 text-sm text-muted-foreground">No projects yet. Describe an idea above or pick a template below to create your first one.</p> : null}
-        </section>
-
-        <section aria-labelledby="shortcuts-title" className="mt-16">
-          <SectionHead id="shortcuts-title" title="Start from a template" description="Runnable starters with real files. Pick one and ask the agent to change it." href="/dashboard/templates" linkLabel="All templates" />
-          <TemplateShowcase templates={templates.map((t) => ({ id: t.id, name: t.name, description: t.description, category: t.category, frameworkName: t.frameworkName }))} />
-        </section>
-
-        <div className="mt-16 grid gap-10 lg:grid-cols-[minmax(0,1.6fr)_minmax(0,1fr)]">
-          {current && entitlements ? (
-            <section aria-labelledby="usage-title" data-reveal>
-              <SectionHead id="usage-title" title="Usage this month" href="/settings/usage" linkLabel="Details" />
-              <UsageCard workspaceName={current.workspace.name} entitlements={entitlements} projectCount={projectCount} />
-            </section>
-          ) : null}
-          <section aria-labelledby="guides-title" data-reveal style={{ "--reveal-delay": "100ms" } as React.CSSProperties}>
-            <SectionHead id="guides-title" title="Learn Codexa" href="/docs" linkLabel="Docs" />
-            <ul className="divide-y divide-border overflow-hidden rounded-xl border border-border bg-card">
-              {GUIDES.map((g) => (
-                <li key={g.href}>
-                  <Link href={g.href} className="group flex items-center gap-3 px-4 py-3 transition-colors hover:bg-muted/40">
-                    <span className="flex size-8 shrink-0 items-center justify-center rounded-lg border border-border bg-surface">
-                      <g.icon className="size-4 text-muted-foreground transition-colors group-hover:text-signal" aria-hidden="true" />
-                    </span>
-                    <span className="min-w-0 flex-1">
-                      <span className="block text-sm font-medium">{g.title}</span>
-                      <span className="block truncate text-xs text-muted-foreground">{g.body}</span>
-                    </span>
-                    <ArrowUpRight className="size-4 shrink-0 text-muted-foreground transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5" aria-hidden="true" />
-                  </Link>
-                </li>
-              ))}
-            </ul>
-            <Link href="/help" className="mt-3 inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground">
-              <BookOpen className="size-3.5" aria-hidden="true" /> Help center
-            </Link>
-          </section>
+      <div className="relative isolate">
+        {/* Slow drifting light so the lower page isn't flat. */}
+        <div className="ambient" aria-hidden="true">
+          <div className="ambient__orb" />
+          <div className="ambient__orb" />
+          <div className="ambient__orb" />
         </div>
-      </AppPage>
+        <AppPage className="pt-4">
+          <section aria-labelledby="recent-title">
+            <SectionHead id="recent-title" title="Your projects" description={current ? `${projectCount} in ${current.workspace.name}` : undefined} href={items.length ? "/projects" : undefined} linkLabel="View all" />
+            {items.length === 0 ? (
+              <GettingStarted canCreate={canCreate} />
+            ) : (
+              <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+                {canCreate ? (
+                  <Link
+                    href="/new-project"
+                    data-reveal
+                    className="group flex min-h-[220px] flex-col items-center justify-center gap-3 rounded-xl border border-dashed border-border-strong bg-card/40 text-center backdrop-blur-sm transition-colors hover:border-foreground/40 hover:bg-card/70"
+                  >
+                    <span className="flex size-11 items-center justify-center rounded-full border border-border bg-surface transition-transform duration-300 group-hover:rotate-90 group-hover:scale-110">
+                      <Plus className="size-5" aria-hidden="true" />
+                    </span>
+                    <span>
+                      <span className="block text-sm font-medium">New project</span>
+                      <span className="mt-0.5 block text-xs text-muted-foreground">From a template or a description</span>
+                    </span>
+                  </Link>
+                ) : null}
+                {items.map((p, i) => (
+                  <div key={p.id} data-reveal style={{ "--reveal-delay": `${(i + 1) * 70}ms` } as React.CSSProperties}>
+                    <ProjectCard project={p} showWorkspace={all.length > 1} />
+                  </div>
+                ))}
+              </div>
+            )}
+          </section>
+
+          <section aria-labelledby="shortcuts-title" className="mt-20">
+            <SectionHead id="shortcuts-title" title="Start from a template" description="Runnable starters with real files. Pick one and ask the agent to change it." href="/dashboard/templates" linkLabel="All templates" />
+            <TemplateShowcase templates={templates.map((t) => ({ id: t.id, name: t.name, description: t.description, category: t.category, frameworkName: t.frameworkName }))} />
+          </section>
+
+          <div className="mt-20 grid gap-10 xl:grid-cols-2">
+            {current && entitlements ? (
+              <section aria-labelledby="usage-title" data-reveal>
+                <SectionHead id="usage-title" title="Usage this month" description={`${entitlements.plan.charAt(0).toUpperCase() + entitlements.plan.slice(1)} plan`} href="/settings/usage" linkLabel="Details" />
+                <UsageCard workspaceName={current.workspace.name} entitlements={entitlements} projectCount={projectCount} />
+              </section>
+            ) : null}
+            <section aria-labelledby="guides-title" data-reveal style={{ "--reveal-delay": "100ms" } as React.CSSProperties}>
+              <SectionHead id="guides-title" title="Learn Codexa" description="Short guides from the docs." href="/docs" linkLabel="All docs" />
+              <ul className="grid gap-3 sm:grid-cols-2">
+                {GUIDES.map((g) => (
+                  <li key={g.href}>
+                    <Link href={g.href} className="tilt-shine group flex h-full flex-col rounded-xl border border-border bg-card p-4 shadow-sm transition-[border-color,box-shadow] hover:border-border-strong hover:shadow-lg">
+                      <span className="flex items-center justify-between">
+                        <span className="flex size-9 items-center justify-center rounded-lg bg-gradient-to-br from-signal/25 to-signal/5 ring-1 ring-signal/20">
+                          <g.icon className="size-4 text-signal" aria-hidden="true" />
+                        </span>
+                        <ArrowUpRight className="size-4 text-muted-foreground transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5" aria-hidden="true" />
+                      </span>
+                      <span className="mt-3 block text-sm font-medium">{g.title}</span>
+                      <span className="mt-1 block text-xs leading-relaxed text-muted-foreground">{g.body}</span>
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+              <Link href="/help" className="mt-3 inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground">
+                <BookOpen className="size-3.5" aria-hidden="true" /> Help center
+              </Link>
+            </section>
+          </div>
+        </AppPage>
+      </div>
     </>
   );
 }
