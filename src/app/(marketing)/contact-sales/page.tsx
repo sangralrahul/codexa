@@ -15,7 +15,6 @@ export default async function Page() {
         <h2 id="form-heading" className="text-display-4">Tell us about your team</h2>
         <SupportForm
           kind="sales"
-          
           defaultSubject="Sales enquiry"
           submitLabel="Contact sales"
           className="mt-5 space-y-4"

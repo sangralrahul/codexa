@@ -46,5 +46,9 @@ curl -c cookies.txt -X POST https://<your-codexa-host>/api/auth/login \\
 curl -b cookies.txt https://<your-codexa-host>/api/v1/workspaces
 \`\`\`
 `;
-  return <DevArticle path="/developers" markdown={md} />;
+  return (
+    <div data-tone="docs">
+      <DevArticle path="/developers" markdown={md} />
+    </div>
+  );
 }

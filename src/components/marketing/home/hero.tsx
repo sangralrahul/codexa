@@ -47,7 +47,7 @@ export function HomeHero({ signedIn, announcement }: { signedIn: boolean; announ
           <SplitHeading as="h1" id="home-title" size="display-1" lines={[...HOME_HERO.lines]} mark={HOME_HERO.mark} className="mx-auto mt-4 max-w-[18ch]! sm:mt-5">
             {HOME_HERO.lines.join(" ")}
           </SplitHeading>
-          <p className="text-lead mx-auto mt-4 max-w-[62ch]!">{HOME_HERO.lead}</p>
+          <p className="text-lead mx-auto mt-6 max-w-[62ch]! sm:mt-5">{HOME_HERO.lead}</p>
         </div>
         <div className="mt-6 sm:mt-7">
           <PromptBox signedIn={signedIn} variant="hero" source="home" footer={links} />

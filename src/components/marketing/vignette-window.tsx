@@ -3,6 +3,7 @@ import { AppWindow } from "@/components/frames/app-window";
 import { IllustrationBadge } from "@/components/frames/illustration-badge";
 import { VIGNETTES, type VignetteId } from "@/components/vignettes/registry";
 import { cn } from "@/lib/utils";
+import type { StoryStage } from "./story-scroll";
 
 /** What each vignette depicts, for the honesty popover (PLAN §4.4). */
 export const VIGNETTE_DETAIL: Record<VignetteId, string> = {
@@ -68,4 +69,12 @@ export function VignettePlate({ id, className, label = "Illustration" }: { id: V
       <V />
     </div>
   );
+}
+
+/** Stages for <StoryScroll>: each vignette rendered on the server with its honesty note and project name. */
+export function storyStages(ids: VignetteId[]): StoryStage[] {
+  return ids.map((id) => {
+    const V = VIGNETTES[id];
+    return { node: <V />, detail: VIGNETTE_DETAIL[id], project: VIGNETTE_PROJECT[id] ?? "my-app" };
+  });
 }

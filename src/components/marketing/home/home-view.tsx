@@ -47,7 +47,7 @@ export function HomeView({
         <ProofStrip facts={data.proof} changelog={changelog} status={status} />
 
         {/* H3 */}
-        <section className="relative py-16 sm:py-24 lg:py-28 [contain-intrinsic-size:auto_1000px] [content-visibility:auto]">
+        <section className="relative py-16 sm:py-24 lg:py-28">
           <div className="container-x">
             <SectionHeader
               index={HOME_WALL.index}
@@ -74,7 +74,7 @@ export function HomeView({
         <PlatformGrid scenario={scenario} />
 
         {/* H6 */}
-        <section aria-labelledby="integrations-title" className="relative overflow-hidden py-16 sm:py-24 lg:py-28 [contain-intrinsic-size:auto_1000px] [content-visibility:auto]">
+        <section aria-labelledby="integrations-title" className="relative overflow-hidden py-16 sm:py-24 lg:py-28">
           <div className="container-x">
             <div data-reveal className="mx-auto max-w-4xl md:text-center">
               <p className="text-label mb-5 text-signal-ink">{HOME_INTEGRATIONS.index}</p>

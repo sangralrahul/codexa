@@ -16,6 +16,37 @@
   animation-iteration-count: 1 !important;
 }
 
+/* The reactive Horizon behind the stage: --horizon-boost (written by the home store on prompt focus,
+   typing and the Repair Beat) eases instead of jumping, and the light rises a little with it. This also
+   drives the CSS poster, which is what phones, calm and low-power devices see instead of the canvas. */
+@property --horizon-boost { syntax: "<number>"; inherits: true; initial-value: 0; }
+.home-horizon { transition: --horizon-boost 600ms var(--ease-out); }
+.home-horizon .horizon { transform-origin: 50% 100%; scale: 1 calc(1 + var(--horizon-boost) * 0.3); }
+
+/* Leaving the SSR poster: the window body crossfades to the first frame of the replay. */
+.stage-fade { animation: stage-fade-in 300ms var(--ease-out) both; }
+@keyframes stage-fade-in { from { opacity: 0; } }
+@media (prefers-reduced-motion: reduce) { .stage-fade { animation: none; } }
+[data-motion="reduced"] .stage-fade { animation: none; }
+
+/* Focus pull (M4) for the stage, without the opacity dip: the window holds real text and controls
+   (the honesty badge), which must keep full contrast while tilted. Phones get no tilt (PLAN §5.2). */
+@supports (animation-timeline: scroll()) {
+  .js #watch-it-build .scroll-tilt { animation-name: home-stage-tilt; }
+}
+.js #watch-it-build .scroll-tilt { opacity: 1; }
+@keyframes home-stage-tilt {
+  from { transform: perspective(2200px) rotateX(16deg) scale(0.92) translateY(48px); }
+  to { transform: perspective(2200px) rotateX(0deg) scale(1) translateY(0); }
+}
+@media (width < 48rem) {
+  .js #watch-it-build .scroll-tilt { animation: none; transform: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  #watch-it-build .scroll-tilt { animation: none !important; transform: none !important; }
+}
+[data-motion="reduced"] #watch-it-build .scroll-tilt { animation: none !important; transform: none !important; }
+
 /* Pause stops every loop inside the stage (live dots, spinners, shimmer, carets). */
 [data-stage][data-paused] *,
 [data-stage][data-paused] *::before,
@@ -123,6 +154,21 @@
   .wall-tile__caption { opacity: 1; transform: none; }
 }
 
+/* Phones and small tablets: one flat drifting row (no 3D plane: it crops and blurs the shots at this size),
+   edge-faded sideways, with a compact name tag instead of the hover caption. */
+@media (width < 48rem) {
+  .wall-stage {
+    perspective: none;
+    mask-image: linear-gradient(to right, transparent, black 7%, black 93%, transparent);
+  }
+  .wall-plane { transform: none !important; animation: none !important; }
+  .wall-cell { padding: 8px 6px; }
+  .wall-tile { width: 260px; border-radius: 14px; }
+  .wall-tile__caption { inset: auto 6px 6px auto; max-width: calc(100% - 12px); padding: 4px 10px; border-radius: 999px; }
+  .wall-tile__name > b { font-size: 12px; }
+  .wall-tile__open, .wall-tile__name > span { display: none; }
+}
+
 /* Calm: a flat, static grid of the first row. */
 @media (prefers-reduced-motion: reduce) {
   .wall-stage { height: auto !important; mask-image: none; }
@@ -167,7 +213,7 @@
   translate: -50% 4px;
   transition: opacity var(--dur-3) var(--ease-out), translate var(--dur-3) var(--ease-out);
 }
-.constellation__node:is(:hover, :focus-visible) .constellation__card { opacity: 1; translate: -50% 0; }
+.constellation__upright:has(.constellation__node:is(:hover, :focus-visible)) .constellation__card { opacity: 1; translate: -50% 0; }
 
 @media (prefers-reduced-motion: reduce) {
   .constellation__dot { display: none; }

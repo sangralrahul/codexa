@@ -229,7 +229,8 @@ function PlanFinder({ usage, onUsage, currency, plans }: { usage: Usage; onUsage
   const id = React.useId();
   const { plan, ruledOut } = explainPlan(usage, currency);
   const name = (pid: string) => plans.find((p) => p.id === pid)?.name ?? pid;
-  const blockers = ruledOut.filter((r) => r.by.length).map((r) => `${name(r.plan)} allows fewer ${r.by.map((k) => USAGE_LABELS[k].unit).join(" and ")}`);
+  const list = (xs: string[]) => (xs.length > 1 ? `${xs.slice(0, -1).join(", ")} and ${xs[xs.length - 1]}` : xs[0]);
+  const blockers = ruledOut.filter((r) => r.by.length).map((r) => `${name(r.plan)} allows fewer ${list(r.by.map((k) => USAGE_LABELS[k].unit))}`);
   const reason = blockers.length ? `${blockers.join("; ")}.` : "It is the cheapest plan, and your usage is within its limits.";
   return (
     <section aria-labelledby={`${id}-title`} className="mt-14 overflow-hidden rounded-[20px] border border-border bg-card/70 shadow-[inset_0_1px_0_var(--hairline)] backdrop-blur">

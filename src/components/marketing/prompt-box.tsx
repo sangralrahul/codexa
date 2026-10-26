@@ -12,6 +12,7 @@ import { AutoGrowTextarea } from "@/components/ui/autogrow-textarea";
 import { useCalm, shakeElement, isCalm } from "@/lib/client/motion";
 import { IDEA_MAX, clampIdea, ideaHref, stashPendingIdea, type IdeaSource } from "@/lib/client/pending-idea";
 import { HOME_CHIPS } from "@/content/marketing/home";
+import { TEMPLATE_SHOTS } from "@/components/templates/shots";
 import { useHomeStore } from "@/components/marketing/home/home-store";
 import type { StarterLite } from "@/components/marketing/home/types";
 
@@ -22,11 +23,19 @@ const CHIP_TYPE_MS = 12;
 const STATIC_PLACEHOLDER = "Describe what you want to build. For example: a CRM for a two-person sales team with a pipeline view and email reminders.";
 const examples = HOME_CHIPS.map((c) => c.prompt);
 
-/** Types the example ideas into the placeholder, one after another. Static when calm, focused or filled. */
-function useTypedPlaceholder(active: boolean) {
+/** Types the example ideas into the placeholder, one after another. Static when calm, focused, filled or off-screen. */
+function useTypedPlaceholder(active: boolean, ref: React.RefObject<HTMLElement | null>) {
   const calm = useCalm();
   const [text, setText] = React.useState(STATIC_PLACEHOLDER);
-  const on = active && !calm;
+  const [inView, setInView] = React.useState(false);
+  React.useEffect(() => {
+    const el = ref.current;
+    if (!el || typeof IntersectionObserver === "undefined") return;
+    const io = new IntersectionObserver(([entry]) => setInView(entry.isIntersecting));
+    io.observe(el);
+    return () => io.disconnect();
+  }, [ref]);
+  const on = active && !calm && inView;
   React.useEffect(() => {
     if (!on) return;
     let item = 0;
@@ -222,9 +231,8 @@ export function PromptBox({
   const [picked, setPicked] = React.useState<string | null>(defaultTemplateId ?? null);
   const [closestId, setClosestId] = React.useState<string | null>(null);
   const [chipTemplate, setChipTemplate] = React.useState<{ id: string; prompt: string } | null>(null);
-  const placeholder = useTypedPlaceholder(!focused && value === "");
-
   const formRef = React.useRef<HTMLFormElement>(null);
+  const placeholder = useTypedPlaceholder(!focused && value === "", formRef);
   const shakeRef = React.useRef<HTMLDivElement>(null);
   const areaRef = React.useRef<HTMLTextAreaElement | null>(null);
   const typing = React.useRef(0);
@@ -329,97 +337,97 @@ export function PromptBox({
   const hint = signedIn ? "Continues in your dashboard." : "Creates a free account first; your idea is carried over.";
 
   return (
-    <form ref={formRef} onSubmit={onSubmit} className={cn("mx-auto w-full text-left", hero ? "max-w-3xl" : "max-w-2xl", className)} aria-label="Build an app from a sentence">
+    <form ref={formRef} onSubmit={onSubmit} className={cn("mx-auto w-full text-left", hero ? "max-w-3xl" : "max-w-2xl", className)} aria-label={hero ? "Build an app from a sentence" : "Start a new build"}>
       <div ref={shakeRef}>
-      <div
-        data-active={value.length > 0 ? "" : undefined}
-        className={cn(
-          "comet-border rounded-[20px] shadow-lg transition-shadow duration-(--dur-3) ease-out",
-          "focus-within:shadow-[0_0_0_1px_color-mix(in_oklab,var(--ring)_60%,transparent),0_0_0_5px_color-mix(in_oklab,var(--signal)_16%,transparent),var(--shadow-lg)]",
-        )}
-      >
-        <div className="comet-border__inner rim rounded-[19px] [--rim-opacity:0.5] before:transition-opacity before:duration-(--dur-3) focus-within:[--rim-opacity:1]">
-          <label id={`${id}-label`} htmlFor={`${id}-prompt`} className="sr-only">
-            Describe the application you want to build
-          </label>
-          <AutoGrowTextarea
-            ref={areaRef}
-            id={`${id}-prompt`}
-            name="prompt"
-            value={value}
-            minRows={hero ? 3 : 2}
-            maxRows={hero ? 8 : 6}
-            maxLength={IDEA_MAX}
-            placeholder={placeholder}
-            onChange={(e) => {
-              clearInterval(typing.current);
-              change(e.target.value);
-            }}
-            onKeyDown={(e) => {
-              if (e.key === "Enter" && (e.metaKey || e.ctrlKey) && !e.nativeEvent.isComposing) {
-                e.preventDefault();
-                formRef.current?.requestSubmit();
-              }
-            }}
-            onFocus={() => {
-              setFocused(true);
-              if (drivesStage) store?.horizon.focus(true);
-            }}
-            onBlur={() => {
-              setFocused(false);
-              if (drivesStage) store?.horizon.focus(false);
-            }}
-            aria-describedby={error ? errorId : hintId}
-            aria-invalid={Boolean(error)}
-            className={cn(
-              "block w-full resize-none bg-transparent text-foreground outline-none placeholder:text-muted-foreground/75 focus-visible:outline-none",
-              hero ? "px-5 pb-2 pt-[18px] text-[17px] leading-[1.55] sm:text-[18px]" : "px-4 pb-1.5 pt-3.5 text-base leading-[1.55]",
-            )}
-          />
-          <div className={cn("flex items-center gap-2", hero ? "px-3 pb-3 sm:px-3.5" : "px-2.5 pb-2.5")}>
-            {starters.length > 0 ? (
-              <div className="min-w-0 flex-1 sm:flex-none">
-                <StarterPicker starters={starters} picked={picked} closest={closest} onPick={pick} compact={!hero} />
-              </div>
-            ) : null}
-            <div className="ml-auto flex shrink-0 items-center gap-2.5">
-              {value.length > COUNTER_FROM ? (
-                <span className={`text-meta ${cn("tabular-nums", value.length >= IDEA_MAX ? "text-danger" : "text-muted-foreground")}`}>
-                  {value.length.toLocaleString("en-US")} / {IDEA_MAX.toLocaleString("en-US")}
-                </span>
+        <div
+          data-active={value.length > 0 ? "" : undefined}
+          className={cn(
+            "comet-border rounded-[20px] shadow-lg transition-shadow duration-(--dur-3) ease-out",
+            "focus-within:shadow-[0_0_0_1px_color-mix(in_oklab,var(--ring)_60%,transparent),0_0_0_5px_color-mix(in_oklab,var(--signal)_16%,transparent),var(--shadow-lg)]",
+          )}
+        >
+          <div className="comet-border__inner rim rounded-[19px] [--rim-opacity:0.5] before:transition-opacity before:duration-(--dur-3) focus-within:[--rim-opacity:1]">
+            <label id={`${id}-label`} htmlFor={`${id}-prompt`} className="sr-only">
+              Describe the application you want to build
+            </label>
+            <AutoGrowTextarea
+              ref={areaRef}
+              id={`${id}-prompt`}
+              name="prompt"
+              value={value}
+              minRows={hero ? 3 : 2}
+              maxRows={hero ? 8 : 6}
+              maxLength={IDEA_MAX}
+              placeholder={placeholder}
+              onChange={(e) => {
+                clearInterval(typing.current);
+                change(e.target.value);
+              }}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && (e.metaKey || e.ctrlKey) && !e.nativeEvent.isComposing) {
+                  e.preventDefault();
+                  formRef.current?.requestSubmit();
+                }
+              }}
+              onFocus={() => {
+                setFocused(true);
+                if (drivesStage) store?.horizon.focus(true);
+              }}
+              onBlur={() => {
+                setFocused(false);
+                if (drivesStage) store?.horizon.focus(false);
+              }}
+              aria-describedby={error ? errorId : hintId}
+              aria-invalid={Boolean(error)}
+              className={cn(
+                "block w-full resize-none bg-transparent text-foreground outline-none placeholder:text-muted-foreground/75 focus-visible:outline-none",
+                hero ? "px-5 pb-2 pt-[18px] text-[17px] leading-[1.55] sm:text-[18px]" : "px-4 pb-1.5 pt-3.5 text-base leading-[1.55]",
+              )}
+            />
+            <div className={cn("flex items-center gap-2", hero ? "px-3 pb-3 sm:px-3.5" : "px-2.5 pb-2.5")}>
+              {starters.length > 0 ? (
+                <div className="min-w-0 flex-1 sm:flex-none">
+                  <StarterPicker starters={starters} picked={picked} closest={closest} onPick={pick} compact={!hero} />
+                </div>
               ) : null}
-              <Kbd mod className="hidden border border-border bg-muted/60 px-1.5 [@media(pointer:fine)]:sm:inline-flex">
-                ↵
-              </Kbd>
-              <Button
-                type="submit"
-                variant="ember"
-                size="lg"
-                spark
-                magnetic
-                aria-busy={submitting || undefined}
-                className={cn("h-11 gap-1.5 pl-5 pr-4 text-[15px]", !hero && "h-10 text-sm")}
-              >
-                Build it
-                <span data-spark-icon className="relative grid size-4 place-items-center">
-                  <ArrowRight
-                    className={cn("col-start-1 row-start-1 size-4 transition-[opacity,transform] duration-(--dur-3) ease-snap", submitting && "rotate-90 scale-50 opacity-0")}
-                    aria-hidden="true"
-                  />
-                  <span
-                    aria-hidden="true"
-                    className={cn(
-                      "col-start-1 row-start-1 size-4 rounded-full border-2 border-current border-r-transparent transition-opacity duration-(--dur-2)",
-                      submitting ? "animate-spin opacity-100" : "opacity-0",
-                    )}
-                  />
-                </span>
-                {submitting ? <span className="sr-only">Opening…</span> : null}
-              </Button>
+              <div className="ml-auto flex shrink-0 items-center gap-2.5">
+                {value.length > COUNTER_FROM ? (
+                  <span className={`text-meta ${cn("tabular-nums", value.length >= IDEA_MAX ? "text-danger" : "text-muted-foreground")}`}>
+                    {value.length.toLocaleString("en-US")} / {IDEA_MAX.toLocaleString("en-US")}
+                  </span>
+                ) : null}
+                <Kbd mod className="hidden border border-border bg-muted/60 px-1.5 [@media(pointer:fine)]:sm:inline-flex">
+                  ↵
+                </Kbd>
+                <Button
+                  type="submit"
+                  variant="ember"
+                  size="lg"
+                  spark
+                  magnetic
+                  aria-busy={submitting || undefined}
+                  className={cn("h-11 gap-1.5 pl-5 pr-4 text-[15px]", !hero && "h-10 text-sm")}
+                >
+                  Build it
+                  <span data-spark-icon className="relative grid size-4 place-items-center">
+                    <ArrowRight
+                      className={cn("col-start-1 row-start-1 size-4 transition-[opacity,transform] duration-(--dur-3) ease-snap", submitting && "rotate-90 scale-50 opacity-0")}
+                      aria-hidden="true"
+                    />
+                    <span
+                      aria-hidden="true"
+                      className={cn(
+                        "col-start-1 row-start-1 size-4 rounded-full border-2 border-current border-r-transparent transition-opacity duration-(--dur-2)",
+                        submitting ? "animate-spin opacity-100" : "opacity-0",
+                      )}
+                    />
+                  </span>
+                  {submitting ? <span className="sr-only">Opening…</span> : null}
+                </Button>
+              </div>
             </div>
           </div>
         </div>
-      </div>
       </div>
 
       {error ? (
@@ -429,7 +437,7 @@ export function PromptBox({
       ) : null}
 
       {hero ? (
-        <ul aria-label="Example ideas" className="-mx-4 mt-3 flex snap-x snap-mandatory gap-2 overflow-x-auto px-4 pb-1 [scrollbar-width:none] sm:mx-0 sm:flex-wrap sm:justify-center sm:overflow-visible sm:px-0 sm:pb-0 lg:-mx-20 [&::-webkit-scrollbar]:hidden">
+        <ul aria-label="Example ideas" className="-mx-4 mt-3 flex snap-x snap-mandatory scroll-px-4 gap-2 overflow-x-auto px-4 pb-1 [scrollbar-width:none] sm:mx-0 sm:flex-wrap sm:justify-center sm:overflow-visible sm:px-0 sm:pb-0 lg:-mx-20 [&::-webkit-scrollbar]:hidden">
           {HOME_CHIPS.map((chip) => {
             const starter = starters.find((s) => s.id === chip.templateId);
             const active = chipTemplate?.id === chip.templateId && value === chip.prompt;
@@ -444,22 +452,23 @@ export function PromptBox({
                     active ? "border-signal/45 text-foreground" : "border-border",
                   )}
                 >
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={`/templates/${chip.templateId}.webp`} alt="" width={20} height={13} loading="lazy" decoding="async" className="h-[13px] w-5 shrink-0 rounded-[2px] bg-white object-cover object-top shadow-[0_0_0_1px_var(--border)]" />
+                  <Thumb id={chip.templateId} shot={TEMPLATE_SHOTS.has(chip.templateId)} className="h-[13px] w-5 rounded-[2px]" />
                   {chip.label}
                 </button>
                 {/* Hover/focus preview of the real starter screenshot (decorative). */}
-                <span
-                  aria-hidden="true"
-                  className="pointer-events-none absolute left-1/2 top-full z-30 mt-2 hidden w-[260px] origin-top -translate-x-1/2 translate-y-1 scale-[0.97] rounded-[14px] border border-border-strong bg-card p-1.5 opacity-0 shadow-xl transition-[opacity,translate,scale] duration-(--dur-3) ease-out peer-hover:translate-y-0 peer-hover:scale-100 peer-hover:opacity-100 peer-focus-visible:translate-y-0 peer-focus-visible:scale-100 peer-focus-visible:opacity-100 md:block calm:transition-none"
-                >
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={`/templates/${chip.templateId}.webp`} alt="" width={248} height={155} loading="lazy" decoding="async" className="aspect-[16/10] w-full rounded-[9px] bg-white object-cover object-top" />
-                  <span className="flex items-center justify-between gap-2 px-1 pb-0.5 pt-1.5 text-[11.5px]">
-                    <span className="truncate font-medium text-foreground">{starter?.name ?? chip.label}</span>
-                    <span className="shrink-0 text-muted-foreground">Starter</span>
+                {TEMPLATE_SHOTS.has(chip.templateId) ? (
+                  <span
+                    aria-hidden="true"
+                    className="pointer-events-none absolute left-1/2 top-full z-30 mt-2 hidden w-[260px] origin-top -translate-x-1/2 translate-y-1 scale-[0.97] rounded-[14px] border border-border-strong bg-card p-1.5 opacity-0 shadow-xl transition-[opacity,translate,scale] duration-(--dur-3) ease-out peer-hover:translate-y-0 peer-hover:scale-100 peer-hover:opacity-100 peer-focus-visible:translate-y-0 peer-focus-visible:scale-100 peer-focus-visible:opacity-100 md:block calm:transition-none"
+                  >
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src={`/templates/${chip.templateId}.webp`} alt="" width={248} height={155} loading="lazy" decoding="async" className="aspect-[16/10] w-full rounded-[9px] bg-white object-cover object-top" />
+                    <span className="flex items-center justify-between gap-2 px-1 pb-0.5 pt-1.5 text-[11.5px]">
+                      <span className="truncate font-medium text-foreground">{starter?.name ?? chip.label}</span>
+                      <span className="shrink-0 text-muted-foreground">Starter</span>
+                    </span>
                   </span>
-                </span>
+                ) : null}
               </li>
             );
           })}

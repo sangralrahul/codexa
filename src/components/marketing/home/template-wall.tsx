@@ -53,7 +53,7 @@ export function TemplateWall({ tiles, children }: { tiles: WallTile[]; children?
 
   return (
     <div className="relative">
-      <div className="wall-stage relative mt-8 md:mt-12 h-[224px] overflow-hidden sm:h-[300px] md:h-[620px]" data-spotlight="grid">
+      <div className="wall-stage relative mt-8 h-[186px] overflow-hidden md:mt-12 md:h-[620px]" data-spotlight="grid">
         <div className="scroll-scale h-full">
           <div className="wall-plane flex h-full flex-col justify-center">
             {rows.map((row, i) => (
@@ -79,7 +79,7 @@ export function TemplateWall({ tiles, children }: { tiles: WallTile[]; children?
       </div>
       <div className="container-x mt-6 flex flex-wrap items-center justify-between gap-3">
         {children}
-        <PauseButton paused={paused} onToggle={() => setPaused((p) => !p)} label="Pause the template wall" showLabel />
+        <PauseButton paused={paused} onToggle={() => setPaused((p) => !p)} label="Pause the template wall" showLabel className="calm:hidden" />
       </div>
     </div>
   );

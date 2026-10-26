@@ -3,7 +3,6 @@ import type { ProductPage, VignetteId } from "@/content/marketing/types";
 import { PRODUCT_FAQ } from "@/content/marketing/product";
 import { FACTS } from "@/content/marketing/facts";
 import { getRoute } from "@/config/routes";
-import { VIGNETTES } from "@/components/vignettes/registry";
 import { Odometer } from "@/components/motion/odometer";
 import { PageHeader, Kicker } from "./page-header";
 import { Section, SectionHeader } from "./section";
@@ -12,8 +11,8 @@ import { FAQ } from "./faq";
 import { CTABand } from "./cta-band";
 import { ContentSections } from "./content-blocks";
 import { Inline } from "./inline";
-import { VignettePlate, VignetteWindow, VIGNETTE_DETAIL, VIGNETTE_PROJECT } from "./vignette-window";
-import { StoryScroll, type StoryStage } from "./story-scroll";
+import { VignettePlate, VignetteWindow, storyStages } from "./vignette-window";
+import { StoryScroll } from "./story-scroll";
 import { FinePrint } from "./fine-print";
 import { RelatedCards } from "./related-cards";
 
@@ -56,13 +55,6 @@ function storyTitle(titles: string[]): string {
     return `${words.slice(0, -1).join(", ")} and ${words[words.length - 1]}.`;
   }
   return "Step by step, in one workspace.";
-}
-
-function stagesFor(ids: VignetteId[]): StoryStage[] {
-  return ids.map((id) => {
-    const V = VIGNETTES[id];
-    return { node: <V />, detail: VIGNETTE_DETAIL[id], project: VIGNETTE_PROJECT[id] ?? "my-app" };
-  });
 }
 
 /**
@@ -119,7 +111,7 @@ export function ProductPageTemplate({ page }: { page: ProductPage }) {
       {steps.length ? (
         <Section size="lg" className="border-t border-border/60">
           <SectionHeader index="01" eyebrow={page.stepsHeading ?? "How it works"} title={storyTitle(steps.map((s) => s.title))} className="mb-14 lg:mb-6" />
-          <StoryScroll steps={steps.map((s) => ({ title: s.title, body: <Inline text={s.description} /> }))} stages={stagesFor(stepVisuals)} label={page.stepsHeading ?? "How it works"} />
+          <StoryScroll steps={steps.map((s) => ({ title: s.title, body: <Inline text={s.description} /> }))} stages={storyStages(stepVisuals)} label={page.stepsHeading ?? "How it works"} />
         </Section>
       ) : null}
 

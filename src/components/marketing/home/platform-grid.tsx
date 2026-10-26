@@ -34,7 +34,7 @@ export function PlatformGrid({ scenario }: { scenario: Scenario }) {
   ];
 
   return (
-    <section aria-labelledby="platform-title" className="relative py-16 sm:py-24 lg:py-28 [contain-intrinsic-size:auto_1400px] [content-visibility:auto]">
+    <section aria-labelledby="platform-title" className="relative py-16 sm:py-24 lg:py-28">
       <div className="container-x relative">
         <div data-reveal className="max-w-3xl">
           <p className="text-label mb-5 text-signal-ink">{HOME_PLATFORM.index}</p>

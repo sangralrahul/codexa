@@ -23,31 +23,84 @@ const PATHS = {
   secrets: "M375 264 V380 H560",
 };
 
+const RAIL = ["browser", "worker", "sandbox", "container"].map((id) => NODES.find((n) => n.id === id)!);
+const LANES = [
+  { label: "Previews", node: NODES.find((n) => n.id === "preview")!, note: "<token>.preview host, a separate origin" },
+  { label: "Secrets", node: NODES.find((n) => n.id === "d1")!, note: "encryptSecret() first; ciphertext only" },
+];
+
+/** Phones: the main path as a vertical rail with one packet (CSS, container units), lanes listed under it. */
+function PhoneRail({ running, started }: { running: boolean; started: boolean }) {
+  return (
+    <div className="relative p-4 pb-14 md:hidden">
+      <ol aria-label="Request path through Codexa" className="relative space-y-3">
+        <span aria-hidden="true" className="absolute bottom-8 left-[21px] top-8 w-px bg-border-strong" />
+        <span aria-hidden="true" className="mk-rail calm:hidden" data-started={started ? "" : undefined} data-running={running ? "" : undefined}>
+          <span className="mk-rail__packet" />
+        </span>
+        {RAIL.map((n, i) => (
+          <li key={n.id} className="relative">
+            <a href={n.href} className="flex items-center gap-3 rounded-[14px] border border-border bg-card px-3 py-3 transition-colors hover:border-border-strong">
+              <span aria-hidden="true" className="relative z-[1] inline-flex size-[18px] shrink-0 items-center justify-center rounded-full border border-border-strong bg-background font-mono text-[9.5px] text-muted-foreground">
+                {i + 1}
+              </span>
+              <span className="min-w-0">
+                <span className="block text-[14px] font-semibold">{n.title}</span>
+                <span className="block font-mono text-[11px] text-muted-foreground">{n.sub}</span>
+              </span>
+            </a>
+          </li>
+        ))}
+      </ol>
+      <ul className="mt-4 grid gap-2">
+        {LANES.map((l) => (
+          <li key={l.label}>
+            <a href={l.node.href} className="flex items-start gap-3 rounded-[14px] border border-dashed border-border-strong px-3 py-2.5 text-[13px] transition-colors hover:border-foreground/40">
+              <span className="text-label mt-[3px] w-16 shrink-0 text-muted-foreground">{l.label}</span>
+              <span className="min-w-0">
+                <span className="block font-medium">{l.node.title}</span>
+                <span className="block font-mono text-[11px] text-muted-foreground">{l.note}</span>
+              </span>
+            </a>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
 /**
  * /security request-path diagram (PLAN §5.3): Browser → Codexa Worker → ProjectSandbox Durable
  * Object → Container runner; previews on a separate origin; secrets through encryptSecret into D1.
- * Packets travel the paths (SVG animateMotion) only while the diagram is in view and not paused;
- * calm (OS setting or the site's Reduced motion) shows the static diagram. Each node links to the
- * section that explains it. Phones scroll it sideways.
+ * Packets travel the paths (SVG animateMotion) only once the diagram has scrolled into view, and
+ * freeze while it is off-screen, the tab is hidden or the visitor pauses it; calm (OS setting or the
+ * site's Reduced motion) shows the static diagram. Each node links to the section that explains it.
+ * Phones get the same path as a vertical rail (one packet travelling down it) with the preview and
+ * secrets lanes beside it, instead of a sideways-scrolling drawing.
  */
 export function RequestPathDiagram({ className, caption }: { className?: string; caption?: string }) {
   const figRef = React.useRef<HTMLElement>(null);
   const svgRef = React.useRef<SVGSVGElement>(null);
   const { playing, paused, setPaused, calm } = useAutoplay(figRef, { threshold: 0.3 });
   const id = React.useId().replace(/:/g, "");
+  // Packets exist only once the diagram has been in view (so the server HTML and an off-screen
+  // diagram are static); after that they freeze in place whenever playback stops.
+  const [started, setStarted] = React.useState(false);
+  if (playing && !started) setStarted(true);
 
   React.useEffect(() => {
     const svg = svgRef.current;
     if (!svg || typeof svg.pauseAnimations !== "function") return;
     if (playing) svg.unpauseAnimations();
     else svg.pauseAnimations();
-  }, [playing]);
+  }, [playing, started]);
 
   return (
     <figure ref={figRef} className={cn("relative", className)}>
-      <div className="relative overflow-x-auto rounded-[18px] border border-border bg-card/70 shadow-[inset_0_1px_0_var(--hairline)] [scrollbar-width:thin]">
+      <div className="relative overflow-hidden rounded-[18px] border border-border bg-card/70 shadow-[inset_0_1px_0_var(--hairline)]">
         <div aria-hidden="true" className="bg-blueprint pointer-events-none absolute inset-0 opacity-70" />
-        <svg ref={svgRef} viewBox="0 0 1000 440" role="group" aria-label="Request path through Codexa" className="relative block w-full min-w-[760px]">
+        <PhoneRail running={playing} started={started && !calm} />
+        <svg ref={svgRef} viewBox="0 0 1000 440" role="group" aria-label="Request path through Codexa" className="relative hidden w-full md:block">
           <defs>
             <path id={`${id}-main`} d={PATHS.main} />
             <path id={`${id}-preview`} d={PATHS.preview} />
@@ -68,8 +121,8 @@ export function RequestPathDiagram({ className, caption }: { className?: string;
             <text x="490" y="420">secrets never leave the server</text>
           </g>
           {/* Packets: behind the nodes, so they pass through them. */}
-          {calm ? null : (
-            <g>
+          {calm || !started ? null : (
+            <g className="calm:hidden">
               {(
                 [
                   ["main", "4.2s", "0s"],

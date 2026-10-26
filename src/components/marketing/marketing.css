@@ -304,8 +304,10 @@
 @media (prefers-reduced-motion: reduce) { .js [data-reveal]:not(.is-visible) .mk-meter { transform: scaleX(var(--share, 1)); } }
 [data-motion="reduced"] .mk-meter { transform: scaleX(var(--share, 1)) !important; }
 
-/* Big numerals in the display face: plain figures (the UI stylistic sets give Mona Sans a slashed zero). */
-.mk-num, .mk-num * { font-feature-settings: "tnum" 1; font-variant-numeric: tabular-nums; }
+/* Big numerals in the display face (prices, counts, chapter numbers): proportional lining figures.
+   Mona Sans draws its tabular zero with a slash ("$2Ø"), so display numbers opt out of tnum; the
+   Odometer sizes each column from the real digit, so rolling stays aligned without tabular widths. */
+.mk-num, .mk-num * { font-feature-settings: "pnum" 1, "lnum" 1; font-variant-numeric: proportional-nums lining-nums; }
 
 /* --------------------------------------------------------------------------
    Legal pages: reading-progress hairline (scroll timeline, JS --p fallback)
@@ -347,4 +349,43 @@
   [data-print-article] a[href^="/"]::after { content: " (" attr(href) ")"; font-size: 9pt; color: dimgray; }
   [data-print-article] section { break-inside: avoid-page; }
   .horizon-line, .bg-noise, .backdrop { display: none !important; }
+}
+
+/* --------------------------------------------------------------------------
+   /security request path, phone rail: one packet travels down the rail
+   (container units give the travel distance; transform only). It appears once
+   the diagram has been in view, freezes when paused or off-screen, and is
+   removed in calm.
+   -------------------------------------------------------------------------- */
+.mk-rail {
+  position: absolute;
+  left: 17px;
+  top: 2rem;
+  bottom: 2rem;
+  z-index: 2;
+  width: 9px;
+  container-type: size;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity var(--dur-3) var(--ease-out);
+}
+.mk-rail[data-started] { opacity: 1; }
+.mk-rail__packet {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 9px;
+  height: 9px;
+  border-radius: 999px;
+  background: var(--signal);
+  box-shadow: 0 0 0 4px color-mix(in oklab, var(--signal) 20%, transparent), 0 0 18px color-mix(in oklab, var(--signal) 70%, transparent);
+  animation: mk-rail 4.2s var(--ease-in-out) infinite;
+  animation-play-state: paused;
+}
+.mk-rail[data-running] .mk-rail__packet { animation-play-state: running; }
+@keyframes mk-rail {
+  0% { transform: translateY(0); opacity: 0; }
+  8% { opacity: 1; }
+  92% { opacity: 1; }
+  100% { transform: translateY(calc(100cqh - 9px)); opacity: 0; }
 }

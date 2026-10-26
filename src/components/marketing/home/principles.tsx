@@ -47,7 +47,7 @@ export function Principles({ scenario, maxRepairAttempts }: { scenario: Scenario
   const files = scenario.files.filter((p) => p.startsWith("src/")).slice(0, 3);
 
   return (
-    <Section size="lg" aria-labelledby="principles-title" className="py-16 sm:py-24 lg:py-32 [contain-intrinsic-size:auto_900px] [content-visibility:auto]">
+    <Section size="lg" aria-labelledby="principles-title" className="py-16 sm:py-24 lg:py-32">
       <div aria-hidden="true" className="bg-dots pointer-events-none absolute inset-x-0 top-1/3 -z-10 h-2/3 opacity-60" />
       <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
         <div data-reveal className="max-w-5xl">

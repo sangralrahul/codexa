@@ -81,7 +81,7 @@ export default function FeaturesPage() {
             {FEATURE_GROUPS.map((g, i) => {
               const [a, b, ...rest] = g.features;
               return (
-                <section key={g.id} id={g.id} aria-labelledby={`${g.id}-title`} className="scroll-mt-28 pb-24 last:pb-0 lg:min-h-[70svh]">
+                <section key={g.id} id={g.id} aria-labelledby={`${g.id}-title`} className="scroll-mt-32 pb-16 last:pb-0 lg:min-h-[70svh] lg:scroll-mt-28 lg:pb-24">
                   <header data-reveal className="relative pt-10">
                     <span aria-hidden="true" className="mk-num pointer-events-none absolute -top-2 left-0 select-none font-display text-[120px] font-extrabold leading-none tracking-[-0.06em] text-foreground/[0.07] [font-stretch:112%]">
                       {String(i + 1).padStart(2, "0")}

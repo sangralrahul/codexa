@@ -99,6 +99,12 @@ export function TimeTravel() {
   const pct = Math.max(0, Math.min(100, v));
   return (
     <div className="flex flex-col gap-3">
+      <div aria-hidden="true" className="-mb-1 flex items-center justify-between font-mono text-[10px] uppercase tracking-[0.1em] text-muted-foreground">
+        <span className="inline-flex items-center gap-1.5">
+          <span className="size-1.5 rounded-full bg-signal" /> After the AI run
+        </span>
+        <span>Snapshot</span>
+      </div>
       <div aria-hidden="true" className="relative h-[174px] overflow-hidden rounded-xl border border-border shadow-sm">
         <Table after={false} />
         <div className="absolute inset-0" style={{ clipPath: `inset(0 ${100 - pct}% 0 0)` }}>
@@ -109,8 +115,6 @@ export function TimeTravel() {
             <span className="h-3 w-px bg-signal" />
           </span>
         </span>
-        <span className="absolute left-2 top-[34px] rounded-full bg-background/85 px-1.5 py-px font-mono text-[9.5px] uppercase tracking-[0.08em] text-muted-foreground">after</span>
-        <span className="absolute right-2 top-[34px] rounded-full bg-background/85 px-1.5 py-px font-mono text-[9.5px] uppercase tracking-[0.08em] text-muted-foreground">snapshot</span>
       </div>
       <input
         type="range"

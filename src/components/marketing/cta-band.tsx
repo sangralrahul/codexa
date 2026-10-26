@@ -93,7 +93,7 @@ export function CTABand({
         className="dark relative isolate mx-auto max-w-6xl overflow-hidden rounded-[28px] border border-border-strong bg-background text-foreground shadow-xl"
         style={{ "--cta-tint": TINT[tone] } as React.CSSProperties}
       >
-        <Backdrop still className="opacity-70 [&_.backdrop__canvas]:[mask-image:linear-gradient(to_bottom,#000,transparent_85%)]" />
+        <Backdrop still className="opacity-70 [&_.backdrop__canvas]:[mask-image:linear-gradient(to_bottom,black,transparent_85%)]" />
         <div aria-hidden="true" className="bg-blueprint pointer-events-none absolute inset-0 opacity-70" />
         <div
           aria-hidden="true"

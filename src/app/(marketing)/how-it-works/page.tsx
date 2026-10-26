@@ -8,19 +8,14 @@ import { LandingSections } from "@/components/marketing/content-blocks";
 import { FAQ } from "@/components/marketing/faq";
 import { CTABand } from "@/components/marketing/cta-band";
 import { Inline } from "@/components/marketing/inline";
-import { StoryScroll, type StoryStage } from "@/components/marketing/story-scroll";
-import { VignetteWindow, VIGNETTE_DETAIL, VIGNETTE_PROJECT } from "@/components/marketing/vignette-window";
-import { VIGNETTES } from "@/components/vignettes/registry";
+import { StoryScroll } from "@/components/marketing/story-scroll";
+import { VignetteWindow, storyStages } from "@/components/marketing/vignette-window";
 import { Alert } from "@/components/ui/misc";
 
 export const metadata = routeMetadata("/how-it-works");
 
 export default function HowItWorksPage() {
-  const stages: StoryStage[] = HOW_IT_WORKS_STEPS.map((s) => {
-    const id = s.visual ?? "agent-run";
-    const V = VIGNETTES[id];
-    return { node: <V />, detail: VIGNETTE_DETAIL[id], project: VIGNETTE_PROJECT[id] ?? "my-app" };
-  });
+  const stages = storyStages(HOW_IT_WORKS_STEPS.map((s) => s.visual ?? "agent-run"));
   return (
     <div data-tone="product">
       <PageHeader

@@ -90,7 +90,6 @@ function CodeView({ frame, scenario, tokens, illustrative }: { frame: StageFrame
       <div className="relative flex min-h-0 min-w-0 flex-col overflow-hidden bg-code-bg">
         {/* Tabs */}
         <div className="flex h-9 shrink-0 items-stretch overflow-hidden border-b border-code-border">
-          {frame.tabs.length === 0 ? <span className="flex items-center px-3 font-mono text-[11px] text-code-muted">No files open</span> : null}
           {frame.tabs.map((t) => {
             const active = t === frame.activeTab;
             return (
@@ -104,7 +103,7 @@ function CodeView({ frame, scenario, tokens, illustrative }: { frame: StageFrame
                 {active ? <span className="absolute inset-x-0 top-0 h-[2px] bg-signal" /> : null}
                 <span className={cn("size-1.5 rounded-full", t.endsWith(".css") ? "bg-syn-attr" : t.endsWith(".tsx") ? "bg-syn-fn" : "bg-syn-number")} />
                 {basename(t)}
-                <span className="text-[10px] text-syn-string">{scenario.writes.find((w) => w.path === t)?.action === "A" ? "A" : "M"}</span>
+                {frame.explorerFresh.includes(t) ? <span className="text-[10px] text-syn-string">{scenario.writes.find((w) => w.path === t)?.action === "A" ? "A" : "M"}</span> : null}
               </span>
             );
           })}

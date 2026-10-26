@@ -16,7 +16,7 @@ import { PhoneStage } from "./phone-stage";
 import { phoneTabFor, type StageFrame } from "./script";
 import { StatusPill } from "./status-pill";
 
-/** The honesty label for the stage (PLAN §4.4). Rendered on the window (md+) and next to Pause on phones. */
+/** The honesty label for the stage (PLAN §4.4). Rendered on the window (lg+) and next to the Pause button below lg. */
 export function StageBadge({ name, className }: { name: string; className?: string }) {
   return <IllustrationBadge label={HOME_STAGE_COPY.badge} detail={HOME_STAGE_COPY.detail(name)} className={className} />;
 }
@@ -59,6 +59,7 @@ export function ProductStage({
   tokens,
   typed,
   swapKey,
+  phaseKey,
   still,
   paused,
   className,
@@ -67,8 +68,10 @@ export function ProductStage({
   scenario: Scenario;
   tokens: Token[][];
   typed: string;
-  /** Changes when the scenario switches (crossfades the window body). */
+  /** Changes when the scenario switches (the window body swaps in). */
   swapKey: string;
+  /** Changes when the replay leaves the SSR poster (the body crossfades to t=0 over 300ms). */
+  phaseKey?: string;
   /** Finished frame (poster, calm, paused): entrance animations jump to their end. */
   still: boolean;
   paused: boolean;
@@ -142,7 +145,8 @@ export function ProductStage({
     };
   }, []);
 
-  const badge = <StageBadge name={scenario.name} />;
+  // The window only has room for the honesty badge from lg; below that it sits next to Pause (storyboard).
+  const badge = <StageBadge name={scenario.name} className="hidden lg:inline-flex" />;
 
   return (
     <div ref={rootRef} data-stage="" data-stage-still={still ? "" : undefined} data-paused={paused ? "" : undefined} className={cn("relative", className)}>
@@ -172,16 +176,18 @@ export function ProductStage({
           }
           bodyClassName="p-1.5"
         >
-          <div aria-hidden="true" key={swapKey} className="stage-swap grid h-full min-h-0 grid-cols-[256px_minmax(0,1fr)] gap-1.5 lg:grid-cols-[300px_minmax(0,1fr)]">
-            <AgentPane frame={frame} scenario={scenario} typed={typed} illustrative={HOME_STAGE_COPY.illustrativeError} />
-            <CanvasPane frame={frame} scenario={scenario} tokens={tokens} illustrative={HOME_STAGE_COPY.illustrativeError} urlRef={urlRef} />
+          <div aria-hidden="true" key={phaseKey} className="stage-fade h-full min-h-0">
+            <div key={swapKey} className="stage-swap grid h-full min-h-0 grid-cols-[256px_minmax(0,1fr)] gap-1.5 lg:grid-cols-[300px_minmax(0,1fr)]">
+              <AgentPane frame={frame} scenario={scenario} typed={typed} illustrative={HOME_STAGE_COPY.illustrativeError} />
+              <CanvasPane frame={frame} scenario={scenario} tokens={tokens} illustrative={HOME_STAGE_COPY.illustrativeError} urlRef={urlRef} />
+            </div>
           </div>
         </AppWindow>
         <DepthCards frame={frame} scenario={scenario} />
       </div>
 
       {/* Phones: one pane that follows the chapter */}
-      <div className="relative md:hidden">
+      <div key={phaseKey} className="stage-fade relative md:hidden">
         <PhoneStage
           frame={frame}
           scenario={scenario}

@@ -15,7 +15,7 @@ const PAY_ICONS = { rupee: IndianRupee, phone: Smartphone, card: CreditCard } as
 export function PricingTeaser() {
   const ids = [PLANS.free.id, PLANS.pro.id, PLANS.team.id];
   return (
-    <section aria-labelledby="pricing-title" className="relative py-16 sm:py-24 lg:py-28 [contain-intrinsic-size:auto_1100px] [content-visibility:auto]">
+    <section aria-labelledby="pricing-title" className="relative py-16 sm:py-24 lg:py-28">
       <div className="container-x">
         <div data-reveal className="mx-auto max-w-4xl text-center">
           <p className="text-label mb-5 text-signal-ink">{HOME_PRICING.index}</p>
@@ -49,7 +49,7 @@ export function PricingTeaser() {
                   <span className="min-w-0 flex-1">
                     <span className="flex items-center gap-2">
                       <span className="font-display text-lg font-semibold tracking-[-0.02em]">{p.name}</span>
-                      {p.highlight ? <span className="rounded-full bg-signal/12 px-1.5 py-px text-[10.5px] font-medium text-signal-ink">Recommended</span> : null}
+                      {p.highlight ? <span className="rounded-full border border-signal/30 px-1.5 py-px text-[10.5px] font-medium text-signal-ink">Recommended</span> : null}
                     </span>
                     <span className="mt-0.5 block text-xs text-muted-foreground">{p.tagline}</span>
                   </span>
@@ -79,7 +79,7 @@ export function PricingTeaser() {
 /** H8 FAQ: a sticky heading beside the accordion (which also emits the FAQPage JSON-LD). */
 export function FaqSection() {
   return (
-    <section aria-labelledby="faq-title" className="relative py-16 sm:py-24 lg:py-28 [contain-intrinsic-size:auto_800px] [content-visibility:auto]">
+    <section aria-labelledby="faq-title" className="relative py-16 sm:py-24 lg:py-28">
       <div className="container-x grid gap-10 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] lg:gap-16">
         <div className="lg:sticky lg:top-28 lg:self-start" data-reveal>
           <p className="text-label mb-5 text-signal-ink">{HOME_FAQ.index}</p>

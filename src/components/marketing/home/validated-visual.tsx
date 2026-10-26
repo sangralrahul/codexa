@@ -24,17 +24,18 @@ export function ValidatedVisual({ repairWord }: { repairWord: string }) {
   const state = (i: number): StepState => (i < doneCount ? "done" : i === doneCount && started && index >= 0 ? "active" : "pending");
   const progress = doneCount / STEPS.length;
   return (
-    <div ref={ref} aria-hidden="true" className="flex items-center gap-5">
-      <div className="relative size-[84px] shrink-0">
-        <svg viewBox="0 0 72 72" className="size-full -rotate-90">
-          <circle cx="36" cy="36" r={R} fill="none" stroke="var(--border)" strokeWidth="5" />
+    <div ref={ref} aria-hidden="true" className="flex items-center gap-6">
+      <div className="relative size-[116px] shrink-0">
+        <span className={cn("absolute inset-[16%] rounded-full transition-[background-color,box-shadow] duration-(--dur-5)", progress === 1 ? "bg-success/[0.07] shadow-[0_0_40px_-6px_color-mix(in_oklab,var(--success)_45%,transparent)]" : "bg-transparent")} />
+        <svg viewBox="0 0 72 72" className="relative size-full -rotate-90">
+          <circle cx="36" cy="36" r={R} fill="none" stroke="var(--border)" strokeWidth="4" />
           <circle
             cx="36"
             cy="36"
             r={R}
             fill="none"
             stroke={progress === 1 ? "var(--success)" : "var(--signal)"}
-            strokeWidth="5"
+            strokeWidth="4"
             strokeLinecap="round"
             strokeDasharray={C}
             strokeDashoffset={C * (1 - progress)}
@@ -42,7 +43,7 @@ export function ValidatedVisual({ repairWord }: { repairWord: string }) {
           />
         </svg>
         <span className={cn("absolute inset-0 flex flex-col items-center justify-center text-center leading-none transition-colors", progress === 1 ? "text-success" : "text-foreground")}>
-          <span className="font-display text-[22px] font-semibold tabular-nums">
+          <span className="font-display text-[28px] font-semibold tracking-[-0.02em] tabular-nums">
             {doneCount}/{STEPS.length}
           </span>
           <span className="mt-1 font-mono text-[9.5px] uppercase tracking-[0.1em] text-muted-foreground">checks</span>

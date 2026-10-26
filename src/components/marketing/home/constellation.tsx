@@ -12,7 +12,7 @@ import type { ConstellationNode } from "./data";
 /** Inner orbit: AI, Git and hosting; outer orbit: data, payments and email. */
 const INNER = new Set(["openai", "anthropic", "github", "vercel"]);
 const SIZE = 600;
-const RADII = { inner: 158, outer: 266 } as const;
+const RADII = { inner: 172, outer: 284 } as const;
 
 function NodeCard({ node, id }: { node: ConstellationNode; id: string }) {
   return (
@@ -43,7 +43,7 @@ function Orbit({ nodes, radius, reverse, idPrefix }: { nodes: ConstellationNode[
       <svg aria-hidden="true" viewBox={`0 0 ${SIZE} ${SIZE}`} className="absolute inset-0 size-full overflow-visible">
         {points.map((p, i) => (
           <g key={p.n.id}>
-            <line x1={c} y1={c} x2={p.x} y2={p.y} stroke="var(--border)" strokeWidth="1" />
+            <line x1={c} y1={c} x2={p.x} y2={p.y} stroke="var(--border-strong)" strokeOpacity="0.75" strokeWidth="1" strokeDasharray="1 5" strokeLinecap="round" />
             <line
               x1={c}
               y1={c}
@@ -63,19 +63,18 @@ function Orbit({ nodes, radius, reverse, idPrefix }: { nodes: ConstellationNode[
         const cardId = `${idPrefix}-${p.n.id}`;
         return (
           <div key={p.n.id} className="constellation__slot absolute" style={{ left: p.x, top: p.y }}>
-            <div className="constellation__upright -translate-x-1/2 -translate-y-1/2">
+            <div className="constellation__upright relative -translate-x-1/2 -translate-y-1/2">
               <Link
                 href={p.n.href}
-                aria-label={`${p.n.name} integration`}
                 aria-describedby={cardId}
                 className="constellation__node group/node relative flex flex-col items-center gap-1.5 rounded-2xl outline-offset-4"
               >
-                <span className="relative flex size-[52px] items-center justify-center rounded-2xl border border-border-strong bg-card text-foreground shadow-md transition-[transform,border-color,box-shadow] duration-(--dur-3) ease-snap group-hover/node:scale-110 group-hover/node:border-signal/50 group-hover/node:shadow-[var(--glow-signal)] group-focus-visible/node:scale-110">
+                <span aria-hidden="true" className="relative flex size-[52px] items-center justify-center rounded-2xl border border-border-strong bg-card text-foreground shadow-md transition-[transform,border-color,box-shadow] duration-(--dur-3) ease-snap group-hover/node:scale-110 group-hover/node:border-signal/50 group-hover/node:shadow-[var(--glow-signal)] group-focus-visible/node:scale-110">
                   <BrandMark id={p.n.id} className="size-6" />
                 </span>
                 <span className="whitespace-nowrap text-[11.5px] font-medium text-muted-foreground transition-colors group-hover/node:text-foreground">{p.n.name}</span>
-                <NodeCard node={p.n} id={cardId} />
               </Link>
+              <NodeCard node={p.n} id={cardId} />
             </div>
           </div>
         );
@@ -108,8 +107,10 @@ export function Constellation({ nodes }: { nodes: ConstellationNode[] }) {
               </radialGradient>
             </defs>
             <circle cx={SIZE / 2} cy={SIZE / 2} r={RADII.outer + 40} fill="url(#constellation-glow)" />
-            <circle cx={SIZE / 2} cy={SIZE / 2} r={RADII.inner} fill="none" stroke="var(--border-strong)" strokeDasharray="2 6" />
-            <circle cx={SIZE / 2} cy={SIZE / 2} r={RADII.outer} fill="none" stroke="var(--border)" strokeDasharray="2 6" />
+            <circle cx={SIZE / 2} cy={SIZE / 2} r={RADII.inner} fill="none" stroke="var(--border-strong)" />
+            <circle cx={SIZE / 2} cy={SIZE / 2} r={RADII.outer} fill="none" stroke="var(--border-strong)" strokeOpacity="0.7" />
+            <circle cx={SIZE / 2} cy={SIZE / 2} r={(RADII.inner + RADII.outer) / 2} fill="none" stroke="var(--border)" strokeDasharray="2 7" />
+            <circle cx={SIZE / 2} cy={SIZE / 2} r={RADII.inner - 56} fill="none" stroke="var(--border)" strokeDasharray="2 7" />
           </svg>
           <Orbit nodes={outer} radius={RADII.outer} reverse idPrefix="cst-o" />
           <Orbit nodes={inner} radius={RADII.inner} idPrefix="cst-i" />

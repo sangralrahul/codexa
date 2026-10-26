@@ -71,7 +71,7 @@ function StoryboardBody() {
       <div
         ref={horizonRef}
         aria-hidden="true"
-        className="pointer-events-none absolute left-1/2 top-[-400px] -z-10 h-[560px] w-[min(1600px,170vw)] -translate-x-1/2 [mask-image:linear-gradient(to_bottom,black_55%,transparent_96%)]"
+        className="home-horizon pointer-events-none absolute left-1/2 top-[-400px] -z-10 h-[560px] w-[min(1600px,170vw)] -translate-x-1/2 [mask-image:linear-gradient(to_bottom,black_55%,transparent_96%)]"
       >
         <Horizon reactive className="bottom-0" />
       </div>
@@ -83,7 +83,8 @@ function StoryboardBody() {
             scenario={scenario}
             tokens={tokens}
             typed={typed}
-            swapKey={`${scenario.id}`}
+            swapKey={scenario.id}
+            phaseKey={clock.poster ? "poster" : "replay"}
             still={still}
             paused={auto.paused}
             className="md:h-[clamp(500px,calc(100svh-260px),740px)]"
@@ -145,7 +146,7 @@ function StoryboardBody() {
           <div className="flex min-w-0 flex-col gap-3 lg:items-end lg:text-right">
             <div className="flex flex-wrap items-center gap-2 lg:justify-end">
               <PauseButton paused={auto.paused} onToggle={() => auto.setPaused((p) => !p)} label="Pause the build replay" showLabel />
-              <span className="md:hidden">
+              <span className="lg:hidden">
                 <StageBadge name={scenario.name} />
               </span>
               {atEnd ? (

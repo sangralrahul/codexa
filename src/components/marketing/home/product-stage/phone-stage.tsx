@@ -76,6 +76,24 @@ export function PhoneStage({
       <div aria-hidden="true" className="relative min-h-0 flex-1 overflow-hidden">
         {shown === "chat" ? (
           <div key="chat" className="stage-swap absolute inset-0 flex flex-col justify-end gap-2.5 p-3 [mask-image:linear-gradient(to_bottom,transparent,black_40px)]">
+            {!frame.working && !frame.finished ? (
+              <div className="mb-auto flex flex-col items-center gap-3 pt-8 text-center">
+                <LogoMark size={26} />
+                <p className="font-display text-[21px] font-semibold leading-tight tracking-[-0.02em] [font-stretch:104%]">
+                  What should we <span className="text-dim">build</span> next?
+                </p>
+                <div className="mt-1 flex w-full max-w-[17rem] items-center gap-2.5 rounded-[12px] border border-border bg-card p-1.5 text-left shadow-sm">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={`/templates/${scenario.id}.webp`} alt="" width={72} height={45} loading="lazy" decoding="async" className="h-[45px] w-[72px] shrink-0 rounded-[7px] bg-white object-cover object-left-top shadow-[0_0_0_1px_var(--border)]" />
+                  <span className="min-w-0">
+                    <span className="block truncate text-[12.5px] font-medium">{scenario.name}</span>
+                    <span className="block text-[11px] text-muted-foreground">
+                      Starter · {scenario.fileCount} files
+                    </span>
+                  </span>
+                </div>
+              </div>
+            ) : null}
             <div className="ml-8 rounded-2xl rounded-tr-md bg-muted px-3 py-2 text-[12.5px] leading-relaxed shadow-[inset_0_0_0_1px_var(--border)]">
               {frame.sent ? scenario.prompt : typed || "…"}
               {!frame.sent && typed.length < scenario.prompt.length ? <span className="caret" /> : null}

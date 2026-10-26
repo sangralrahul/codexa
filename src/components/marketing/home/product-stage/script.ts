@@ -8,6 +8,9 @@ import type { Scenario, StageTools } from "../types";
  * Pure module (no React), shared by the desktop window and the phone layout.
  */
 
+/** Lines of the main file the stage shows (scenarios.ts tokenises the first 16). */
+const CODE_LINES = 16;
+
 const CHAPTER_EVENTS = {
   describe: [
     ["d0", 0],
@@ -29,7 +32,7 @@ const CHAPTER_EVENTS = {
     ["g0", 0],
     ["gA", 600],
     ["gB", 1200],
-    ...Array.from({ length: 16 }, (_, i) => [`gL${i + 1}`, 1270 + i * 70] as const),
+    ...Array.from({ length: CODE_LINES }, (_, i) => [`gL${i + 1}`, 1270 + i * 70] as const),
     ["gMain", 2500],
     ["gSum", 2900],
     ["gEnd", 3400],
@@ -129,12 +132,14 @@ export type StageFrame = {
   activeTab: string | null;
   /** Path being written while the editor shows a skeleton. */
   writing: string | null;
+  /** Visible lines of the main file (all of them unless it is being rewritten). */
   revealed: number;
   streaming: boolean;
   errorLine: number | null;
   fixedLine: number | null;
   terminal: TerminalLine[];
   terminalOpen: boolean;
+  /** Paths the agent has written so far (explorer flash, tab badges). */
   explorerFresh: string[];
   boot: { container: RowState; server: RowState } | null;
   previewShown: boolean;
@@ -215,19 +220,21 @@ export function frameAt(index: number, s: Scenario, tools: StageTools, maxRepair
   if (at("rBoot")) status = { label: "Preview running", tone: "ok" };
   if (at("sLand")) status = { label: "Live", tone: "live" };
 
-  // --- Editor
-  const tabs: string[] = [];
+  // --- Editor: the project starts as the starter, so its main file is open from the first frame.
+  // Each write opens its own tab; then the main file is rewritten line by line.
+  const written: string[] = [];
   writes.slice(0, 3).forEach((w, i) => {
-    if (at(writeCues[i + offset]) && !tabs.includes(w.path)) tabs.push(w.path);
+    if (at(writeCues[i + offset]) && !written.includes(w.path)) written.push(w.path);
   });
+  const tabs: string[] = [main, ...written.filter((p) => p !== main)];
   let revealed = 0;
-  for (let i = 1; i <= 16; i++) if (at(`gL${i}` as CueName)) revealed = i;
+  for (let i = 1; i <= CODE_LINES; i++) if (at(`gL${i}` as CueName)) revealed = i;
   const mainOpen = at("gB");
   // Three write slots (g0→gA, gA→gB, gB→gMain); with two writes the first slot is the agent preparing.
   const slotOffset = 3 - Math.min(3, writes.length);
   const slot = at("gB") ? 2 : at("gA") ? 1 : at("g0") ? 0 : -1;
   const writing = slot >= 0 && slot < 2 && slot - slotOffset >= 0 ? writes[slot - slotOffset].path : null;
-  const activeTab = mainOpen ? main : (tabs[tabs.length - 1] ?? null);
+  const activeTab = mainOpen || !writing ? main : writing;
 
   // --- Terminal (validate)
   const terminal: TerminalLine[] = [];
@@ -260,13 +267,13 @@ export function frameAt(index: number, s: Scenario, tools: StageTools, maxRepair
     tabs,
     activeTab,
     writing,
-    revealed: mainOpen ? revealed : 0,
+    revealed: mainOpen && !at("gMain") ? revealed : CODE_LINES,
     streaming: mainOpen && !at("gMain"),
     errorLine: at("vErr") && !at("vFixed") ? errLine : null,
     fixedLine: at("vFixed") && !at("r0") ? errLine : null,
     terminal,
     terminalOpen: at("v0") && !at("r0"),
-    explorerFresh: tabs,
+    explorerFresh: written,
     boot: at("r0") && !at("rWipe") ? { container: at("rBoot") ? "done" : "active", server: at("rBoot") ? "active" : "pending" } : null,
     previewShown: at("rWipe"),
     previewWipe: at("rWipe") && !at("rEnd"),

@@ -56,6 +56,8 @@ export function TemplateRail({ ids, signedIn, className }: { ids: string[]; sign
   );
 }
 
+const FAN_OFFSETS = [[0], [-0.5, 0.5], [0, -1, 1]];
+
 /** A fanned stack of real starter screenshots (hero visual for solution pages; decorative). */
 export function TemplateFan({ ids, className, caption = true, stack = false }: { ids: string[]; className?: string; caption?: boolean; /** Stacked at rest; fans out when the enclosing .group is hovered or focused. */ stack?: boolean }) {
   const items = railTemplates(ids).filter((t) => TEMPLATE_SHOTS.has(t.id)).slice(0, 3);
@@ -64,9 +66,10 @@ export function TemplateFan({ ids, className, caption = true, stack = false }: {
     <figure className={cn("relative", className)}>
       <div aria-hidden="true" className={cn("mk-fan relative mx-auto w-full", stack ? "mk-fan--stack aspect-[16/10]" : "aspect-[16/10.4] max-w-[640px]")}>
         {items.map((t, i) => {
-          const k = i - (items.length - 1) / 2;
+          // The first (best-fitting) starter sits in front, centred; the others fan out behind it.
+          const k = FAN_OFFSETS[items.length - 1][i];
           return (
-          <div key={t.id} className="mk-fan__card" style={{ "--k": k, "--a": Math.abs(k), zIndex: 3 - Math.ceil(Math.abs(k)) } as React.CSSProperties}>
+          <div key={t.id} className="mk-fan__card" style={{ "--k": k, "--a": Math.abs(k), zIndex: 3 - i } as React.CSSProperties}>
             <div className="flex h-7 items-center gap-1.5 border-b border-border bg-surface/90 px-3">
               <span className="truncate font-mono text-[10px] text-muted-foreground">{t.name}</span>
             </div>
