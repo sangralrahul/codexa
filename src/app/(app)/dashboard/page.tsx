@@ -1,6 +1,7 @@
 import Link from "next/link";
-import { ArrowRight, FolderPlus } from "lucide-react";
+import { ArrowRight, ArrowUpRight, BookOpen, Database, Globe2, MessageSquareText, Plus, Rocket } from "lucide-react";
 import { AppPage } from "@/components/app/app-shell";
+import { Backdrop, Eyebrow } from "@/components/marketing/backdrop";
 import { requireUser } from "@/lib/auth/guards";
 import { getCurrentWorkspace } from "@/lib/services/current-workspace";
 import { countProjects, listRecentProjectsForUser } from "@/lib/services/projects";
@@ -8,24 +9,28 @@ import { getWorkspaceEntitlements } from "@/lib/services/usage";
 import { capabilities } from "@/lib/env";
 import { serializeProject } from "@/app/api/v1/projects/_lib/serialize";
 import { DEFAULT_TEMPLATE_ID, listTemplateSummaries, templateCategory } from "@/components/projects/template-summaries";
-import { PromptBox } from "@/components/projects/prompt-box";
+import { PromptBox, type PromptPreset } from "@/components/projects/prompt-box";
 import { ProjectCard } from "@/components/projects/project-card";
 import { UsageCard } from "@/components/projects/usage-card";
-import { TemplateThumb } from "@/components/templates/template-thumb";
-import { buttonClasses } from "@/components/ui/button";
+import { TemplateShowcase } from "@/components/projects/template-showcase";
 import type { ProjectListItem, WorkspaceRole } from "@/lib/client/workspace/types";
 
 export const metadata = { title: "Dashboard", robots: { index: false } };
 
-function SectionHead({ id, title, href, linkLabel }: { id: string; title: string; href: string; linkLabel: string }) {
+function SectionHead({ id, title, description, href, linkLabel }: { id: string; title: string; description?: string; href?: string; linkLabel?: string }) {
   return (
-    <div className="mb-4 flex items-end justify-between gap-4">
-      <h2 id={id} className="text-[15px] font-semibold tracking-tight">
-        {title}
-      </h2>
-      <Link href={href} className="group inline-flex items-center gap-1 text-[13px] text-muted-foreground transition-colors hover:text-foreground">
-        {linkLabel} <ArrowRight className="size-3.5 transition-transform group-hover:translate-x-0.5" aria-hidden="true" />
-      </Link>
+    <div className="mb-5 flex items-end justify-between gap-4">
+      <div>
+        <h2 id={id} className="text-lg font-semibold tracking-tight">
+          {title}
+        </h2>
+        {description ? <p className="mt-0.5 text-sm text-muted-foreground">{description}</p> : null}
+      </div>
+      {href ? (
+        <Link href={href} className="group inline-flex shrink-0 items-center gap-1 text-[13px] text-muted-foreground transition-colors hover:text-foreground">
+          {linkLabel} <ArrowRight className="size-3.5 transition-transform group-hover:translate-x-0.5" aria-hidden="true" />
+        </Link>
+      ) : null}
     </div>
   );
 }
@@ -40,6 +45,13 @@ function greeting(timeZone: string) {
   }
 }
 
+const GUIDES = [
+  { href: "/docs/quickstart", title: "Quickstart", body: "From a prompt to a running preview in a few minutes.", icon: Rocket },
+  { href: "/docs/prompting", title: "Writing good prompts", body: "Patterns that get maintainable code from the agent.", icon: MessageSquareText },
+  { href: "/docs/databases", title: "Connect a database", body: "PostgreSQL or Supabase, schema browser and SQL.", icon: Database },
+  { href: "/docs/custom-domains", title: "Deploy and custom domains", body: "Publish, roll back and point your own domain.", icon: Globe2 },
+];
+
 export default async function DashboardPage() {
   const user = await requireUser("/dashboard");
   const { current, all } = await getCurrentWorkspace(user);
@@ -47,7 +59,7 @@ export default async function DashboardPage() {
   const [recent, entitlements, projectCount] = await Promise.all([
     listRecentProjectsForUser(
       all.map((w) => w.workspace.id),
-      6,
+      5,
     ),
     current ? getWorkspaceEntitlements(current.workspace) : null,
     current ? countProjects(current.workspace.id) : 0,
@@ -65,75 +77,114 @@ export default async function DashboardPage() {
       category: templateCategory(s.templateId),
     };
   });
-  const shortcuts = listTemplateSummaries().filter((t) => t.featured).slice(0, 4);
+  const templates = listTemplateSummaries();
+  const byCategory = (c: string) => templates.find((t) => t.category === c)?.id;
+  const presetDefs: (Omit<PromptPreset, "templateId"> & { templateId?: string })[] = [
+    { label: "Landing page", icon: "globe", prompt: "A landing page for a coffee subscription with pricing, FAQ and an email signup.", templateId: byCategory("landing-pages") },
+    { label: "Dashboard", icon: "dashboard", prompt: "A sales dashboard with revenue charts, a customers table and date filters.", templateId: byCategory("dashboards") },
+    { label: "AI chat app", icon: "bot", prompt: "A support chatbot with a conversation sidebar and saved chats.", templateId: byCategory("ai-tools") },
+    { label: "Online store", icon: "shop", prompt: "An online store for handmade candles with a product grid, filters and a cart.", templateId: byCategory("ecommerce") },
+    { label: "Portfolio", icon: "user", prompt: "A personal portfolio with a projects grid, about section and contact form.", templateId: byCategory("portfolios") },
+    { label: "REST API", icon: "server", prompt: "A REST API for a library: books, members and loans with validation.", templateId: templates.find((t) => t.framework === "node-express")?.id },
+  ];
+  const presets = presetDefs.filter((p): p is PromptPreset => Boolean(p.templateId));
   const canCreate = current ? current.role !== "viewer" : false;
   const firstName = (user.name || user.email.split("@")[0]).split(/\s+/)[0];
   const hello = `${user.timezone && user.timezone !== "UTC" ? greeting(user.timezone) : "Welcome back"}, ${firstName}`;
 
   return (
-    <AppPage>
-      <section aria-labelledby="dash-title" className="mx-auto max-w-3xl pb-4 pt-6 text-center sm:pt-10">
-        <p className="text-[13px] text-muted-foreground">{current ? hello : `Hi ${firstName}`}</p>
-        <h1 id="dash-title" className="mt-2 text-balance text-3xl font-semibold tracking-[-0.03em] sm:text-4xl">
-          What do you want to build?
-        </h1>
-        <div className="mt-8 text-left">
-          <PromptBox workspaceId={canCreate && current ? current.workspace.id : null} templateId={DEFAULT_TEMPLATE_ID} aiConfigured={capabilities.ai} />
-        </div>
-      </section>
+    <>
+      {/* Hero: the live silk gradient behind the composer, fading into the page. */}
+      <div className="relative isolate overflow-hidden">
+        <Backdrop className="-z-10 [mask-image:linear-gradient(to_bottom,#000_55%,transparent)]" />
+        <AppPage className="pb-14 pt-12 sm:pt-20">
+          <section aria-labelledby="dash-title" className="mx-auto max-w-3xl text-center">
+            <div data-reveal>
+              <Eyebrow>{current ? hello : `Hi ${firstName}`}</Eyebrow>
+            </div>
+            <h1 id="dash-title" data-reveal style={{ "--reveal-delay": "80ms" } as React.CSSProperties} className="mt-6 text-balance text-4xl font-semibold leading-[1.05] tracking-[-0.035em] sm:text-5xl">
+              What will you <span className="serif-accent">build</span> today?
+            </h1>
+            <p data-reveal style={{ "--reveal-delay": "140ms" } as React.CSSProperties} className="mx-auto mt-4 max-w-xl text-pretty text-muted-foreground">
+              Describe it in plain words. Codexa sets up a real project, writes the code and runs it for you.
+            </p>
+            <div data-reveal style={{ "--reveal-delay": "200ms" } as React.CSSProperties} className="mt-9 text-left">
+              <PromptBox
+                workspaceId={canCreate && current ? current.workspace.id : null}
+                templateId={DEFAULT_TEMPLATE_ID}
+                templates={templates.map((t) => ({ id: t.id, name: t.name, category: t.category, frameworkName: t.frameworkName }))}
+                presets={presets}
+                aiConfigured={capabilities.ai}
+              />
+            </div>
+          </section>
+        </AppPage>
+      </div>
 
-      <section aria-labelledby="recent-title" className="mt-14">
-        <SectionHead id="recent-title" title="Recent projects" href="/projects" linkLabel="All projects" />
-        {items.length === 0 ? (
-          <div className="flex flex-col items-center rounded-xl border border-dashed border-border-strong px-6 py-12 text-center">
-            <span className="flex size-11 items-center justify-center rounded-xl border border-border bg-surface">
-              <FolderPlus className="size-5 text-muted-foreground" aria-hidden="true" />
-            </span>
-            <p className="mt-4 text-sm font-medium">No projects yet</p>
-            <p className="mt-1 max-w-sm text-sm text-muted-foreground">Describe your idea above, or start from one of the templates below.</p>
+      <AppPage className="pt-4">
+        <section aria-labelledby="recent-title">
+          <SectionHead id="recent-title" title="Your projects" description={current ? `${projectCount} in ${current.workspace.name}` : undefined} href="/projects" linkLabel="View all" />
+          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
             {canCreate ? (
-              <Link href="/new-project" className={buttonClasses("outline", "sm", "mt-5 rounded-md")}>
-                Create a project
+              <Link
+                href="/new-project"
+                data-reveal
+                className="group flex min-h-[220px] flex-col items-center justify-center gap-3 rounded-xl border border-dashed border-border-strong text-center transition-colors hover:border-foreground/40 hover:bg-muted/30"
+              >
+                <span className="flex size-11 items-center justify-center rounded-full border border-border bg-surface transition-transform duration-300 group-hover:rotate-90 group-hover:scale-110">
+                  <Plus className="size-5" aria-hidden="true" />
+                </span>
+                <span>
+                  <span className="block text-sm font-medium">New project</span>
+                  <span className="mt-0.5 block text-xs text-muted-foreground">From a template or a description</span>
+                </span>
               </Link>
             ) : null}
-          </div>
-        ) : (
-          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-            {items.map((p) => (
-              <ProjectCard key={p.id} project={p} showWorkspace={all.length > 1} />
+            {items.map((p, i) => (
+              <div key={p.id} data-reveal style={{ "--reveal-delay": `${(i + 1) * 70}ms` } as React.CSSProperties}>
+                <ProjectCard project={p} showWorkspace={all.length > 1} />
+              </div>
             ))}
           </div>
-        )}
-      </section>
-
-      <section aria-labelledby="shortcuts-title" className="mt-14">
-        <SectionHead id="shortcuts-title" title="Start from a template" href="/dashboard/templates" linkLabel="Browse templates" />
-        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-          {shortcuts.map((t) => (
-            <Link
-              key={t.id}
-              href={`/new-project?template=${encodeURIComponent(t.id)}`}
-              className="glow-card group flex flex-col rounded-xl border border-border focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-            >
-              <div className="border-b border-border bg-surface p-3">
-                <TemplateThumb category={t.category} className="transition-transform duration-500 ease-out group-hover:scale-[1.02]" />
-              </div>
-              <div className="flex flex-1 flex-col p-4">
-                <span className="text-sm font-medium">{t.name}</span>
-                <span className="mt-1 line-clamp-2 text-xs leading-relaxed text-muted-foreground">{t.description}</span>
-                <span className="mt-3 text-[11px] text-muted-foreground">{t.frameworkName}</span>
-              </div>
-            </Link>
-          ))}
-        </div>
-      </section>
-
-      {current && entitlements ? (
-        <section aria-labelledby="usage-title" className="mt-14">
-          <SectionHead id="usage-title" title="Usage this month" href="/settings/usage" linkLabel="View usage" />
-          <UsageCard workspaceName={current.workspace.name} entitlements={entitlements} projectCount={projectCount} />
+          {items.length === 0 ? <p className="mt-4 text-sm text-muted-foreground">No projects yet. Describe an idea above or pick a template below to create your first one.</p> : null}
         </section>
-      ) : null}
-    </AppPage>
+
+        <section aria-labelledby="shortcuts-title" className="mt-16">
+          <SectionHead id="shortcuts-title" title="Start from a template" description="Runnable starters with real files. Pick one and ask the agent to change it." href="/dashboard/templates" linkLabel="All templates" />
+          <TemplateShowcase templates={templates.map((t) => ({ id: t.id, name: t.name, description: t.description, category: t.category, frameworkName: t.frameworkName }))} />
+        </section>
+
+        <div className="mt-16 grid gap-10 lg:grid-cols-[minmax(0,1.6fr)_minmax(0,1fr)]">
+          {current && entitlements ? (
+            <section aria-labelledby="usage-title" data-reveal>
+              <SectionHead id="usage-title" title="Usage this month" href="/settings/usage" linkLabel="Details" />
+              <UsageCard workspaceName={current.workspace.name} entitlements={entitlements} projectCount={projectCount} />
+            </section>
+          ) : null}
+          <section aria-labelledby="guides-title" data-reveal style={{ "--reveal-delay": "100ms" } as React.CSSProperties}>
+            <SectionHead id="guides-title" title="Learn Codexa" href="/docs" linkLabel="Docs" />
+            <ul className="divide-y divide-border overflow-hidden rounded-xl border border-border bg-card">
+              {GUIDES.map((g) => (
+                <li key={g.href}>
+                  <Link href={g.href} className="group flex items-center gap-3 px-4 py-3 transition-colors hover:bg-muted/40">
+                    <span className="flex size-8 shrink-0 items-center justify-center rounded-lg border border-border bg-surface">
+                      <g.icon className="size-4 text-muted-foreground transition-colors group-hover:text-signal" aria-hidden="true" />
+                    </span>
+                    <span className="min-w-0 flex-1">
+                      <span className="block text-sm font-medium">{g.title}</span>
+                      <span className="block truncate text-xs text-muted-foreground">{g.body}</span>
+                    </span>
+                    <ArrowUpRight className="size-4 shrink-0 text-muted-foreground transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5" aria-hidden="true" />
+                  </Link>
+                </li>
+              ))}
+            </ul>
+            <Link href="/help" className="mt-3 inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground">
+              <BookOpen className="size-3.5" aria-hidden="true" /> Help center
+            </Link>
+          </section>
+        </div>
+      </AppPage>
+    </>
   );
 }

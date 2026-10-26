@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
+import { Camera, Trash2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { api, ClientApiError } from "@/lib/client/api";
 import { Button } from "@/components/ui/button";
@@ -24,7 +25,7 @@ export function ProfileForm({ initial, timezones, locales }: { initial: ProfileV
     try {
       await api("/api/v1/account/profile", {
         method: "PATCH",
-        json: { name: values.name, timezone: values.timezone, locale: values.locale, avatarUrl: values.avatarUrl.trim() === "" ? "" : values.avatarUrl.trim() },
+        json: { name: values.name, timezone: values.timezone, locale: values.locale },
       });
       setStatus({ kind: "saved", message: "Profile saved." });
       router.refresh();
@@ -36,7 +37,44 @@ export function ProfileForm({ initial, timezones, locales }: { initial: ProfileV
     }
   }
 
-  const initials = (values.name || values.email).slice(0, 2).toUpperCase();
+  const fileRef = useRef<HTMLInputElement>(null);
+  const [photo, setPhoto] = useState<{ busy: "upload" | "remove" | null; error?: string }>({ busy: null });
+
+  async function uploadPhoto(file: File) {
+    if (file.size > 2 * 1024 * 1024) return setPhoto({ busy: null, error: "The image is larger than 2 MB." });
+    setPhoto({ busy: "upload" });
+    try {
+      const body = new FormData();
+      body.append("file", file);
+      const res = await fetch("/api/v1/account/avatar", { method: "POST", body, credentials: "same-origin" });
+      const data = (await res.json().catch(() => ({}))) as { user?: { avatarUrl: string | null }; error?: { message?: string } };
+      if (!res.ok || !data.user) throw new Error(data.error?.message ?? "Upload failed. Try another image.");
+      set("avatarUrl", data.user.avatarUrl ?? "");
+      setPhoto({ busy: null });
+      router.refresh();
+    } catch (err) {
+      setPhoto({ busy: null, error: err instanceof Error ? err.message : "Upload failed." });
+    }
+  }
+
+  async function removePhoto() {
+    setPhoto({ busy: "remove" });
+    try {
+      await api("/api/v1/account/avatar", { method: "DELETE" });
+      set("avatarUrl", "");
+      setPhoto({ busy: null });
+      router.refresh();
+    } catch {
+      setPhoto({ busy: null, error: "Could not remove the photo." });
+    }
+  }
+
+  const initials = (values.name || values.email)
+    .split(/\s+/)
+    .map((w) => w[0])
+    .join("")
+    .slice(0, 2)
+    .toUpperCase();
   return (
     <form onSubmit={onSubmit} noValidate>
       <SettingsCard
@@ -50,19 +88,57 @@ export function ProfileForm({ initial, timezones, locales }: { initial: ProfileV
           </Button>
         }
       >
-        <div className="flex items-center gap-4">
-          {values.avatarUrl ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img src={values.avatarUrl} alt="" className="size-14 rounded-full border border-border object-cover" />
-          ) : (
-            <span aria-hidden="true" className="flex size-14 items-center justify-center rounded-full bg-muted text-base font-semibold">
-              {initials}
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
+          <button
+            type="button"
+            onClick={() => fileRef.current?.click()}
+            className="group relative size-20 shrink-0 overflow-hidden rounded-full border border-border focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            aria-label="Upload a profile photo"
+          >
+            {values.avatarUrl ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img key={values.avatarUrl} src={values.avatarUrl} alt="" className="pop-in size-full object-cover" />
+            ) : (
+              <span aria-hidden="true" className="flex size-full items-center justify-center bg-gradient-to-br from-foreground to-foreground/70 text-xl font-semibold text-background">
+                {initials}
+              </span>
+            )}
+            <span aria-hidden="true" className="absolute inset-0 flex items-center justify-center bg-black/45 text-white opacity-0 transition-opacity group-hover:opacity-100">
+              {photo.busy === "upload" ? <span className="spin size-5 rounded-full border-2 border-white/40 border-t-white" /> : <Camera className="size-5" />}
             </span>
-          )}
+          </button>
           <div className="min-w-0">
             <p className="truncate text-sm font-medium">{values.email}</p>
-            <p className="text-xs text-muted-foreground">Your email address is used to sign in and cannot be changed here.</p>
+            <p className="text-xs text-muted-foreground">You sign in with this address. PNG, JPG, GIF or WebP photo, up to 2 MB.</p>
+            <div className="mt-2.5 flex flex-wrap gap-2">
+              <Button type="button" size="sm" variant="outline" loading={photo.busy === "upload"} onClick={() => fileRef.current?.click()}>
+                <Camera className="size-3.5" aria-hidden="true" /> {values.avatarUrl ? "Change photo" : "Upload photo"}
+              </Button>
+              {values.avatarUrl ? (
+                <Button type="button" size="sm" variant="ghost" loading={photo.busy === "remove"} onClick={() => void removePhoto()}>
+                  <Trash2 className="size-3.5" aria-hidden="true" /> Remove
+                </Button>
+              ) : null}
+            </div>
+            {photo.error ? (
+              <p role="alert" className="pop-in mt-2 text-xs text-danger">
+                {photo.error}
+              </p>
+            ) : null}
           </div>
+          <input
+            ref={fileRef}
+            type="file"
+            accept="image/png,image/jpeg,image/gif,image/webp"
+            className="sr-only"
+            tabIndex={-1}
+            aria-hidden="true"
+            onChange={(e) => {
+              const f = e.target.files?.[0];
+              e.target.value = "";
+              if (f) void uploadPhoto(f);
+            }}
+          />
         </div>
         <Field label="Name" htmlFor="name" error={errors.name}>
           <Input id="name" name="name" value={values.name} onChange={(e) => set("name", e.target.value)} required maxLength={80} autoComplete="name" aria-invalid={Boolean(errors.name)} />
@@ -88,9 +164,6 @@ export function ProfileForm({ initial, timezones, locales }: { initial: ProfileV
             </Select>
           </Field>
         </div>
-        <Field label="Avatar URL" htmlFor="avatarUrl" error={errors.avatarUrl} hint="An https:// link to an image. Leave empty to use your initials.">
-          <Input id="avatarUrl" name="avatarUrl" type="url" placeholder="https://" value={values.avatarUrl} onChange={(e) => set("avatarUrl", e.target.value)} aria-invalid={Boolean(errors.avatarUrl)} />
-        </Field>
         {status.kind === "error" ? <Alert variant="danger">{status.message}</Alert> : null}
       </SettingsCard>
     </form>

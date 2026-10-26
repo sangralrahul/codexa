@@ -34,3 +34,16 @@ export async function deletePrefix(prefix: string) {
 }
 
 export const snapshotKey = (projectId: string, snapshotId: string) => `snapshots/${projectId}/${snapshotId}.json`;
+
+export async function putBytes(key: string, bytes: ArrayBuffer | Uint8Array, contentType: string) {
+  await requireBinding("STORAGE").put(key, bytes, { httpMetadata: { contentType } });
+}
+
+export async function getObject(key: string) {
+  return requireBinding("STORAGE").get(key);
+}
+
+/** Uploaded profile photos: one random file name per upload, so URLs can be cached forever. */
+export const avatarPrefix = (userId: string) => `avatars/${userId}/`;
+export const avatarKey = (userId: string, file: string) => `${avatarPrefix(userId)}${file}`;
+export const avatarPath = (userId: string, file: string) => `/api/v1/avatars/${userId}/${file}`;

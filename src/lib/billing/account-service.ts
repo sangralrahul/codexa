@@ -12,6 +12,7 @@ import { hashPassword, verifyPassword } from "@/lib/crypto";
 import { validatePassword } from "@/lib/auth/flows";
 import { toSafeUser } from "@/lib/auth/session";
 import { listUserWorkspaces } from "@/lib/services/workspaces";
+import { avatarPrefix, deletePrefix } from "@/lib/storage";
 
 export const LOCALES = [
   { value: "en", label: "English" },
@@ -171,6 +172,8 @@ export async function deleteAccount(user: User, password: string, ip?: string | 
       .where(eq(users.id, user.id)),
   );
   await runBatch(statements);
+  // Uploaded profile photos are personal data: remove them with the account (best effort; the row no longer points at them).
+  await deletePrefix(avatarPrefix(user.id)).catch(() => {});
   await audit({ actorId: user.id, action: "account.deleted", targetType: "user", targetId: user.id, metadata: { transferredWorkspaces: transferred, deletedWorkspaces: deleted }, ip });
   return { transferred, deleted };
 }

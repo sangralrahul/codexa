@@ -12,8 +12,8 @@ export function Separator({ className, orientation = "horizontal" }: { className
   );
 }
 
-export function Skeleton({ className }: { className?: string }) {
-  return <div aria-hidden="true" className={cn("animate-pulse rounded-md bg-muted", className)} />;
+export function Skeleton({ className, style }: { className?: string; style?: React.CSSProperties }) {
+  return <div aria-hidden="true" style={style} className={cn("skeleton rounded-md bg-muted", className)} />;
 }
 
 type AlertVariant = "info" | "success" | "warning" | "danger";

@@ -477,6 +477,18 @@ input:is([type="checkbox"], [type="radio"]):checked { animation: check-pop 260ms
 /* Mobile navigation drawer slides in from the left. */
 @keyframes drawer-in { from { transform: translateX(-100%); } }
 
+/* Loading placeholders: a soft light sweeps across. */
+.skeleton { position: relative; overflow: hidden; }
+.skeleton::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  transform: translateX(-100%);
+  background: linear-gradient(90deg, transparent, color-mix(in oklab, var(--foreground) 6%, transparent), transparent);
+  animation: skeleton-sweep 1.4s ease-in-out infinite;
+}
+@keyframes skeleton-sweep { to { transform: translateX(100%); } }
+
 /* Accordions (native <details>) open and close smoothly where the browser supports it. */
 :root { interpolate-size: allow-keywords; }
 details::details-content { block-size: 0; overflow: hidden; transition: block-size 320ms cubic-bezier(0.2, 0.8, 0.2, 1), content-visibility 320ms allow-discrete; }
@@ -510,7 +522,7 @@ details[open]::details-content { block-size: auto; }
 @media (prefers-reduced-motion: reduce) {
   .js [data-reveal] { opacity: 1; transform: none; }
   .tilt-in { transform: none; }
-  .page-enter, .value-flip, .nav-progress[data-state], input:checked, .nav-item::before { animation: none; }
+  .page-enter, .value-flip, .nav-progress[data-state], input:checked, .nav-item::before, .skeleton::after { animation: none; }
   details::details-content, .segmented__pill { transition: none; }
 }
 }

@@ -9,6 +9,7 @@ import { LogoMark } from "@/components/logo";
 import { Alert } from "@/components/ui/misc";
 import { buttonClasses } from "@/components/ui/button";
 import { ResendVerificationButton } from "@/components/auth/forms";
+import { Backdrop } from "@/components/marketing/backdrop";
 import { SearchTrigger } from "@/components/search/search-dialog";
 import { cn } from "@/lib/utils";
 
@@ -76,8 +77,10 @@ export function AppShell({
           </div>
         </div>
       ) : null}
-      <div className="flex min-w-0 flex-1 flex-col">
-        <header className="sticky top-0 z-40 flex h-14 items-center gap-3 border-b border-border bg-background/85 px-4 backdrop-blur-md sm:px-6">
+      <div className="relative isolate flex min-w-0 flex-1 flex-col">
+        {/* Ambient live gradient at the top of app pages (the dashboard draws its own, stronger one). */}
+        {pathname !== "/dashboard" ? <Backdrop className="-z-10 bottom-auto h-[420px] opacity-60 [mask-image:linear-gradient(to_bottom,#000_20%,transparent)]" /> : null}
+        <header className="sticky top-0 z-40 flex h-14 items-center gap-3 border-b border-border/70 bg-background/70 px-4 backdrop-blur-xl sm:px-6">
           <button type="button" onClick={() => setOpen(true)} className="-ml-1 rounded-md p-2 hover:bg-muted lg:hidden" aria-label="Open navigation">
             <Menu className="size-5" />
           </button>
@@ -118,7 +121,7 @@ export function AppShell({
           </div>
         </header>
         {!emailVerified ? (
-          <div className="border-b border-border bg-warning/[0.06]">
+          <div className="border-b border-border/70 bg-warning/[0.06] backdrop-blur-sm">
             <div className="flex flex-wrap items-center gap-x-3 gap-y-1 px-4 py-2 text-[13px] sm:px-6">
               <Mail className="size-4 shrink-0 text-warning" aria-hidden="true" />
               <span className="min-w-0 flex-1">

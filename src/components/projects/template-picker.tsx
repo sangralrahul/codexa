@@ -5,7 +5,6 @@ import { Check, Zap } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { TemplateSummary } from "@/lib/client/workspace/types";
 import { Badge } from "@/components/ui/badge";
-import { Select } from "@/components/ui/input";
 import { TemplateThumb } from "@/components/templates/template-thumb";
 
 const CATEGORY_NAMES: Record<string, string> = {
@@ -22,40 +21,41 @@ const CATEGORY_NAMES: Record<string, string> = {
   "mobile-first": "Mobile-first",
 };
 
-/** Radio-group style template chooser grouped by category (or framework). */
+/** Radio-group template chooser with category filter chips. */
 export function TemplatePicker({ templates, value, onChange, compact }: { templates: TemplateSummary[]; value: string; onChange: (id: string) => void; compact?: boolean }) {
-  const [groupBy, setGroupBy] = useState<"category" | "framework">("category");
-  const groups = useMemo(() => {
-    const map = new Map<string, TemplateSummary[]>();
-    for (const t of templates) {
-      const key = groupBy === "category" ? (CATEGORY_NAMES[t.category] ?? t.category) : t.frameworkName;
-      (map.get(key) ?? map.set(key, []).get(key)!).push(t);
-    }
-    return [...map.entries()];
-  }, [templates, groupBy]);
+  const [category, setCategory] = useState("all");
+  const categories = useMemo(() => {
+    const counts = new Map<string, number>();
+    for (const t of templates) counts.set(t.category, (counts.get(t.category) ?? 0) + 1);
+    return [...counts.entries()];
+  }, [templates]);
+  const groups: [string, TemplateSummary[]][] = [[category, category === "all" ? templates : templates.filter((t) => t.category === category)]];
 
   return (
     <div>
-      {!compact ? (
-        <div className="mb-3 flex items-center justify-end gap-2 text-xs">
-          <label htmlFor="template-group" className="text-muted-foreground">
-            Group by
-          </label>
-          <Select id="template-group" value={groupBy} onChange={(e) => setGroupBy(e.target.value as "category" | "framework")} className="h-8 w-32 text-xs">
-            <option value="category">Category</option>
-            <option value="framework">Framework</option>
-          </Select>
-        </div>
-      ) : null}
+      <div className="-mx-1 mb-4 flex gap-1.5 overflow-x-auto px-1 pb-1 scrollbar-thin" role="tablist" aria-label="Template categories">
+        {[["all", templates.length] as [string, number], ...categories].map(([c, n]) => (
+          <button
+            key={c}
+            type="button"
+            role="tab"
+            aria-selected={category === c}
+            onClick={() => setCategory(c)}
+            className={cn(
+              "inline-flex shrink-0 items-center gap-1.5 rounded-full border px-3 py-1 text-xs transition-colors",
+              category === c ? "border-foreground bg-foreground text-background" : "border-border text-muted-foreground hover:border-border-strong hover:text-foreground",
+            )}
+          >
+            {c === "all" ? "All" : (CATEGORY_NAMES[c] ?? c)}
+            <span className="tabular-nums opacity-60">{n}</span>
+          </button>
+        ))}
+      </div>
       <div role="radiogroup" aria-label="Template" className="space-y-7">
         {groups.map(([group, list]) => (
           <div key={group}>
-            <h3 className="mb-2.5 flex items-center gap-2 text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
-              {group}
-              <span className="tabular-nums text-muted-foreground/70">{list.length}</span>
-            </h3>
             <div className={cn("grid gap-3", compact ? "sm:grid-cols-2" : "sm:grid-cols-2 xl:grid-cols-3")}>
-              {list.map((t) => {
+              {list.map((t, i) => {
                 const selected = t.id === value;
                 return (
                   <button
@@ -64,8 +64,9 @@ export function TemplatePicker({ templates, value, onChange, compact }: { templa
                     role="radio"
                     aria-checked={selected}
                     onClick={() => onChange(t.id)}
+                    style={{ animationDelay: `${Math.min(i, 8) * 40}ms` }}
                     className={cn(
-                      "group relative flex flex-col items-start rounded-xl border bg-card p-2.5 text-left transition-[border-color,box-shadow,transform] duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring active:scale-[0.985]",
+                      "pop-in group relative flex flex-col items-start rounded-xl border bg-card p-2.5 text-left transition-[border-color,box-shadow,transform] duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring active:scale-[0.985]",
                       selected ? "border-foreground ring-2 ring-foreground/80" : "border-border hover:border-border-strong",
                     )}
                   >
