@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { AlertTriangle, CheckCircle2, ChevronRight, FileMinus2, FilePen, FilePlus2, ListChecks, Loader2, Wrench, XCircle } from "lucide-react";
+import { AlertTriangle, CheckCircle2, ChevronRight, FileMinus2, FilePen, FilePlus2, FileSearch, FolderTree, ListChecks, Loader2, Search, TerminalSquare, Wrench, XCircle, type LucideIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { emit } from "@/lib/client/events";
 import { summarizeToolInput } from "@/lib/ai/tools/schemas";
@@ -28,8 +28,8 @@ export function stageLabel(stage: string) {
 /** Plan steps as a checklist. Steps are ticked once the run has finished successfully. */
 export function PlanPart({ steps, done }: { steps: string[]; done: boolean }) {
   return (
-    <section className="rounded-lg border border-border bg-card p-3" aria-label="Plan">
-      <h4 className="mb-2 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+    <section className="rounded-lg border border-border bg-surface p-3" aria-label="Plan">
+      <h4 className="mb-2 flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">
         <ListChecks className="size-3.5" aria-hidden="true" /> Plan
       </h4>
       <ol className="space-y-1.5">
@@ -66,7 +66,7 @@ export function StageTimeline({ stages, running }: { stages: { stage: string; de
               aria-hidden="true"
               className={cn(
                 "absolute -left-[17px] top-1 size-2 rounded-full",
-                failed ? "bg-danger" : cancelled ? "bg-warning" : last && running ? "bg-primary animate-pulse" : "bg-success",
+                failed ? "bg-danger" : cancelled ? "bg-warning" : last && running ? "bg-signal animate-pulse" : "bg-success",
               )}
             />
             <span className={cn("font-medium", failed && "text-danger", cancelled && "text-warning")}>{stageLabel(s.stage)}</span>
@@ -79,36 +79,47 @@ export function StageTimeline({ stages, running }: { stages: { stage: string; de
   );
 }
 
+/** Icon for a tool by name, so a run reads as a timeline of actions. */
+function toolIcon(name: string): LucideIcon {
+  if (/^(read|get|open)_?file/.test(name)) return FileSearch;
+  if (/^(write|edit|update|create)_?file/.test(name)) return FilePen;
+  if (/^(delete|remove)_?file/.test(name)) return FileMinus2;
+  if (/^(list|tree)/.test(name)) return FolderTree;
+  if (/search|grep|find/.test(name)) return Search;
+  if (/run|command|exec|typecheck|build|test/.test(name)) return TerminalSquare;
+  return Wrench;
+}
+
 /** A tool call and its result, collapsed by default. */
 export function ToolCallRow({ call, result }: { call: Extract<MessagePart, { type: "tool_call" }>; result?: Extract<MessagePart, { type: "tool_result" }> }) {
   const summary = summarizeToolInput(call.name, call.input);
   const pending = !result;
   return (
-    <details className="group rounded-md border border-border bg-background text-xs">
-      <summary className="flex cursor-pointer list-none items-center gap-2 px-2 py-1.5 focus-visible:outline-2 focus-visible:outline-ring [&::-webkit-details-marker]:hidden">
-        <ChevronRight className="size-3 shrink-0 text-muted-foreground transition-transform group-open:rotate-90" aria-hidden="true" />
-        <Wrench className="size-3 shrink-0 text-muted-foreground" aria-hidden="true" />
-        <code className="font-medium">{call.name}</code>
-        <span className="min-w-0 truncate text-muted-foreground">{summary}</span>
-        <span className="ml-auto shrink-0">
+    <details className="group rounded-md text-xs">
+      <summary className="flex h-7 cursor-pointer list-none items-center gap-2 rounded-md px-2 transition-colors hover:bg-muted focus-visible:outline-2 focus-visible:outline-ring [&::-webkit-details-marker]:hidden">
+        {React.createElement(toolIcon(call.name), { className: "size-3.5 shrink-0 text-muted-foreground", "aria-hidden": true })}
+        <code className="shrink-0 font-mono text-[11.5px] font-medium">{call.name}</code>
+        <span className="min-w-0 truncate font-mono text-[11px] text-muted-foreground">{summary}</span>
+        <span className="ml-auto flex shrink-0 items-center gap-1.5">
           {pending ? (
-            <Loader2 className="size-3 animate-spin text-muted-foreground" aria-label="Running" />
+            <Loader2 className="size-3.5 animate-spin text-muted-foreground" aria-label="Running" />
           ) : result.isError ? (
-            <XCircle className="size-3 text-danger" aria-label="Failed" />
+            <XCircle className="size-3.5 text-danger" aria-label="Failed" />
           ) : (
-            <CheckCircle2 className="size-3 text-success" aria-label="Succeeded" />
+            <CheckCircle2 className="size-3.5 text-success" aria-label="Succeeded" />
           )}
+          <ChevronRight className="size-3 text-muted-foreground transition-transform group-open:rotate-90" aria-hidden="true" />
         </span>
       </summary>
-      <div className="space-y-2 border-t border-border px-2 py-2">
+      <div className="mx-2 mb-1.5 mt-1 space-y-2 border-l border-border pl-3">
         <div>
-          <p className="mb-1 font-medium text-muted-foreground">Input</p>
-          <pre className="max-h-48 overflow-auto rounded bg-muted p-2 font-mono text-[11px] leading-snug">{formatInput(call.input)}</pre>
+          <p className="mb-1 text-[11px] font-medium text-muted-foreground">Input</p>
+          <pre className="max-h-48 overflow-auto rounded-md bg-muted p-2 font-mono text-[11px] leading-snug">{formatInput(call.input)}</pre>
         </div>
         {result ? (
           <div>
-            <p className="mb-1 font-medium text-muted-foreground">{result.isError ? "Error" : "Output"}</p>
-            <pre className={cn("max-h-48 overflow-auto rounded p-2 font-mono text-[11px] leading-snug", result.isError ? "bg-danger/5 text-danger" : "bg-muted")}>{result.output}</pre>
+            <p className="mb-1 text-[11px] font-medium text-muted-foreground">{result.isError ? "Error" : "Output"}</p>
+            <pre className={cn("max-h-48 overflow-auto rounded-md p-2 font-mono text-[11px] leading-snug", result.isError ? "bg-danger/5 text-danger" : "bg-muted")}>{result.output}</pre>
           </div>
         ) : null}
       </div>
@@ -135,7 +146,7 @@ export function FileChangeChip({ path, action, summary }: { path: string; action
       onClick={() => emit("codexa:open-file", { path })}
       disabled={action === "delete"}
       title={action === "delete" ? `${label} ${path}` : `Open ${path}`}
-      className="inline-flex max-w-full items-center gap-1 rounded-full border border-border bg-card px-2 py-0.5 font-mono text-[11px] hover:bg-muted focus-visible:outline-2 focus-visible:outline-ring disabled:cursor-default disabled:opacity-70"
+      className="inline-flex max-w-full items-center gap-1.5 rounded-md border border-border bg-background px-2 py-1 font-mono text-[11px] transition-colors hover:border-border-strong hover:bg-muted focus-visible:outline-2 focus-visible:outline-ring disabled:cursor-default disabled:opacity-70"
     >
       <Icon className={cn("size-3 shrink-0", tone)} aria-hidden="true" />
       <span className="sr-only">{label} </span>
@@ -147,7 +158,7 @@ export function FileChangeChip({ path, action, summary }: { path: string; action
 
 export function ErrorPart({ message }: { message: string }) {
   return (
-    <div role="alert" className="flex items-start gap-2 rounded-md border border-danger/40 bg-danger/5 p-2 text-xs text-foreground">
+    <div role="alert" className="flex items-start gap-2 rounded-lg border border-danger/40 bg-danger/5 p-2.5 text-xs text-foreground">
       <AlertTriangle className="mt-0.5 size-3.5 shrink-0 text-danger" aria-hidden="true" />
       <span className="whitespace-pre-wrap break-words">{message}</span>
     </div>
@@ -170,6 +181,16 @@ export function AssistantParts({ parts, status, streaming }: { parts: MessagePar
   const blocks: React.ReactNode[] = [];
   let stages: { stage: string; detail?: string }[] = [];
   let files: Extract<MessagePart, { type: "file_change" }>[] = [];
+  let tools: React.ReactNode[] = [];
+  const flushTools = (key: string) => {
+    if (tools.length)
+      blocks.push(
+        <div key={key} className="rounded-lg border border-border bg-surface/60 p-1" aria-label="Agent actions">
+          {tools}
+        </div>,
+      );
+    tools = [];
+  };
   const flushStages = (key: string) => {
     if (stages.length) blocks.push(<StageTimeline key={key} stages={stages} running={false} />);
     stages = [];
@@ -187,6 +208,14 @@ export function AssistantParts({ parts, status, streaming }: { parts: MessagePar
   };
 
   parts.forEach((p, i) => {
+    if (p.type === "tool_result") return; // rendered inside its tool call row
+    if (p.type === "tool_call") {
+      flushStages(`s${i}`);
+      flushFiles(`f${i}`);
+      tools.push(<ToolCallRow key={i} call={p} result={resultsById.get(p.id)} />);
+      return;
+    }
+    flushTools(`t${i}`);
     if (p.type === "stage") {
       flushFiles(`f${i}`);
       stages.push({ stage: p.stage, detail: p.detail });
@@ -206,19 +235,15 @@ export function AssistantParts({ parts, status, streaming }: { parts: MessagePar
       case "plan":
         blocks.push(<PlanPart key={i} steps={p.steps} done={done} />);
         break;
-      case "tool_call":
-        blocks.push(<ToolCallRow key={i} call={p} result={resultsById.get(p.id)} />);
-        break;
-      case "tool_result":
-        break; // rendered inside its tool call row
       case "error":
         blocks.push(<ErrorPart key={i} message={p.message} />);
         break;
     }
   });
+  flushTools("t-tail");
   // The trailing stage group is the live one while streaming.
   if (stages.length) blocks.push(<StageTimeline key="s-tail" stages={stages} running={running} />);
   flushFiles("f-tail");
 
-  return <div className="space-y-2">{blocks}</div>;
+  return <div className="space-y-2.5">{blocks}</div>;
 }

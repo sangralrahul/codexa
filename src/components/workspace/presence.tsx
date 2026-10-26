@@ -58,6 +58,26 @@ export function Presence({ projectId, activeFile, compact }: { projectId: string
   // Realtime is optional: deployments without it (e.g. Vercel) simply show nothing.
   if (status === "not_configured") return null;
 
+  // In the top bar, connection problems collapse to a dot with a tooltip instead of a sentence.
+  if (compact && status !== "connected") {
+    const text = status === "unauthorized" ? "Presence unavailable" : status === "unavailable" ? "Realtime server not reachable" : status === "reconnecting" ? "Reconnecting to realtime…" : "Connecting to realtime…";
+    return (
+      <TooltipProvider>
+        <Tooltip content={error ? `${text} (${error})` : text}>
+          <button
+            type="button"
+            onClick={status === "unavailable" ? reconnect : undefined}
+            className="inline-flex size-8 items-center justify-center rounded-md text-muted-foreground hover:bg-muted"
+            aria-label={status === "unavailable" ? `${text}. Retry` : text}
+          >
+            <Users className="size-4" aria-hidden="true" />
+            <span className={cn("-ml-1 mt-3 size-1.5 rounded-full", status === "unavailable" || status === "unauthorized" ? "bg-muted-foreground/60" : "animate-pulse bg-warning")} aria-hidden="true" />
+          </button>
+        </Tooltip>
+      </TooltipProvider>
+    );
+  }
+
   if (status === "unavailable" || status === "unauthorized") {
     return (
       <div className={cn("flex items-center gap-2 text-xs text-muted-foreground", compact && "max-w-[12rem]")} role="status" aria-live="polite">
@@ -89,9 +109,9 @@ export function Presence({ projectId, activeFile, compact }: { projectId: string
   return (
     <TooltipProvider>
       <div className="flex items-center gap-2" role="status" aria-live="polite" aria-label={`${live} ${live === 1 ? "person" : "people"} live in this project`}>
-        <span className="inline-flex items-center gap-1.5 rounded-full border border-border px-2 py-0.5 text-xs">
-          <span className="size-2 rounded-full bg-success" aria-hidden="true" />
-          Live: {live}
+        <span className="inline-flex h-6 items-center gap-1.5 rounded-full border border-border px-2 text-[11px] font-medium">
+          <span className="size-1.5 rounded-full bg-success" aria-hidden="true" />
+          Live · {live}
         </span>
         {visible.length ? (
           <ul className="flex -space-x-2" aria-label="Collaborators">

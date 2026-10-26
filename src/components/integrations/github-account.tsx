@@ -56,14 +56,25 @@ export function GithubAccountCard({ configured, account, next, errorCode }: { co
         </Alert>
       ) : null}
       {!configured ? (
-        <Alert variant="warning" title="GitHub is not configured on this server">
-          Set <code className="font-mono text-xs">GITHUB_CLIENT_ID</code> and <code className="font-mono text-xs">GITHUB_CLIENT_SECRET</code> (create an OAuth app at github.com/settings/developers with the callback URL{" "}
-          <code className="font-mono text-xs">&lt;APP_URL&gt;/api/auth/github/callback</code>) and restart the app.
-        </Alert>
+        <div role="status" className="rounded-xl border border-border bg-surface/60 p-4 text-sm">
+          <p className="font-medium">GitHub is not configured on this server</p>
+          <p className="mt-0.5 text-muted-foreground">Linking a GitHub account and importing repositories are unavailable until the server operator enables it.</p>
+          <details className="group mt-2 text-xs text-muted-foreground">
+            <summary className="cursor-pointer list-none font-medium text-foreground/80 hover:text-foreground [&::-webkit-details-marker]:hidden">
+              Details for the server operator <span aria-hidden="true" className="inline-block transition-transform group-open:rotate-90">›</span>
+            </summary>
+            <p className="mt-2 leading-relaxed">
+              Set <code className="font-mono">GITHUB_CLIENT_ID</code> and <code className="font-mono">GITHUB_CLIENT_SECRET</code> (create an OAuth app at github.com/settings/developers with the callback URL{" "}
+              <code className="font-mono">&lt;APP_URL&gt;/api/auth/github/callback</code>) and restart the app.
+            </p>
+          </details>
+        </div>
       ) : null}
-      <div className="flex flex-col gap-3 glow-card rounded-2xl border border-border p-4 sm:flex-row sm:items-center sm:justify-between">
+      <div className="flex flex-col gap-3 rounded-xl border border-border bg-card p-4 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex min-w-0 items-center gap-3">
-          <FolderGit2 className="size-5 shrink-0 text-muted-foreground" aria-hidden="true" />
+          <span className="flex size-10 shrink-0 items-center justify-center rounded-lg border border-border bg-surface">
+            <FolderGit2 className="size-5" aria-hidden="true" />
+          </span>
           <div className="min-w-0">
             {account.linked ? (
               <>
@@ -94,11 +105,11 @@ export function GithubAccountCard({ configured, account, next, errorCode }: { co
               </Button>
             </>
           ) : configured ? (
-            <Button asChild>
+            <Button size="sm" asChild>
               <a href={startUrl}>Connect GitHub</a>
             </Button>
           ) : (
-            <Button disabled title="GitHub is not configured on this server">
+            <Button size="sm" disabled title="GitHub is not configured on this server">
               Connect GitHub
             </Button>
           )}

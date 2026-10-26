@@ -2,12 +2,13 @@
 
 import * as React from "react";
 import Link from "next/link";
-import { Bot, ChevronDown, FlaskConical, KeyRound, MessageSquarePlus, RefreshCw, Sparkles, User } from "lucide-react";
+import { ChevronDown, FlaskConical, KeyRound, MessageSquarePlus, RefreshCw, Sparkles } from "lucide-react";
 import { api, ClientApiError } from "@/lib/client/api";
 import { emit, on as subscribeEvent } from "@/lib/client/events";
 import { INITIAL_PROMPT_KEY } from "@/lib/client/workspace/storage";
 import { cn } from "@/lib/utils";
-import { Alert, Badge, Button, DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger, EmptyState, Skeleton, Spinner } from "@/components/ui";
+import { Alert, Badge, Button, DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger, Skeleton, Spinner } from "@/components/ui";
+import { LogoMark } from "@/components/logo";
 import { Composer, FIX_DEFAULT_PROMPT } from "./composer";
 import { AssistantParts } from "./message-parts";
 import { ReviewChanges } from "./review-changes";
@@ -308,11 +309,11 @@ export function ChatPanel({ projectId, conversationId: initialConversationId }: 
 
   return (
     <section className="flex h-full min-h-0 flex-col bg-background" aria-label="AI assistant">
-      <header className="flex items-center gap-2 border-b border-border px-2 py-1.5 sm:px-3">
-        <Sparkles className="size-4 shrink-0 text-primary" aria-hidden="true" />
+      <header className="flex h-10 shrink-0 items-center gap-1.5 border-b border-border px-2">
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <button type="button" className="flex min-w-0 flex-1 items-center gap-1 rounded-md px-1.5 py-1 text-left text-sm font-medium hover:bg-muted focus-visible:outline-2 focus-visible:outline-ring" aria-label="Choose conversation">
+            <button type="button" className="flex min-w-0 flex-1 items-center gap-1.5 rounded-md px-1.5 py-1 text-left text-[13px] font-medium transition-colors hover:bg-muted focus-visible:outline-2 focus-visible:outline-ring" aria-label="Choose conversation">
+              <Sparkles className="size-3.5 shrink-0 text-signal" aria-hidden="true" />
               <span className="truncate">{active?.title ?? "New chat"}</span>
               <ChevronDown className="size-3.5 shrink-0 text-muted-foreground" aria-hidden="true" />
             </button>
@@ -334,16 +335,23 @@ export function ChatPanel({ projectId, conversationId: initialConversationId }: 
             <FlaskConical className="size-3" aria-hidden="true" /> Mock AI (development only)
           </Badge>
         ) : status?.configured ? (
-          <Badge variant="outline" title={`Provider: ${status.provider}`}>
+          <Badge variant="outline" title={`Provider: ${status.provider}`} className="max-w-[9rem] truncate font-mono text-[10px]">
             {status.model}
           </Badge>
         ) : null}
-        <Button size="icon" variant="ghost" onClick={newChat} disabled={Boolean(running)} aria-label="New chat" title="New chat" className="h-8 w-8">
+        <button
+          type="button"
+          onClick={newChat}
+          disabled={Boolean(running)}
+          aria-label="New chat"
+          title="New chat"
+          className="inline-flex size-7 shrink-0 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:outline-2 focus-visible:outline-ring disabled:opacity-40"
+        >
           <MessageSquarePlus className="size-4" aria-hidden="true" />
-        </Button>
+        </button>
       </header>
 
-      <div ref={listRef} className="min-h-0 flex-1 overflow-y-auto px-2 py-3 sm:px-3" aria-live="polite" aria-busy={Boolean(running)}>
+      <div ref={listRef} className="min-h-0 flex-1 overflow-y-auto px-3 py-4 scrollbar-thin" aria-live="polite" aria-busy={Boolean(running)}>
         {statusError ? (
           <Alert variant="danger" title="Could not load AI status">
             {statusError}{" "}
@@ -366,11 +374,12 @@ export function ChatPanel({ projectId, conversationId: initialConversationId }: 
             </button>
           </Alert>
         ) : !messages.length && !notConfigured && status ? (
-          <EmptyState
-            icon={<Bot className="size-8" aria-hidden="true" />}
-            title="Start building with AI"
-            description="Describe a feature, ask a question about the code, or fix the latest error. The agent plans first, edits files through reviewable tools, and snapshots the project before every change."
-            className="mt-4 p-6"
+          <ChatWelcome
+            onPick={(text, m) => {
+              setMode(m);
+              setDraft(text);
+              textareaRef.current?.focus();
+            }}
           />
         ) : null}
         {!status && !statusError ? (
@@ -378,7 +387,7 @@ export function ChatPanel({ projectId, conversationId: initialConversationId }: 
             <Spinner /> Checking AI configuration…
           </p>
         ) : null}
-        <ol className="space-y-4">
+        <ol className="space-y-5">
           {messages.map((m) => (
             <li key={m.id}>
               {m.role === "user" ? <UserMessage content={m.content} /> : <AssistantMessage projectId={projectId} message={m} onReverted={() => activeId && void loadMessages(activeId)} />}
@@ -407,11 +416,11 @@ export function ChatPanel({ projectId, conversationId: initialConversationId }: 
 
 function UserMessage({ content }: { content: string }) {
   return (
-    <div className="flex items-start gap-2">
-      <span className="mt-0.5 flex size-6 shrink-0 items-center justify-center rounded-full bg-muted" aria-hidden="true">
-        <User className="size-3.5" />
-      </span>
-      <div className="min-w-0 flex-1 whitespace-pre-wrap break-words rounded-lg bg-muted px-3 py-2 text-sm">{content}</div>
+    <div className="flex justify-end">
+      <div className="max-w-[88%] whitespace-pre-wrap break-words rounded-2xl rounded-br-md bg-muted px-3.5 py-2 text-sm leading-relaxed">
+        <span className="sr-only">You: </span>
+        {content}
+      </div>
     </div>
   );
 }
@@ -423,11 +432,13 @@ function AssistantMessage({ projectId, message, onReverted }: { projectId: strin
   const showReview = run && run.id && !message.streaming && (status === "succeeded" || status === "failed" || status === "cancelled") && (changed.length > 0 || run.snapshotBeforeId);
   const hasParts = message.parts.length > 0;
   return (
-    <div className="flex items-start gap-2">
-      <span className="mt-0.5 flex size-6 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary" aria-hidden="true">
-        <Bot className="size-3.5" />
-      </span>
-      <div className="min-w-0 flex-1 space-y-2">
+    <div className="min-w-0">
+      <p className="mb-1.5 flex items-center gap-1.5 text-xs font-semibold">
+        <LogoMark size={16} />
+        Codexa
+        {message.streaming ? <Spinner className="size-3 text-muted-foreground" /> : null}
+      </p>
+      <div className="min-w-0 space-y-2.5">
         {hasParts ? <AssistantParts parts={message.parts} status={status} streaming={message.streaming} /> : message.streaming ? (
           <p className="flex items-center gap-2 text-xs text-muted-foreground">
             <Spinner /> Starting…
@@ -436,8 +447,8 @@ function AssistantMessage({ projectId, message, onReverted }: { projectId: strin
           <p className="whitespace-pre-wrap text-sm">{message.content}</p>
         ) : null}
         {message.nextSteps?.length ? (
-          <div className="rounded-lg border border-border bg-card p-3 text-sm">
-            <p className="mb-1 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Next steps</p>
+          <div className="rounded-lg border border-border bg-surface p-3 text-sm">
+            <p className="mb-1 text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">Next steps</p>
             <ul className="list-disc space-y-0.5 pl-5">
               {message.nextSteps.map((s, i) => (
                 <li key={i}>{s}</li>
@@ -459,17 +470,60 @@ function AssistantMessage({ projectId, message, onReverted }: { projectId: strin
 
 function NotConfigured({ missingEnv }: { missingEnv: string[] }) {
   return (
-    <EmptyState
-      icon={<KeyRound className="size-8" aria-hidden="true" />}
-      title="AI is not configured"
-      description={`No AI provider key is set on this server. Add ${missingEnv.length ? missingEnv.join(" or ") : "ANTHROPIC_API_KEY or OPENAI_API_KEY"} to the server environment and restart the app to enable the agent.`}
-      action={
-        <Button asChild variant="outline" size="sm">
-          <Link href="/docs/ai-agent">Read the AI agent setup guide</Link>
-        </Button>
-      }
-      className="mb-4 p-6"
-    />
+    <div className="pop-in mx-auto mb-4 flex max-w-sm flex-col items-center px-2 pt-6 text-center">
+      <span className="flex size-12 items-center justify-center rounded-xl border border-border bg-surface text-muted-foreground shadow-sm">
+        <KeyRound className="size-5" aria-hidden="true" />
+      </span>
+      <p className="mt-4 text-sm font-semibold">AI is not configured</p>
+      <p className="mt-1 text-xs leading-relaxed text-muted-foreground">The AI assistant isn&apos;t set up on this server yet. Your files, the editor, previews and version history still work.</p>
+      <Button asChild variant="outline" size="sm" className="mt-4 h-8 rounded-md">
+        <Link href="/docs/ai-agent">Read the AI agent setup guide</Link>
+      </Button>
+      <details className="group mt-6 w-full rounded-lg border border-border text-left text-xs">
+        <summary className="flex cursor-pointer list-none items-center justify-between px-3 py-2 font-medium text-muted-foreground hover:text-foreground [&::-webkit-details-marker]:hidden">
+          Details for the server operator
+          <span className="transition-transform group-open:rotate-90" aria-hidden="true">›</span>
+        </summary>
+        <p className="border-t border-border px-3 py-2.5 leading-relaxed text-muted-foreground">
+          No AI provider key is set. Add {missingEnv.length ? missingEnv.join(" or ") : "ANTHROPIC_API_KEY or OPENAI_API_KEY"} to the server environment and restart the app to enable the agent.
+        </p>
+      </details>
+    </div>
+  );
+}
+
+const SUGGESTIONS: { text: string; mode: AgentMode }[] = [
+  { text: "Add a dark mode toggle to the header", mode: "build" },
+  { text: "Explain how this project is structured", mode: "ask" },
+  { text: FIX_DEFAULT_PROMPT, mode: "fix" },
+];
+
+/** First-run state: what the agent does, plus a few starting points that fill the composer. */
+function ChatWelcome({ onPick }: { onPick: (text: string, mode: AgentMode) => void }) {
+  return (
+    <div className="pop-in mx-auto flex max-w-sm flex-col items-center px-2 pt-6 text-center">
+      <span className="flex size-12 items-center justify-center rounded-xl border border-border bg-surface shadow-sm">
+        <Sparkles className="size-5 text-signal" aria-hidden="true" />
+      </span>
+      <p className="mt-4 text-sm font-semibold">What should we build?</p>
+      <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
+        Describe a feature, ask about the code, or fix the latest error. The agent plans first, edits files through reviewable tools, and snapshots the project before every change.
+      </p>
+      <ul className="mt-5 w-full space-y-1.5 text-left">
+        {SUGGESTIONS.map((s) => (
+          <li key={s.text}>
+            <button
+              type="button"
+              onClick={() => onPick(s.text, s.mode)}
+              className="group flex w-full items-center justify-between gap-2 rounded-lg border border-border bg-background px-3 py-2 text-xs transition-colors hover:border-border-strong hover:bg-muted/50 focus-visible:outline-2 focus-visible:outline-ring"
+            >
+              <span className="truncate">{s.text}</span>
+              <span className="shrink-0 rounded bg-muted px-1.5 py-0.5 text-[10px] font-medium capitalize text-muted-foreground">{s.mode}</span>
+            </button>
+          </li>
+        ))}
+      </ul>
+    </div>
   );
 }
 

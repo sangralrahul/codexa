@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Check, ExternalLink } from "lucide-react";
+import { CreditCard, Check, ExternalLink } from "lucide-react";
 import { api, ClientApiError } from "@/lib/client/api";
 import { cn } from "@/lib/utils";
 import { PLANS, formatPrice } from "@/config/plans";
@@ -53,10 +53,22 @@ export function CheckoutResultBanner({ result }: { result: string | null }) {
 export function PaymentsNotConfigured({ providers }: { providers: BillingOverview["providers"] }) {
   if (providers.stripe || providers.razorpay) return null;
   return (
-    <Alert variant="warning" title="Payments are not configured on this deployment">
-      Online upgrades need at least one payment provider. Set <code>STRIPE_SECRET_KEY</code> and <code>STRIPE_WEBHOOK_SECRET</code> (international, USD) and/or <code>RAZORPAY_KEY_ID</code>, <code>RAZORPAY_KEY_SECRET</code> and <code>RAZORPAY_WEBHOOK_SECRET</code> (India, INR), then restart the server. Staff can still
-      assign plans manually from the admin area.
-    </Alert>
+    <div role="status" className="flex gap-3 rounded-xl border border-border bg-surface/60 p-4 text-sm">
+      <CreditCard className="mt-0.5 size-4 shrink-0 text-muted-foreground" aria-hidden="true" />
+      <div className="min-w-0">
+        <p className="font-medium">Online payments are not configured on this server yet</p>
+        <p className="mt-0.5 text-muted-foreground">Plans can&apos;t be bought or changed here for now. Codexa staff can still assign a plan to your workspace; contact support if you need one.</p>
+        <details className="group mt-2 text-xs text-muted-foreground">
+          <summary className="cursor-pointer list-none font-medium text-foreground/80 hover:text-foreground [&::-webkit-details-marker]:hidden">
+            Details for the server operator <span aria-hidden="true" className="inline-block transition-transform group-open:rotate-90">›</span>
+          </summary>
+          <p className="mt-2 leading-relaxed">
+            Online upgrades need at least one payment provider. Set <code>STRIPE_SECRET_KEY</code> and <code>STRIPE_WEBHOOK_SECRET</code> (international, USD) and/or <code>RAZORPAY_KEY_ID</code>, <code>RAZORPAY_KEY_SECRET</code> and <code>RAZORPAY_WEBHOOK_SECRET</code> (India, INR), then restart the server. Staff can
+            assign plans manually from the admin area.
+          </p>
+        </details>
+      </div>
+    </div>
   );
 }
 

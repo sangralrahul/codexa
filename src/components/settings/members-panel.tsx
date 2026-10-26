@@ -11,6 +11,7 @@ import { Alert, EmptyState } from "@/components/ui/misc";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogClose, DialogContent, DialogFooter } from "@/components/ui/dialog";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown";
+import { SettingsCard, tableHead, tableRow } from "./section";
 
 type Role = "owner" | "admin" | "editor" | "viewer";
 const ROLE_LABEL: Record<Role, string> = { owner: "Owner", admin: "Admin", editor: "Editor", viewer: "Viewer" };
@@ -128,30 +129,36 @@ export function MembersPanel({ workspaceId, currentUserId, role, members: initia
   }
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6">
       {flash ? <Alert variant={flash.kind === "ok" ? "success" : "danger"}>{flash.message}</Alert> : null}
 
-      <section aria-labelledby="members-heading" className="space-y-3">
-        <div className="flex flex-wrap items-center justify-between gap-2">
-          <h2 id="members-heading" className="text-base font-semibold">
-            Members <span className="text-sm font-normal text-muted-foreground">({members.length})</span>
-          </h2>
-          <p className="text-xs text-muted-foreground">
-            {seats.limit < 0 ? "Unlimited seats" : `${seatsUsed} of ${seats.limit} seat${seats.limit === 1 ? "" : "s"} used (pending invitations count)`}
-          </p>
+      <SettingsCard
+        id="members"
+        title={
+          <>
+            Members <span className="font-normal text-muted-foreground">{members.length}</span>
+          </>
+        }
+        description={seats.limit < 0 ? "Unlimited seats on this plan." : `${seatsUsed} of ${seats.limit} seat${seats.limit === 1 ? "" : "s"} used. Pending invitations count toward seats.`}
+        bodyClassName="p-0 pt-4"
+      >
+        <div className="hidden grid-cols-[minmax(0,1fr)_9rem_2.5rem] items-center border-t border-border sm:grid">
+          <span className={tableHead}>Member</span>
+          <span className={tableHead}>Role</span>
+          <span className="sr-only">Actions</span>
         </div>
-        <ul className="divide-y divide-border rounded-lg border border-border">
+        <ul>
           {members.map((m) => {
             const self = m.userId === currentUserId;
             const canEditThis = canManage && !(role === "admin" && m.role === "owner");
             return (
-              <li key={m.userId} className="flex flex-wrap items-center justify-between gap-3 p-3">
+              <li key={m.userId} className={`${tableRow} flex flex-wrap items-center justify-between gap-3 px-4 py-3 sm:grid sm:grid-cols-[minmax(0,1fr)_9rem_2.5rem]`}>
                 <div className="flex min-w-0 items-center gap-3">
                   {m.avatarUrl ? (
                     // eslint-disable-next-line @next/next/no-img-element
-                    <img src={m.avatarUrl} alt="" className="size-9 rounded-full border border-border object-cover" />
+                    <img src={m.avatarUrl} alt="" className="size-8 rounded-full border border-border object-cover" />
                   ) : (
-                    <span aria-hidden="true" className="flex size-9 items-center justify-center rounded-full bg-muted text-xs font-semibold uppercase">
+                    <span aria-hidden="true" className="flex size-8 shrink-0 items-center justify-center rounded-full bg-foreground text-[11px] font-semibold uppercase text-background">
                       {(m.name || m.email).slice(0, 2)}
                     </span>
                   )}
@@ -165,13 +172,13 @@ export function MembersPanel({ workspaceId, currentUserId, role, members: initia
                     </p>
                   </div>
                 </div>
-                <div className="flex items-center gap-2">
+                <div>
                   {canEditThis ? (
                     <>
                       <label htmlFor={`role-${m.userId}`} className="sr-only">
                         Role for {m.email}
                       </label>
-                      <Select id={`role-${m.userId}`} className="h-9 w-32" value={m.role} disabled={busy === m.userId} onChange={(e) => changeRole(m, e.target.value as Role)}>
+                      <Select id={`role-${m.userId}`} className="h-8 w-32 text-[13px]" value={m.role} disabled={busy === m.userId} onChange={(e) => changeRole(m, e.target.value as Role)}>
                         {(["owner", "admin", "editor", "viewer"] as Role[]).map((r) => (
                           <option key={r} value={r} disabled={r === "owner" && role !== "owner"}>
                             {ROLE_LABEL[r]}
@@ -182,10 +189,12 @@ export function MembersPanel({ workspaceId, currentUserId, role, members: initia
                   ) : (
                     <Badge variant={m.role === "owner" ? "primary" : "default"}>{ROLE_LABEL[m.role]}</Badge>
                   )}
+                </div>
+                <div className="flex justify-end">
                   {canEditThis || self ? (
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="icon" aria-label={`More actions for ${m.email}`}>
+                        <Button variant="ghost" size="icon" className="size-8" aria-label={`More actions for ${m.email}`}>
                           <MoreHorizontal className="size-4" />
                         </Button>
                       </DropdownMenuTrigger>
@@ -204,51 +213,52 @@ export function MembersPanel({ workspaceId, currentUserId, role, members: initia
             );
           })}
         </ul>
-      </section>
+      </SettingsCard>
 
       {canManage ? (
-        <section aria-labelledby="invite-heading" className="space-y-3">
-          <h2 id="invite-heading" className="text-base font-semibold">
-            Invite a teammate
-          </h2>
-          {seatsLeft === 0 ? (
-            <Alert variant="warning" title="No seats left on your plan">
-              Upgrade on the <a href="/settings/billing" className="underline">Billing</a> page to invite more people, or revoke a pending invitation.
-            </Alert>
-          ) : null}
-          <InviteForm
-            workspaceId={workspaceId}
-            actorRole={role}
-            disabled={seatsLeft === 0}
-            emailConfigured={emailConfigured}
-            onInvited={(invite, status) => {
-              setInvites((s) => [invite, ...s]);
-              setFlash({ kind: status === "failed" ? "error" : "ok", message: emailStatusText(invite.email, status) });
-            }}
-          />
-        </section>
+        <InviteForm
+          workspaceId={workspaceId}
+          actorRole={role}
+          disabled={seatsLeft === 0}
+          emailConfigured={emailConfigured}
+          onInvited={(invite, status) => {
+            setInvites((s) => [invite, ...s]);
+            setFlash({ kind: status === "failed" ? "error" : "ok", message: emailStatusText(invite.email, status) });
+          }}
+        />
       ) : null}
 
       {canManage ? (
-        <section aria-labelledby="pending-heading" className="space-y-3">
-          <h2 id="pending-heading" className="text-base font-semibold">
-            Pending invitations <span className="text-sm font-normal text-muted-foreground">({invites.length})</span>
-          </h2>
+        <SettingsCard
+          id="pending"
+          title={
+            <>
+              Pending invitations <span className="font-normal text-muted-foreground">{invites.length}</span>
+            </>
+          }
+          description="Invitations stay here until they are accepted, revoked or expire."
+          bodyClassName={invites.length === 0 ? undefined : "p-0 pt-4"}
+        >
           {invites.length === 0 ? (
-            <EmptyState icon={<Mail className="size-6" />} title="No pending invitations" description="People you invite appear here until they accept." className="p-6" />
+            <EmptyState icon={<Mail className="size-5" />} title="No pending invitations" description="People you invite appear here until they accept." className="border-dashed p-6" />
           ) : (
-            <ul className="divide-y divide-border rounded-lg border border-border">
+            <ul>
               {invites.map((i) => (
-                <li key={i.id} className="flex flex-wrap items-center justify-between gap-3 p-3 text-sm">
-                  <div className="min-w-0">
-                    <p className="flex flex-wrap items-center gap-2 font-medium">
-                      <span className="truncate">{i.email}</span>
-                      <Badge>{ROLE_LABEL[i.role]}</Badge>
-                      {i.expired ? <Badge variant="warning">Expired</Badge> : null}
-                    </p>
-                    <p className="text-xs text-muted-foreground">
-                      Sent {new Date(i.createdAt).toLocaleDateString()} · {i.expired ? "expired" : "expires"} {new Date(i.expiresAt).toLocaleDateString()}
-                    </p>
+                <li key={i.id} className={`${tableRow} flex flex-wrap items-center justify-between gap-3 px-4 py-3 text-sm`}>
+                  <div className="flex min-w-0 items-center gap-3">
+                    <span aria-hidden="true" className="flex size-8 shrink-0 items-center justify-center rounded-full border border-dashed border-border-strong text-muted-foreground">
+                      <Mail className="size-3.5" />
+                    </span>
+                    <div className="min-w-0">
+                      <p className="flex flex-wrap items-center gap-2 font-medium">
+                        <span className="truncate">{i.email}</span>
+                        <Badge>{ROLE_LABEL[i.role]}</Badge>
+                        {i.expired ? <Badge variant="warning">Expired</Badge> : null}
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        Sent {new Date(i.createdAt).toLocaleDateString()} · {i.expired ? "expired" : "expires"} {new Date(i.expiresAt).toLocaleDateString()}
+                      </p>
+                    </div>
                   </div>
                   <div className="flex items-center gap-2">
                     <Button variant="outline" size="sm" onClick={() => resend(i)} loading={busy === i.id}>
@@ -262,7 +272,7 @@ export function MembersPanel({ workspaceId, currentUserId, role, members: initia
               ))}
             </ul>
           )}
-        </section>
+        </SettingsCard>
       ) : null}
 
       <Dialog open={confirm !== null} onOpenChange={(o) => (!o ? setConfirm(null) : null)}>
@@ -332,27 +342,39 @@ function InviteForm({
   }
 
   return (
-    <form onSubmit={onSubmit} className="space-y-3" noValidate>
-      <div className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_160px_auto] sm:items-end">
-        <Field label="Email address" htmlFor="invite-email" error={error}>
-          <Input id="invite-email" type="email" autoComplete="off" value={email} onChange={(e) => setEmail(e.target.value)} required disabled={disabled} placeholder="teammate@example.com" aria-invalid={Boolean(error)} />
-        </Field>
-        <Field label="Role" htmlFor="invite-role">
-          <Select id="invite-role" value={role} onChange={(e) => setRole(e.target.value as Role)} disabled={disabled}>
-            {(["admin", "editor", "viewer", "owner"] as Role[]).map((r) => (
-              <option key={r} value={r} disabled={r === "owner" && actorRole !== "owner"}>
-                {ROLE_LABEL[r]}
-              </option>
-            ))}
-          </Select>
-        </Field>
-        <Button type="submit" loading={busy} disabled={disabled} className="sm:mb-0">
-          <UserPlus className="size-4" aria-hidden="true" /> Send invite
-        </Button>
-      </div>
-      <p className="text-xs text-muted-foreground">
-        {ROLE_HELP[role]} Invitations expire after 7 days.{!emailConfigured ? " Email delivery is not configured here; invitations are stored in the outbox." : ""}
-      </p>
+    <form onSubmit={onSubmit} noValidate>
+      <SettingsCard
+        id="invite"
+        title="Invite a teammate"
+        description="They get an email with a link to join this workspace."
+        bodyClassName="space-y-4"
+        hint={`${ROLE_HELP[role]} Invitations expire after 7 days.${!emailConfigured ? " Email delivery is not configured here; invitations are stored in the outbox." : ""}`}
+        footer={
+          <Button type="submit" size="sm" loading={busy} disabled={disabled}>
+            <UserPlus className="size-3.5" aria-hidden="true" /> Send invite
+          </Button>
+        }
+      >
+        {disabled ? (
+          <Alert variant="warning" title="No seats left on your plan">
+            Upgrade on the <a href="/settings/billing" className="underline">Billing</a> page to invite more people, or revoke a pending invitation.
+          </Alert>
+        ) : null}
+        <div className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_180px]">
+          <Field label="Email address" htmlFor="invite-email" error={error}>
+            <Input id="invite-email" type="email" autoComplete="off" value={email} onChange={(e) => setEmail(e.target.value)} required disabled={disabled} placeholder="teammate@example.com" aria-invalid={Boolean(error)} />
+          </Field>
+          <Field label="Role" htmlFor="invite-role">
+            <Select id="invite-role" value={role} onChange={(e) => setRole(e.target.value as Role)} disabled={disabled}>
+              {(["admin", "editor", "viewer", "owner"] as Role[]).map((r) => (
+                <option key={r} value={r} disabled={r === "owner" && actorRole !== "owner"}>
+                  {ROLE_LABEL[r]}
+                </option>
+              ))}
+            </Select>
+          </Field>
+        </div>
+      </SettingsCard>
     </form>
   );
 }
@@ -377,7 +399,7 @@ export function LeaveWorkspaceButton({ workspaceId, userId, workspaceName }: { w
   }
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <Button variant="danger" onClick={() => setOpen(true)}>
+      <Button variant="danger" size="sm" onClick={() => setOpen(true)}>
         Leave {workspaceName}
       </Button>
       <DialogContent title={`Leave ${workspaceName}?`} description="You will lose access to every project in this workspace. An owner can invite you again later.">

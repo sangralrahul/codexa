@@ -59,15 +59,15 @@ export function ProjectsBrowser({ projects, showWorkspace, emptyTitle, emptyDesc
 
   return (
     <div>
-      <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-center">
-        <div className="relative flex-1">
+      <div className="mb-5 flex flex-col gap-2 sm:flex-row sm:items-center">
+        <div className="relative flex-1 sm:max-w-sm">
           <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" aria-hidden="true" />
           <label htmlFor="projects-search" className="sr-only">
             Search projects
           </label>
           <Input id="projects-search" value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Search projects…" className="pl-9" />
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 sm:ml-auto">
           <label htmlFor="projects-sort" className="sr-only">
             Sort by
           </label>
@@ -76,14 +76,15 @@ export function ProjectsBrowser({ projects, showWorkspace, emptyTitle, emptyDesc
             <option value="name">Name</option>
             <option value="created">Newest</option>
           </Select>
-          <div className="inline-flex rounded-lg border border-border p-0.5" role="radiogroup" aria-label="Layout">
+          <div className="segmented inline-flex h-9 items-center rounded-lg border border-border bg-surface p-0.5" role="radiogroup" aria-label="Layout">
+            <span aria-hidden="true" className="segmented__pill w-8" style={{ transform: `translateX(${layout === "grid" ? 2 : 34}px)` }} />
             <button
               type="button"
               role="radio"
               aria-checked={layout === "grid"}
               aria-label="Grid view"
               onClick={() => changeLayout("grid")}
-              className={cn("rounded-md p-1.5", layout === "grid" ? "bg-muted text-foreground" : "text-muted-foreground hover:text-foreground")}
+              className={cn("flex size-8 items-center justify-center rounded-md transition-colors", layout === "grid" ? "text-foreground" : "text-muted-foreground hover:text-foreground")}
             >
               <LayoutGrid className="size-4" />
             </button>
@@ -93,7 +94,7 @@ export function ProjectsBrowser({ projects, showWorkspace, emptyTitle, emptyDesc
               aria-checked={layout === "list"}
               aria-label="List view"
               onClick={() => changeLayout("list")}
-              className={cn("rounded-md p-1.5", layout === "list" ? "bg-muted text-foreground" : "text-muted-foreground hover:text-foreground")}
+              className={cn("flex size-8 items-center justify-center rounded-md transition-colors", layout === "list" ? "text-foreground" : "text-muted-foreground hover:text-foreground")}
             >
               <List className="size-4" />
             </button>
@@ -104,9 +105,9 @@ export function ProjectsBrowser({ projects, showWorkspace, emptyTitle, emptyDesc
         {filtered.length} of {projects.length} project{projects.length === 1 ? "" : "s"}
       </p>
       {filtered.length === 0 ? (
-        <p className="rounded-xl border border-dashed border-border-strong p-8 text-center text-sm text-muted-foreground">No projects match “{query.trim()}”.</p>
+        <p className="pop-in rounded-xl border border-dashed border-border-strong p-10 text-center text-sm text-muted-foreground">No projects match “{query.trim()}”.</p>
       ) : (
-        <div className={cn(layout === "grid" ? "grid gap-3 sm:grid-cols-2 xl:grid-cols-3" : "flex flex-col gap-2")}>
+        <div className={cn(layout === "grid" ? "grid gap-4 sm:grid-cols-2 xl:grid-cols-3" : "flex flex-col gap-2")}>
           {filtered.map((p) => (
             <ProjectCard key={p.id} project={p} layout={layout} showWorkspace={showWorkspace} />
           ))}

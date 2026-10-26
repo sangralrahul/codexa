@@ -6,3 +6,4 @@ export { CodeViewer, languageForPath } from "./code-viewer";
 export { UseTemplateButton } from "./use-template-button";
 export { DifficultyBadge, FrameworkBadge } from "./badges";
 export type { TemplateCardData } from "./types";
+export { TemplateThumb } from "./template-thumb";

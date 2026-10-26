@@ -25,3 +25,8 @@ export function listTemplateSummaries(): TemplateSummary[] {
 }
 
 export const DEFAULT_TEMPLATE_ID = "vite-react-starter";
+
+/** Template category for a project's thumbnail (null when the project has no known template). */
+export function templateCategory(templateId: string | null): string | null {
+  return (templateId && TEMPLATES.find((t) => t.id === templateId)?.category) || null;
+}

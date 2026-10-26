@@ -132,31 +132,36 @@ export function RepoList({
         </div>
       ) : null}
       {!loading && !error && !repos.length ? (
-        <EmptyState icon={<FolderGit2 className="size-8" aria-hidden="true" />} title={q ? "No repositories match" : "No repositories found"} description={q ? "Try a different search." : "Your GitHub account has no repositories you can access yet."} />
+        <EmptyState icon={<FolderGit2 className="size-6" aria-hidden="true" />} title={q ? "No repositories match" : "No repositories found"} description={q ? "Try a different search." : "Your GitHub account has no repositories you can access yet."} />
       ) : null}
       {repos.length ? (
-        <ul className="divide-y divide-border rounded-xl border border-border bg-card" aria-label="Repositories">
+        <ul className="divide-y divide-border overflow-hidden rounded-xl border border-border bg-card" aria-label="Repositories">
           {repos.map((r) => {
             const selected = selectedId === r.id;
             return (
-              <li key={r.id} className={selected ? "bg-primary/5" : undefined}>
-                <div className="flex flex-col gap-2 p-3 sm:flex-row sm:items-center sm:justify-between">
-                  <div className="min-w-0">
-                    <div className="flex flex-wrap items-center gap-2">
-                      <span className="truncate font-mono text-sm font-medium">{r.fullName}</span>
-                      {r.private ? (
-                        <Badge variant="outline">
-                          <Lock className="size-3" aria-hidden="true" /> private
-                        </Badge>
-                      ) : null}
-                      {r.language ? <Badge>{r.language}</Badge> : null}
-                      {!r.canPush ? <Badge variant="warning">read-only</Badge> : null}
+              <li key={r.id} className={selected ? "bg-muted/60 shadow-[inset_2px_0_0_var(--signal)]" : "transition-colors hover:bg-muted/40"}>
+                <div className="flex flex-col gap-2 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
+                  <div className="flex min-w-0 items-start gap-3">
+                    <span aria-hidden="true" className="mt-0.5 flex size-8 shrink-0 items-center justify-center rounded-lg border border-border bg-surface text-muted-foreground">
+                      <FolderGit2 className="size-4" />
+                    </span>
+                    <div className="min-w-0">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <span className="truncate font-mono text-sm font-medium">{r.fullName}</span>
+                        {r.private ? (
+                          <Badge variant="outline">
+                            <Lock className="size-3" aria-hidden="true" /> private
+                          </Badge>
+                        ) : null}
+                        {r.language ? <Badge>{r.language}</Badge> : null}
+                        {!r.canPush ? <Badge variant="warning">read-only</Badge> : null}
+                      </div>
+                      <p className="mt-0.5 line-clamp-1 text-xs text-muted-foreground">{r.description || "No description"}</p>
+                      <p className="mt-0.5 text-[11px] text-muted-foreground">
+                        {r.defaultBranch}
+                        {r.pushedAt ? ` · pushed ${new Date(r.pushedAt).toLocaleDateString()}` : ""}
+                      </p>
                     </div>
-                    <p className="mt-0.5 line-clamp-1 text-xs text-muted-foreground">{r.description || "No description"}</p>
-                    <p className="mt-0.5 text-[11px] text-muted-foreground">
-                      {r.defaultBranch}
-                      {r.pushedAt ? ` · pushed ${new Date(r.pushedAt).toLocaleDateString()}` : ""}
-                    </p>
                   </div>
                   <div className="flex shrink-0 items-center gap-2">
                     <a href={r.htmlUrl} target="_blank" rel="noreferrer" className="rounded-md p-2 text-muted-foreground hover:bg-muted hover:text-foreground" aria-label={`Open ${r.fullName} on GitHub`}>

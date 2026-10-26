@@ -1,12 +1,11 @@
 import Link from "next/link";
-import { ArrowRight, CreditCard, Gauge, Plug, Settings2, ShieldCheck, UserRound, Users } from "lucide-react";
+import { ArrowUpRight, CreditCard, Gauge, Plus, Plug, Settings2, ShieldCheck, UserRound, Users } from "lucide-react";
 import { pageMetadata } from "@/lib/seo";
 import { requireUser } from "@/lib/auth/guards";
 import { getCurrentWorkspace } from "@/lib/services/current-workspace";
 import { getEffectivePlan } from "@/lib/services/usage";
 import { PLANS } from "@/config/plans";
 import { PageHeader } from "@/components/app/app-shell";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Alert } from "@/components/ui/misc";
 
@@ -26,22 +25,29 @@ const WORKSPACE = [
 
 function LinkCard({ href, title, description, icon: Icon }: { href: string; title: string; description: string; icon: typeof UserRound }) {
   return (
-    <Link href={href} className="group block rounded-xl focus-visible:outline-2 focus-visible:outline-ring focus-visible:outline-offset-2">
-      <Card className="h-full transition hover:border-border-strong hover:shadow-md">
-        <CardHeader className="flex flex-row items-start gap-3">
-          <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-muted text-foreground">
-            <Icon className="size-4" aria-hidden="true" />
-          </span>
-          <div className="min-w-0 flex-1">
-            <CardTitle className="flex items-center gap-1.5 text-sm">
-              {title}
-              <ArrowRight className="size-3.5 text-muted-foreground transition group-hover:translate-x-0.5" aria-hidden="true" />
-            </CardTitle>
-            <CardDescription className="mt-1 text-xs">{description}</CardDescription>
-          </div>
-        </CardHeader>
-      </Card>
+    <Link
+      href={href}
+      className="group flex items-start gap-3.5 rounded-xl border border-border bg-card p-4 transition-[border-color,box-shadow,transform] duration-200 hover:border-border-strong hover:shadow-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring active:scale-[0.99]"
+    >
+      <span className="flex size-9 shrink-0 items-center justify-center rounded-lg border border-border bg-surface text-foreground transition-colors group-hover:bg-muted">
+        <Icon className="size-4" aria-hidden="true" />
+      </span>
+      <span className="min-w-0 flex-1">
+        <span className="flex items-center justify-between gap-2 text-sm font-medium">
+          {title}
+          <ArrowUpRight className="size-4 text-muted-foreground transition-transform duration-300 group-hover:-translate-y-0.5 group-hover:translate-x-0.5 group-hover:text-foreground" aria-hidden="true" />
+        </span>
+        <span className="mt-0.5 block text-xs leading-relaxed text-muted-foreground">{description}</span>
+      </span>
     </Link>
+  );
+}
+
+function GroupHeading({ id, children }: { id: string; children: React.ReactNode }) {
+  return (
+    <h2 id={id} className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
+      {children}
+    </h2>
   );
 }
 
@@ -52,10 +58,10 @@ export default async function SettingsIndexPage() {
   return (
     <div>
       <PageHeader title="Settings" description={`Signed in as ${user.email}`} />
-      <section aria-labelledby="account-heading" className="mb-8">
-        <h2 id="account-heading" className="mb-3 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
-          Account
-        </h2>
+      <section aria-labelledby="account-heading" className="mb-10">
+        <div className="mb-3">
+          <GroupHeading id="account-heading">Account</GroupHeading>
+        </div>
         <div className="grid gap-3 sm:grid-cols-2">
           {ACCOUNT.map((c) => (
             <LinkCard key={c.href} {...c} />
@@ -64,11 +70,12 @@ export default async function SettingsIndexPage() {
       </section>
       <section aria-labelledby="workspace-heading">
         <div className="mb-3 flex flex-wrap items-center gap-2">
-          <h2 id="workspace-heading" className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
-            Workspace
-          </h2>
+          <GroupHeading id="workspace-heading">Workspace</GroupHeading>
           {current ? (
             <>
+              <span aria-hidden="true" className="text-muted-foreground">
+                ·
+              </span>
               <span className="text-sm font-medium">{current.workspace.name}</span>
               <Badge variant="primary">{PLANS[plan ?? "free"].name}</Badge>
               <Badge variant="outline" className="capitalize">
@@ -82,6 +89,18 @@ export default async function SettingsIndexPage() {
             {WORKSPACE.map((c) => (
               <LinkCard key={c.href} {...c} />
             ))}
+            <Link
+              href="/settings/workspaces/new"
+              className="group flex items-center gap-3.5 rounded-xl border border-dashed border-border-strong p-4 text-sm text-muted-foreground transition-colors hover:border-foreground/40 hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring active:scale-[0.99]"
+            >
+              <span className="flex size-9 shrink-0 items-center justify-center rounded-lg border border-dashed border-border-strong">
+                <Plus className="size-4" aria-hidden="true" />
+              </span>
+              <span>
+                <span className="block font-medium text-foreground">Create another workspace</span>
+                <span className="block text-xs">For a team, a client or a side project.</span>
+              </span>
+            </Link>
           </div>
         ) : (
           <Alert variant="info" title="No workspace selected">
@@ -91,11 +110,6 @@ export default async function SettingsIndexPage() {
             to manage members, billing and integrations.
           </Alert>
         )}
-        <CardContent className="px-0 pt-4">
-          <Link href="/settings/workspaces/new" className="text-sm font-medium text-primary hover:underline">
-            Create another workspace
-          </Link>
-        </CardContent>
       </section>
     </div>
   );

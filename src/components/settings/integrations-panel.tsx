@@ -9,6 +9,7 @@ import { Field, Input } from "@/components/ui/input";
 import { Alert, EmptyState, Skeleton } from "@/components/ui/misc";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogClose, DialogContent, DialogFooter } from "@/components/ui/dialog";
+import { SettingsCard, tableRow } from "./section";
 
 type Connection = { id: string; provider: string; name: string; status: string; lastTestedAt: string | null; lastError: string | null; createdAt: string; config?: Record<string, unknown> };
 type State = { kind: "loading" } | { kind: "unavailable"; message: string } | { kind: "ready"; connections: Connection[] } | { kind: "error"; message: string };
@@ -78,12 +79,14 @@ export function IntegrationsPanel({ workspaceId, canManage }: { workspaceId: str
   const byCategory = INTEGRATION_CATEGORIES.map((cat) => ({ cat, items: available.filter((i) => i.category === cat.id) })).filter((g) => g.items.length);
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6">
       {flash ? <Alert variant={flash.kind === "ok" ? "success" : "danger"}>{flash.message}</Alert> : null}
-      <section aria-labelledby="connections-heading" className="space-y-3">
-        <h2 id="connections-heading" className="text-base font-semibold">
-          Connected services
-        </h2>
+      <SettingsCard
+        id="connections"
+        title="Connected services"
+        description="Credentials are encrypted before storage and never returned to the browser."
+        bodyClassName={state.kind === "ready" && state.connections.length > 0 ? "p-0 pt-4" : undefined}
+      >
         {state.kind === "loading" ? (
           <div className="space-y-2" aria-busy="true" aria-label="Loading connections">
             <Skeleton className="h-14 w-full" />
@@ -101,29 +104,34 @@ export function IntegrationsPanel({ workspaceId, canManage }: { workspaceId: str
             </button>
           </Alert>
         ) : state.connections.length === 0 ? (
-          <EmptyState icon={<Plug className="size-6" />} title="No connections yet" description="Connect a database, AI provider, payment or email service to use it from projects in this workspace." className="p-6" />
+          <EmptyState icon={<Plug className="size-5" />} title="No connections yet" description="Connect a database, AI provider, payment or email service to use it from projects in this workspace." className="border-dashed p-6" />
         ) : (
-          <ul className="divide-y divide-border rounded-lg border border-border">
+          <ul>
             {state.connections.map((c) => (
-              <li key={c.id} className="flex flex-wrap items-center justify-between gap-3 p-3 text-sm">
-                <div className="min-w-0">
-                  <p className="flex flex-wrap items-center gap-2 font-medium">
-                    <span className="truncate">{c.name}</span>
-                    <Badge variant="outline" className="capitalize">
-                      {c.provider}
-                    </Badge>
-                    <Badge variant={c.status === "connected" ? "success" : c.status === "error" ? "danger" : "warning"} className="capitalize">
-                      {c.status}
-                    </Badge>
-                  </p>
-                  <p className="text-xs text-muted-foreground">{c.lastError ? c.lastError : c.lastTestedAt ? `Last tested ${new Date(c.lastTestedAt).toLocaleString()}` : "Not tested yet"}</p>
+              <li key={c.id} className={`${tableRow} flex flex-wrap items-center justify-between gap-3 px-6 py-3 text-sm`}>
+                <div className="flex min-w-0 items-center gap-3">
+                  <span aria-hidden="true" className="flex size-8 shrink-0 items-center justify-center rounded-lg border border-border bg-surface text-xs font-semibold uppercase">
+                    {c.provider.slice(0, 2)}
+                  </span>
+                  <div className="min-w-0">
+                    <p className="flex flex-wrap items-center gap-2 font-medium">
+                      <span className="truncate">{c.name}</span>
+                      <Badge variant="outline" className="capitalize">
+                        {c.provider}
+                      </Badge>
+                      <Badge variant={c.status === "connected" ? "success" : c.status === "error" ? "danger" : "warning"} className="capitalize">
+                        {c.status}
+                      </Badge>
+                    </p>
+                    <p className="text-xs text-muted-foreground">{c.lastError ? c.lastError : c.lastTestedAt ? `Last tested ${new Date(c.lastTestedAt).toLocaleString()}` : "Not tested yet"}</p>
+                  </div>
                 </div>
                 {canManage ? (
                   <div className="flex items-center gap-2">
                     <Button variant="outline" size="sm" onClick={() => test(c)} loading={busy === c.id}>
                       Test
                     </Button>
-                    <Button variant="ghost" size="sm" onClick={() => remove(c)} disabled={busy === c.id} aria-label={`Remove ${c.name}`}>
+                    <Button variant="ghost" size="icon" className="size-8" onClick={() => remove(c)} disabled={busy === c.id} aria-label={`Remove ${c.name}`}>
                       <Trash2 className="size-4" aria-hidden="true" />
                     </Button>
                   </div>
@@ -132,22 +140,27 @@ export function IntegrationsPanel({ workspaceId, canManage }: { workspaceId: str
             ))}
           </ul>
         )}
-      </section>
+      </SettingsCard>
 
-      <section aria-labelledby="available-heading" className="space-y-3">
-        <h2 id="available-heading" className="text-base font-semibold">
-          Available integrations
-        </h2>
-        {!canManage ? <p className="text-xs text-muted-foreground">Only owners and admins can add connections.</p> : null}
+      <section aria-labelledby="available-heading" className="space-y-4">
+        <div className="flex flex-wrap items-baseline justify-between gap-2">
+          <h2 id="available-heading" className="text-base font-semibold tracking-tight">
+            Available integrations
+          </h2>
+          {!canManage ? <p className="text-xs text-muted-foreground">Only owners and admins can add connections.</p> : null}
+        </div>
         {byCategory.map(({ cat, items }) => (
           <div key={cat.id}>
-            <h3 className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">{cat.name}</h3>
-            <ul className="grid gap-2 sm:grid-cols-2">
+            <h3 className="mb-2 text-[11px] font-medium uppercase tracking-wider text-muted-foreground">{cat.name}</h3>
+            <ul className="grid gap-3 sm:grid-cols-2">
               {items.map((i) => (
-                <li key={i.id} className="flex items-start justify-between gap-3 rounded-lg border border-border p-3">
-                  <div className="min-w-0">
+                <li key={i.id} className="flex items-center gap-3 rounded-xl border border-border bg-card p-3 transition-colors hover:border-border-strong">
+                  <span aria-hidden="true" className="flex size-9 shrink-0 items-center justify-center rounded-lg border border-border bg-surface text-sm font-semibold">
+                    {i.name.slice(0, 1)}
+                  </span>
+                  <div className="min-w-0 flex-1">
                     <p className="text-sm font-medium">{i.name}</p>
-                    <p className="line-clamp-2 text-xs text-muted-foreground">{i.description}</p>
+                    <p className="line-clamp-1 text-xs text-muted-foreground">{i.description}</p>
                   </div>
                   <Button variant="outline" size="sm" disabled={!canManage || state.kind !== "ready"} onClick={() => setAdding(i)} aria-label={`Connect ${i.name}`}>
                     Connect

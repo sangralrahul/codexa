@@ -1,8 +1,4 @@
-import Link from "next/link";
-import { ArrowRight } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 
 type Entitlements = {
   plan: string;
@@ -11,19 +7,21 @@ type Entitlements = {
   used: { ai_request: number; runtime_minutes: number; deployment: number };
 };
 
-function Meter({ label, used, limit }: { label: string; used: number; limit: number }) {
+function Meter({ label, used, limit, unit }: { label: string; used: number; limit: number; unit?: string }) {
   const unlimited = limit < 0;
   const pct = unlimited ? 0 : Math.min(100, Math.round((used / Math.max(1, limit)) * 100));
   return (
-    <div>
-      <div className="flex items-center justify-between text-xs">
-        <span>{label}</span>
-        <span className="tabular-nums text-muted-foreground">
-          {used.toLocaleString()} / {unlimited ? "∞" : limit.toLocaleString()}
+    <div className="bg-card p-5">
+      <p className="text-xs text-muted-foreground">{label}</p>
+      <p className="mt-2 flex items-baseline gap-1.5">
+        <span className="text-2xl font-semibold tabular-nums tracking-tight">{used.toLocaleString()}</span>
+        <span className="text-xs tabular-nums text-muted-foreground">
+          / {unlimited ? "unlimited" : limit.toLocaleString()}
+          {unit ? ` ${unit}` : ""}
         </span>
-      </div>
-      <div className="mt-1 h-1.5 overflow-hidden rounded-full bg-muted" role="progressbar" aria-label={label} aria-valuemin={0} aria-valuemax={100} aria-valuenow={pct}>
-        <div className={cn("h-full rounded-full", pct >= 90 ? "bg-danger" : pct >= 70 ? "bg-warning" : "bg-primary")} style={{ width: `${pct}%` }} />
+      </p>
+      <div className="mt-3 h-1 overflow-hidden rounded-full bg-muted" role="progressbar" aria-label={label} aria-valuemin={0} aria-valuemax={100} aria-valuenow={pct}>
+        <div className={cn("h-full rounded-full transition-[width] duration-700", pct >= 90 ? "bg-danger" : pct >= 70 ? "bg-warning" : "bg-foreground")} style={{ width: `${pct}%` }} />
       </div>
     </div>
   );
@@ -33,27 +31,16 @@ function Meter({ label, used, limit }: { label: string; used: number; limit: num
 export function UsageCard({ workspaceName, entitlements, projectCount }: { workspaceName: string; entitlements: Entitlements; projectCount: number }) {
   const e = entitlements;
   return (
-    <Card>
-      <CardHeader className="flex flex-row items-start justify-between gap-2">
-        <div>
-          <CardTitle className="text-sm">Usage this month</CardTitle>
-          <CardDescription className="text-xs">
-            {workspaceName} · since {e.periodStart.toLocaleDateString("en-US", { month: "short", day: "numeric" })}
-          </CardDescription>
-        </div>
-        <Badge variant="primary" className="capitalize">
-          {e.plan}
-        </Badge>
-      </CardHeader>
-      <CardContent className="space-y-3">
+    <div className="overflow-hidden rounded-xl border border-border bg-card">
+      <div className="grid gap-px bg-border sm:grid-cols-2 lg:grid-cols-4">
         <Meter label="Projects" used={projectCount} limit={e.limits.projects} />
         <Meter label="AI requests" used={e.used.ai_request} limit={e.limits.aiRequestsPerMonth} />
-        <Meter label="Runtime minutes" used={e.used.runtime_minutes} limit={e.limits.runtimeMinutesPerMonth} />
+        <Meter label="Preview runtime" used={e.used.runtime_minutes} limit={e.limits.runtimeMinutesPerMonth} unit="min" />
         <Meter label="Deployments" used={e.used.deployment} limit={e.limits.deploymentsPerMonth} />
-        <Link href="/settings/billing" className="inline-flex items-center gap-1 text-xs font-medium text-primary hover:underline">
-          Usage & billing <ArrowRight className="size-3.5" aria-hidden="true" />
-        </Link>
-      </CardContent>
-    </Card>
+      </div>
+      <p className="border-t border-border bg-surface/60 px-5 py-2.5 text-xs text-muted-foreground">
+        <span className="capitalize">{e.plan}</span> plan · {workspaceName} · period started {e.periodStart.toLocaleDateString("en-US", { month: "short", day: "numeric" })}
+      </p>
+    </div>
   );
 }

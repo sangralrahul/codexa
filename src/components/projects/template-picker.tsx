@@ -6,6 +6,7 @@ import { cn } from "@/lib/utils";
 import type { TemplateSummary } from "@/lib/client/workspace/types";
 import { Badge } from "@/components/ui/badge";
 import { Select } from "@/components/ui/input";
+import { TemplateThumb } from "@/components/templates/template-thumb";
 
 const CATEGORY_NAMES: Record<string, string> = {
   websites: "Websites",
@@ -46,11 +47,14 @@ export function TemplatePicker({ templates, value, onChange, compact }: { templa
           </Select>
         </div>
       ) : null}
-      <div role="radiogroup" aria-label="Template" className="space-y-5">
+      <div role="radiogroup" aria-label="Template" className="space-y-7">
         {groups.map(([group, list]) => (
           <div key={group}>
-            <h3 className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">{group}</h3>
-            <div className={cn("grid gap-2", compact ? "sm:grid-cols-2" : "sm:grid-cols-2 lg:grid-cols-3")}>
+            <h3 className="mb-2.5 flex items-center gap-2 text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
+              {group}
+              <span className="tabular-nums text-muted-foreground/70">{list.length}</span>
+            </h3>
+            <div className={cn("grid gap-3", compact ? "sm:grid-cols-2" : "sm:grid-cols-2 xl:grid-cols-3")}>
               {list.map((t) => {
                 const selected = t.id === value;
                 return (
@@ -61,28 +65,33 @@ export function TemplatePicker({ templates, value, onChange, compact }: { templa
                     aria-checked={selected}
                     onClick={() => onChange(t.id)}
                     className={cn(
-                      "flex flex-col items-start rounded-xl border p-3 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
-                      selected ? "border-primary bg-primary/5" : "border-border bg-card hover:border-border-strong",
+                      "group relative flex flex-col items-start rounded-xl border bg-card p-2.5 text-left transition-[border-color,box-shadow,transform] duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring active:scale-[0.985]",
+                      selected ? "border-foreground ring-2 ring-foreground/80" : "border-border hover:border-border-strong",
                     )}
                   >
-                    <div className="flex w-full items-start justify-between gap-2">
+                    <TemplateThumb category={t.category} className={cn("w-full transition-opacity", selected ? "opacity-100" : "opacity-90 group-hover:opacity-100")} />
+                    {selected ? (
+                      <span className="pop-in absolute right-1.5 top-1.5 flex size-5 items-center justify-center rounded-full bg-foreground text-background shadow-sm">
+                        <Check className="size-3" aria-hidden="true" />
+                      </span>
+                    ) : null}
+                    <div className="mt-2.5 w-full px-0.5">
                       <span className="text-sm font-medium">{t.name}</span>
-                      {selected ? <Check className="size-4 shrink-0 text-primary" aria-hidden="true" /> : null}
-                    </div>
-                    <span className="mt-1 line-clamp-2 text-xs text-muted-foreground">{t.description}</span>
-                    <span className="mt-2 flex flex-wrap items-center gap-1">
-                      <Badge variant="primary" className="text-[10px]">
-                        {t.frameworkName}
-                      </Badge>
-                      <Badge variant="outline" className="text-[10px] capitalize">
-                        {t.difficulty}
-                      </Badge>
-                      {t.prebuilt ? (
-                        <Badge variant="success" className="gap-0.5 text-[10px]">
-                          <Zap className="size-3" aria-hidden="true" /> prebuilt deps
+                      <span className="mt-0.5 line-clamp-2 block text-xs text-muted-foreground">{t.description}</span>
+                      <span className="mt-2 flex flex-wrap items-center gap-1">
+                        <Badge variant="outline" className="text-[10px]">
+                          {t.frameworkName}
                         </Badge>
-                      ) : null}
-                    </span>
+                        <Badge variant="outline" className="text-[10px] capitalize">
+                          {t.difficulty}
+                        </Badge>
+                        {t.prebuilt ? (
+                          <Badge variant="success" className="gap-0.5 text-[10px]">
+                            <Zap className="size-3" aria-hidden="true" /> prebuilt deps
+                          </Badge>
+                        ) : null}
+                      </span>
+                    </div>
                   </button>
                 );
               })}

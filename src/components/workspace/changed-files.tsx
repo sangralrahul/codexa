@@ -51,15 +51,14 @@ export function ChangedFiles({ projectId, version, onOpenFile, onOpenHistory }: 
         <button
           type="button"
           className={cn(
-            "inline-flex h-8 items-center gap-1.5 rounded-md border px-2 text-xs",
-            count > 0 ? "border-warning/50 bg-warning/10 text-foreground" : "border-border text-muted-foreground hover:bg-muted",
+            "inline-flex h-8 items-center gap-1.5 rounded-md px-2 text-xs font-medium transition-colors hover:bg-muted focus-visible:outline-2 focus-visible:outline-ring",
+            count > 0 ? "text-foreground" : "text-muted-foreground",
           )}
           aria-label={`${count} file${count === 1 ? "" : "s"} changed since last snapshot`}
           title="Changed since last snapshot"
         >
-          <GitCompare className="size-3.5" aria-hidden="true" />
-          <span className="tabular-nums">{error ? "?" : count}</span>
-          <span className="hidden sm:inline">changed</span>
+          <GitCompare className="size-4" aria-hidden="true" />
+          <span className={cn("inline-flex h-5 min-w-5 items-center justify-center rounded-full px-1.5 tabular-nums", count > 0 ? "bg-warning/15 text-warning" : "bg-muted")}>{error ? "?" : count}</span>
         </button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="max-h-80 w-72 overflow-auto">

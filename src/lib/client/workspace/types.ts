@@ -94,4 +94,5 @@ export type TemplateSummary = {
 };
 
 /** Project row enriched with workspace context for list pages. */
-export type ProjectListItem = ProjectDto & { workspaceName: string; role: WorkspaceRole };
+/** `category` (template category) only drives the card thumbnail; absent for projects without a known template. */
+export type ProjectListItem = ProjectDto & { workspaceName: string; role: WorkspaceRole; category?: string | null };

@@ -105,20 +105,16 @@ export function OnboardingFlow({ user, workspaceId, templates, defaultTemplateId
 
   return (
     <div className="mx-auto w-full max-w-3xl">
-      <ol className="mb-8 flex items-center gap-2 text-xs" aria-label="Progress">
+      <ol className="mb-8 grid grid-cols-3 gap-3 text-xs" aria-label="Progress">
         {["Profile", "Goals", "First project"].map((label, i) => (
-          <li key={label} className="flex items-center gap-2">
-            <span
-              aria-current={step === i ? "step" : undefined}
-              className={cn(
-                "flex size-6 items-center justify-center rounded-full border text-[11px] font-medium",
-                step > i ? "border-primary bg-primary text-primary-foreground" : step === i ? "border-primary text-primary" : "border-border text-muted-foreground",
-              )}
-            >
-              {step > i ? <Check className="size-3.5" aria-hidden="true" /> : i + 1}
+          <li key={label} aria-current={step === i ? "step" : undefined}>
+            <span className="block h-1 overflow-hidden rounded-full bg-muted">
+              <span className={cn("block h-full rounded-full bg-foreground transition-[width] duration-500 ease-out", step >= i ? "w-full" : "w-0")} />
             </span>
-            <span className={cn(step === i ? "font-medium text-foreground" : "text-muted-foreground")}>{label}</span>
-            {i < 2 ? <span className="mx-1 h-px w-6 bg-border sm:w-10" aria-hidden="true" /> : null}
+            <span className={cn("mt-2 flex items-center gap-1.5", step === i ? "font-medium text-foreground" : "text-muted-foreground")}>
+              {step > i ? <Check className="size-3.5 text-success" aria-hidden="true" /> : <span className="font-mono tabular-nums">{String(i + 1).padStart(2, "0")}</span>}
+              {label}
+            </span>
           </li>
         ))}
       </ol>
@@ -135,7 +131,7 @@ export function OnboardingFlow({ user, workspaceId, templates, defaultTemplateId
             e.preventDefault();
             void saveProfile();
           }}
-          className="space-y-5 rounded-2xl border border-border bg-card p-6"
+          className="pop-in space-y-5 rounded-xl border border-border bg-card p-6 shadow-sm sm:p-8"
         >
           <div>
             <h1 className="text-xl font-semibold tracking-tight">Welcome to Codexa</h1>
@@ -164,7 +160,7 @@ export function OnboardingFlow({ user, workspaceId, templates, defaultTemplateId
               </Select>
             </Field>
           </div>
-          <div className="flex justify-end">
+          <div className="-mx-6 -mb-6 mt-6 flex justify-end border-t border-border bg-surface/60 px-6 py-3 sm:-mx-8 sm:-mb-8 sm:px-8">
             <Button type="submit" loading={busy} disabled={!name.trim()}>
               Continue <ArrowRight className="size-4" />
             </Button>
@@ -173,7 +169,7 @@ export function OnboardingFlow({ user, workspaceId, templates, defaultTemplateId
       ) : null}
 
       {step === 1 ? (
-        <div className="space-y-5 rounded-2xl border border-border bg-card p-6">
+        <div className="pop-in space-y-5 rounded-xl border border-border bg-card p-6 shadow-sm sm:p-8">
           <div>
             <h1 className="text-xl font-semibold tracking-tight">What are you building?</h1>
             <p className="mt-1 text-sm text-muted-foreground">Pick anything that applies. This only helps us suggest templates.</p>
@@ -189,15 +185,17 @@ export function OnboardingFlow({ user, workspaceId, templates, defaultTemplateId
                   onClick={() => setGoals((s) => (on ? s.filter((x) => x !== g) : [...s, g]))}
                   className={cn(
                     "rounded-full border px-3 py-1.5 text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
-                    on ? "border-primary bg-primary/10 text-primary" : "border-border text-muted-foreground hover:border-border-strong hover:text-foreground",
+                    "inline-flex items-center gap-1.5 active:scale-[0.97]",
+                    on ? "border-foreground bg-foreground text-background" : "border-border text-muted-foreground hover:border-border-strong hover:text-foreground",
                   )}
                 >
+                  {on ? <Check className="pop-in size-3.5" aria-hidden="true" /> : null}
                   {g}
                 </button>
               );
             })}
           </div>
-          <div className="flex items-center justify-between">
+          <div className="-mx-6 -mb-6 mt-6 flex items-center justify-between border-t border-border bg-surface/60 px-6 py-3 sm:-mx-8 sm:-mb-8 sm:px-8">
             <Button type="button" variant="ghost" onClick={() => setStep(0)}>
               <ArrowLeft className="size-4" /> Back
             </Button>
@@ -214,14 +212,14 @@ export function OnboardingFlow({ user, workspaceId, templates, defaultTemplateId
             e.preventDefault();
             void finish(true);
           }}
-          className="space-y-5 rounded-2xl border border-border bg-card p-6"
+          className="pop-in space-y-5 rounded-xl border border-border bg-card p-6 shadow-sm sm:p-8"
         >
           <div>
             <h1 className="text-xl font-semibold tracking-tight">Create your first project</h1>
             <p className="mt-1 text-sm text-muted-foreground">Start from a template, or describe what you want and let the AI builder take it from there.</p>
           </div>
           {!workspaceId ? <Alert variant="warning">You do not have a workspace yet, so we will take you to the dashboard instead.</Alert> : null}
-          <div className="inline-flex rounded-lg bg-muted p-1" role="tablist" aria-label="How to start">
+          <div className="inline-flex rounded-lg border border-border bg-surface p-0.5" role="tablist" aria-label="How to start">
             {(["template", "prompt"] as const).map((m) => (
               <button
                 key={m}
@@ -229,7 +227,7 @@ export function OnboardingFlow({ user, workspaceId, templates, defaultTemplateId
                 role="tab"
                 aria-selected={mode === m}
                 onClick={() => setMode(m)}
-                className={cn("rounded-md px-3 py-1.5 text-sm font-medium", mode === m ? "bg-background shadow-sm" : "text-muted-foreground")}
+                className={cn("rounded-md px-3 py-1.5 text-sm font-medium transition-all duration-200", mode === m ? "bg-background text-foreground shadow-sm ring-1 ring-border" : "text-muted-foreground hover:text-foreground")}
               >
                 {m === "template" ? "From a template" : "From a description"}
               </button>
@@ -245,7 +243,7 @@ export function OnboardingFlow({ user, workspaceId, templates, defaultTemplateId
               <Textarea id="ob-prompt" value={prompt} onChange={(e) => setPrompt(e.target.value)} rows={4} maxLength={2000} placeholder="A recipe app where I can save and tag recipes…" />
             </Field>
           )}
-          <div className="flex flex-col-reverse gap-2 sm:flex-row sm:items-center sm:justify-between">
+          <div className="-mx-6 -mb-6 mt-6 flex flex-col-reverse gap-2 border-t border-border bg-surface/60 px-6 py-3 sm:-mx-8 sm:-mb-8 sm:flex-row sm:items-center sm:justify-between sm:px-8">
             <Button type="button" variant="ghost" onClick={() => setStep(1)} disabled={busy}>
               <ArrowLeft className="size-4" /> Back
             </Button>

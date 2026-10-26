@@ -14,16 +14,17 @@ export function Meter({ label, used, limit, format, hint }: { label: string; use
   const pct = unlimited ? 0 : Math.min(100, Math.round((used / Math.max(1, limit)) * 100));
   const tone = pct >= 100 ? "bg-danger" : pct >= 80 ? "bg-warning" : "bg-primary";
   return (
-    <div>
-      <div className="flex items-baseline justify-between gap-3 text-sm">
-        <span className="font-medium">{label}</span>
-        <span className="tabular-nums text-muted-foreground">
-          {fmt(used)} / {unlimited ? "Unlimited" : fmt(limit)}
-          {!unlimited ? <span className="ml-1.5 text-xs">({pct}%)</span> : null}
-        </span>
+    <div className="bg-card p-4 sm:[&:last-child:nth-child(odd)]:col-span-2">
+      <div className="flex items-baseline justify-between gap-3">
+        <span className="text-[13px] text-muted-foreground">{label}</span>
+        {!unlimited ? <span className="text-xs tabular-nums text-muted-foreground">{pct}%</span> : null}
       </div>
+      <p className="mt-1 text-sm tabular-nums">
+        <span className="text-lg font-semibold tracking-tight">{fmt(used)}</span>
+        <span className="text-muted-foreground"> / {unlimited ? "Unlimited" : fmt(limit)}</span>
+      </p>
       <div
-        className="mt-1.5 h-2 overflow-hidden rounded-full bg-muted"
+        className="mt-2 h-1.5 overflow-hidden rounded-full bg-muted"
         role="progressbar"
         aria-label={label}
         aria-valuemin={0}
@@ -31,7 +32,7 @@ export function Meter({ label, used, limit, format, hint }: { label: string; use
         aria-valuenow={pct}
         aria-valuetext={unlimited ? `${fmt(used)} used, unlimited` : `${fmt(used)} of ${fmt(limit)}`}
       >
-        <div className={cn("h-full rounded-full transition-[width]", unlimited ? "bg-success/60" : tone)} style={{ width: unlimited ? "100%" : `${pct}%` }} />
+        <div className={cn("h-full rounded-full transition-[width] duration-700", unlimited ? "bg-success/60" : tone)} style={{ width: unlimited ? "100%" : `${pct}%` }} />
       </div>
       {hint ? <p className="mt-1 text-xs text-muted-foreground">{hint}</p> : null}
     </div>
@@ -61,7 +62,7 @@ export function UsageMeters({ entitlements, counts, showUpgrade = true }: { enti
         </p>
         <Badge variant="primary">{def.name} plan</Badge>
       </div>
-      <div className="grid gap-5 sm:grid-cols-2">
+      <div className="grid gap-px overflow-hidden rounded-lg border border-border bg-border sm:grid-cols-2">
         <Meter label="AI requests" used={e.used.ai_request} limit={l.aiRequestsPerMonth} />
         <Meter label="AI tokens" used={e.used.ai_tokens} limit={l.aiTokensPerMonth} format={compact} />
         <Meter label="Preview runtime" used={e.used.runtime_minutes} limit={l.runtimeMinutesPerMonth} format={minutes} />

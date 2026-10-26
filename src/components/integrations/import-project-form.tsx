@@ -93,62 +93,70 @@ export function ImportProjectForm({
   return (
     <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_360px]">
       <section aria-labelledby="pick-repo">
-        <h2 id="pick-repo" className="mb-3 text-base font-semibold">
-          1. Pick a repository
+        <h2 id="pick-repo" className="mb-4 flex items-center gap-2.5 text-base font-semibold tracking-tight">
+          <span className="flex size-5 items-center justify-center rounded-full bg-foreground text-[11px] font-semibold text-background">1</span>
+          Pick a repository
         </h2>
         <RepoList onSelect={select} selectedId={repo?.id ?? null} actionLabel="Select" />
       </section>
-      <form onSubmit={submit} className="h-fit space-y-4 rounded-xl border border-border bg-card p-4 lg:sticky lg:top-20" aria-labelledby="import-settings">
-        <h2 id="import-settings" className="text-base font-semibold">
-          2. Import settings
-        </h2>
-        {error ? (
-          <Alert variant="danger" title="Import failed">
-            {error}
-          </Alert>
-        ) : null}
-        <Field label="Repository (owner/name)" htmlFor="import-repo" error={fieldErrors.repo} hint="Select from the list or type any repository you can access.">
-          <Input id="import-repo" value={repoName} onChange={(e) => setRepoName(e.target.value)} placeholder="owner/name" autoComplete="off" aria-invalid={Boolean(fieldErrors.repo) || undefined} />
-        </Field>
-        <Field label="Branch" htmlFor="import-branch" error={fieldErrors.branch ?? branchError} hint={branches === null && repoName ? "Loading branches…" : undefined}>
-          {branches && branches.length ? (
-            <Select id="import-branch" value={branch} onChange={(e) => setBranch(e.target.value)}>
-              {branches.map((b) => (
-                <option key={b.name} value={b.name}>
-                  {b.name}
-                  {b.protected ? " (protected)" : ""}
-                </option>
-              ))}
-            </Select>
-          ) : (
-            <Input id="import-branch" value={branch} onChange={(e) => setBranch(e.target.value)} placeholder="main" autoComplete="off" />
-          )}
-        </Field>
-        <Field label="Workspace" htmlFor="import-workspace" error={fieldErrors.workspaceId}>
-          <Select id="import-workspace" value={workspaceId} onChange={(e) => setWorkspaceId(e.target.value)} disabled={!workspaces.length}>
-            {workspaces.length ? (
-              workspaces.map((w) => (
-                <option key={w.id} value={w.id}>
-                  {w.name}
-                </option>
-              ))
+      <form onSubmit={submit} className="h-fit overflow-hidden rounded-xl border border-border bg-card lg:sticky lg:top-20" aria-labelledby="import-settings">
+        <div className="border-b border-border px-5 py-4">
+          <h2 id="import-settings" className="flex items-center gap-2.5 text-base font-semibold tracking-tight">
+            <span className="flex size-5 items-center justify-center rounded-full bg-foreground text-[11px] font-semibold text-background">2</span>
+            Import settings
+          </h2>
+        </div>
+        <div className="space-y-4 px-5 py-5">
+          {error ? (
+            <Alert variant="danger" title="Import failed">
+              {error}
+            </Alert>
+          ) : null}
+          <Field label="Repository (owner/name)" htmlFor="import-repo" error={fieldErrors.repo} hint="Select from the list or type any repository you can access.">
+            <Input id="import-repo" value={repoName} onChange={(e) => setRepoName(e.target.value)} placeholder="owner/name" autoComplete="off" aria-invalid={Boolean(fieldErrors.repo) || undefined} />
+          </Field>
+          <Field label="Branch" htmlFor="import-branch" error={fieldErrors.branch ?? branchError} hint={branches === null && repoName ? "Loading branches…" : undefined}>
+            {branches && branches.length ? (
+              <Select id="import-branch" value={branch} onChange={(e) => setBranch(e.target.value)}>
+                {branches.map((b) => (
+                  <option key={b.name} value={b.name}>
+                    {b.name}
+                    {b.protected ? " (protected)" : ""}
+                  </option>
+                ))}
+              </Select>
             ) : (
-              <option value="">No workspace where you can create projects</option>
+              <Input id="import-branch" value={branch} onChange={(e) => setBranch(e.target.value)} placeholder="main" autoComplete="off" />
             )}
-          </Select>
-        </Field>
-        <Field label="Project name" htmlFor="import-name" error={fieldErrors.name} hint="Defaults to the repository name.">
-          <Input id="import-name" value={name} onChange={(e) => setName(e.target.value)} maxLength={100} placeholder={repo?.name ?? "my-app"} />
-        </Field>
-        <p className="text-xs text-muted-foreground">Text files up to 1 MB each (max 2000 files) are imported; node_modules, build output and binaries are skipped.</p>
-        <Button type="submit" className="w-full" disabled={!canSubmit} loading={busy}>
-          <Download className="size-4" aria-hidden="true" /> {busy ? "Importing…" : "Import repository"}
-        </Button>
-        {result ? (
-          <Alert variant="success" title={`Imported ${result.imported} files`}>
-            Opening {result.project.name}… {result.skipped.length ? `${result.skipped.length} files were skipped.` : ""}
-          </Alert>
-        ) : null}
+          </Field>
+          <Field label="Workspace" htmlFor="import-workspace" error={fieldErrors.workspaceId}>
+            <Select id="import-workspace" value={workspaceId} onChange={(e) => setWorkspaceId(e.target.value)} disabled={!workspaces.length}>
+              {workspaces.length ? (
+                workspaces.map((w) => (
+                  <option key={w.id} value={w.id}>
+                    {w.name}
+                  </option>
+                ))
+              ) : (
+                <option value="">No workspace where you can create projects</option>
+              )}
+            </Select>
+          </Field>
+          <Field label="Project name" htmlFor="import-name" error={fieldErrors.name} hint="Defaults to the repository name.">
+            <Input id="import-name" value={name} onChange={(e) => setName(e.target.value)} maxLength={100} placeholder={repo?.name ?? "my-app"} />
+          </Field>
+          {result ? (
+            <Alert variant="success" title={`Imported ${result.imported} files`}>
+              Opening {result.project.name}… {result.skipped.length ? `${result.skipped.length} files were skipped.` : ""}
+            </Alert>
+          ) : null}
+        </div>
+        <div className="space-y-3 border-t border-border bg-surface/60 px-5 py-3">
+          <p className="text-xs text-muted-foreground">Text files up to 1 MB each (max 2000 files) are imported; node_modules, build output and binaries are skipped.</p>
+          <Button type="submit" size="sm" className="w-full" disabled={!canSubmit} loading={busy}>
+            <Download className="size-3.5" aria-hidden="true" /> {busy ? "Importing…" : "Import repository"}
+          </Button>
+        </div>
       </form>
     </div>
   );

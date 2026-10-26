@@ -2,7 +2,6 @@ import { pageMetadata } from "@/lib/seo";
 import { requireUser } from "@/lib/auth/guards";
 import { LOCALES } from "@/lib/billing/account-service";
 import { PageHeader } from "@/components/app/app-shell";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { ProfileForm } from "@/components/settings/profile-form";
 
 export const metadata = pageMetadata({ title: "Profile settings", description: "Update your name, time zone, language and avatar.", path: "/settings/profile", noindex: true });
@@ -23,19 +22,11 @@ export default async function ProfileSettingsPage() {
   return (
     <div>
       <PageHeader title="Profile" description="How you appear to teammates and how dates are shown to you." />
-      <Card>
-        <CardHeader>
-          <CardTitle>Personal details</CardTitle>
-          <CardDescription>These details are visible to members of workspaces you belong to.</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <ProfileForm
-            initial={{ name: user.name, email: user.email, timezone: user.timezone, locale, avatarUrl: user.avatarUrl ?? "" }}
-            timezones={timezones.includes("UTC") ? timezones : ["UTC", ...timezones]}
-            locales={LOCALES.map((l) => ({ value: l.value, label: l.label }))}
-          />
-        </CardContent>
-      </Card>
+      <ProfileForm
+        initial={{ name: user.name, email: user.email, timezone: user.timezone, locale, avatarUrl: user.avatarUrl ?? "" }}
+        timezones={timezones.includes("UTC") ? timezones : ["UTC", ...timezones]}
+        locales={LOCALES.map((l) => ({ value: l.value, label: l.label }))}
+      />
     </div>
   );
 }

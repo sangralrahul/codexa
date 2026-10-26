@@ -24,7 +24,7 @@ export default async function ImportProjectPage({ searchParams }: { searchParams
         title="Import from GitHub"
         description="Create a Codexa project from a repository branch. The project stays linked so you can commit and push from the workspace."
         actions={
-          <Link href="/dashboard/github" className={buttonClasses("outline", "md")}>
+          <Link href="/dashboard/github" className={buttonClasses("outline", "sm")}>
             Your repositories
           </Link>
         }

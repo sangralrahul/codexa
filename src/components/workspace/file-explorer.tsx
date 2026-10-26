@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { ChevronDown, ChevronRight, File, FilePlus2, FolderPlus, Folder, FolderOpen, MoreHorizontal, Pencil, RefreshCw, Trash2 } from "lucide-react";
+import { ChevronRight, FilePlus2, FolderPlus, Folder, FolderOpen, MoreHorizontal, Pencil, RefreshCw, Trash2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { buildTree, joinPath, validateName, type TreeNode } from "@/lib/client/workspace/paths";
 import type { EditorState } from "@/lib/client/workspace/use-editor-state";
@@ -9,6 +9,8 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSepara
 import { Tooltip } from "@/components/ui/tooltip";
 import { ConfirmDialog } from "./confirm-dialog";
 import { Alert } from "@/components/ui/misc";
+import { FileIcon } from "./file-icon";
+import { toolButton } from "./panel-tabs";
 
 type Pending = { kind: "file" | "folder"; dir: string } | { kind: "rename"; path: string; isFolder: boolean } | null;
 
@@ -70,8 +72,8 @@ export function FileExplorer({ state, canEdit, projectId }: { state: EditorState
 
   return (
     <div className="flex h-full min-h-0 flex-col" data-testid="file-explorer">
-      <div className="flex items-center justify-between gap-1 border-b border-border px-2 py-1.5">
-        <span className="truncate px-1 text-xs font-medium uppercase tracking-wide text-muted-foreground">Files</span>
+      <div className="flex h-9 shrink-0 items-center justify-between gap-1 pl-3 pr-1.5">
+        <span className="truncate text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">Explorer</span>
         <div className="flex items-center">
           {canEdit ? (
             <>
@@ -111,7 +113,12 @@ export function FileExplorer({ state, canEdit, projectId }: { state: EditorState
         {pending && pending.kind !== "rename" && pending.dir === "" ? (
           <NameInput depth={0} placeholder={pending.kind === "file" ? "filename.ts" : "folder-name"} onSubmit={submitPending} onCancel={() => setPending(null)} />
         ) : null}
-        {tree.length === 0 && !pending ? <p className="px-3 py-6 text-center text-xs text-muted-foreground">No files yet.</p> : null}
+        {tree.length === 0 && !pending ? (
+          <div className="px-4 py-10 text-center">
+            <p className="text-xs font-medium">No files yet</p>
+            <p className="mt-1 text-xs text-muted-foreground">{canEdit ? "Create a file, or ask the AI in the Chat tab to scaffold the project." : "This project has no files."}</p>
+          </div>
+        ) : null}
         {tree.map((node) => (
           <Node
             key={node.path}
@@ -155,7 +162,7 @@ export function FileExplorer({ state, canEdit, projectId }: { state: EditorState
 function IconButton({ label, onClick, children }: { label: string; onClick: () => void; children: React.ReactNode }) {
   return (
     <Tooltip content={label}>
-      <button type="button" onClick={onClick} aria-label={label} className="rounded-md p-1 text-muted-foreground hover:bg-muted hover:text-foreground">
+      <button type="button" onClick={onClick} aria-label={label} className={cn(toolButton, "size-7")}>
         {children}
       </button>
     </Tooltip>
@@ -182,7 +189,7 @@ function NameInput({
     ref.current?.setSelectionRange(0, dot > 0 ? dot : initial.length);
   }, [initial]);
   return (
-    <div style={{ paddingLeft: depth * 12 + 8 }} className="py-0.5 pr-2">
+    <div style={{ paddingLeft: depth * 12 + 22 }} className="py-0.5 pr-2">
       <input
         ref={ref}
         defaultValue={initial}
@@ -245,29 +252,32 @@ function Node({
     <div role="treeitem" aria-expanded={isFolder ? !isCollapsed : undefined} aria-selected={isActive}>
       <div
         className={cn(
-          "group flex items-center gap-1 pr-1 text-[13px] hover:bg-muted",
-          isActive && "bg-primary/10 text-foreground",
-          !isActive && open.has(node.path) && "text-foreground",
+          "group relative mx-1 flex items-center gap-1 rounded-md pr-1 text-[13px] transition-colors hover:bg-muted",
+          isActive ? "bg-muted font-medium text-foreground" : open.has(node.path) ? "text-foreground" : "text-foreground/85",
         )}
-        style={{ paddingLeft: depth * 12 + 4 }}
+        style={{ paddingLeft: depth * 12 + 6 }}
       >
+        {/* Indentation guides, one per ancestor level. */}
+        {Array.from({ length: depth }, (_, i) => (
+          <span key={i} aria-hidden="true" className="pointer-events-none absolute inset-y-0 w-px bg-border" style={{ left: i * 12 + 12 }} />
+        ))}
         <button
           type="button"
           onClick={() => (isFolder ? toggle(node.path) : onOpen(node.path))}
           onDoubleClick={() => canEdit && !isFolder && onRename(node.path, false)}
-          className="flex min-w-0 flex-1 items-center gap-1.5 py-1 text-left focus-visible:outline-none"
+          className="flex h-7 min-w-0 flex-1 items-center gap-1.5 text-left focus-visible:outline-none"
           aria-label={isFolder ? `${isCollapsed ? "Expand" : "Collapse"} folder ${node.name}` : `Open ${node.path}`}
           aria-current={isActive ? "true" : undefined}
         >
           {isFolder ? (
             <>
-              {isCollapsed ? <ChevronRight className="size-3.5 shrink-0 text-muted-foreground" /> : <ChevronDown className="size-3.5 shrink-0 text-muted-foreground" />}
+              <ChevronRight className={cn("size-3.5 shrink-0 text-muted-foreground transition-transform duration-200", !isCollapsed && "rotate-90")} />
               {isCollapsed ? <Folder className="size-4 shrink-0 text-muted-foreground" /> : <FolderOpen className="size-4 shrink-0 text-muted-foreground" />}
             </>
           ) : (
             <>
               <span className="w-3.5 shrink-0" />
-              <File className="size-4 shrink-0 text-muted-foreground" />
+              <FileIcon name={node.name} />
             </>
           )}
           <span className="truncate">{node.name}</span>
@@ -279,7 +289,7 @@ function Node({
               <button
                 type="button"
                 aria-label={`Actions for ${node.name}`}
-                className="rounded p-0.5 text-muted-foreground opacity-0 hover:bg-muted group-hover:opacity-100 focus-visible:opacity-100 data-[state=open]:opacity-100"
+                className="rounded p-0.5 text-muted-foreground opacity-0 hover:bg-background hover:text-foreground group-hover:opacity-100 focus-visible:opacity-100 data-[state=open]:opacity-100"
               >
                 <MoreHorizontal className="size-4" />
               </button>

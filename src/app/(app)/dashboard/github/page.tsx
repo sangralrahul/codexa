@@ -21,11 +21,11 @@ export default async function DashboardGithubPage({ searchParams }: { searchPara
         description={ready ? `Repositories available to @${account.username}. Import one to start a linked project.` : "Link your GitHub account to browse and import repositories."}
         actions={
           <>
-            <Link href="/connect-github" className={buttonClasses("outline", "md")}>
+            <Link href="/connect-github" className={buttonClasses("outline", "sm")}>
               {account.linked ? "Manage link" : "Connect GitHub"}
             </Link>
             {ready ? (
-              <Link href="/import-project" className={buttonClasses("primary", "md")}>
+              <Link href="/import-project" className={buttonClasses("primary", "sm")}>
                 Import by name
               </Link>
             ) : null}

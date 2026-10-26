@@ -1,9 +1,8 @@
 "use client";
 
 import * as React from "react";
-import { Hammer, MessageCircleQuestion, Send, Square, Wrench } from "lucide-react";
+import { ArrowUp, Hammer, MessageCircleQuestion, Square, Wrench } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { Button, Textarea } from "@/components/ui";
 import type { AgentMode } from "./types";
 
 const MODES: { id: AgentMode; label: string; hint: string; Icon: typeof Hammer }[] = [
@@ -57,68 +56,87 @@ export function Composer({
 
   return (
     <form
-      className="border-t border-border bg-background p-2 sm:p-3"
+      className="shrink-0 bg-background p-2 sm:p-3"
       onSubmit={(e) => {
         e.preventDefault();
         if (canSend) onSend();
       }}
     >
-      <div role="radiogroup" aria-label="Mode" className="mb-2 flex flex-wrap gap-1">
-        {MODES.map(({ id, label, hint, Icon }) => (
-          <button
-            key={id}
-            type="button"
-            role="radio"
-            aria-checked={mode === id}
-            title={hint}
-            disabled={running}
-            onClick={() => onModeChange(id)}
-            className={cn(
-              "inline-flex h-7 items-center gap-1 rounded-md border px-2 text-xs font-medium transition-colors focus-visible:outline-2 focus-visible:outline-ring disabled:opacity-60",
-              mode === id ? "border-primary bg-primary/10 text-primary" : "border-border text-muted-foreground hover:bg-muted hover:text-foreground",
-            )}
-          >
-            <Icon className="size-3.5" aria-hidden="true" />
-            {label}
-          </button>
-        ))}
-      </div>
       {mode === "fix" && lastError ? (
-        <details className="mb-2 rounded-md border border-warning/40 bg-warning/5 text-xs">
-          <summary className="cursor-pointer px-2 py-1 font-medium">Latest error will be sent to the AI</summary>
-          <pre className="max-h-32 overflow-auto px-2 pb-2 font-mono text-[11px] text-muted-foreground">{lastError}</pre>
+        <details className="mb-2 rounded-lg border border-warning/40 bg-warning/5 text-xs">
+          <summary className="cursor-pointer px-2.5 py-1.5 font-medium">Latest error will be sent to the AI</summary>
+          <pre className="max-h-32 overflow-auto px-2.5 pb-2 font-mono text-[11px] text-muted-foreground">{lastError}</pre>
         </details>
       ) : null}
-      <label htmlFor="ai-composer" className="sr-only">
-        Message to the AI
-      </label>
-      <Textarea
-        id="ai-composer"
-        ref={textareaRef}
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        onKeyDown={onKeyDown}
-        placeholder={placeholder}
-        disabled={disabled || running}
-        rows={3}
-        maxLength={8000}
-        className="min-h-[72px] resize-y"
-        aria-describedby="ai-composer-hint"
-      />
-      <div className="mt-2 flex items-center justify-between gap-2">
-        <p id="ai-composer-hint" className="truncate text-[11px] text-muted-foreground">
-          {disabled && disabledReason ? disabledReason : running ? "Working… you can cancel at any time." : "Enter to send · Shift+Enter for a new line"}
-        </p>
-        {running ? (
-          <Button type="button" size="sm" variant="outline" onClick={onCancel}>
-            <Square className="size-3.5" aria-hidden="true" /> Cancel
-          </Button>
-        ) : (
-          <Button type="submit" size="sm" disabled={!canSend}>
-            <Send className="size-3.5" aria-hidden="true" /> Send
-          </Button>
+      <div
+        className={cn(
+          "rounded-xl border border-border bg-card shadow-sm transition-[border-color,box-shadow] focus-within:border-border-strong focus-within:shadow-md",
+          (disabled || running) && "bg-muted/40",
         )}
+      >
+        <label htmlFor="ai-composer" className="sr-only">
+          Message to the AI
+        </label>
+        <textarea
+          id="ai-composer"
+          ref={textareaRef}
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          onKeyDown={onKeyDown}
+          placeholder={placeholder}
+          disabled={disabled || running}
+          rows={2}
+          maxLength={8000}
+          className="block max-h-48 min-h-[64px] w-full resize-none bg-transparent px-3 pt-2.5 text-sm leading-relaxed outline-none [field-sizing:content] placeholder:text-muted-foreground disabled:cursor-not-allowed"
+          aria-describedby="ai-composer-hint"
+        />
+        <div className="flex items-center justify-between gap-2 px-2 pb-2">
+          <div role="radiogroup" aria-label="Mode" className="flex items-center rounded-lg bg-muted p-0.5">
+            {MODES.map(({ id, label, hint, Icon }) => (
+              <button
+                key={id}
+                type="button"
+                role="radio"
+                aria-checked={mode === id}
+                title={hint}
+                disabled={running}
+                onClick={() => onModeChange(id)}
+                className={cn(
+                  "inline-flex h-6 items-center gap-1 rounded-md px-2 text-[11.5px] font-medium transition-colors focus-visible:outline-2 focus-visible:outline-ring disabled:opacity-60",
+                  mode === id ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground",
+                )}
+              >
+                <Icon className="size-3" aria-hidden="true" />
+                {label}
+              </button>
+            ))}
+          </div>
+          {running ? (
+            <button
+              type="button"
+              onClick={onCancel}
+              aria-label="Cancel"
+              title="Cancel the run"
+              className="inline-flex size-8 shrink-0 items-center justify-center rounded-full border border-border-strong bg-background text-foreground transition-transform hover:bg-muted active:scale-95"
+            >
+              <Square className="size-3 fill-current" aria-hidden="true" />
+            </button>
+          ) : (
+            <button
+              type="submit"
+              disabled={!canSend}
+              aria-label="Send"
+              title="Send (Enter)"
+              className="inline-flex size-8 shrink-0 items-center justify-center rounded-full bg-foreground text-background transition-[transform,opacity] hover:opacity-90 active:scale-95 disabled:pointer-events-none disabled:opacity-30"
+            >
+              <ArrowUp className="size-4" aria-hidden="true" />
+            </button>
+          )}
+        </div>
       </div>
+      <p id="ai-composer-hint" className="mt-1.5 truncate px-1 text-[11px] text-muted-foreground">
+        {disabled && disabledReason ? disabledReason : running ? "Working… you can cancel at any time." : "Enter to send · Shift+Enter for a new line"}
+      </p>
     </form>
   );
 }

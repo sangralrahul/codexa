@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { api, ClientApiError } from "@/lib/client/api";
 import { Button } from "@/components/ui/button";
 import { Field, Input } from "@/components/ui/input";
-import { Alert } from "@/components/ui/misc";
+import { SettingsCard } from "./section";
 
 export function NewWorkspaceForm() {
   const router = useRouter();
@@ -29,16 +29,22 @@ export function NewWorkspaceForm() {
   }
 
   return (
-    <form onSubmit={onSubmit} className="space-y-4" noValidate>
-      <Field label="Workspace name" htmlFor="new-ws-name" hint="For example your company, team or client name." error={error}>
-        <Input id="new-ws-name" value={name} onChange={(e) => setName(e.target.value)} required minLength={2} maxLength={60} autoFocus aria-invalid={Boolean(error)} />
-      </Field>
-      <Alert variant="info">New workspaces start on the Free plan. You become its owner and can invite members from the Members page.</Alert>
-      <div className="flex justify-end">
-        <Button type="submit" loading={busy}>
-          Create workspace
-        </Button>
-      </div>
+    <form onSubmit={onSubmit} noValidate className="max-w-xl">
+      <SettingsCard
+        id="new-workspace"
+        title="Create a workspace"
+        description="You can rename it or change its URL slug later."
+        hint="Starts on the Free plan, with you as owner."
+        footer={
+          <Button type="submit" size="sm" loading={busy}>
+            Create workspace
+          </Button>
+        }
+      >
+        <Field label="Workspace name" htmlFor="new-ws-name" hint="For example your company, team or client name. You can invite members from the Members page next." error={error}>
+          <Input id="new-ws-name" value={name} onChange={(e) => setName(e.target.value)} required minLength={2} maxLength={60} autoFocus aria-invalid={Boolean(error)} />
+        </Field>
+      </SettingsCard>
     </form>
   );
 }

@@ -1,14 +1,14 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { ArrowDownToLine, Copy, Trash2 } from "lucide-react";
+import { ArrowDownToLine, Check, Copy, TerminalSquare, Trash2 } from "lucide-react";
 import type { Terminal } from "@xterm/xterm";
 import type { FitAddon } from "@xterm/addon-fit";
-import { Button } from "@/components/ui/button";
 import { StatusDot } from "@/components/ui/misc";
 import { Tooltip, TooltipProvider } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 import type { LogLine } from "@/lib/runtime/types";
+import { toolButton } from "./panel-tabs";
 
 /**
  * Logs panel: streams the runtime's stdout/stderr/system lines over SSE into
@@ -20,6 +20,14 @@ const COLORS = { stdout: "", stderr: "\x1b[31m", system: "\x1b[36m" } as const;
 const RESET = "\x1b[0m";
 
 type ConnState = "connecting" | "live" | "ended" | "error";
+
+/** xterm needs concrete colours: read the site's code tokens so the terminal matches the theme. */
+function terminalTheme() {
+  const css = getComputedStyle(document.documentElement);
+  const bg = css.getPropertyValue("--code-bg").trim() || "black";
+  const fg = css.getPropertyValue("--code-fg").trim() || "white";
+  return { background: bg, foreground: fg, cursor: bg, selectionBackground: "rgba(255,255,255,0.18)" };
+}
 
 export function LogsPanel({ projectId }: { projectId: string; conversationId?: string }) {
   const hostRef = useRef<HTMLDivElement>(null);
@@ -70,7 +78,7 @@ export function LogsPanel({ projectId }: { projectId: string; conversationId?: s
           fontSize: 12,
           fontFamily: "ui-monospace, SFMono-Regular, Menlo, monospace",
           scrollback: MAX_LINES,
-          theme: { background: "#0b0d12", foreground: "#e6e8ee", cursor: "#0b0d12" },
+          theme: terminalTheme(),
         });
         const fit = new FitAddon();
         term.loadAddon(fit);
@@ -167,42 +175,46 @@ export function LogsPanel({ projectId }: { projectId: string; conversationId?: s
   return (
     <TooltipProvider>
       <section className="flex h-full min-h-0 flex-col bg-background" aria-label="Logs">
-        <div className="flex shrink-0 items-center gap-2 border-b border-border px-2 py-1.5">
-          <span className="flex items-center gap-1.5 text-xs font-medium" aria-live="polite">
-            <StatusDot status={dot} /> Runtime {runtimeStatus} · <span className="font-normal text-muted-foreground">{connLabel}</span>
+        <div className="flex h-10 shrink-0 items-center gap-2 border-b border-border px-2">
+          <span className="flex items-center gap-1.5 pl-1 text-xs font-medium" aria-live="polite">
+            <StatusDot status={dot} /> <span>Runtime {runtimeStatus}</span>
+            <span className="rounded-full bg-muted px-1.5 py-0.5 text-[10px] font-normal text-muted-foreground">{connLabel}</span>
           </span>
-          <div className="ml-auto flex items-center gap-1">
+          <div className="ml-auto flex items-center gap-0.5">
             <Tooltip content={autoscroll ? "Autoscroll on" : "Autoscroll off"}>
-              <Button size="icon" variant="ghost" aria-label="Toggle autoscroll" aria-pressed={autoscroll} onClick={() => setAutoscroll((v) => !v)} className={cn(autoscroll && "bg-muted")}>
-                <ArrowDownToLine className="size-4" aria-hidden="true" />
-              </Button>
+              <button type="button" aria-label="Toggle autoscroll" aria-pressed={autoscroll} onClick={() => setAutoscroll((v) => !v)} className={cn(toolButton, "size-7")}>
+                <ArrowDownToLine className="size-3.5" aria-hidden="true" />
+              </button>
             </Tooltip>
             <Tooltip content={copied ? "Copied" : "Copy logs"}>
-              <Button size="icon" variant="ghost" aria-label="Copy logs" onClick={() => void copy()}>
-                <Copy className="size-4" aria-hidden="true" />
-              </Button>
+              <button type="button" aria-label="Copy logs" onClick={() => void copy()} className={cn(toolButton, "size-7")}>
+                {copied ? <Check className="pop-in size-3.5 text-success" aria-hidden="true" /> : <Copy className="size-3.5" aria-hidden="true" />}
+              </button>
             </Tooltip>
             <Tooltip content="Clear">
-              <Button size="icon" variant="ghost" aria-label="Clear logs" onClick={clear}>
-                <Trash2 className="size-4" aria-hidden="true" />
-              </Button>
+              <button type="button" aria-label="Clear logs" onClick={clear} className={cn(toolButton, "size-7")}>
+                <Trash2 className="size-3.5" aria-hidden="true" />
+              </button>
             </Tooltip>
           </div>
         </div>
-        <div className="relative min-h-0 flex-1 bg-[#0b0d12]">
+        <div className="relative min-h-0 flex-1 bg-code-bg">
           {fallback ? (
-            <pre className="h-full overflow-auto p-2 font-mono text-[12px] leading-5 text-[#e6e8ee]" aria-live="polite">
+            <pre className="h-full overflow-auto p-3 font-mono text-[12px] leading-5 text-code-fg" aria-live="polite">
               {fallbackLines.length ? fallbackLines.map((l, i) => (
-                <div key={i} className={cn(l.stream === "stderr" && "text-red-400", l.stream === "system" && "text-cyan-300")}>
+                <div key={i} className={cn(l.stream === "stderr" && "text-danger", l.stream === "system" && "text-info")}>
                   {l.line}
                 </div>
-              )) : <span className="text-[#9aa3b2]">No log output yet. Start the preview to see dev server output here.</span>}
+              )) : <span className="text-code-fg/60">No log output yet. Start the preview to see dev server output here.</span>}
             </pre>
           ) : (
-            <div ref={hostRef} className="h-full w-full p-1" aria-label="Terminal output" />
+            <div ref={hostRef} className="h-full w-full p-2" aria-label="Terminal output" />
           )}
           {!fallback && conn === "ended" && !hasOutput ? (
-            <p className="pointer-events-none absolute inset-x-0 top-2 text-center text-xs text-[#9aa3b2]">No runtime is running. Start the preview to stream its logs here.</p>
+            <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center gap-2 p-6 text-center text-code-fg/60">
+              <TerminalSquare className="size-6" aria-hidden="true" />
+              <p className="text-xs">No runtime is running. Start the preview to stream its logs here.</p>
+            </div>
           ) : null}
         </div>
       </section>

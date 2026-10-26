@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Plus } from "lucide-react";
-import { PageHeader } from "@/components/app/app-shell";
+import { AppPage, PageHeader } from "@/components/app/app-shell";
+import { templateCategory } from "@/components/projects/template-summaries";
 import { requireUser } from "@/lib/auth/guards";
 import { getCurrentWorkspace } from "@/lib/services/current-workspace";
 import { listProjects } from "@/lib/services/projects";
@@ -25,16 +26,17 @@ export default async function ProjectsPage() {
       updatedAt: s.updatedAt.toISOString(),
       workspaceName: current!.workspace.name,
       role: current!.role,
+      category: templateCategory(s.templateId),
     };
   });
   return (
-    <div className="container-x py-8">
+    <AppPage>
       <PageHeader
         title="Projects"
         description={current ? `${items.length} project${items.length === 1 ? "" : "s"} in ${current.workspace.name}` : undefined}
         actions={
           current && current.role !== "viewer" ? (
-            <Link href="/new-project" className={buttonClasses("primary", "md")}>
+            <Link href="/new-project" className={buttonClasses("primary", "sm", "rounded-md")}>
               <Plus className="size-4" /> New project
             </Link>
           ) : null
@@ -51,6 +53,6 @@ export default async function ProjectsPage() {
       ) : (
         <ProjectsBrowser projects={items} />
       )}
-    </div>
+    </AppPage>
   );
 }

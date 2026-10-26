@@ -6,6 +6,7 @@ import { filesApi } from "@/lib/client/workspace/api";
 import type { SearchResult } from "@/lib/client/workspace/types";
 import { Input } from "@/components/ui/input";
 import { Spinner } from "@/components/ui/misc";
+import { FileIcon } from "./file-icon";
 
 export function SearchPanel({ projectId, onOpen, focusKey }: { projectId: string; onOpen: (path: string, line: number) => void; focusKey: number }) {
   const [query, setQuery] = useState("");
@@ -88,15 +89,17 @@ export function SearchPanel({ projectId, onOpen, focusKey }: { projectId: string
         {!results && !loading && !error ? <p className="px-3 py-6 text-center text-xs text-muted-foreground">Type to search file contents. Results open at the matching line.</p> : null}
         {Object.entries(grouped).map(([path, rows]) => (
           <div key={path} className="py-1">
-            <p className="truncate px-3 py-1 text-[11px] font-medium text-muted-foreground" title={path}>
-              {path} <span className="text-muted-foreground/70">({rows.length})</span>
+            <p className="flex items-center gap-1.5 truncate px-3 py-1 text-[11.5px] font-medium" title={path}>
+              <FileIcon name={path.split("/").pop() ?? path} className="size-3.5" />
+              <span className="truncate">{path}</span>
+              <span className="ml-auto shrink-0 rounded-full bg-muted px-1.5 text-[10px] tabular-nums text-muted-foreground">{rows.length}</span>
             </p>
             {rows.map((r) => (
               <button
                 key={`${r.path}:${r.line}`}
                 type="button"
                 onClick={() => onOpen(r.path, r.line)}
-                className="flex w-full items-start gap-2 px-3 py-1 text-left text-xs hover:bg-muted"
+                className="flex w-full items-start gap-2 px-3 py-1 text-left text-xs transition-colors hover:bg-muted focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-ring"
               >
                 <span className="w-8 shrink-0 text-right tabular-nums text-muted-foreground">{r.line}</span>
                 <span className="truncate font-mono">{r.text.trim()}</span>

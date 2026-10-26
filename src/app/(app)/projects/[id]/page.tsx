@@ -7,13 +7,14 @@ import { listFiles, touchProject } from "@/lib/services/projects";
 import { serializeProject } from "@/app/api/v1/projects/_lib/serialize";
 import { Workspace } from "@/components/workspace/workspace";
 import type { FileEntry, ProjectDto } from "@/lib/client/workspace/types";
+import type { User } from "@/db/schema";
 
 type Props = { params: Promise<{ id: string }> };
 
-async function loadAccess(id: string): Promise<{ access: ProjectAccess } | { denied: true } | { missing: true }> {
+async function loadAccess(id: string): Promise<{ access: ProjectAccess; user: User } | { denied: true } | { missing: true }> {
   const user = await requireUser(`/projects/${id}`);
   try {
-    return { access: await assertProjectAccess(user, id, "viewer") };
+    return { access: await assertProjectAccess(user, id, "viewer"), user };
   } catch (err) {
     if (err instanceof ApiError && err.status === 403) return { denied: true };
     if (err instanceof ApiError && err.status === 404) return { missing: true };
@@ -32,7 +33,8 @@ export default async function ProjectWorkspacePage({ params }: Props) {
   const res = await loadAccess(id);
   if ("denied" in res) redirect("/access-denied");
   if ("missing" in res) notFound();
-  const { project, role } = res.access;
+  const { project, role, workspace } = res.access;
+  const { user } = res;
   const [files] = await Promise.all([listFiles(project.id), touchProject(project.id)]);
   const s = serializeProject(project);
   const dto: ProjectDto = {
@@ -42,5 +44,6 @@ export default async function ProjectWorkspacePage({ params }: Props) {
     updatedAt: s.updatedAt.toISOString(),
   };
   const entries: FileEntry[] = files.map((f) => ({ path: f.path, size: f.size, isBinary: f.isBinary, updatedAt: f.updatedAt.toISOString() }));
-  return <Workspace project={dto} role={role} files={entries} />;
+  // The workspace is full-screen (AppShell focus mode), so it carries its own breadcrumb and account menu.
+  return <Workspace project={dto} role={role} files={entries} workspaceName={workspace.name} user={{ name: user.name, email: user.email, avatarUrl: user.avatarUrl }} />;
 }

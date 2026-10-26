@@ -4,6 +4,7 @@ import { buttonClasses } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { DifficultyBadge, FrameworkBadge } from "./badges";
 import type { TemplateCardData } from "./types";
+import { TemplateThumb } from "./template-thumb";
 
 export function templatePreviewHref(id: string) {
   return `/templates/preview/${id}`;
@@ -17,6 +18,7 @@ export function TemplateCard({ template, action }: { template: TemplateCardData;
   const t = template;
   return (
     <li className="flex h-full flex-col glow-card rounded-2xl border border-border p-5 text-card-foreground">
+      <TemplateThumb category={t.category} className="mb-4" />
       <div className="flex items-start justify-between gap-3">
         <div className="flex flex-wrap items-center gap-1.5">
           <FrameworkBadge name={t.frameworkName} />

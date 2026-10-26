@@ -5,8 +5,8 @@ import { getCurrentWorkspace } from "@/lib/services/current-workspace";
 import { latestSubscription } from "@/lib/billing/webhooks";
 import { grantsEntitlements } from "@/lib/billing/state";
 import { PageHeader } from "@/components/app/app-shell";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Alert, EmptyState } from "@/components/ui/misc";
+import { SettingsCard } from "@/components/settings/section";
+import { EmptyState } from "@/components/ui/misc";
 import { buttonClasses } from "@/components/ui/button";
 import { WorkspaceGeneralForm } from "@/components/settings/workspace-general-form";
 import { LeaveWorkspaceButton } from "@/components/settings/members-panel";
@@ -30,38 +30,31 @@ export default async function WorkspaceSettingsPage() {
   return (
     <div className="space-y-6">
       <PageHeader title="Workspace" description={`General settings for ${ws.name}.`} />
-      <Card>
-        <CardHeader>
-          <CardTitle>General</CardTitle>
-          <CardDescription>Name, URL slug and the currency used at checkout.</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <WorkspaceGeneralForm
-            workspaceId={ws.id}
-            initial={{ name: ws.name, slug: ws.slug, billingCurrency: ws.billingCurrency }}
-            canEdit={canEdit}
-            hasSubscription={Boolean(sub && grantsEntitlements(sub.status) && sub.provider !== "manual")}
-          />
-        </CardContent>
-      </Card>
-      <Card>
-        <CardHeader>
-          <CardTitle>Leave workspace</CardTitle>
-          <CardDescription>You will lose access to its projects. The last owner must transfer ownership first.</CardDescription>
-        </CardHeader>
-        <CardContent>
-          {current.role === "owner" ? (
-            <Alert variant="info" className="mb-3">
-              You are an owner. Transfer ownership to another member on the{" "}
-              <Link href="/settings/members" className="underline">
+      <WorkspaceGeneralForm
+        workspaceId={ws.id}
+        initial={{ name: ws.name, slug: ws.slug, billingCurrency: ws.billingCurrency }}
+        canEdit={canEdit}
+        hasSubscription={Boolean(sub && grantsEntitlements(sub.status) && sub.provider !== "manual")}
+      />
+      <SettingsCard
+        tone="danger"
+        title="Leave workspace"
+        description="You will lose access to its projects. The last owner must transfer ownership first."
+        hint={
+          current.role === "owner" ? (
+            <>
+              You are an owner. If you are the only one, transfer ownership on the{" "}
+              <Link href="/settings/members" className="underline hover:text-foreground">
                 Members
               </Link>{" "}
-              page before leaving if you are the only owner.
-            </Alert>
-          ) : null}
-          <LeaveWorkspaceButton workspaceId={ws.id} userId={user.id} workspaceName={ws.name} />
-        </CardContent>
-      </Card>
+              page first.
+            </>
+          ) : (
+            "You can be invited back later by an owner or admin."
+          )
+        }
+        footer={<LeaveWorkspaceButton workspaceId={ws.id} userId={user.id} workspaceName={ws.name} />}
+      />
     </div>
   );
 }

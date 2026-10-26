@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Group, Panel, Separator } from "react-resizable-panels";
 import { Code2, Files, MessageSquare, Monitor, Search, Terminal } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -26,6 +26,7 @@ import { ShareDialog } from "./share-dialog";
 import { SettingsDrawer } from "./settings-drawer";
 import { ActivityDrawer } from "./activity-drawer";
 import { WorkspaceHeader, type RuntimeStatus, type WorkspaceTool } from "./workspace-header";
+import { PanelTabs } from "./panel-tabs";
 
 type LeftTab = "chat" | "files" | "search";
 type RightTab = "preview" | "logs";
@@ -34,7 +35,29 @@ type Layout = Record<string, number>;
 
 const DEFAULT_LAYOUT: Layout = { left: 24, center: 46, right: 30 };
 
-export function Workspace({ project: initial, role, files }: { project: ProjectDto; role: WorkspaceRole; files: FileEntry[] }) {
+const LEFT_TABS = [
+  ["chat", "Chat", MessageSquare],
+  ["files", "Files", Files],
+  ["search", "Search", Search],
+] as const;
+const RIGHT_TABS = [
+  ["preview", "Preview", Monitor],
+  ["logs", "Logs", Terminal],
+] as const;
+
+export function Workspace({
+  project: initial,
+  role,
+  files,
+  workspaceName,
+  user,
+}: {
+  project: ProjectDto;
+  role: WorkspaceRole;
+  files: FileEntry[];
+  workspaceName?: string;
+  user?: { name: string; email: string; avatarUrl: string | null };
+}) {
   const canEdit = role === "owner" || role === "admin" || role === "editor";
   const projectId = initial.id;
   const [project, setProject] = useState(initial);
@@ -50,21 +73,6 @@ export function Workspace({ project: initial, role, files }: { project: ProjectD
   const [changesVersion, setChangesVersion] = useState(0);
   const [runtime, setRuntime] = useState<{ status: RuntimeStatus; previewUrl: string | null; error: string | null }>({ status: "unknown", previewUrl: null, error: null });
   const [layout, setLayout] = useState<Layout | null>(null);
-  const rootRef = useRef<HTMLDivElement>(null);
-
-  // Fill the viewport below whatever sits above us (app header, verification banner) without page scroll.
-  useEffect(() => {
-    const el = rootRef.current;
-    if (!el) return;
-    const fit = () => {
-      const top = el.getBoundingClientRect().top + window.scrollY;
-      el.style.height = `calc(100dvh - ${Math.max(0, Math.round(top))}px)`;
-    };
-    fit();
-    window.addEventListener("resize", fit);
-    return () => window.removeEventListener("resize", fit);
-  }, []);
-
   // ---- persisted panel sizes / tabs ----------------------------------------
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect -- one-time hydration from localStorage after mount (SSR-safe)
@@ -141,33 +149,16 @@ export function Workspace({ project: initial, role, files }: { project: ProjectD
   // ---- panels ---------------------------------------------------------------
   const left = (
     <section className="flex h-full min-h-0 flex-col bg-surface" aria-label="Sidebar">
-      <div className="flex shrink-0 border-b border-border" role="tablist" aria-label="Sidebar panels">
-        {(
-          [
-            ["chat", "Chat", MessageSquare],
-            ["files", "Files", Files],
-            ["search", "Search", Search],
-          ] as const
-        ).map(([id, label, Icon]) => (
-          <button
-            key={id}
-            role="tab"
-            type="button"
-            aria-selected={leftTab === id}
-            aria-controls={`left-${id}`}
-            onClick={() => {
-              setLeftTab(id);
-              if (id === "search") setSearchFocus((n) => n + 1);
-            }}
-            className={cn(
-              "flex flex-1 items-center justify-center gap-1.5 border-b-2 px-2 py-2 text-xs font-medium",
-              leftTab === id ? "border-primary text-foreground" : "border-transparent text-muted-foreground hover:text-foreground",
-            )}
-          >
-            <Icon className="size-3.5" aria-hidden="true" /> {label}
-          </button>
-        ))}
-      </div>
+      <PanelTabs
+        tabs={LEFT_TABS}
+        value={leftTab}
+        onChange={(id) => {
+          setLeftTab(id);
+          if (id === "search") setSearchFocus((n) => n + 1);
+        }}
+        label="Sidebar panels"
+        idPrefix="left"
+      />
       <div id={`left-${leftTab}`} role="tabpanel" className="min-h-0 flex-1">
         {leftTab === "chat" ? (
           <ChatPanel projectId={projectId} />
@@ -184,29 +175,7 @@ export function Workspace({ project: initial, role, files }: { project: ProjectD
 
   const right = (
     <section className="flex h-full min-h-0 flex-col bg-surface" aria-label="Preview and logs">
-      <div className="flex shrink-0 border-b border-border" role="tablist" aria-label="Output panels">
-        {(
-          [
-            ["preview", "Preview", Monitor],
-            ["logs", "Logs", Terminal],
-          ] as const
-        ).map(([id, label, Icon]) => (
-          <button
-            key={id}
-            role="tab"
-            type="button"
-            aria-selected={rightTab === id}
-            aria-controls={`right-${id}`}
-            onClick={() => setRightTab(id)}
-            className={cn(
-              "flex flex-1 items-center justify-center gap-1.5 border-b-2 px-2 py-2 text-xs font-medium",
-              rightTab === id ? "border-primary text-foreground" : "border-transparent text-muted-foreground hover:text-foreground",
-            )}
-          >
-            <Icon className="size-3.5" aria-hidden="true" /> {label}
-          </button>
-        ))}
-      </div>
+      <PanelTabs tabs={RIGHT_TABS} value={rightTab} onChange={setRightTab} label="Output panels" idPrefix="right" />
       <div id={`right-${rightTab}`} role="tabpanel" className="min-h-0 flex-1 overflow-auto">
         {rightTab === "preview" ? <PreviewPanel projectId={projectId} /> : <LogsPanel projectId={projectId} />}
       </div>
@@ -221,10 +190,12 @@ export function Workspace({ project: initial, role, files }: { project: ProjectD
   }, [tool, projectId]);
 
   return (
-    <div ref={rootRef} className="flex h-[calc(100dvh-3.5rem)] min-h-[480px] flex-col overflow-hidden bg-background" data-testid="workspace">
+    <div className="flex h-dvh min-h-[480px] flex-col overflow-hidden bg-background" data-testid="workspace">
       <WorkspaceHeader
         projectId={projectId}
         name={project.name}
+        workspaceName={workspaceName}
+        user={user}
         onRename={rename}
         canEdit={canEdit}
         saveStatus={state.status}
@@ -242,11 +213,11 @@ export function Workspace({ project: initial, role, files }: { project: ProjectD
             <Panel id="left" minSize="200px" defaultSize={layout.left ?? DEFAULT_LAYOUT.left} collapsible collapsedSize={0}>
               {left}
             </Panel>
-            <Separator className="w-1 bg-border transition-colors hover:bg-primary/60 data-[resize-handle-active]:bg-primary" aria-label="Resize sidebar" />
+            <Separator className="relative w-px bg-border outline-none transition-colors after:absolute after:inset-y-0 after:-left-1 after:-right-1 after:content-[''] hover:bg-signal/70 data-[resize-handle-active]:bg-signal" aria-label="Resize sidebar" />
             <Panel id="center" minSize="30%" defaultSize={layout.center ?? DEFAULT_LAYOUT.center}>
               {editor}
             </Panel>
-            <Separator className="w-1 bg-border transition-colors hover:bg-primary/60 data-[resize-handle-active]:bg-primary" aria-label="Resize preview" />
+            <Separator className="relative w-px bg-border outline-none transition-colors after:absolute after:inset-y-0 after:-left-1 after:-right-1 after:content-[''] hover:bg-signal/70 data-[resize-handle-active]:bg-signal" aria-label="Resize preview" />
             <Panel id="right" minSize="220px" defaultSize={layout.right ?? DEFAULT_LAYOUT.right} collapsible collapsedSize={0}>
               {right}
             </Panel>
@@ -273,8 +244,9 @@ export function Workspace({ project: initial, role, files }: { project: ProjectD
                 type="button"
                 onClick={() => setMobileTab(id)}
                 aria-current={mobileTab === id ? "page" : undefined}
-                className={cn("flex flex-1 flex-col items-center gap-0.5 py-2 text-[11px]", mobileTab === id ? "text-primary" : "text-muted-foreground")}
+                className={cn("relative flex flex-1 flex-col items-center gap-0.5 py-2 text-[11px] font-medium transition-colors", mobileTab === id ? "text-foreground" : "text-muted-foreground")}
               >
+                {mobileTab === id ? <span className="pop-in absolute inset-x-6 top-0 h-0.5 rounded-full bg-foreground" aria-hidden="true" /> : null}
                 <Icon className="size-5" aria-hidden="true" />
                 {label}
               </button>
