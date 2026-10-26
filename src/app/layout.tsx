@@ -9,6 +9,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { site } from "@/config/site";
 import { MotionEffects } from "@/components/marketing/motion-effects";
 import { NavProgress } from "@/components/marketing/nav-progress";
+import { Toaster } from "@/components/ui/toast";
 
 // Editorial accent face for headline words (self-hosted from @fontsource).
 const instrumentSerif = localFont({
@@ -61,6 +62,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
             <NavProgress />
             {children}
             <MotionEffects />
+            <Toaster />
           </TooltipProvider>
         </ThemeProvider>
       </body>

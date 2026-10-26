@@ -6,7 +6,7 @@ import { ArrowUpRight, BookOpen, CreditCard, FolderGit2, FolderKanban, Home, Lay
 import { cn } from "@/lib/utils";
 import { LogoMark } from "@/components/logo";
 import { Tooltip } from "@/components/ui/tooltip";
-import { openSearch } from "@/components/search/search-dialog";
+import { openCommandMenu } from "./command-menu";
 import { WorkspaceSwitcher, WorkspaceAvatar } from "./workspace-switcher";
 import { UserMenu } from "./user-menu";
 
@@ -172,8 +172,8 @@ export function AppSidebar({
         </Tooltip>
         <button
           type="button"
-          onClick={openSearch}
-          aria-label="Search documentation"
+          onClick={openCommandMenu}
+          aria-label="Search or jump to"
           className={cn(
             "flex h-8 items-center gap-2.5 rounded-lg text-[13px] text-muted-foreground transition-colors hover:bg-foreground/[0.05] hover:text-foreground",
             collapsed ? "w-9 justify-center" : "w-full border border-border bg-background/40 px-2.5",
@@ -182,7 +182,7 @@ export function AppSidebar({
           <Search className="size-4 shrink-0" aria-hidden="true" />
           {collapsed ? null : (
             <>
-              <span className="flex-1 text-left">Search docs</span>
+              <span className="flex-1 text-left">Search or jump to…</span>
               <kbd className="text-[10px]">Ctrl K</kbd>
             </>
           )}

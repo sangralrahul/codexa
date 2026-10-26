@@ -13,6 +13,7 @@ import { Dialog, DialogContent, DialogFooter } from "@/components/ui/dialog";
 import { Field, Input } from "@/components/ui/input";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown";
 import { ConfirmDialog } from "@/components/workspace/confirm-dialog";
+import { toast } from "@/components/ui/toast";
 import { TemplatePreview } from "@/components/templates/template-preview";
 import { frameworkLabel, relativeTime } from "./format";
 
@@ -119,6 +120,7 @@ function ProjectMenu({ project, canEdit, canDelete, floating }: { project: Proje
     setError(null);
     try {
       const res = await projectsApi.duplicate(project.id);
+      toast.success("Project duplicated", `Opening ${res.project.name}`);
       router.push(`/projects/${res.project.id}`);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Could not duplicate");
@@ -183,6 +185,7 @@ function ProjectMenu({ project, canEdit, canDelete, floating }: { project: Proje
               try {
                 await projectsApi.patch(project.id, { name: n });
                 setRenaming(false);
+                toast.success("Project renamed", n);
                 router.refresh();
               } catch (err) {
                 setError(err instanceof Error ? err.message : "Could not rename");
@@ -215,6 +218,7 @@ function ProjectMenu({ project, canEdit, canDelete, floating }: { project: Proje
         destructive
         onConfirm={async () => {
           await projectsApi.remove(project.id);
+          toast.success("Project deleted", project.name);
           router.refresh();
         }}
       />

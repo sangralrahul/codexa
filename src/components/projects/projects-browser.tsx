@@ -12,12 +12,14 @@ import { EmptyState } from "@/components/ui/misc";
 import { ProjectCard } from "./project-card";
 
 type Sort = "recent" | "name" | "created";
+type Vis = "all" | "private" | "unlisted" | "public";
 const LAYOUT_KEY = "codexa:projects:layout";
 
 export function ProjectsBrowser({ projects, showWorkspace, emptyTitle, emptyDescription }: { projects: ProjectListItem[]; showWorkspace?: boolean; emptyTitle?: string; emptyDescription?: string }) {
   const [query, setQuery] = useState("");
   const [sort, setSort] = useState<Sort>("recent");
   const [layout, setLayout] = useState<"grid" | "list">("grid");
+  const [vis, setVis] = useState<Vis>("all");
 
   useEffect(() => {
     const saved = readLocal<"grid" | "list">(LAYOUT_KEY, "grid");
@@ -31,14 +33,14 @@ export function ProjectsBrowser({ projects, showWorkspace, emptyTitle, emptyDesc
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
-    let list = projects;
+    let list = vis === "all" ? projects : projects.filter((p) => p.visibility === vis);
     if (q) list = list.filter((p) => [p.name, p.description, p.framework, p.workspaceName].some((s) => s.toLowerCase().includes(q)));
     list = list.slice();
     if (sort === "name") list.sort((a, b) => a.name.localeCompare(b.name));
     else if (sort === "created") list.sort((a, b) => Date.parse(b.createdAt) - Date.parse(a.createdAt));
     else list.sort((a, b) => Date.parse(b.lastOpenedAt ?? b.updatedAt) - Date.parse(a.lastOpenedAt ?? a.updatedAt));
     return list;
-  }, [projects, query, sort]);
+  }, [projects, query, sort, vis]);
 
   if (projects.length === 0) {
     return (
@@ -59,6 +61,25 @@ export function ProjectsBrowser({ projects, showWorkspace, emptyTitle, emptyDesc
 
   return (
     <div>
+      <div className="mb-4 flex gap-1 overflow-x-auto border-b border-border" role="tablist" aria-label="Visibility">
+        {(["all", "private", "unlisted", "public"] as const).map((v) => {
+          const n = v === "all" ? projects.length : projects.filter((p) => p.visibility === v).length;
+          return (
+            <button
+              key={v}
+              type="button"
+              role="tab"
+              aria-selected={vis === v}
+              onClick={() => setVis(v)}
+              className={cn("relative inline-flex shrink-0 items-center gap-2 px-3 pb-2.5 pt-1 text-sm capitalize transition-colors", vis === v ? "font-medium text-foreground" : "text-muted-foreground hover:text-foreground")}
+            >
+              {v}
+              <span className={cn("rounded-full px-1.5 text-[11px] tabular-nums", vis === v ? "bg-foreground text-background" : "bg-muted")}>{n}</span>
+              <span aria-hidden="true" className={cn("absolute inset-x-2 -bottom-px h-0.5 rounded-full bg-foreground transition-transform duration-300", vis === v ? "scale-x-100" : "scale-x-0")} />
+            </button>
+          );
+        })}
+      </div>
       <div className="mb-5 flex flex-col gap-2 sm:flex-row sm:items-center">
         <div className="relative flex-1 sm:max-w-sm">
           <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" aria-hidden="true" />
@@ -105,11 +126,13 @@ export function ProjectsBrowser({ projects, showWorkspace, emptyTitle, emptyDesc
         {filtered.length} of {projects.length} project{projects.length === 1 ? "" : "s"}
       </p>
       {filtered.length === 0 ? (
-        <p className="pop-in rounded-xl border border-dashed border-border-strong p-10 text-center text-sm text-muted-foreground">No projects match “{query.trim()}”.</p>
+        <p className="pop-in rounded-xl border border-dashed border-border-strong p-10 text-center text-sm text-muted-foreground">{query.trim() ? `No projects match “${query.trim()}”.` : `No ${vis} projects.`}</p>
       ) : (
         <div className={cn(layout === "grid" ? "grid gap-4 sm:grid-cols-2 xl:grid-cols-3" : "flex flex-col gap-2")}>
-          {filtered.map((p) => (
-            <ProjectCard key={p.id} project={p} layout={layout} showWorkspace={showWorkspace} />
+          {filtered.map((p, i) => (
+            <div key={p.id} className="pop-in" style={{ animationDelay: `${Math.min(i, 9) * 40}ms` }}>
+            <ProjectCard project={p} layout={layout} showWorkspace={showWorkspace} />
+            </div>
           ))}
         </div>
       )}

@@ -3,14 +3,14 @@
 import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LifeBuoy, Mail, Menu, Plus, X } from "lucide-react";
+import { LifeBuoy, Mail, Menu, Plus, Search, X } from "lucide-react";
 import { AppSidebar, type SidebarProject, type SidebarUpsell, type SidebarUsage, type SidebarUser, type SidebarWorkspace } from "./sidebar";
 import { LogoMark } from "@/components/logo";
 import { Alert } from "@/components/ui/misc";
 import { buttonClasses } from "@/components/ui/button";
 import { ResendVerificationButton } from "@/components/auth/forms";
 import { Backdrop } from "@/components/marketing/backdrop";
-import { SearchDialog } from "@/components/search/search-dialog";
+import { CommandMenu, openCommandMenu } from "./command-menu";
 import { cn } from "@/lib/utils";
 
 /** Page name shown in the top bar breadcrumb, by path prefix (most specific first). */
@@ -89,7 +89,7 @@ export function AppShell({
 
   return (
     <div className="flex min-h-screen bg-background">
-      <SearchDialog />
+      <CommandMenu workspaces={workspaces} currentWorkspaceId={currentWorkspaceId} recent={recent} isStaff={isStaff} />
       <aside className={cn("hidden shrink-0 border-r border-border bg-surface transition-[width] duration-300 ease-[cubic-bezier(0.2,0.8,0.2,1)] lg:block", collapsed ? "w-[60px]" : "w-64")}>
         <div className="sticky top-0 h-screen overflow-hidden">{sidebar(false)}</div>
       </aside>
@@ -136,6 +136,15 @@ export function AppShell({
             </ol>
           </nav>
           <div className="flex items-center gap-1.5">
+            <button
+              type="button"
+              onClick={openCommandMenu}
+              className="hidden h-8 w-56 items-center gap-2 rounded-lg border border-border bg-background/60 px-2.5 text-[13px] text-muted-foreground transition-colors hover:border-border-strong hover:text-foreground md:flex"
+            >
+              <Search className="size-3.5" aria-hidden="true" />
+              <span className="flex-1 text-left">Search…</span>
+              <kbd className="text-[10px]">Ctrl K</kbd>
+            </button>
             <Link href="/support" className={cn(buttonClasses("ghost", "sm"), "hidden rounded-md text-muted-foreground md:inline-flex")}>
               <LifeBuoy className="size-4" aria-hidden="true" /> Help
             </Link>

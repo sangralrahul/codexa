@@ -1,5 +1,6 @@
 import Link from "next/link";
-import { Plus } from "lucide-react";
+import { Clock, FolderKanban, Globe, Lock, Plus } from "lucide-react";
+import { relativeTime } from "@/components/projects/format";
 import { AppPage, PageHeader } from "@/components/app/app-shell";
 import { templateCategory } from "@/components/projects/template-summaries";
 import { requireUser } from "@/lib/auth/guards";
@@ -51,7 +52,29 @@ export default async function ProjectsPage() {
           to start building.
         </Alert>
       ) : (
-        <ProjectsBrowser projects={items} />
+        <>
+          {items.length ? (
+            <div className="mb-8 grid gap-px overflow-hidden rounded-xl border border-border bg-border sm:grid-cols-4">
+              {[
+                { label: "Projects", value: String(items.length), icon: FolderKanban },
+                { label: "Private", value: String(items.filter((p) => p.visibility === "private").length), icon: Lock },
+                { label: "Shared by link or public", value: String(items.filter((p) => p.visibility !== "private").length), icon: Globe },
+                { label: "Last activity", value: relativeTime(items.map((p) => p.lastOpenedAt ?? p.updatedAt).sort().at(-1) ?? null), icon: Clock },
+              ].map((s, i) => (
+                <div key={s.label} className="pop-in flex items-center gap-3 bg-card p-4" style={{ animationDelay: `${i * 60}ms` }}>
+                  <span className="flex size-9 items-center justify-center rounded-lg bg-gradient-to-br from-signal/20 to-signal/5 ring-1 ring-signal/20">
+                    <s.icon className="size-4 text-signal" aria-hidden="true" />
+                  </span>
+                  <span className="min-w-0">
+                    <span className="block truncate text-xs text-muted-foreground">{s.label}</span>
+                    <span className="block truncate text-lg font-semibold tracking-tight first-letter:uppercase">{s.value}</span>
+                  </span>
+                </div>
+              ))}
+            </div>
+          ) : null}
+          <ProjectsBrowser projects={items} />
+        </>
       )}
     </AppPage>
   );

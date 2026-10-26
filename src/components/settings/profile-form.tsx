@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Field, Input, Select } from "@/components/ui/input";
 import { Alert } from "@/components/ui/misc";
 import { SettingsCard } from "./section";
+import { toast } from "@/components/ui/toast";
 
 export type ProfileValues = { name: string; email: string; timezone: string; locale: string; avatarUrl: string };
 
@@ -28,6 +29,7 @@ export function ProfileForm({ initial, timezones, locales }: { initial: ProfileV
         json: { name: values.name, timezone: values.timezone, locale: values.locale },
       });
       setStatus({ kind: "saved", message: "Profile saved." });
+      toast.success("Profile saved");
       router.refresh();
     } catch (err) {
       if (err instanceof ClientApiError) {
@@ -51,6 +53,7 @@ export function ProfileForm({ initial, timezones, locales }: { initial: ProfileV
       if (!res.ok || !data.user) throw new Error(data.error?.message ?? "Upload failed. Try another image.");
       set("avatarUrl", data.user.avatarUrl ?? "");
       setPhoto({ busy: null });
+      toast.success("Photo updated");
       router.refresh();
     } catch (err) {
       setPhoto({ busy: null, error: err instanceof Error ? err.message : "Upload failed." });

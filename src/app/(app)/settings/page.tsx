@@ -57,7 +57,39 @@ export default async function SettingsIndexPage() {
   const plan = current ? await getEffectivePlan(current.workspace) : null;
   return (
     <div>
-      <PageHeader title="Settings" description={`Signed in as ${user.email}`} />
+      <PageHeader title="Settings" description="Your account and workspace preferences." />
+      {/* Account banner: who you are, which workspace and plan you're in. */}
+      <section aria-label="Your account" className="pop-in relative mb-8 overflow-hidden rounded-2xl border border-border bg-card">
+        <div aria-hidden="true" className="h-20 bg-[radial-gradient(80%_120%_at_0%_0%,color-mix(in_oklab,var(--signal)_35%,transparent),transparent_60%),radial-gradient(70%_120%_at_100%_0%,color-mix(in_oklab,var(--info)_30%,transparent),transparent_60%)]" />
+        <div className="flex flex-col gap-4 px-5 pb-5 sm:flex-row sm:items-end">
+          <span className="-mt-9 flex size-[72px] shrink-0 items-center justify-center overflow-hidden rounded-2xl border-4 border-card bg-foreground text-xl font-semibold text-background shadow-lg">
+            {user.avatarUrl ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={user.avatarUrl} alt="" className="size-full object-cover" />
+            ) : (
+              (user.name || user.email)
+                .split(/\s+/)
+                .map((w) => w[0])
+                .join("")
+                .slice(0, 2)
+                .toUpperCase()
+            )}
+          </span>
+          <div className="min-w-0 flex-1">
+            <p className="truncate text-lg font-semibold tracking-tight">{user.name || user.email}</p>
+            <p className="truncate text-sm text-muted-foreground">
+              {user.email} · member since {user.createdAt.toLocaleDateString("en-US", { month: "long", year: "numeric" })}
+            </p>
+          </div>
+          <div className="flex shrink-0 flex-wrap items-center gap-2">
+            {current ? <Badge variant="outline">{current.workspace.name}</Badge> : null}
+            {plan ? <Badge variant="primary">{PLANS[plan].name} plan</Badge> : null}
+            <Link href="/settings/profile" className="inline-flex h-8 items-center rounded-lg border border-border px-3 text-[13px] transition-colors hover:border-border-strong hover:bg-muted/50">
+              Edit profile
+            </Link>
+          </div>
+        </div>
+      </section>
       <section aria-labelledby="account-heading" className="mb-10">
         <div className="mb-3">
           <GroupHeading id="account-heading">Account</GroupHeading>

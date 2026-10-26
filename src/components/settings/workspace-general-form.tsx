@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Field, Input, Select } from "@/components/ui/input";
 import { Alert } from "@/components/ui/misc";
 import { SettingsCard } from "./section";
+import { toast } from "@/components/ui/toast";
 
 export type WorkspaceGeneralValues = { name: string; slug: string; billingCurrency: "USD" | "INR" };
 
@@ -23,6 +24,7 @@ export function WorkspaceGeneralForm({ workspaceId, initial, canEdit, hasSubscri
     try {
       await api(`/api/v1/workspaces/${workspaceId}/billing/settings`, { method: "PATCH", json: values });
       setStatus({ kind: "saved", message: "Workspace settings saved." });
+      toast.success("Workspace saved");
       router.refresh();
     } catch (err) {
       if (err instanceof ClientApiError) {
