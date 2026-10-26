@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useId, useState } from "react";
+import { useId, useLayoutEffect, useRef, useState } from "react";
 import { Check } from "lucide-react";
 import type { Currency } from "@/db/schema";
 import { formatPrice, type PlanPrice } from "@/config/plans";
@@ -34,12 +34,22 @@ function Toggle<T extends string>({
   onChange: (v: T) => void;
 }) {
   const id = useId();
+  const group = useRef<HTMLDivElement>(null);
+  const pill = useRef<HTMLSpanElement>(null);
+  // The pill slides under the selected option; measured from the DOM so labels can differ in width.
+  useLayoutEffect(() => {
+    const active = group.current?.querySelector<HTMLElement>('[aria-checked="true"]');
+    if (!active || !pill.current) return;
+    pill.current.style.width = `${active.offsetWidth}px`;
+    pill.current.style.transform = `translateX(${active.offsetLeft}px)`;
+  }, [value]);
   return (
     <div className="inline-flex items-center gap-2">
       <span id={id} className="text-xs font-medium text-muted-foreground">
         {label}
       </span>
-      <div role="radiogroup" aria-labelledby={id} className="inline-flex rounded-lg border border-border bg-surface p-0.5">
+      <div ref={group} role="radiogroup" aria-labelledby={id} className="segmented inline-flex rounded-lg border border-border bg-surface p-0.5">
+        <span ref={pill} aria-hidden="true" className="segmented__pill" />
         {options.map((o) => (
           <button
             key={o.value}
@@ -47,10 +57,7 @@ function Toggle<T extends string>({
             role="radio"
             aria-checked={value === o.value}
             onClick={() => onChange(o.value)}
-            className={cn(
-              "rounded-md px-3 py-1.5 text-sm font-medium text-muted-foreground transition hover:text-foreground",
-              value === o.value && "bg-background text-foreground shadow-sm",
-            )}
+            className={cn("rounded-md px-3 py-1.5 text-sm font-medium text-muted-foreground transition-colors duration-300 hover:text-foreground", value === o.value && "text-foreground")}
           >
             {o.label}
             {o.hint ? <span className="ml-1 text-xs text-success">{o.hint}</span> : null}
@@ -134,7 +141,7 @@ export function PricingTableClient({ plans, compact }: { plans: PricingPlanView[
                 {line ? (
                   <>
                     <p className="flex items-baseline gap-1">
-                      <span className="text-3xl font-semibold tracking-tight tabular-nums">{formatPrice(line.perMonth, currency)}</span>
+                      <span key={`${currency}-${interval}`} className="value-flip text-3xl font-semibold tracking-tight tabular-nums">{formatPrice(line.perMonth, currency)}</span>
                       <span className="text-sm text-muted-foreground">/ month</span>
                     </p>
                     <p className="mt-1 text-xs text-muted-foreground">

@@ -39,7 +39,7 @@ export function CodeBlock({ children, language, className }: { children: React.R
         aria-label={copied ? "Copied" : "Copy code"}
         className="absolute right-2 top-2 inline-flex h-7 items-center gap-1 rounded-md border border-white/10 bg-black/30 px-2 text-[11px] text-code-fg/80 opacity-80 transition hover:bg-black/50 hover:text-code-fg focus-visible:opacity-100 group-hover:opacity-100"
       >
-        {copied ? <Check className="size-3.5" aria-hidden="true" /> : <Copy className="size-3.5" aria-hidden="true" />}
+        {copied ? <Check className="pop-in size-3.5 text-success" aria-hidden="true" /> : <Copy className="size-3.5" aria-hidden="true" />}
         <span>{copied ? "Copied" : failed ? "Copy failed" : "Copy"}</span>
       </button>
       <pre ref={ref} className={cn("!m-0", language && "pt-7")} tabIndex={0}>

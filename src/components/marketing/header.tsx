@@ -59,7 +59,7 @@ function DesktopMenu({
         aria-haspopup="true"
         onClick={() => setOpen((o) => !o)}
         className={cn(
-          "inline-flex items-center gap-1 rounded-md px-3 py-2 text-sm font-medium text-muted-foreground transition hover:text-foreground",
+          "inline-flex items-center gap-1 rounded-md px-2.5 py-2 text-sm font-medium text-muted-foreground transition hover:text-foreground xl:px-3",
           (open || active) && "text-foreground",
         )}
       >
@@ -137,7 +137,7 @@ export function MarketingHeader({ signedIn }: { signedIn: boolean }) {
         {/* Gradient hairline that fades in once the page scrolls. */}
         <div aria-hidden="true" className={cn("pointer-events-none absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-foreground/15 to-transparent transition-opacity duration-300", scrolled ? "opacity-100" : "opacity-0")} />
         <div className="container-x flex h-16 items-center justify-between gap-4">
-          <div className="flex items-center gap-6">
+          <div className="flex items-center gap-4 xl:gap-6">
             <Logo />
             <nav aria-label="Main" className="hidden items-center lg:flex">
               {groups.map((g) => (
@@ -146,7 +146,7 @@ export function MarketingHeader({ signedIn }: { signedIn: boolean }) {
               <Link
                 href="/pricing"
                 className={cn(
-                  "rounded-md px-3 py-2 text-sm font-medium text-muted-foreground hover:text-foreground",
+                  "rounded-md px-2.5 py-2 text-sm font-medium text-muted-foreground hover:text-foreground xl:px-3",
                   pathname.startsWith("/pricing") && "text-foreground",
                 )}
               >
@@ -155,7 +155,7 @@ export function MarketingHeader({ signedIn }: { signedIn: boolean }) {
               <Link
                 href="/docs"
                 className={cn(
-                  "rounded-md px-3 py-2 text-sm font-medium text-muted-foreground hover:text-foreground",
+                  "rounded-md px-2.5 py-2 text-sm font-medium text-muted-foreground hover:text-foreground xl:px-3",
                   pathname.startsWith("/docs") && "text-foreground",
                 )}
               >
@@ -164,8 +164,11 @@ export function MarketingHeader({ signedIn }: { signedIn: boolean }) {
             </nav>
           </div>
           <div className="hidden items-center gap-2 lg:flex">
-            <SearchTrigger className="inline-flex size-9 items-center justify-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground" />
-            <ThemeToggle />
+            <SearchTrigger compact />
+            {/* On narrower desktops the bar is full; the theme switch is still in the footer. */}
+            <div className="hidden xl:block">
+              <ThemeToggle />
+            </div>
             {signedIn ? (
               <Link
                 href="/dashboard"

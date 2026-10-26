@@ -33,7 +33,7 @@ function NavGroup({ label, items }: { label: string; items: SettingsNavItem[] })
               href={it.href}
               aria-current={active(it) ? "page" : undefined}
               className={cn(
-                "block rounded-md px-2.5 py-1.5 text-sm text-muted-foreground transition hover:bg-muted hover:text-foreground",
+                "nav-item block rounded-md px-2.5 py-1.5 text-sm text-muted-foreground transition hover:bg-muted hover:text-foreground",
                 active(it) && "bg-muted font-medium text-foreground",
               )}
             >

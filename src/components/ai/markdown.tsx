@@ -43,7 +43,7 @@ function CodeBlock({ language, code, children }: { language?: string; code: stri
           className="inline-flex items-center gap-1 rounded px-1.5 py-0.5 hover:bg-muted hover:text-foreground focus-visible:outline-2 focus-visible:outline-ring"
           aria-label={copied ? "Copied" : "Copy code"}
         >
-          {copied ? <Check className="size-3" aria-hidden="true" /> : <Copy className="size-3" aria-hidden="true" />}
+          {copied ? <Check className="pop-in size-3 text-success" aria-hidden="true" /> : <Copy className="size-3" aria-hidden="true" />}
           {copied ? "Copied" : "Copy"}
         </button>
       </div>

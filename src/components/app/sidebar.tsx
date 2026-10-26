@@ -68,7 +68,7 @@ export function AppSidebar({
             onClick={onNavigate}
             aria-current={active(it.href, it.exact) ? "page" : undefined}
             className={cn(
-              "flex items-center gap-2.5 rounded-md px-2.5 py-2 text-sm text-muted-foreground transition hover:bg-muted hover:text-foreground",
+              "nav-item flex items-center gap-2.5 rounded-md px-2.5 py-2 text-sm text-muted-foreground transition hover:bg-muted hover:text-foreground",
               active(it.href, it.exact) && "bg-muted font-medium text-foreground",
             )}
           >

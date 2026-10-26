@@ -50,6 +50,8 @@ export function autoHighlight(title: string): string | undefined {
   const clause = comma > 0 ? title.slice(comma + 2) : "";
   if (clause && clause.split(" ").length <= 4) return clause;
   const words = title.trim().split(/\s+/);
+  // A one-word title set entirely in the accent face reads as decoration, not emphasis.
+  if (words.length < 2) return undefined;
   if (words.length >= 4) return words.slice(-2).join(" ");
   return words[words.length - 1] || undefined;
 }

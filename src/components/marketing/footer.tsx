@@ -2,6 +2,7 @@ import Link from "next/link";
 import { Logo } from "@/components/logo";
 import { FOOTER, getRoute } from "@/config/routes";
 import { site } from "@/config/site";
+import { ThemeToggle } from "@/components/theme/theme-toggle";
 
 export function MarketingFooter() {
   return (
@@ -52,6 +53,7 @@ export function MarketingFooter() {
             </Link>
             .
           </p>
+          <ThemeToggle />
         </div>
       </div>
       {/* Oversized faded wordmark. */}

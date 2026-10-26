@@ -10,7 +10,7 @@ export const metadata = routeMetadata(PATH);
 export default async function Page() {
   const user = await getCurrentUser();
   return (
-    <PageTemplate page={PRICING_PAGES[PATH]}>
+    <PageTemplate page={PRICING_PAGES[PATH]} layout="form">
       <section aria-labelledby="form-heading" className="glow-card rounded-2xl border border-border p-6">
         <h2 id="form-heading" className="text-xl font-semibold tracking-tight">Talk to us about Enterprise</h2>
         <SupportForm

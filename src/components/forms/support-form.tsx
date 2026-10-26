@@ -91,7 +91,7 @@ export function SupportForm({
   if (done) {
     return (
       <div role="status" className={className}>
-        <div className="flex gap-3 rounded-xl border border-success/30 bg-success/5 p-5">
+        <div className="pop-in flex gap-3 rounded-xl border border-success/30 bg-success/5 p-5">
           <CheckCircle2 className="mt-0.5 size-5 shrink-0 text-success" aria-hidden="true" />
           <div>
             <p className="font-medium">{successTitle}</p>

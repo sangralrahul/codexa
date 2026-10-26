@@ -104,7 +104,8 @@ function useIsMac() {
   );
 }
 
-export function SearchTrigger({ className }: { className?: string }) {
+/** `compact`: icon only below 2xl screens, for crowded headers. */
+export function SearchTrigger({ className, compact }: { className?: string; compact?: boolean }) {
   const isMac = useIsMac();
   const host = useDialogHost();
   return (
@@ -115,16 +116,16 @@ export function SearchTrigger({ className }: { className?: string }) {
         aria-label="Search documentation"
         aria-keyshortcuts={isMac ? "Meta+K" : "Control+K"}
         className={cn(
-          "inline-flex h-9 items-center justify-center gap-2 rounded-md border border-border bg-background text-sm text-muted-foreground transition hover:border-border-strong hover:text-foreground sm:justify-between sm:px-3",
-          "w-9 sm:w-auto sm:min-w-[11rem]",
+          "inline-flex h-9 shrink-0 items-center justify-center gap-2 whitespace-nowrap rounded-md border border-border bg-background text-sm text-muted-foreground transition hover:border-border-strong hover:text-foreground",
+          compact ? "w-9 2xl:w-auto 2xl:min-w-[11rem] 2xl:justify-between 2xl:px-3" : "w-9 sm:w-auto sm:min-w-[11rem] sm:justify-between sm:px-3",
           className,
         )}
       >
         <span className="inline-flex items-center gap-2">
           <Search className="size-4" aria-hidden="true" />
-          <span className="hidden sm:inline">Search docs…</span>
+          <span className={compact ? "hidden 2xl:inline" : "hidden sm:inline"}>Search docs…</span>
         </span>
-        <kbd className="hidden sm:inline-block" aria-hidden="true">
+        <kbd className={compact ? "hidden 2xl:inline-block" : "hidden sm:inline-block"} aria-hidden="true">
           {isMac ? "⌘" : "Ctrl"} K
         </kbd>
       </button>

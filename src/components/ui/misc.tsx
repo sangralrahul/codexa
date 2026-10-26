@@ -37,7 +37,7 @@ export function Alert({
 }) {
   const { box, Icon } = alertStyles[variant];
   return (
-    <div role={variant === "danger" ? "alert" : "status"} className={cn("flex gap-3 rounded-lg border p-3.5 text-sm", box, className)}>
+    <div role={variant === "danger" ? "alert" : "status"} className={cn("pop-in flex gap-3 rounded-lg border p-3.5 text-sm", box, className)}>
       <Icon className="mt-0.5 size-4 shrink-0" aria-hidden="true" />
       <div className="min-w-0">
         {title ? <p className="font-medium">{title}</p> : null}
