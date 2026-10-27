@@ -85,6 +85,7 @@
   --silk-2: #ff8a66;
   --silk-3: #ffc070;
   --silk-opacity: 0.85;
+  --aurora-magenta: #d9468f;
   /* Syntax (code panes stay dark in both themes). */
   --syn-keyword: #c4a7ff;
   --syn-string: #9fe0b0;
@@ -168,6 +169,7 @@
   --silk-2: #ff5f3a;
   --silk-3: #ffb23e;
   --silk-opacity: 0.7;
+  --aurora-magenta: #e0479e;
   color-scheme: dark;
 }
 
@@ -862,84 +864,96 @@ body:has(main [data-tone="company"]) { --silk-1: #ff8a66; --silk-2: #ffc070; --s
 .horizon__canvas { @variant calm { opacity: 0; } }
 
 /* ==========================================================================
-   Aurora: the hero light (src/components/marketing/aurora.tsx).
-   Soft curtains of colour drifting slowly across the top of the page (two layers at
-   different speeds), a faint grid and a quiet glow. Transform-only animation; the
-   stripe and colour periods are in px so each layer loops seamlessly.
+   Aurora: the home hero light (src/components/marketing/aurora.tsx).
+   A vivid "sunrise": a huge disc of brand colour swirling slowly behind the prompt,
+   a bright rim where it meets the sky, film grain, and a fade into the page.
+   Transform-only animation; calm mode holds it still.
    ========================================================================== */
 .aurora {
-  --aurora-grid: color-mix(in oklab, var(--foreground) 5%, transparent);
-  --aurora-violet: color-mix(in oklab, var(--silk-1) 60%, var(--signal));
-  --aurora-colors: repeating-linear-gradient(100deg, var(--signal) 0px, var(--aurora-violet) 200px, var(--silk-1) 400px, var(--signal-2) 600px, var(--signal) 800px);
-  --aurora-stripes: repeating-linear-gradient(100deg, var(--background) 0px, var(--background) 50px, transparent 120px, transparent 140px, var(--background) 200px);
   position: absolute;
   inset: 0;
   overflow: hidden;
   pointer-events: none;
 }
-.aurora__curtain {
+.aurora__sky {
   position: absolute;
-  inset: 0 0 auto;
-  height: 780px;
-  overflow: hidden;
-  opacity: 0.55;
-  mask-image: radial-gradient(ellipse 80% 75% at 50% 0%, #000 10%, rgba(0, 0, 0, 0.45) 50%, transparent 80%);
+  inset: 0;
+  background: linear-gradient(to bottom, var(--background) 0%, color-mix(in oklab, var(--background) 92%, var(--silk-1)) 45%, color-mix(in oklab, var(--background) 80%, var(--signal)) 100%);
 }
-.dark .aurora__curtain { opacity: 0.6; }
-.aurora__curtain::before,
-.aurora__curtain::after {
-  content: "";
+/* The sun hangs from the prompt box (AuroraSun is rendered inside its wrapper): its top edge
+   crosses the composer at --sun-at of the composer's height, whatever the viewport. */
+.aurora-sun {
+  --sun: min(2300px, 190vw);
+  --aurora-pink: color-mix(in oklab, var(--signal) 55%, var(--aurora-magenta));
+  --aurora-violet: color-mix(in oklab, var(--silk-1) 65%, var(--aurora-magenta));
+  --sun-at: 22%;
   position: absolute;
-  top: -20px;
-  bottom: -20px;
-  left: 0;
-  /* 812px = one shared period (800px along the 100deg gradient line) / sin(100deg). */
-  width: calc(100% + 812px);
-  background-image: var(--aurora-stripes), var(--aurora-colors);
-  filter: blur(28px) saturate(1.2);
-  will-change: transform;
-  animation: aurora-flow 30s linear infinite;
+  inset: 0;
+  z-index: -5;
+  pointer-events: none;
 }
-.aurora__curtain::after {
-  background-image: var(--aurora-colors);
-  opacity: 0.45;
-  mix-blend-mode: soft-light;
-  animation-duration: 19s;
-  animation-direction: reverse;
-}
-@keyframes aurora-flow { to { transform: translateX(-812px); } }
-
-.aurora__glow {
+.aurora__sun {
   position: absolute;
   left: 50%;
-  top: -16rem;
-  width: min(64rem, 130vw);
-  height: 30rem;
+  top: var(--sun-at);
+  width: var(--sun);
+  height: var(--sun);
   translate: -50% 0;
   border-radius: 9999px;
-  background: radial-gradient(closest-side, color-mix(in oklab, var(--signal) 30%, transparent), transparent);
-  filter: blur(30px);
-  animation: aurora-breathe 9s ease-in-out infinite alternate;
+  overflow: hidden;
+  opacity: 0.85;
 }
-@keyframes aurora-breathe { from { transform: scale(0.92); opacity: 0.55; } to { transform: scale(1.08); opacity: 1; } }
-.aurora__grid {
+.dark .aurora__sun { opacity: 1; }
+.aurora__swirl {
+  position: absolute;
+  inset: -12%;
+  background: conic-gradient(from 0deg, var(--signal), var(--signal-2), var(--aurora-pink), var(--aurora-violet), var(--silk-1), var(--aurora-magenta), var(--signal));
+  filter: blur(70px) saturate(1.15);
+  will-change: transform;
+  animation: aurora-spin 36s linear infinite;
+}
+@keyframes aurora-spin { to { transform: rotate(360deg); } }
+/* The sun's upper edge: a bright rim and a soft bloom above it. */
+.aurora__rim {
+  position: absolute;
+  left: 50%;
+  top: var(--sun-at);
+  width: var(--sun);
+  height: var(--sun);
+  translate: -50% 0;
+  border-radius: 9999px;
+  box-shadow:
+    inset 0 2px 0 0 color-mix(in oklab, white 75%, var(--signal-2)),
+    inset 0 18px 40px -10px color-mix(in oklab, white 45%, transparent),
+    0 -30px 120px 10px color-mix(in oklab, var(--signal) 45%, transparent),
+    0 -10px 40px 0 color-mix(in oklab, var(--signal-2) 40%, transparent);
+  animation: aurora-pulse 7s ease-in-out infinite alternate;
+}
+@keyframes aurora-pulse { from { opacity: 0.75; } to { opacity: 1; } }
+/* Inside the disc, darken toward its centre so the colour reads as light on the horizon. */
+.aurora__depth {
   position: absolute;
   inset: 0;
-  background-image: linear-gradient(var(--aurora-grid) 1px, transparent 1px), linear-gradient(90deg, var(--aurora-grid) 1px, transparent 1px);
-  background-size: 72px 72px;
-  background-position: center top;
-  mask-image: radial-gradient(60% 55% at 50% 0%, #000 0%, transparent 100%);
+  border-radius: inherit;
+  background: radial-gradient(closest-side at 50% 50%, color-mix(in oklab, var(--background) 55%, transparent) 55%, transparent 100%);
 }
-/* Readability: a soft pool behind the headline and lead, and a clean fade into the page. */
+.aurora__grain {
+  position: absolute;
+  inset: 0;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='180' height='180'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0.5 0 0 0 0 0.5 0 0 0 0 0.5 0 0 0 0.9 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
+  opacity: 0.14;
+  mix-blend-mode: overlay;
+}
 .aurora__fade {
   position: absolute;
-  inset: 0;
-  background:
-    radial-gradient(38% 22% at 50% 30%, color-mix(in oklab, var(--background) 50%, transparent), transparent 85%),
-    linear-gradient(to bottom, transparent 50%, var(--background) 100%);
+  inset: auto 0 0;
+  height: 26%;
+  z-index: -2;
+  pointer-events: none;
+  background: linear-gradient(to bottom, transparent, var(--background));
 }
-.aurora * { @variant calm { animation: none !important; } }
-.aurora__curtain { @variant calm { &::before, &::after { animation: none; } } }
+.aurora__grain { z-index: -2; pointer-events: none; }
+:is(.aurora, .aurora-sun) * { @variant calm { animation: none !important; } }
 
 .bg-noise {
   background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/></filter><rect width='100%' height='100%' filter='url(%23n)' opacity='0.5'/></svg>");

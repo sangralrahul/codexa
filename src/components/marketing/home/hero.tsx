@@ -2,7 +2,7 @@ import Link from "next/link";
 import { ArrowDown, ArrowRight } from "lucide-react";
 import { SplitHeading } from "@/components/motion/split-heading";
 import { Eyebrow } from "@/components/marketing/backdrop";
-import { Aurora } from "@/components/marketing/aurora";
+import { Aurora, AuroraFinish, AuroraSun } from "@/components/marketing/aurora";
 import { PromptBox } from "@/components/marketing/prompt-box";
 import { HOME_HERO } from "@/content/marketing/home";
 
@@ -29,8 +29,8 @@ export function HomeHero({ signedIn, announcement }: { signedIn: boolean; announ
   );
 
   return (
-    <section aria-labelledby="home-title" className="relative isolate">
-      <Aurora className="inset-x-0! -top-24! bottom-auto! -z-10 h-[1100px]" />
+    <section aria-labelledby="home-title" className="relative isolate min-h-[calc(100svh-var(--header-h))] overflow-clip pb-28 pt-[6vh] sm:pb-36 sm:pt-[9vh]">
+      <Aurora className="-z-10" />
       <div className="container-x relative pb-4 pt-6 text-center sm:pt-8 md:pb-3 lg:pt-5">
         <div className="scroll-fade">
           {announcement ? (
@@ -47,10 +47,12 @@ export function HomeHero({ signedIn, announcement }: { signedIn: boolean; announ
           </SplitHeading>
           <p className="text-lead mx-auto mt-6 max-w-[62ch]! sm:mt-5">{HOME_HERO.lead}</p>
         </div>
-        <div className="mt-6 lg:mt-5">
+        <div className="relative mt-8 lg:mt-7">
+          <AuroraSun />
           <PromptBox signedIn={signedIn} variant="hero" source="home" footer={links} />
         </div>
       </div>
+      <AuroraFinish />
     </section>
   );
 }
