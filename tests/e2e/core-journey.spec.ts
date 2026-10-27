@@ -33,7 +33,7 @@ test("sign up, create, generate, edit, preview, deploy", async ({ page, context 
 
   // Share the browser session with the API client.
   const cookies = await context.cookies();
-  const session = cookies.find((c) => c.name === "codexa_session");
+  const session = cookies.find((c) => c.name === "codexa_session" || c.name === "__Host-codexa_session");
   expect(session).toBeTruthy();
   const api = await page.request.storageState().then(() => page.request);
 

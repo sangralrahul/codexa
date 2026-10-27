@@ -1,6 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 
-const SESSION_COOKIE = "codexa_session";
+// Same name logic as src/lib/auth/session.ts (kept local so the proxy stays dependency-free).
+const SESSION_COOKIE = process.env.NODE_ENV === "production" ? "__Host-codexa_session" : "codexa_session";
 
 /**
  * Lightweight optimistic checks only. Real authorization happens server-side

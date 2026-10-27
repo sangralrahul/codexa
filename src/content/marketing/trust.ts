@@ -61,7 +61,7 @@ export const TRUST_PAGES: Record<string, ContentPage> = {
         id: "accounts",
         heading: "Accounts and sessions",
         blocks: [
-          { type: "list", items: ["Passwords are hashed with a modern password hashing function; plaintext passwords are never stored or logged.", "Email verification and password reset use single-use, expiring tokens.", "Sessions are httpOnly, SameSite cookies named `codexa_session`; the stored session token is a hash, so a database read alone cannot be used to hijack a session.", "GitHub sign-in is available only when the operator configures OAuth; the OAuth state is checked on callback.", "Workspace roles (owner, admin, editor, viewer) are enforced on the server for every API route."] },
+          { type: "list", items: ["Passwords are hashed with a modern password hashing function; plaintext passwords are never stored or logged.", "Email verification and password reset use single-use, expiring tokens.", "Sessions are httpOnly, SameSite cookies named `__Host-codexa_session` (the `__Host-` prefix stops other subdomains from setting it); the stored session token is a hash, so a database read alone cannot be used to hijack a session.", "GitHub sign-in is available only when the operator configures OAuth; the OAuth state is checked on callback.", "Workspace roles (owner, admin, editor, viewer) are enforced on the server for every API route."] },
         ],
       },
       {
@@ -250,7 +250,7 @@ export const TRUST_PAGES: Record<string, ContentPage> = {
         heading: "Cookies we set",
         blocks: [
           { type: "table", caption: "Cookies set by the Codexa application", columns: ["Cookie", "Purpose", "Type", "Lifetime"], rows: [
-            ["`codexa_session`", "Identifies your signed-in session. httpOnly, SameSite, Secure over HTTPS. The stored value is a hash of the token.", "Strictly necessary", "Until you sign out or the session expires"],
+            ["`__Host-codexa_session`", "Identifies your signed-in session. httpOnly, SameSite, Secure over HTTPS. The stored value is a hash of the token.", "Strictly necessary", "Until you sign out or the session expires"],
             ["`codexa_theme`", "Remembers your light, dark, or system theme choice.", "Preference", "1 year"],
             ["`codexa_workspace`", "Remembers which workspace you last opened.", "Preference", "1 year"],
             ["GitHub OAuth state", "A short-lived, httpOnly cookie that protects the GitHub sign-in callback against cross-site request forgery. Only set during sign-in when GitHub OAuth is configured.", "Strictly necessary", "A few minutes"],
@@ -258,7 +258,7 @@ export const TRUST_PAGES: Record<string, ContentPage> = {
         ],
       },
       { id: "third-party", heading: "Third-party cookies", blocks: [{ type: "paragraph", text: "When you check out with Stripe or Razorpay, their hosted pages may set their own cookies under their policies. Codexa does not embed advertising, tracking pixels, or third-party analytics." }] },
-      { id: "control", heading: "Managing cookies", blocks: [{ type: "paragraph", text: "You can clear or block cookies in your browser. Blocking `codexa_session` will sign you out; blocking the preference cookies only resets your theme and workspace selection." }] },
+      { id: "control", heading: "Managing cookies", blocks: [{ type: "paragraph", text: "You can clear or block cookies in your browser. Blocking `__Host-codexa_session` will sign you out; blocking the preference cookies only resets your theme and workspace selection." }] },
     ],
   },
 

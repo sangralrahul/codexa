@@ -10,6 +10,11 @@ const securityHeaders = [
   { key: "X-Frame-Options", value: "SAMEORIGIN" },
   { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
   { key: "Permissions-Policy", value: "camera=(), microphone=(), geolocation=()" },
+  // Always HTTPS for two years (covers sub-subdomains of the app host only).
+  { key: "Strict-Transport-Security", value: "max-age=63072000; includeSubDomains" },
+  // No framing by other sites, no <base> hijacking, no plugins.
+  { key: "Content-Security-Policy", value: "frame-ancestors 'self'; base-uri 'self'; object-src 'none'" },
+  { key: "Cross-Origin-Opener-Policy", value: "same-origin-allow-popups" },
 ];
 
 const nextConfig: NextConfig = {

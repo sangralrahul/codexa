@@ -6,7 +6,12 @@ import { sessions, users, type User } from "@/db/schema";
 import { hashToken, randomToken } from "@/lib/crypto";
 import { cache } from "react";
 
-export const SESSION_COOKIE = "codexa_session";
+/**
+ * In production the cookie carries the `__Host-` prefix: browsers then only accept it from this exact
+ * host over HTTPS with path=/ and no Domain, so apps served on sibling subdomains (user previews and
+ * hosted sites) cannot plant or overwrite a session cookie for Codexa.
+ */
+export const SESSION_COOKIE = process.env.NODE_ENV === "production" ? "__Host-codexa_session" : "codexa_session";
 const SESSION_TTL_MS = 1000 * 60 * 60 * 24 * 30; // 30 days
 const SESSION_REFRESH_MS = 1000 * 60 * 60 * 24; // refresh lastSeen once a day
 
@@ -51,7 +56,7 @@ export async function setSessionCookie(token: string, expiresAt: Date) {
 
 export async function clearSessionCookie() {
   const store = await cookies();
-  store.set(SESSION_COOKIE, "", { httpOnly: true, sameSite: "lax", path: "/", maxAge: 0 });
+  store.set(SESSION_COOKIE, "", { httpOnly: true, sameSite: "lax", secure: process.env.NODE_ENV === "production", path: "/", maxAge: 0 });
 }
 
 export async function validateSessionToken(token: string): Promise<{ user: User; sessionId: string } | null> {
