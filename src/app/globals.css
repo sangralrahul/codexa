@@ -1308,6 +1308,45 @@ img[data-developed], .develop { animation: develop 700ms var(--ease-out) backwar
 .logo-mark__notch { transform-origin: 29px 3px; animation: pop-in var(--dur-3) var(--ease-snap) both; }
 .logo-mark { @variant calm { animation: none; & * { animation: none !important; } & .logo-mark__halo { display: none; } } }
 
+/* Stacked sections (src/components/motion/stack-scroll.tsx). Each .stack-panel sticks (pinned by its
+   bottom edge when taller than the viewport) and the next one slides over it as a card with a
+   rounded top; the covered panel sinks back (scale) and dims (--cover, 0–1, written by script). */
+.stack-panel { position: relative; background: var(--background); overflow-x: clip; }
+@media (width >= 48rem) {
+  .stack-panel {
+    position: sticky;
+    top: var(--pin-top, 0px);
+    transform-origin: 50% calc(100% - 50vh);
+    transform: scale(calc(1 - var(--cover, 0) * 0.06));
+    will-change: transform;
+  }
+  .stack-panel + .stack-panel {
+    border-radius: 36px 36px 0 0;
+    border-top: 1px solid var(--border);
+    box-shadow: 0 -30px 70px -30px rgba(0, 0, 0, 0.3);
+  }
+  .dark .stack-panel + .stack-panel { box-shadow: 0 -30px 80px -24px rgba(0, 0, 0, 0.9), inset 0 1px 0 0 color-mix(in oklab, var(--foreground) 6%, transparent); }
+  .stack-panel::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: 50;
+    border-radius: inherit;
+    pointer-events: none;
+    background: #000;
+    opacity: calc(var(--cover, 0) * 0.18);
+  }
+  .dark .stack-panel::after { opacity: calc(var(--cover, 0) * 0.55); }
+  .stack-panel[data-covered] > * { visibility: hidden; }
+}
+.stack-panel {
+  @variant calm {
+    position: relative; top: auto; transform: none;
+    &::after { display: none; }
+    & > * { visibility: visible !important; }
+  }
+}
+
 /* Text shimmer: the current stage label while an agent works. */
 .text-shimmer {
   background-image: linear-gradient(100deg, var(--muted-foreground) 35%, var(--foreground) 50%, var(--muted-foreground) 65%);

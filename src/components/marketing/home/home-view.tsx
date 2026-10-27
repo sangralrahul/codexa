@@ -7,6 +7,7 @@ import type { HomeData } from "./data";
 import type { TickerEntry } from "./changelog-ticker";
 import { HomeStoreProvider } from "./home-store";
 import { HomeHero } from "./hero";
+import { StackScroll } from "@/components/motion/stack-scroll";
 import { Storyboard } from "./storyboard";
 import { ProofStrip } from "./proof-strip";
 import { TemplateWall } from "./template-wall";
@@ -40,11 +41,16 @@ export function HomeView({
     <div data-page="home" className="relative overflow-x-clip">
       <HomeStoreProvider starters={data.starters} scenarios={data.scenarios} tools={data.tools} aiReady={aiReady} maxRepairAttempts={data.maxRepairAttempts}>
         {/* H0 + H1 */}
-        <HomeHero signedIn={signedIn} announcement={announcement} />
-        {/* Everything after the hero is one sheet that slides up over the pinned hero (home.css). */}
-        <div className="home-cover">
-        <Storyboard />
+        {/* Each panel sticks while the next slides up over it (Razorpay-style stacked sections). */}
+        <StackScroll>
+        <div className="stack-panel">
+          <HomeHero signedIn={signedIn} announcement={announcement} />
+        </div>
+        <div className="stack-panel pt-14">
+          <Storyboard />
+        </div>
 
+        <div className="stack-panel">
         {/* H2 */}
         <ProofStrip facts={data.proof} changelog={changelog} status={status} />
 
@@ -68,13 +74,19 @@ export function HomeView({
             </p>
           </TemplateWall>
         </section>
+        </div>
 
         {/* H4 */}
-        <Principles scenario={scenario} maxRepairAttempts={data.maxRepairAttempts} />
+        <div className="stack-panel">
+          <Principles scenario={scenario} maxRepairAttempts={data.maxRepairAttempts} />
+        </div>
 
         {/* H5 */}
-        <PlatformGrid scenario={scenario} />
+        <div className="stack-panel">
+          <PlatformGrid scenario={scenario} />
+        </div>
 
+        <div className="stack-panel">
         {/* H6: stacked and centred up to xl; from xl the copy sits beside the orbit, so the 600px constellation does not float in empty space. */}
         <section aria-labelledby="integrations-title" className="relative overflow-hidden py-16 sm:py-24 lg:py-28">
           <div className="container-x">
@@ -108,11 +120,15 @@ export function HomeView({
           </div>
         </section>
 
-        {/* H7–H9 */}
-        <PricingTeaser />
-        <FaqSection />
-        <FinalCta signedIn={signedIn} freePlan={data.freePlan} />
         </div>
+
+        {/* H7–H9 */}
+        <div className="stack-panel">
+          <PricingTeaser />
+          <FaqSection />
+          <FinalCta signedIn={signedIn} freePlan={data.freePlan} />
+        </div>
+        </StackScroll>
       </HomeStoreProvider>
     </div>
   );

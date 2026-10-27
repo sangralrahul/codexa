@@ -4,7 +4,6 @@ import { SplitHeading } from "@/components/motion/split-heading";
 import { Eyebrow } from "@/components/marketing/backdrop";
 import { WordCycle } from "@/components/motion/word-cycle";
 import { HeroFloats } from "./hero-scenes";
-import { StickyFit } from "./sticky-fit";
 import { PromptBox } from "@/components/marketing/prompt-box";
 import { HOME_HERO } from "@/content/marketing/home";
 
@@ -31,8 +30,7 @@ export function HomeHero({ signedIn, announcement }: { signedIn: boolean; announ
   );
 
   return (
-    <section aria-labelledby="home-title" className="home-pin relative isolate min-h-[calc(100svh-var(--header-h))] overflow-clip pb-28 pt-[6vh] sm:pb-36 sm:pt-[9vh]">
-      <StickyFit />
+    <section aria-labelledby="home-title" className="relative isolate min-h-[calc(100svh-var(--header-h))] overflow-clip pb-28 pt-[6vh] sm:pb-36 sm:pt-[9vh]">
       <HeroFloats />
       <div className="container-x relative pb-4 pt-6 text-center sm:pt-8 md:pb-3 lg:pt-5">
         <div className="scroll-fade">
