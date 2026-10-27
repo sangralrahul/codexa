@@ -123,7 +123,7 @@ export default async function ChangelogPage() {
                     <span aria-hidden="true" className="size-1.5 rounded-full bg-signal shadow-[0_0_0_3px_color-mix(in_oklab,var(--signal)_18%,transparent)]" />
                     Latest release
                   </p>
-                  <h2 id="latest-release" className="mt-4 font-mono text-[clamp(44px,7vw,76px)] font-medium leading-none tracking-[-0.04em]">
+                  <h2 id="latest-release" className="mt-4 font-mono text-[clamp(44px,7vw,76px)] font-medium leading-none tracking-[-0.025em]">
                     {latestVersion === "unversioned" ? "Updates" : `v${latestVersion}`}
                   </h2>
                   <p className="text-meta mt-4 text-muted-foreground">

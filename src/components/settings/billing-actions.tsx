@@ -426,7 +426,7 @@ export function PlanCards({
               </div>
               <p className="mt-1 text-[13px] text-muted-foreground">{def.tagline}</p>
               <p className="mt-4 flex items-baseline gap-1">
-                <span key={`${currency}-${interval}`} className="price-swap font-display text-[32px] font-semibold leading-none tracking-[-0.04em] tabular-nums">
+                <span key={`${currency}-${interval}`} className="price-swap font-display text-[32px] font-semibold leading-none tracking-[-0.025em] tabular-nums">
                   {formatPrice(q.perMonthMinor, currency)}
                 </span>
                 <span className="text-[13px] text-muted-foreground">/ month</span>

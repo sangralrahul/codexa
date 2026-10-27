@@ -47,7 +47,7 @@ function HubArt({ id, digest = [] }: { id: HubId; digest?: string[] }) {
   if (id === "blog") {
     return (
       <div aria-hidden="true" className={cn(frame, "bg-[linear-gradient(135deg,color-mix(in_oklab,var(--signal)_22%,var(--surface)),var(--surface)_60%)]")}>
-        <p className="font-display absolute bottom-4 left-5 right-5 text-[26px] font-bold leading-[0.95] tracking-[-0.04em] text-foreground/90">
+        <p className="font-display absolute bottom-4 left-5 right-5 text-[26px] font-bold leading-[0.95] tracking-[-0.025em] text-foreground/90">
           Notes from
           <br />
           <span className="text-dim">the build.</span>

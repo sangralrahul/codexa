@@ -189,7 +189,7 @@ function PlanCard({ p, prev, currency, interval, compact, fit }: { p: PricingPla
         {line ? (
           <>
             <p className="flex flex-wrap items-baseline gap-x-1.5">
-              <PriceRoll minor={line.perMonth} currency={currency} className="mk-price__num font-display font-bold leading-none tracking-[-0.04em] [font-stretch:104%]" />
+              <PriceRoll minor={line.perMonth} currency={currency} className="mk-price__num font-display font-bold leading-none tracking-[-0.025em] [font-stretch:104%]" />
               <span className="whitespace-nowrap text-sm text-muted-foreground">/ month</span>
             </p>
             <p className="mt-2 min-h-[2.75em] text-[12.5px] leading-snug text-muted-foreground">
@@ -202,7 +202,7 @@ function PlanCard({ p, prev, currency, interval, compact, fit }: { p: PricingPla
           </>
         ) : (
           <>
-            <p data-custom="" className="mk-price__num mk-num font-display font-bold leading-none tracking-[-0.04em] [font-stretch:104%]">
+            <p data-custom="" className="mk-price__num mk-num font-display font-bold leading-none tracking-[-0.025em] [font-stretch:104%]">
               Custom
             </p>
             <p className="mt-2 min-h-[2.75em] text-[12.5px] leading-snug text-muted-foreground">Priced per agreement; invoice billing available.</p>

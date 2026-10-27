@@ -119,7 +119,7 @@ export function PageTitle({
   mark?: string;
 }) {
   return (
-    <h1 className={cn("font-display text-balance text-4xl font-bold leading-[1.02] tracking-[-0.035em] [font-stretch:104%] sm:text-5xl", className)}>
+    <h1 className={cn("font-display text-balance text-4xl font-bold leading-[1.02] tracking-[-0.022em] sm:text-5xl", className)}>
       {typeof children === "string" ? <Marked text={children} mark={mark} highlight={highlight || undefined} /> : children}
     </h1>
   );

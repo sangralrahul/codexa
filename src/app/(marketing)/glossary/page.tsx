@@ -31,7 +31,7 @@ export default function GlossaryPage() {
       <div className="mt-10 space-y-12">
         {groups.map((g) => (
           <section key={g.letter} aria-labelledby={`letter-${g.letter}`} className="grid gap-x-8 sm:grid-cols-[4rem_minmax(0,1fr)]">
-            <h2 id={`letter-${g.letter}`} className="font-display scroll-mt-48 text-[40px] font-bold leading-none tracking-[-0.04em] text-foreground-dim lg:scroll-mt-44">
+            <h2 id={`letter-${g.letter}`} className="font-display scroll-mt-48 text-[40px] font-bold leading-none tracking-[-0.025em] text-foreground-dim lg:scroll-mt-44">
               {g.letter}
             </h2>
             <dl className="mt-3 divide-y divide-border border-y border-border sm:mt-0">

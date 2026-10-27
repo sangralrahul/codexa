@@ -2,6 +2,7 @@ import Link from "next/link";
 import { ArrowDown, ArrowRight } from "lucide-react";
 import { SplitHeading } from "@/components/motion/split-heading";
 import { Eyebrow } from "@/components/marketing/backdrop";
+import { Aurora } from "@/components/marketing/aurora";
 import { PromptBox } from "@/components/marketing/prompt-box";
 import { HOME_HERO } from "@/content/marketing/home";
 
@@ -29,10 +30,7 @@ export function HomeHero({ signedIn, announcement }: { signedIn: boolean; announ
 
   return (
     <section aria-labelledby="home-title" className="relative isolate">
-      <div aria-hidden="true" className="pointer-events-none absolute inset-x-0 -top-24 -z-10 h-[1100px] overflow-hidden">
-        <div className="bg-blueprint absolute inset-0" />
-        <div className="bg-noise absolute inset-0" />
-      </div>
+      <Aurora className="inset-x-0! -top-24! bottom-auto! -z-10 h-[1100px]" />
       <div className="container-x relative pb-4 pt-6 text-center sm:pt-8 md:pb-3 lg:pt-5">
         <div className="scroll-fade">
           {announcement ? (

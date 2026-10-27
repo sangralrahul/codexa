@@ -38,7 +38,7 @@ export function ProofStrip({ facts, changelog, status }: { facts: ProofFact[]; c
             >
               <dt className="order-2 text-sm text-foreground/85">{f.label}</dt>
               <dd className="order-1">
-                <Odometer value={f.value} className="text-display-2 tracking-[-0.04em]" />
+                <Odometer value={f.value} className="text-display-2 tracking-[-0.025em]" />
               </dd>
               {/* Source footnote: the identifier on one unbroken line, the file on its own line below (sm+).
                   On a very narrow cell the identifier truncates (full text in the title) rather than breaking. */}

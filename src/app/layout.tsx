@@ -1,5 +1,4 @@
 import type { Metadata, Viewport } from "next";
-import { GeistSans } from "geist/font/sans";
 import { GeistMono } from "geist/font/mono";
 import localFont from "next/font/local";
 import { cookies } from "next/headers";
@@ -11,17 +10,23 @@ import { MotionEffects } from "@/components/marketing/motion-effects";
 import { NavProgress } from "@/components/marketing/nav-progress";
 import { Toaster } from "@/components/ui/toast";
 
-// Display face for headings, prices and big numerals: Mona Sans Variable (OFL, self-hosted from
-// @fontsource-variable). The latin "standard" file carries both the weight (200–900) and width
-// (75–125%) axes, so display utilities can set font-stretch. Exposed as --font-mona-sans; the
-// design system reads it through --font-display (globals.css).
-const monaSans = localFont({
-  src: [{ path: "../../node_modules/@fontsource-variable/mona-sans/files/mona-sans-latin-standard-normal.woff2", weight: "200 900", style: "normal" }],
-  variable: "--font-mona-sans",
+// Type: Inter Variable for UI and body copy (opsz axis, so large sizes get Inter Display's tighter
+// shapes) and Inter Tight Variable for headings, prices and big numerals. Both OFL, self-hosted
+// from @fontsource-variable. Exposed as --font-inter / --font-inter-tight; globals.css reads them
+// through --font-sans and --font-display.
+const inter = localFont({
+  src: [{ path: "../../node_modules/@fontsource-variable/inter/files/inter-latin-opsz-normal.woff2", weight: "100 900", style: "normal" }],
+  variable: "--font-inter",
   display: "swap",
   preload: true,
   adjustFontFallback: "Arial",
-  declarations: [{ prop: "font-stretch", value: "75% 125%" }],
+});
+const interTight = localFont({
+  src: [{ path: "../../node_modules/@fontsource-variable/inter-tight/files/inter-tight-latin-wght-normal.woff2", weight: "100 900", style: "normal" }],
+  variable: "--font-inter-tight",
+  display: "swap",
+  preload: true,
+  adjustFontFallback: "Arial",
 });
 
 export const metadata: Metadata = {
@@ -54,7 +59,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
       lang="en"
       suppressHydrationWarning
       data-motion={motion}
-      className={`${GeistSans.variable} ${GeistMono.variable} ${monaSans.variable} h-full antialiased ${theme === "dark" ? "dark" : ""}`}
+      className={`${inter.variable} ${interTight.variable} ${GeistMono.variable} h-full antialiased ${theme === "dark" ? "dark" : ""}`}
     >
       <head>
         <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />

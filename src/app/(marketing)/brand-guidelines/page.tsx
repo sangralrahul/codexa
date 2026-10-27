@@ -21,7 +21,7 @@ const colors = [
 ];
 
 const type = [
-  { name: "Mona Sans", role: "Display: headings, prices, big numerals", sample: "Ship it. Roll it back.", cls: "font-display text-[2rem] font-bold tracking-[-0.04em] [font-stretch:108%]" },
+  { name: "Mona Sans", role: "Display: headings, prices, big numerals", sample: "Ship it. Roll it back.", cls: "font-display text-[2rem] font-bold tracking-[-0.025em] [font-stretch:108%]" },
   { name: "Geist", role: "Interface and body text", sample: "Describe what you want to build.", cls: "text-[1.375rem] font-medium tracking-[-0.01em]" },
   { name: "Geist Mono", role: "Code, paths, kickers, status", sample: "src/components/Invoice.tsx", cls: "font-mono text-[1.0625rem]" },
 ];

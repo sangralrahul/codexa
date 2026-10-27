@@ -45,7 +45,7 @@ export function BlogCover({
   } as React.CSSProperties;
   const titleClass = cn(
     "font-display z-[1] self-end px-5 pb-5 font-bold text-foreground [grid-area:1/1] sm:px-6 sm:pb-6",
-    size === "lg" ? "max-w-[18ch] text-[clamp(28px,4.2vw,52px)] leading-[0.98] tracking-[-0.045em]" : "max-w-[20ch] text-[24px] leading-[1.02] tracking-[-0.035em]",
+    size === "lg" ? "max-w-[18ch] text-[clamp(28px,4.2vw,52px)] leading-[0.98] tracking-[-0.025em]" : "max-w-[20ch] text-[24px] leading-[1.02] tracking-[-0.035em]",
   );
   const text = <span className="inline-block transition-transform duration-(--dur-4) ease-(--ease-out) group-hover:-translate-y-1 calm:group-hover:translate-y-0">{title}</span>;
   const Tag = link?.level === 2 ? "h2" : "h3";
@@ -90,7 +90,7 @@ export function BlogHero({ title, category, label = "Codexa · Blog", className,
         <span>{category}</span>
         <span aria-hidden="true">{label}</span>
       </div>
-      <h1 className="font-display max-w-[20ch] px-6 pb-8 pt-20 text-[clamp(34px,5.2vw,60px)] font-bold leading-[0.98] tracking-[-0.045em] text-foreground sm:px-10 sm:pb-10 sm:pt-28">{title}</h1>
+      <h1 className="font-display max-w-[20ch] px-6 pb-8 pt-20 text-[clamp(34px,5.2vw,60px)] font-bold leading-[0.98] tracking-[-0.025em] text-foreground sm:px-10 sm:pb-10 sm:pt-28">{title}</h1>
       {children ? <div className="-mt-4 px-6 pb-8 sm:-mt-6 sm:px-10 sm:pb-10">{children}</div> : null}
     </div>
   );

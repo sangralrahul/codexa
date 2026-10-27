@@ -25,11 +25,11 @@ function SpecIndex() {
     <div className="e3 overflow-hidden rounded-[18px]">
       <div className="grid grid-cols-2 divide-x divide-border border-b border-border">
         <div className="p-5 sm:p-6">
-          <Odometer value={shipped} className="mk-num font-display text-[clamp(2.5rem,1.8rem+2vw,3.5rem)] font-bold tracking-[-0.04em] [font-stretch:108%]" />
+          <Odometer value={shipped} className="mk-num font-display text-[clamp(2.5rem,1.8rem+2vw,3.5rem)] font-bold tracking-[-0.025em] [font-stretch:108%]" />
           <p className="mt-1 text-[13px] text-muted-foreground">features listed as shipped</p>
         </div>
         <div className="p-5 sm:p-6">
-          <Odometer value={planned} className="mk-num font-display text-[clamp(2.5rem,1.8rem+2vw,3.5rem)] font-bold tracking-[-0.04em] text-foreground-dim [font-stretch:108%]" />
+          <Odometer value={planned} className="mk-num font-display text-[clamp(2.5rem,1.8rem+2vw,3.5rem)] font-bold tracking-[-0.025em] text-foreground-dim [font-stretch:108%]" />
           <p className="mt-1 text-[13px] text-muted-foreground">on the roadmap, marked as such</p>
         </div>
       </div>

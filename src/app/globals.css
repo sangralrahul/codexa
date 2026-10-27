@@ -104,8 +104,8 @@
   --dur-4: 420ms;
   --dur-5: 720ms;
   --dur-6: 1100ms;
-  /* Display face (next/font sets --font-mona-sans on <html>). */
-  --font-display: var(--font-mona-sans), var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+  /* Display face (next/font sets --font-inter-tight on <html>). */
+  --font-display: var(--font-inter-tight), var(--font-inter), ui-sans-serif, system-ui, sans-serif;
   --header-h: 68px;
   color-scheme: light;
 }
@@ -233,9 +233,9 @@ body:has(main [data-tone="company"]) { --silk-1: #ff8a66; --silk-2: #ffc070; --s
   --color-syn-comment: var(--syn-comment);
   --color-syn-attr: var(--syn-attr);
   --color-syn-type: var(--syn-type);
-  --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
   --font-mono: var(--font-geist-mono), ui-monospace, SFMono-Regular, Menlo, monospace;
-  --font-display: var(--font-mona-sans), var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-inter-tight), var(--font-inter), ui-sans-serif, system-ui, sans-serif;
   /* No serif face ships (Instrument Serif is retired); font-serif is the system serif. */
   --font-serif: ui-serif, Georgia, serif;
   --radius-sm: calc(var(--radius) - 4px);
@@ -393,9 +393,9 @@ body:has(main [data-tone="company"]) { --silk-1: #ff8a66; --silk-2: #ffc070; --s
 @utility text-display-1 {
   font-family: var(--font-display);
   font-size: clamp(3rem, 1.6rem + 6.2vw, 7.25rem);
-  line-height: 0.94;
-  letter-spacing: -0.045em;
-  font-weight: 760;
+  line-height: 0.98;
+  letter-spacing: -0.022em;
+  font-weight: 700;
   font-stretch: 100%;
   max-width: 14ch;
   text-wrap: balance;
@@ -410,8 +410,8 @@ body:has(main [data-tone="company"]) { --silk-1: #ff8a66; --silk-2: #ffc070; --s
   font-family: var(--font-display);
   font-size: clamp(2.5rem, 1.5rem + 3.6vw, 4.75rem);
   line-height: 0.98;
-  letter-spacing: -0.04em;
-  font-weight: 720;
+  letter-spacing: -0.02em;
+  font-weight: 680;
   font-stretch: 108%;
   text-wrap: balance;
 }
@@ -419,8 +419,8 @@ body:has(main [data-tone="company"]) { --silk-1: #ff8a66; --silk-2: #ffc070; --s
   font-family: var(--font-display);
   font-size: clamp(1.875rem, 1.4rem + 1.6vw, 2.75rem);
   line-height: 1.05;
-  letter-spacing: -0.03em;
-  font-weight: 680;
+  letter-spacing: -0.018em;
+  font-weight: 650;
   font-stretch: 104%;
   text-wrap: balance;
 }
@@ -847,11 +847,173 @@ body:has(main [data-tone="company"]) { --silk-1: #ff8a66; --silk-2: #ffc070; --s
   inset: 0;
   background: radial-gradient(ellipse 72% 120% at 50% 132%, transparent 69.6%, color-mix(in oklab, var(--signal) 75%, white 10%) 70%, transparent 70.5%);
   opacity: 0.8;
+  filter: drop-shadow(0 0 6px color-mix(in oklab, var(--signal) 70%, transparent));
+  animation: horizon-breathe 6s ease-in-out infinite alternate;
 }
+@keyframes horizon-breathe { from { opacity: 0.55; } to { opacity: 1; } }
+.horizon__poster { animation: horizon-swell 12s ease-in-out infinite alternate; transform-origin: 50% 100%; }
+@keyframes horizon-swell { from { transform: scale(0.96); } to { transform: scale(1.06); } }
+.horizon :is(.horizon__rim, .horizon__poster) { @variant calm { animation: none; } }
 .horizon__canvas { opacity: 0; transition: opacity 900ms var(--ease-out); }
 .horizon__canvas[data-ready="true"] { opacity: 1; }
 .horizon__canvas:is([data-lost="true"], [data-calm="true"]) { opacity: 0; }
 .horizon__canvas { @variant calm { opacity: 0; } }
+
+/* ==========================================================================
+   Aurora: the hero light scene (src/components/marketing/aurora.tsx).
+   Drifting colour mesh + slow light rays + blueprint grid with light trails
+   + twinkling dust + a pointer glow. Transform/opacity animation only.
+   ========================================================================== */
+.aurora {
+  --aurora-strength: 0.75;
+  --aurora-grid: color-mix(in oklab, var(--foreground) 9%, transparent);
+  --aurora-violet: color-mix(in oklab, var(--silk-1) 55%, var(--signal));
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  contain: strict;
+}
+.dark .aurora { --aurora-strength: 0.9; --aurora-grid: color-mix(in oklab, var(--foreground) 8%, transparent); }
+
+.aurora__mesh {
+  position: absolute;
+  inset: -10% -5% 20%;
+  opacity: var(--aurora-strength);
+  filter: saturate(1.25);
+}
+.aurora__blob {
+  position: absolute;
+  border-radius: 9999px;
+  filter: blur(72px);
+  will-change: transform;
+  animation: var(--a) ease-in-out infinite alternate;
+}
+.aurora__blob--1 {
+  --a: aurora-a 17s;
+  width: 46rem; height: 30rem; left: calc(50% - 23rem); top: -10rem;
+  background: radial-gradient(closest-side, color-mix(in oklab, var(--signal) 85%, transparent), transparent);
+}
+.aurora__blob--2 {
+  --a: aurora-b 21s;
+  width: 40rem; height: 34rem; left: 2%; top: -6rem;
+  background: radial-gradient(closest-side, color-mix(in oklab, var(--silk-1) 70%, transparent), transparent);
+}
+.aurora__blob--3 {
+  --a: aurora-c 19s;
+  width: 38rem; height: 30rem; right: 2%; top: -8rem;
+  background: radial-gradient(closest-side, color-mix(in oklab, var(--silk-3) 85%, transparent), transparent);
+}
+.aurora__blob--4 {
+  --a: aurora-d 24s;
+  width: 34rem; height: 26rem; left: calc(50% - 30rem); top: 8rem;
+  background: radial-gradient(closest-side, color-mix(in oklab, var(--aurora-violet) 60%, transparent), transparent);
+}
+@keyframes aurora-a { from { transform: translate(-14%, -4%) scale(0.95); } to { transform: translate(12%, 10%) scale(1.15); } }
+@keyframes aurora-b { from { transform: translate(-6%, 0) scale(1); } 50% { transform: translate(22%, 14%) scale(1.2); } to { transform: translate(8%, -8%) scale(0.9); } }
+@keyframes aurora-c { from { transform: translate(8%, 6%) scale(1.1); } to { transform: translate(-20%, -4%) scale(0.92); } }
+@keyframes aurora-d { from { transform: translate(0, 0) scale(0.9); } to { transform: translate(70%, -18%) scale(1.2); } }
+
+/* Soft light rays fanning down from above the headline, swaying slowly. */
+.aurora__rays {
+  position: absolute;
+  left: 50%;
+  top: -12rem;
+  width: 120rem;
+  height: 70rem;
+  margin-left: -60rem;
+  transform-origin: 50% 0;
+  background: repeating-conic-gradient(from 150deg at 50% 0%, transparent 0deg, color-mix(in oklab, var(--signal-2) 22%, transparent) 2.5deg, transparent 5deg, transparent 9deg, color-mix(in oklab, var(--silk-1) 14%, transparent) 11deg, transparent 13deg, transparent 18deg);
+  mask-image: radial-gradient(42% 60% at 50% 0%, #000 0%, rgba(0, 0, 0, 0.35) 55%, transparent 85%);
+  opacity: 0.7;
+  mix-blend-mode: plus-lighter;
+  animation: aurora-sway 26s ease-in-out infinite alternate;
+}
+:root:not(.dark) .aurora__rays { mix-blend-mode: normal; opacity: 0.55; }
+@keyframes aurora-sway { from { transform: rotate(-5deg); } to { transform: rotate(5deg); } }
+
+/* Blueprint grid centred on the page axis (a line every 64px from the centre), lit from the top. */
+.aurora__grid {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: calc(50% - 1280px);
+  width: 2560px;
+  background-image: linear-gradient(var(--aurora-grid) 1px, transparent 1px), linear-gradient(90deg, var(--aurora-grid) 1px, transparent 1px);
+  background-size: 64px 64px;
+  mask-image: radial-gradient(900px 640px at 50% 0%, #000 0%, rgba(0, 0, 0, 0.55) 50%, transparent 100%);
+}
+.aurora__trail {
+  position: absolute;
+  border-radius: 9999px;
+  opacity: 0;
+  animation: var(--dur) linear var(--delay) infinite;
+}
+.aurora__trail--down {
+  left: calc(1280px + var(--line) * 64px);
+  top: 0;
+  width: 1px;
+  height: 160px;
+  background: linear-gradient(to bottom, transparent, color-mix(in oklab, var(--signal) 90%, transparent) 75%, var(--signal-2));
+  box-shadow: 0 0 10px 1px color-mix(in oklab, var(--signal) 55%, transparent);
+  animation-name: aurora-trail-down;
+}
+.aurora__trail--across {
+  left: 380px;
+  top: calc(var(--line) * 64px);
+  width: 200px;
+  height: 1px;
+  background: linear-gradient(to right, transparent, color-mix(in oklab, var(--silk-1) 80%, transparent) 70%, color-mix(in oklab, var(--silk-1) 40%, white));
+  box-shadow: 0 0 10px 1px color-mix(in oklab, var(--silk-1) 50%, transparent);
+  animation-name: aurora-trail-across;
+}
+@keyframes aurora-trail-down { 0% { transform: translateY(-160px); opacity: 0; } 8% { opacity: 1; } 70% { opacity: 1; } 100% { transform: translateY(820px); opacity: 0; } }
+@keyframes aurora-trail-across { 0% { transform: translateX(0); opacity: 0; } 10% { opacity: 1; } 80% { opacity: 1; } 100% { transform: translateX(1600px); opacity: 0; } }
+
+/* Twinkling dust: two tiled layers of tiny lights, out of phase. */
+.aurora__dust {
+  position: absolute;
+  inset: 0 0 30%;
+  background-image:
+    radial-gradient(1.5px 1.5px at 20px 30px, color-mix(in oklab, var(--foreground) 70%, transparent), transparent),
+    radial-gradient(1px 1px at 140px 90px, color-mix(in oklab, var(--signal-2) 90%, transparent), transparent),
+    radial-gradient(1.5px 1.5px at 230px 160px, color-mix(in oklab, var(--foreground) 60%, transparent), transparent),
+    radial-gradient(1px 1px at 80px 210px, color-mix(in oklab, var(--signal) 90%, transparent), transparent);
+  background-size: 280px 260px;
+  mask-image: radial-gradient(60% 80% at 50% 0%, #000, transparent);
+  opacity: 0.25;
+  animation: aurora-twinkle 5s ease-in-out infinite alternate;
+}
+.aurora__dust--2 {
+  background-size: 360px 330px;
+  background-position: 120px 70px;
+  animation-duration: 7s;
+  animation-delay: -3s;
+}
+.dark .aurora__dust { opacity: 0.55; }
+@keyframes aurora-twinkle { from { opacity: 0.08; } to { opacity: 0.6; } }
+
+/* A soft light that follows the pointer (aurora.tsx writes --ax/--ay). */
+.aurora__glow {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(420px circle at var(--ax, 50%) var(--ay, -400px), color-mix(in oklab, var(--signal) 22%, transparent), transparent 70%);
+  opacity: 0;
+  transition: opacity var(--dur-5) var(--ease-out);
+}
+.aurora[data-pointer="on"] .aurora__glow { opacity: 1; }
+
+/* Readability: a quiet pool behind the headline, and a clean fade into the page below. */
+.aurora__fade {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(46% 26% at 50% 34%, color-mix(in oklab, var(--background) 45%, transparent), transparent 80%),
+    linear-gradient(to bottom, transparent 55%, var(--background) 100%);
+}
+
+.aurora * { @variant calm { animation: none !important; } }
+.aurora { @variant calm { & .aurora__trail { display: none; } & .aurora__glow { display: none; } } }
 
 .bg-noise {
   background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/></filter><rect width='100%' height='100%' filter='url(%23n)' opacity='0.5'/></svg>");

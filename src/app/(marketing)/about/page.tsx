@@ -90,7 +90,7 @@ export default async function AboutPage() {
               const body = rest.charAt(0).toUpperCase() + rest.slice(1);
               return (
                 <li key={p} data-spotlight-tile className="relative flex flex-col rounded-[18px] border border-border bg-card p-6 shadow-[inset_0_1px_0_var(--hairline)]">
-                  <span aria-hidden="true" className="mk-num font-display text-[56px] font-extrabold leading-none tracking-[-0.05em] text-foreground/[0.08] [font-stretch:112%]">
+                  <span aria-hidden="true" className="mk-num font-display text-[56px] font-extrabold leading-none tracking-[-0.025em] text-foreground/[0.08] [font-stretch:112%]">
                     {String(i + 1).padStart(2, "0")}
                   </span>
                   <h3 className="mt-6 flex items-center gap-2 text-[17px] font-semibold tracking-[-0.015em]">

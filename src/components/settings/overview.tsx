@@ -225,7 +225,7 @@ export function OverviewBento({ data }: { data: SettingsOverview }) {
           </span>
           {/* Clock and its zone line share one left edge, whether the pair sits beside the name or wraps under it. */}
           <span className="text-left">
-            <LocalTime tz={tz} className="block font-display text-[34px] font-semibold leading-none tracking-[-0.04em] tabular-nums" />
+            <LocalTime tz={tz} className="block font-display text-[34px] font-semibold leading-none tracking-[-0.025em] tabular-nums" />
             <span className="mt-1.5 block text-xs tabular-nums text-foreground-dim">
               {tz.replace(/_/g, " ")}
               {offset ? ` · ${offset}` : ""}

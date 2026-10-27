@@ -228,7 +228,7 @@
   font-size: min(18.5vw, 19rem);
   font-weight: 800;
   line-height: 0.86;
-  letter-spacing: -0.05em;
+  letter-spacing: -0.03em;
   user-select: none;
   /* The word fades into the page at the bottom edge. */
   mask-image: linear-gradient(to bottom, #000 35%, transparent 100%);
@@ -437,7 +437,7 @@
   font-weight: 800;
   font-stretch: 112%;
   line-height: 0.82;
-  letter-spacing: -0.04em;
+  letter-spacing: -0.025em;
   color: transparent;
   -webkit-text-stroke: 1px var(--border-strong);
   user-select: none;
