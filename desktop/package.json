@@ -1,0 +1,67 @@
+{
+  "name": "codexa-desktop",
+  "productName": "Codexa",
+  "version": "1.0.0",
+  "description": "Codexa for Windows: turn ideas into working software.",
+  "author": "Codexa",
+  "homepage": "https://codexa.creditvault.tech",
+  "private": true,
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "dist:win": "electron-builder --win nsis --x64 --publish never"
+  },
+  "devDependencies": {
+    "electron": "38.2.0",
+    "electron-builder": "26.0.12"
+  },
+  "build": {
+    "appId": "tech.creditvault.codexa",
+    "productName": "Codexa",
+    "copyright": "\u00a9 Codexa",
+    "directories": {
+      "output": "dist",
+      "buildResources": "build"
+    },
+    "files": [
+      "main.js",
+      "offline.html",
+      "build/icon.png"
+    ],
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "icon": "build/icon.ico",
+      "artifactName": "Codexa-Setup-x64.${ext}"
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "Codexa",
+      "installerIcon": "build/icon.ico",
+      "uninstallerIcon": "build/icon.ico",
+      "runAfterFinish": true
+    },
+    "publish": [
+      {
+        "provider": "github",
+        "owner": "sangralrahul",
+        "repo": "codexa",
+        "releaseType": "release"
+      }
+    ]
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/sangralrahul/codexa.git"
+  }
+}

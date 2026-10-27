@@ -37,6 +37,7 @@ const RAW_ROUTES: Omit<RouteEntry, "navLabel">[] = [
   { path: "/full-stack-development", title: "Full-stack development", description: "Frontend, backend, database, authentication, and APIs in one workspace.", group: "product", priority: 0.7 },
   { path: "/visual-editor", title: "Visual editor", description: "Preview your application, inspect the rendered output, and request targeted UI changes.", group: "product", priority: 0.7 },
   { path: "/code-editor", title: "Code editor", description: "A Monaco-based editor with tabs, search, diagnostics, diff view, and AI-assisted edits.", group: "product", priority: 0.7 },
+  { path: "/download", title: "Download Codexa for Windows", description: "Codexa as a desktop app for Windows 10 and 11 (64-bit): its own window, Start menu entry and taskbar icon.", group: "product", priority: 0.7 },
   { path: "/app-deployment", title: "App deployment", description: "Build, deploy, and roll back applications with live logs and deployment history.", group: "product", priority: 0.7 },
   { path: "/integrations", title: "Integrations", description: "Databases, authentication, AI providers, payments, email, storage, hosting, and GitHub.", group: "product", priority: 0.8 },
   { path: "/alternatives", title: "Alternatives", description: "How Codexa compares with other AI development platforms, honestly.", group: "product", priority: 0.5 },
@@ -259,6 +260,7 @@ export const NAV = {
     { label: "Changelog", href: "/changelog", description: "What shipped, release by release", well: "changelog" },
     { label: "Blog", href: "/blog", description: "Product notes and engineering", well: "changelog" },
     { label: "Community", href: "/community", description: "Discussions and issues on GitHub", well: "changelog" },
+    { label: "Download for Windows", href: "/download", description: "The desktop app for Windows 10 and 11", well: "docs" },
   ],
   company: [
     { label: "About", href: "/about", description: "Who builds Codexa, and how", well: "company" },

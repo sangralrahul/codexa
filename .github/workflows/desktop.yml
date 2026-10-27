@@ -1,0 +1,75 @@
+name: Desktop (Windows)
+
+# Builds Codexa for Windows (desktop/) on a Windows runner, smoke-tests the installer, and publishes
+# it as a GitHub release. The website's /download button points at
+# releases/latest/download/Codexa-Setup-x64.exe, so the newest release is what people get.
+# Run it from the Actions tab ("Run workflow"), or push a tag like desktop-v1.0.1.
+
+on:
+  workflow_dispatch:
+  push:
+    tags: ["desktop-v*"]
+
+permissions:
+  contents: write
+
+jobs:
+  windows:
+    runs-on: windows-latest
+    defaults:
+      run:
+        working-directory: desktop
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: desktop/package-lock.json
+
+      - run: npm ci
+
+      - name: Build installer (x64)
+        run: npx electron-builder --win nsis --x64 --publish never
+
+      - name: Smoke test (silent install, files and uninstaller present)
+        shell: pwsh
+        run: |
+          Start-Process -FilePath "dist\Codexa-Setup-x64.exe" -ArgumentList "/S" -Wait
+          $dir = Join-Path $env:LOCALAPPDATA "Programs\Codexa"
+          if (-not (Test-Path "$dir\Codexa.exe")) { Get-ChildItem "$env:LOCALAPPDATA\Programs" -Recurse -Depth 1 | Out-String | Write-Host; throw "Codexa.exe was not installed" }
+          if (-not (Test-Path "$dir\Uninstall Codexa.exe")) { throw "Uninstaller missing" }
+          $v = (Get-Item "$dir\Codexa.exe").VersionInfo
+          Write-Host "Installed $($v.ProductName) $($v.FileVersion) at $dir"
+          $p = Start-Process -FilePath "$dir\Codexa.exe" -PassThru
+          Start-Sleep -Seconds 15
+          if ($p.HasExited) { throw "Codexa exited right after launch (code $($p.ExitCode))" }
+          Stop-Process -Id $p.Id -Force
+          Write-Host "App launched and stayed running"
+
+      - name: Version
+        id: version
+        shell: pwsh
+        run: |
+          $v = (Get-Content package.json | ConvertFrom-Json).version
+          "version=$v" >> $env:GITHUB_OUTPUT
+          $hash = (Get-FileHash "dist\Codexa-Setup-x64.exe" -Algorithm SHA256).Hash.ToLower()
+          "sha256=$hash" >> $env:GITHUB_OUTPUT
+
+      - name: Publish release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: desktop-v${{ steps.version.outputs.version }}
+          name: Codexa for Windows ${{ steps.version.outputs.version }}
+          make_latest: true
+          body: |
+            Codexa for Windows ${{ steps.version.outputs.version }} (64-bit, Windows 10 and 11).
+
+            Download **Codexa-Setup-x64.exe** below and run it. The installer is not code-signed yet, so Windows SmartScreen may ask first: click **More info**, then **Run anyway**.
+
+            SHA-256 of Codexa-Setup-x64.exe: `${{ steps.version.outputs.sha256 }}`
+          files: |
+            desktop/dist/Codexa-Setup-x64.exe
+            desktop/dist/Codexa-Setup-x64.exe.blockmap
+            desktop/dist/latest.yml

@@ -19,7 +19,11 @@ const eslintConfig = defineConfig([
     ".open-next/**",
     ".wrangler/**",
     "containers/runner/dist/**",
+    "desktop/node_modules/**",
+    "desktop/dist/**",
   ]),
+  // The Electron main process (desktop/) is CommonJS.
+  { files: ["desktop/**/*.js"], rules: { "@typescript-eslint/no-require-imports": "off" } },
   {
     rules: {
       "@typescript-eslint/no-unused-vars": ["warn", { argsIgnorePattern: "^_", varsIgnorePattern: "^_" }],
