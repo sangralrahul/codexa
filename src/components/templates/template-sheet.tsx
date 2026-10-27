@@ -9,7 +9,9 @@ import { DeviceFrame } from "@/components/frames/device-frame";
 import { buttonClasses } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { FileTree } from "./file-tree";
-import { TemplatePreview } from "./template-preview";
+import { RouteList, TemplatePreview } from "./template-preview";
+import { TEMPLATE_API_ROUTES } from "./api-routes.generated";
+import { TEMPLATE_SHOTS } from "./shots";
 import { templatePreviewHref } from "./template-card";
 import type { ReadmeBlock, TemplateSheetDetail } from "./template-details";
 import { useGallery } from "./gallery-state";
@@ -74,12 +76,15 @@ export function TemplatePreviewSheet({ details, actions }: { details: Record<str
   const t = items.find((x) => x.id === shown);
   const d = shown ? details[shown] : undefined;
   const open = Boolean(preview && details[preview]);
+  const hasShot = Boolean(shown && TEMPLATE_SHOTS.has(shown));
+  const routes = shown ? TEMPLATE_API_ROUTES[shown] : undefined;
 
   return (
     <Sheet open={open} onOpenChange={(o) => (o ? undefined : openPreview(null))}>
       {t && d ? (
         <SheetContent
           width={720}
+          className="[--btn-radius:10px]"
           title={t.name}
           description={t.description}
           bodyClassName="px-0 py-0"
@@ -95,18 +100,25 @@ export function TemplatePreviewSheet({ details, actions }: { details: Record<str
         >
           <div className="relative overflow-hidden border-b border-border bg-surface px-5 pb-6 pt-5">
             <div aria-hidden="true" className="bg-dots absolute inset-0 opacity-70" />
-            {t.category === "mobile-first" ? (
+            {!hasShot && routes ? (
+              // API-only starters have no screen: show their real route list (read from the source).
+              <RouteList routes={routes} variant="hero" command={d.devCommand} className="relative rounded-[14px] shadow-xl" />
+            ) : !hasShot ? (
+              <TemplatePreview id={t.id} category={t.category} className="relative shadow-xl" />
+            ) : t.category === "mobile-first" ? (
               <div className="relative mx-auto h-[360px] [container-type:size]">
                 <DeviceFrame device="phone" fit="height">
                   <TemplatePreview id={t.id} category={t.category} sizes="200px" className="size-full rounded-none border-0 shadow-none" imgClassName="size-full aspect-auto object-cover object-top" />
                 </DeviceFrame>
               </div>
             ) : (
-              <BrowserFrame url={`${t.id}.preview.local/`} chrome="minimal" className="relative shadow-xl">
+              <BrowserFrame url={d.url} chrome="minimal" className="relative shadow-xl">
                 <TemplatePreview id={t.id} category={t.category} sizes="(min-width: 760px) 680px, 100vw" pan className="rounded-none border-0 shadow-none" />
               </BrowserFrame>
             )}
-            <p className="text-meta relative mt-3 text-center text-muted-foreground">Starter screenshot, captured from this template&apos;s own build.</p>
+            <p className="text-meta relative mt-3 text-center text-muted-foreground">
+              {hasShot ? "Starter screenshot, captured from this template\u2019s own build." : "An API with no screen: these routes are read from the template\u2019s own source."}
+            </p>
           </div>
 
           <dl className="grid grid-cols-2 gap-px border-b border-border bg-border sm:grid-cols-4">

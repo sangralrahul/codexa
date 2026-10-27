@@ -1,4 +1,4 @@
-import { routeMetadata } from "@/lib/seo";
+import { authMetadata } from "@/components/auth/meta";
 import { AuthCard } from "@/components/auth/auth-card";
 import { LoginForm } from "@/components/auth/forms";
 import { cleanTemplateId, one, safeNext } from "@/components/auth/params";
@@ -6,7 +6,7 @@ import { capabilities } from "@/lib/env";
 import { clampIdea } from "@/lib/client/pending-idea";
 import { Alert } from "@/components/ui/misc";
 
-export const metadata = routeMetadata("/login");
+export const metadata = authMetadata("/login");
 
 type SearchParams = Promise<{
   reset?: string;

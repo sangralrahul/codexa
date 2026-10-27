@@ -104,7 +104,7 @@ function SearchPill({ className, iconOnlyBelow = "xl" }: { className?: string; i
     >
       <Search className="size-4" aria-hidden="true" />
       <span className={cn(iconOnlyBelow === "xl" && "hidden xl:inline")}>Search</span>
-      <Kbd mod className={cn("ml-1 border-0 bg-muted px-1.5 shadow-[inset_0_0_0_1px_var(--border)]", iconOnlyBelow === "xl" && "hidden xl:inline-flex")}>
+      <Kbd mod className={cn("ml-1 gap-1 border-0 bg-muted px-1.5 shadow-[inset_0_0_0_1px_var(--border)]", iconOnlyBelow === "xl" && "hidden xl:inline-flex")}>
         K
       </Kbd>
     </button>
@@ -117,6 +117,9 @@ export function MarketingHeader({ signedIn, wells }: { signedIn: boolean; wells?
   const [focusItem, setFocusItem] = React.useState<Record<GroupKey, number>>({ product: 0, solutions: 0, resources: 0, company: 0 });
   const [mobileOpen, setMobileOpen] = React.useState(false);
   const [scrolled, setScrolled] = React.useState(false);
+  /** Set the first time a visitor reaches for a menu; until then the wells' screenshots are not fetched. */
+  const [armed, setArmed] = React.useState(false);
+  const arm = () => setArmed(true);
   const [lastPath, setLastPath] = React.useState(pathname);
   if (lastPath !== pathname) {
     // Route changed: close every menu (state adjustment during render).
@@ -131,6 +134,7 @@ export function MarketingHeader({ signedIn, wells }: { signedIn: boolean; wells?
   const triggerRefs = React.useRef<Partial<Record<GroupKey, HTMLButtonElement | null>>>({});
   const panelRefs = React.useRef<Partial<Record<GroupKey, HTMLDivElement | null>>>({});
   const bgRef = React.useRef<HTMLDivElement>(null);
+  const menuButtonRef = React.useRef<HTMLButtonElement>(null);
   const openTimer = React.useRef<ReturnType<typeof setTimeout> | null>(null);
   const closeTimer = React.useRef<ReturnType<typeof setTimeout> | null>(null);
   /** How the open menu was opened: a click right after a hover-open should not close it again. */
@@ -146,16 +150,30 @@ export function MarketingHeader({ signedIn, wells }: { signedIn: boolean; wells?
     return () => io.disconnect();
   }, []);
 
-  // Mobile sheet: lock the page behind it; Escape closes it.
+  // Mobile sheet: lock the page behind it and take it out of the tab order (inert), so keyboard and
+  // screen-reader users stay in the sheet; Escape closes it and returns focus to the toggle.
   React.useEffect(() => {
     if (!mobileOpen) return;
     const prev = document.body.style.overflow;
     document.body.style.overflow = "hidden";
-    const onKey = (e: KeyboardEvent) => e.key === "Escape" && setMobileOpen(false);
+    const shell = headerRef.current?.closest(".site-shell");
+    const behind = shell ? Array.from(shell.children).filter((el): el is HTMLElement => el instanceof HTMLElement && (el.tagName === "MAIN" || el.tagName === "FOOTER")) : [];
+    for (const el of behind) el.inert = true;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key !== "Escape") return;
+      setMobileOpen(false);
+      menuButtonRef.current?.focus();
+    };
     document.addEventListener("keydown", onKey);
+    // The sheet is phones and tablets only: widening the window past lg closes it (and un-inerts the page).
+    const wide = window.matchMedia("(min-width: 64rem)");
+    const onWide = () => wide.matches && setMobileOpen(false);
+    wide.addEventListener("change", onWide);
     return () => {
       document.body.style.overflow = prev;
+      for (const el of behind) el.inert = false;
       document.removeEventListener("keydown", onKey);
+      wide.removeEventListener("change", onWide);
     };
   }, [mobileOpen]);
 
@@ -232,13 +250,23 @@ export function MarketingHeader({ signedIn, wells }: { signedIn: boolean; wells?
         data-scrolled={scrolled ? "" : undefined}
         data-mega={open ? "" : undefined}
         data-sheet={mobileOpen ? "" : undefined}
+        data-armed={armed || open ? "" : undefined}
       >
         <div className="mk-bar">
           <div aria-hidden="true" className="mk-bar__glass" />
           <div className="relative flex h-full items-center justify-between gap-3">
             <div className="flex min-w-0 items-center gap-3 xl:gap-5">
               <Logo />
-              <nav aria-label="Main" className="hidden lg:block" onPointerLeave={scheduleClose} onPointerEnter={keepOpen}>
+              <nav
+                aria-label="Main"
+                className="hidden lg:block"
+                onPointerLeave={scheduleClose}
+                onPointerEnter={() => {
+                  keepOpen();
+                  arm();
+                }}
+                onFocus={arm}
+              >
                 <div ref={navRef} className="relative">
                 <GlideIndicator ref={glide} className="inset-y-0 rounded-full bg-foreground/[0.065] shadow-none" />
                 <ul className="flex items-center">
@@ -394,6 +422,7 @@ export function MarketingHeader({ signedIn, wells }: { signedIn: boolean; wells?
             <div className="flex items-center gap-1 lg:hidden">
               <SearchPill iconOnlyBelow="xl" className="border-transparent bg-transparent shadow-none" />
               <button
+                ref={menuButtonRef}
                 type="button"
                 className="inline-flex size-10 items-center justify-center rounded-full text-foreground transition-colors hover:bg-foreground/[0.06]"
                 aria-label={mobileOpen ? "Close menu" : "Open menu"}

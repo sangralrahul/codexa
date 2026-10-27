@@ -5,7 +5,7 @@ import { LogoMark } from "@/components/logo";
 /** Mirrors the workspace shell (agent card, explorer, editor, browser frame) while the project opens. */
 export default function Loading() {
   return (
-    <div role="status" aria-label="Opening project" className="ws-root flex h-dvh flex-col bg-background">
+    <div role="status" className="ws-root relative flex h-dvh flex-col bg-background">
       <div className="flex h-[52px] shrink-0 items-center gap-2.5 px-3" aria-hidden="true">
         <Skeleton className="size-7 rounded-lg" />
         <Skeleton className="h-5 w-8 rounded-[5px]" />
@@ -65,13 +65,14 @@ export default function Loading() {
             </div>
           </div>
         </div>
-        <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
-          <div className="glass flex items-center gap-3 rounded-2xl border border-border-strong px-4 py-3 shadow-xl">
-            <span className="ws-orb rounded-lg" data-running="">
-              <LogoMark size={26} state="running" />
-            </span>
-            <span className="text-[14px] font-medium">Opening project…</span>
-          </div>
+      </div>
+      {/* The one thing announced: the skeleton above is decorative. */}
+      <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
+        <div className="ws-pill-in glass flex items-center gap-3 rounded-2xl border border-border-strong px-4 py-3 shadow-xl">
+          <span className="ws-orb rounded-lg" data-running="" aria-hidden="true">
+            <LogoMark size={26} state="running" />
+          </span>
+          <span className="text-[14px] font-medium">Opening project…</span>
         </div>
       </div>
     </div>

@@ -222,7 +222,7 @@ export function AppShell({
             >
               <Search className="size-3.5" aria-hidden="true" />
               <span className="flex-1 truncate text-left">Search or build anything…</span>
-              <Kbd mod className="border border-border bg-muted">
+              <Kbd mod className="gap-1 border border-border bg-muted px-1.5">
                 K
               </Kbd>
             </button>
@@ -233,7 +233,9 @@ export function AppShell({
               </button>
               <div ref={setSlot} className="flex items-center gap-1.5 empty:hidden" />
               {canCreate && pathname !== "/new-project" ? (
-                <Link href="/new-project" className={cn(buttonClasses("primary", "sm"), "w-8 px-0 sm:w-auto sm:px-3", collapsed ? "inline-flex" : "inline-flex lg:hidden")}>
+                // Only when the sidebar's own button is out of view (collapsed rail or phones), and never twice:
+                // /projects shows New project in its toolbar from 1024px up.
+                <Link href="/new-project" className={cn(buttonClasses("primary", "sm"), "w-8 px-0 sm:w-auto sm:px-3", collapsed && pathname !== "/projects" ? "inline-flex" : "inline-flex lg:hidden")}>
                   <Plus className="size-4" aria-hidden="true" />
                   <span className="hidden sm:inline">New project</span>
                   <span className="sr-only sm:hidden">New project</span>

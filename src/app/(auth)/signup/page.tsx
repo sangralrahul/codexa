@@ -1,4 +1,4 @@
-import { routeMetadata } from "@/lib/seo";
+import { authMetadata } from "@/components/auth/meta";
 import { AuthCard } from "@/components/auth/auth-card";
 import { SignupForm } from "@/components/auth/forms";
 import { cleanTemplateId, one, safeNext } from "@/components/auth/params";
@@ -7,7 +7,7 @@ import { clampIdea } from "@/lib/client/pending-idea";
 import { getTemplate } from "@/templates";
 import { PLANS } from "@/config/plans";
 
-export const metadata = routeMetadata("/signup");
+export const metadata = authMetadata("/signup");
 
 type SearchParams = Promise<{ next?: string | string[]; email?: string | string[]; prompt?: string | string[]; template?: string | string[] }>;
 

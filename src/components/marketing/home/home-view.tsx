@@ -2,7 +2,7 @@ import Link from "next/link";
 import * as React from "react";
 import { ArrowRight } from "lucide-react";
 import { SectionHeader } from "@/components/marketing/section";
-import { HOME_INTEGRATIONS, HOME_WALL } from "@/content/marketing/home";
+import { HOME_INTEGRATIONS, HOME_PROOF, HOME_WALL } from "@/content/marketing/home";
 import type { HomeData } from "./data";
 import type { TickerEntry } from "./changelog-ticker";
 import { HomeStoreProvider } from "./home-store";
@@ -92,7 +92,9 @@ export function HomeView({
                 <span className="link-draw">Browse integrations</span>
                 <ArrowRight className="size-3.5 transition-transform group-hover/i:translate-x-0.5" aria-hidden="true" />
               </Link>
-              <p>{HOME_INTEGRATIONS.trademark}</p>
+              <p>
+                {HOME_PROOF.platformLine} {HOME_INTEGRATIONS.trademark}
+              </p>
             </div>
           </div>
         </section>

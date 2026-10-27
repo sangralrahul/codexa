@@ -159,7 +159,8 @@ export function SettingsNav({ workspaceName, meta }: { workspaceName: string | n
     setQuery("");
     const [path, hash] = href.split("#");
     if (path === pathname && hash) {
-      document.getElementById(hash)?.scrollIntoView({ behavior: isCalm() ? "auto" : "smooth", block: "start" });
+      const el = document.getElementById(hash);
+      (el?.closest<HTMLElement>(".settings-card") ?? el)?.scrollIntoView({ behavior: isCalm() ? "auto" : "smooth", block: "start" });
       window.history.replaceState(null, "", `#${hash}`);
       flashSection(hash);
     } else {

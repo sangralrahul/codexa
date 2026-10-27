@@ -69,7 +69,7 @@ export function PlatformGrid({ scenario }: { scenario: Scenario }) {
           </ul>
         </div>
 
-        <div className="mt-8 flex flex-col gap-5 md:flex-row md:items-center md:justify-between">
+        <div className="mt-6 flex flex-col gap-5">
           <p className="text-sm text-muted-foreground">{HOME_PLATFORM.caption}</p>
           <ul aria-label="Explore the platform" className="flex flex-wrap gap-2">
             {HOME_PLATFORM.chips.map((c) => {

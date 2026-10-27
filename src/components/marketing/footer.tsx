@@ -78,7 +78,7 @@ export function MarketingFooter() {
           {/* Phones and tablets: a two-column grid of accordions. */}
           <div className="grid grid-cols-2 gap-x-5 border-t border-border lg:hidden">
             {GROUPS.map(([group, paths]) => (
-              <details key={group} className="group border-b border-border">
+              <details key={group} className="group border-b border-border [&:last-child:nth-child(odd)]:col-span-2">
                 <summary className="flex cursor-pointer list-none items-center justify-between py-3.5 text-[14px] font-medium [&::-webkit-details-marker]:hidden">
                   {group}
                   <span aria-hidden="true" className="relative inline-flex size-4 items-center justify-center text-muted-foreground">

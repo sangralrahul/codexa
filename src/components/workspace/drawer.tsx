@@ -48,6 +48,8 @@ export function Drawer({
         width={width ?? (wide ? 1040 : 480)}
         footer={footer}
         modal={modal}
+        // Portaled outside the workspace root: carry the app's 10px button shape along.
+        className="[--btn-radius:10px]"
         bodyClassName="p-0"
         // Focus the sheet itself (not the close button) so keyboard users start at the top of its content.
         onOpenAutoFocus={(e) => {

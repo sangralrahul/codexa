@@ -168,7 +168,8 @@ function PlanCard({ p, prev, currency, interval, compact, fit }: { p: PricingPla
         ) : null}
       </div>
       <p className="relative mt-1.5 min-h-[2.75rem] text-[13.5px] leading-snug text-muted-foreground">{p.tagline}</p>
-      <div className="relative mt-5 min-h-[5.5rem]">
+      {/* Fixed height for the price and its note (one or two lines), so every card's button sits on one line. */}
+      <div className="relative mt-5 min-h-[6.5rem]">
         {line ? (
           <>
             <p className="flex items-baseline gap-1.5">
@@ -268,7 +269,8 @@ function PlanFinder({ usage, onUsage, currency, plans }: { usage: Usage; onUsage
                   step={r.step}
                   value={usage[k]}
                   onChange={(e) => onUsage({ ...usage, [k]: Number(e.target.value) })}
-                  className="mt-3 w-full accent-signal"
+                  className="mk-range mt-3 w-full"
+                  style={{ "--fill": `${(((usage[k] - r.min) / Math.max(1, r.max - r.min)) * 100).toFixed(2)}%` } as React.CSSProperties}
                 />
                 <div aria-hidden="true" className="mt-1 flex justify-between font-mono text-[10px] text-muted-foreground">
                   <span>{fmt(r.min)}</span>

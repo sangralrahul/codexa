@@ -49,7 +49,7 @@ export default async function SharedProjectsPage() {
         emptyDescription={
           memberships.length
             ? "The workspaces you were invited to have no projects yet."
-            : "When a workspace owner invites you (Settings → Team), their projects appear here. Share links you receive open directly from the link."
+            : "When a workspace owner invites you (Settings → Members), their projects appear here. Share links you receive open directly from the link."
         }
       />
     </AppPage>

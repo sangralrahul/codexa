@@ -4,6 +4,7 @@ import { NAV, type NavItem } from "@/config/routes";
 import { BrandMark } from "@/components/brand";
 import { CodeLines } from "@/components/vignettes/code-lines";
 import { LogoMark } from "@/components/logo";
+import { templateShotFor } from "@/components/templates/shots";
 import type { ChromeData } from "./chrome-data";
 
 /**
@@ -11,6 +12,8 @@ import type { ChromeData } from "./chrome-data";
  * rendered on the server and handed to the client header as props, so they cost no client JS.
  * Each well replays its entrance (`.mk-in`, staggered by --d) when its item is hovered or focused.
  * Decorative: the header marks the well container aria-hidden; the link text carries the meaning.
+ * Screenshots use the 720w captures and are not fetched until the visitor first reaches for a menu
+ * (the header sets data-armed; until then marketing.css keeps the well images display:none).
  */
 const d = (n: number) => ({ "--d": n }) as React.CSSProperties;
 
@@ -140,16 +143,16 @@ function TemplatesWell({ templates }: { templates: ChromeData["templates"] }) {
   if (!templates.length) return <DocsWell />;
   return (
     <div className="flex h-full flex-col p-2">
-      <ul className="grid flex-1 grid-cols-2 gap-1.5">
+      <ul className="grid min-h-0 flex-1 grid-cols-2 grid-rows-2 gap-1.5">
         {templates.slice(0, 4).map((t, i) => (
-          <li key={t.id} className="mk-in overflow-hidden rounded-md bg-white shadow-[inset_0_0_0_1px_var(--border)]" style={d(i)}>
+          <li key={t.id} className="mk-in min-h-0 overflow-hidden rounded-md bg-white shadow-[inset_0_0_0_1px_var(--border)]" style={d(i)}>
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={`/templates/${t.id}.webp`} alt="" width={120} height={75} loading="lazy" decoding="async" className="h-full w-full object-cover object-top" />
+            <img src={templateShotFor(t.id, 240)} alt="" width={120} height={75} loading="lazy" decoding="async" className="h-full w-full object-cover object-top" />
           </li>
         ))}
       </ul>
       <p className="mk-in truncate px-1 pt-1.5 font-mono text-[10px] uppercase tracking-[0.08em] text-muted-foreground" style={d(5)}>
-        Real starters · captured from their builds
+        Real starters · their own builds
       </p>
     </div>
   );
@@ -206,7 +209,7 @@ function SolutionWell({ item, name }: { item: NavItem; name?: string }) {
     <div className="flex h-full flex-col p-2">
       <div className="mk-in relative flex-1 overflow-hidden rounded-md bg-white shadow-[inset_0_0_0_1px_var(--border)]" style={d(0)}>
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src={`/templates/${item.template}.webp`} alt="" width={244} height={150} loading="lazy" decoding="async" className="mk-pan absolute inset-0 h-full w-full object-cover object-top" />
+        <img src={templateShotFor(item.template, 244)} alt="" width={244} height={150} loading="lazy" decoding="async" className="mk-pan absolute inset-0 h-full w-full object-cover object-top" />
       </div>
       <p className="mk-in truncate px-1 pt-1.5 font-mono text-[10px] uppercase tracking-[0.08em] text-muted-foreground" style={d(2)}>
         Starter · {name}

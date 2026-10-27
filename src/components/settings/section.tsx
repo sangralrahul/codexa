@@ -21,6 +21,7 @@ export function SettingsCard({
   actions,
   layout = "stack",
   dirty = false,
+  flush = false,
   className,
   bodyClassName,
 }: {
@@ -41,12 +42,15 @@ export function SettingsCard({
   layout?: "stack" | "split";
   /** Tints the footer bar while a form inside has unsaved changes. */
   dirty?: boolean;
+  /** Edge-to-edge body for row lists and tables (rows bring their own padding): no side or bottom padding. */
+  flush?: boolean;
   className?: string;
   bodyClassName?: string;
 }) {
   const headingId = id ? `${id}-title` : undefined;
   const danger = tone === "danger";
   const split = layout === "split";
+  const body = flush ? "pt-3" : "px-5 pb-6 pt-5 sm:px-6";
   const header = (
     <header className={cn("flex items-start gap-3.5 px-5 pt-5 sm:px-6", danger && !split && "bg-danger/[0.035] pb-4", danger && !split && children && "border-b border-danger/15", split && "lg:px-6 lg:pb-6")}>
       {icon ? (
@@ -81,12 +85,12 @@ export function SettingsCard({
       {split ? (
         <div className="lg:grid lg:grid-cols-[minmax(0,1fr)_minmax(0,2fr)]">
           {header}
-          {children ? <div className={cn("px-5 pb-6 pt-5 sm:px-6 lg:border-l lg:border-border/70 lg:pt-6", bodyClassName)}>{children}</div> : <div className="pb-5" />}
+          {children ? <div className={cn(body, "lg:border-l lg:border-border/70 lg:pt-6", bodyClassName)}>{children}</div> : <div className="pb-5" />}
         </div>
       ) : (
         <>
           {header}
-          {children ? <div className={cn("px-5 pb-6 pt-5 sm:px-6", bodyClassName)}>{children}</div> : danger ? null : <div className="pb-5" />}
+          {children ? <div className={cn(body, bodyClassName)}>{children}</div> : danger ? null : <div className="pb-5" />}
         </>
       )}
       {footer || hint ? (

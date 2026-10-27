@@ -100,7 +100,8 @@ export function GalleryFilters({ categories, frameworks, stickyClassName = "md:t
               type="search"
               value={q}
               onChange={(e) => onSearchChange(e.target.value)}
-              placeholder="Search templates (e.g. kanban, express, landing)"
+              placeholder={`Search ${items.length} templates`}
+              title="Search by name, framework or tag (e.g. kanban, express, landing)"
               className="h-10 pl-9 pr-9 [&::-webkit-search-cancel-button]:hidden"
               autoComplete="off"
               enterKeyHint="search"
@@ -209,7 +210,8 @@ function CategoryChips({
         className={cn(
           "relative z-[1] inline-flex h-8 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full px-3 text-[13px] font-medium transition-colors duration-(--dur-2)",
           "focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-ring",
-          active ? "text-background" : "text-muted-foreground hover:text-foreground",
+          // Until the gliding pill has measured (first paint, before hydration), the active chip draws its own.
+          active ? "bg-foreground text-background in-[[data-chips]:has(>.glide-indicator[data-ready])]:bg-transparent" : "text-muted-foreground hover:text-foreground",
         )}
       >
         {label}
@@ -223,6 +225,7 @@ function CategoryChips({
       ref={scroller}
       role="group"
       aria-label="Filter by category"
+      data-chips=""
       onScroll={measure}
       data-fade={fade}
       className={cn(

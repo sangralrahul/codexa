@@ -3,9 +3,10 @@ import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 import { Logo } from "@/components/logo";
 import { Backdrop, Horizon } from "@/components/marketing/backdrop";
-import { BuildReplay } from "@/components/auth/build-replay";
+import { BuildReplay, BuildReplayBand } from "@/components/auth/build-replay";
 import { AuthStrip } from "@/components/auth/auth-strip";
 import { replayItems, stripShots } from "@/components/auth/replay-data";
+import { cn } from "@/lib/utils";
 
 /**
  * Account pages (sign in, sign up, password reset, verification, invites), PLAN §5.5.
@@ -14,7 +15,8 @@ import { replayItems, stripShots } from "@/components/auth/replay-data";
  *   bottom) beside an inset, floating panel that is always dark (it reads as deliberate in
  *   the light theme too). The panel holds the page's one live canvas (Horizon) and the
  *   Build replay: real starter screenshots, labelled as an illustration.
- * - Phones and tablets: the still CSS wash behind a glass card, then a strip of starters.
+ * - Tablets (md): the replay as a compact 220px band above the glass card (no canvas).
+ * - Phones: the still CSS wash behind a glass card, then a strip of real starters.
  *
  * The layout persists across login ⇄ signup, so the replay keeps its place.
  */
@@ -38,8 +40,9 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
         </header>
 
         <main id="main" className="flex flex-1 flex-col justify-center py-6 sm:py-10">
+          {items.length > 1 ? <BuildReplayBand items={items} className="mx-auto mb-8 hidden w-full max-w-[600px] md:block lg:hidden" /> : null}
           <div className="auth-card mx-auto w-full max-w-[440px] lg:max-w-[408px]">{children}</div>
-          <AuthStrip shots={stripShots()} className="mt-10 lg:hidden" />
+          <AuthStrip shots={stripShots()} className={cn("mt-10 lg:hidden", items.length > 1 && "md:hidden")} />
         </main>
 
         <footer className="py-6 text-center text-xs text-muted-foreground lg:text-left">

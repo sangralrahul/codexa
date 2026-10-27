@@ -3,8 +3,9 @@
  *
  * Honesty rules (CLAUDE.md, PLAN §1): no numbers live here. Every count on the home page is
  * imported from code or config at render time (TEMPLATES, toolSchemas, LIMITS, workspaceRoleEnum,
- * PLANS, the providers registry, the changelog). Template ids below are validated against
- * TEMPLATES on the server (src/components/marketing/home/scenarios.ts); unknown ids are dropped.
+ * PLANS, the providers registry, the changelog). Template ids below are checked against the real
+ * starters: scenarios.ts stages only ids that exist in TEMPLATES, and on the home page the prompt
+ * box drops a chip whose id is not in the starter list.
  */
 
 export const HOME_HERO = {

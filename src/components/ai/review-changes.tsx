@@ -134,7 +134,16 @@ export function RunFooter({
             <ChevronRight className={cn("size-3.5 transition-transform duration-200", open && "rotate-90")} aria-hidden="true" />
             Review changes
             <span className="font-mono text-[11px] tabular-nums text-muted-foreground">
-              {count} file{count === 1 ? "" : "s"}
+              {details && stats.length === 0 && changedCount > 0 ? (
+                // The run did change files, but the project now matches its checkpoint again (reverted or edited back).
+                <>
+                  {changedCount} file{changedCount === 1 ? "" : "s"} · <span className="font-sans">no current diff</span>
+                </>
+              ) : (
+                <>
+                  {count} file{count === 1 ? "" : "s"}
+                </>
+              )}
               {details && (added || removed) ? (
                 <>
                   {" "}
@@ -230,6 +239,7 @@ export function RunFooter({
 
       <Dialog open={confirm !== null} onOpenChange={(o) => !o && !busy && setConfirm(null)}>
         <DialogContent
+          className="[--btn-radius:10px]"
           title={confirm === "restore" ? `Restore “${checkpoint?.name ?? "Before AI run"}”?` : "Revert this run?"}
           description={
             confirm === "restore"

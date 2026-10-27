@@ -209,7 +209,7 @@ export function DatabasePanel({ projectId }: { projectId: string; conversationId
 
   const addDialog = (
     <Dialog open={adding} onOpenChange={setAdding}>
-      <DialogContent title="Add database connection" description="Connection strings are encrypted at rest and never shown again. The connection is shared with the whole workspace.">
+      <DialogContent title="Add database connection" description="Connection strings are encrypted at rest and never shown again. The connection is shared with the whole workspace." className="[--btn-radius:10px]">
         <ConnectionForm
           workspaceId={workspaceId}
           providers={providers}
@@ -419,7 +419,7 @@ export function DatabasePanel({ projectId }: { projectId: string; conversationId
       </div>
 
       <Dialog open={Boolean(confirm)} onOpenChange={(o) => !o && setConfirm(null)}>
-        <DialogContent title="Run destructive SQL?" description="This statement can delete or alter data irreversibly. It runs inside a transaction but cannot be undone once committed.">
+        <DialogContent title="Run destructive SQL?" description="This statement can delete or alter data irreversibly. It runs inside a transaction but cannot be undone once committed." className="[--btn-radius:10px]">
           <Alert variant="warning" title="Why this needs confirmation">
             {confirm?.reason}
           </Alert>

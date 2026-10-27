@@ -100,7 +100,7 @@ export function ProfileChip({
           type="button"
           className="group inline-flex max-w-full items-center gap-2.5 rounded-full border border-border bg-card/80 py-1 pl-1 pr-3 text-[13px] shadow-[inset_0_1px_0_var(--hairline)] backdrop-blur transition-[border-color,background-color] duration-200 hover:border-border-strong hover:bg-card focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring data-[state=open]:border-border-strong"
         >
-          <Avatar name={shownName} size="sm" />
+          <Avatar name={name.trim()} size="sm" />
           <span className="min-w-0 truncate font-medium text-foreground">{shownName}</span>
           <span aria-hidden="true" className="text-border-strong">
             ·
@@ -118,7 +118,7 @@ export function ProfileChip({
           </span>
         </button>
       </PopoverTrigger>
-      <PopoverContent align="start" className="w-[min(22rem,calc(100vw_-_24px))] p-5">
+      <PopoverContent align="start" className="w-[min(22rem,calc(100vw_-_24px))] p-5 [--btn-radius:10px]">
         <form
           onSubmit={(e) => {
             e.preventDefault();

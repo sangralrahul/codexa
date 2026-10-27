@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ArrowUpRight, Check, CreditCard, Gauge, Plug, Plus, Settings2, ShieldCheck, UserRound, Users } from "lucide-react";
+import { ArrowUpRight, Check, CreditCard, Gauge, Mail, Plug, Plus, Settings2, ShieldCheck, UserRound, Users } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { isUnlimited } from "@/config/plans";
 import type { ChecklistItem, SettingsOverview } from "@/lib/services/settings-overview";
@@ -173,7 +173,7 @@ export function OverviewBento({ data }: { data: SettingsOverview }) {
   return (
     <div data-spotlight="grid" data-reveal="stagger" className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-6">
       <Tile href="/settings/profile" icon={UserRound} label="Profile" className="sm:col-span-2 lg:col-span-4" footer={<>Language: {account.locale === "hi" ? "Hindi (in preparation)" : "English"} · dates in {tz.replace(/_/g, " ")}</>}>
-        <span className="flex flex-1 flex-wrap items-end justify-between gap-5">
+        <span className="flex flex-1 flex-wrap items-center justify-between gap-5">
           <span className="flex min-w-0 items-center gap-3.5">
             <Avatar name={account.name || account.email} src={account.avatarUrl} size="lg" />
             <span className="min-w-0">
@@ -191,7 +191,7 @@ export function OverviewBento({ data }: { data: SettingsOverview }) {
         </span>
       </Tile>
 
-      <Tile href="/settings/security" icon={ShieldCheck} label="Security" className="lg:col-span-2" footer={others > 0 ? `${others} other device${others === 1 ? "" : "s"} signed in` : "Only this device is signed in"}>
+      <Tile href="/settings/security" icon={ShieldCheck} label="Security" className={cn("lg:col-span-2", !workspace && "sm:col-span-2")} footer={others > 0 ? `${others} other device${others === 1 ? "" : "s"} signed in` : "Only this device is signed in"}>
         <span className="flex flex-col gap-2.5">
           <Fact status={account.passwordSet ? "ok" : "warn"}>{account.passwordSet ? "Password set" : account.github?.linked ? "GitHub sign-in only" : "No password yet"}</Fact>
           <Fact status={account.emailVerified ? "ok" : "warn"}>{account.emailVerified ? "Email verified" : "Email not verified"}</Fact>
@@ -258,7 +258,7 @@ function WorkspaceTiles({ workspace: w }: { workspace: NonNullable<SettingsOverv
         icon={Users}
         label="Members"
         className="lg:col-span-2"
-        footer={seats.pending ? `${seats.pending} pending invitation${seats.pending === 1 ? "" : "s"} hold a seat` : w.nextSeats && !isUnlimited(seats.limit) ? `${w.nextSeats.name} has ${isUnlimited(w.nextSeats.seats) ? "unlimited" : w.nextSeats.seats} seats` : "Pending invitations also take a seat"}
+        footer={seats.pending ? (seats.pending === 1 ? "1 pending invitation holds a seat" : `${seats.pending} pending invitations hold seats`) : w.nextSeats && !isUnlimited(seats.limit) ? `${w.nextSeats.name} has ${isUnlimited(w.nextSeats.seats) ? "unlimited" : w.nextSeats.seats} seats` : "Pending invitations also take a seat"}
       >
         <span className="flex items-center">
           {seats.people.map((p, i) => (
@@ -268,8 +268,8 @@ function WorkspaceTiles({ workspace: w }: { workspace: NonNullable<SettingsOverv
           ))}
           {extra > 0 ? <span className="-ml-2 flex size-8 items-center justify-center rounded-full bg-muted font-mono text-[11px] ring-2 ring-card">+{extra}</span> : null}
           {Array.from({ length: Math.min(seats.pending, 3) }).map((_, i) => (
-            <span key={`p${i}`} aria-hidden="true" className="-ml-2 flex size-8 items-center justify-center rounded-full border border-dashed border-border-strong bg-card text-foreground-dim ring-2 ring-card">
-              ·
+            <span key={`p${i}`} aria-hidden="true" className="seat--pending -ml-2 flex size-8 items-center justify-center rounded-full border border-dashed border-border-strong bg-card text-foreground-dim ring-2 ring-card" style={{ "--i": i } as React.CSSProperties}>
+              <Mail className="size-3.5" />
             </span>
           ))}
         </span>
@@ -324,7 +324,7 @@ function WorkspaceTiles({ workspace: w }: { workspace: NonNullable<SettingsOverv
 
       <Link
         href="/settings/workspaces/new"
-        className="bento-tile group flex min-h-[176px] flex-col justify-between rounded-[16px] border border-dashed border-border-strong p-5 text-muted-foreground outline-none transition-colors hover:border-foreground/35 hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring lg:col-span-2"
+        className="bento-tile group flex min-h-[176px] flex-col justify-between rounded-[16px] border border-dashed border-border-strong p-5 text-muted-foreground outline-none transition-colors hover:border-foreground/35 hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring sm:col-span-2 lg:col-span-2"
       >
         <span className="flex size-9 items-center justify-center rounded-[10px] border border-dashed border-border-strong transition-transform duration-300 group-hover:rotate-90">
           <Plus className="size-4" aria-hidden="true" />

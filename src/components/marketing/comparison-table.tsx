@@ -80,7 +80,7 @@ export function ComparisonTable({
                 <span className={cn("block text-[15px] font-semibold tracking-[-0.01em]", hi(i) && "text-foreground")}>{c}</span>
                 {head?.[i]?.sub ? <span className="mt-0.5 block text-[12.5px] tabular-nums text-muted-foreground">{head[i].sub}</span> : null}
                 {head?.[i]?.href && head[i].cta ? (
-                  <Link href={head[i].href!} className={cn("mt-3 inline-flex h-7 items-center rounded-full px-3 text-[12px] font-medium transition-colors", hi(i) ? "bg-foreground text-background hover:opacity-90" : "border border-border text-foreground hover:border-border-strong")}>
+                  <Link href={head[i].href!} className={cn("mt-3 inline-flex h-7 items-center whitespace-nowrap rounded-full px-3 text-[12px] font-medium transition-colors", hi(i) ? "bg-foreground text-background hover:opacity-90" : "border border-border text-foreground hover:border-border-strong")}>
                     {head[i].cta}
                   </Link>
                 ) : null}

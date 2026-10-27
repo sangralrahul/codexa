@@ -61,6 +61,14 @@
 .auth-panel {
   box-shadow: 0 0 0 1px var(--border), var(--shadow-stage);
 }
+/* Tablet band: the panel's light as a still CSS glow from the top edge (the live canvas is large-screen only). */
+.auth-band-glow {
+  pointer-events: none;
+  background:
+    radial-gradient(55% 85% at 28% -10%, color-mix(in oklab, var(--silk-1) 26%, transparent), transparent 70%),
+    radial-gradient(45% 75% at 82% -10%, color-mix(in oklab, var(--signal) 18%, transparent), transparent 70%);
+}
+
 /* The horizon lights the frame from behind; a little brighter than a page wash. */
 .auth-panel .horizon { --silk-opacity: 0.95; }
 
@@ -94,12 +102,28 @@
 .replay-seg[data-state="current"] .replay-seg__fill { animation: replay-fill var(--replay-ms, 6000ms) linear var(--replay-delay, 0ms) both; }
 .replay-seg[data-paused] .replay-seg__fill { animation-play-state: paused; }
 
+/* Plan rows that have not run yet: placeholder bars breathing softly while the prompt types. */
+@keyframes replay-ghost { from { opacity: 0.55; } to { opacity: 1; } }
+.replay-ghost { animation: replay-ghost 1.4s var(--ease-in-out) infinite alternate; }
+/* Paused (or scrolled away): the endless loops in the depiction hold still (spinners, pulses, carets).
+   One-shot entrances (wipe, row rise) still finish, so a story dot picked while paused lands on a whole frame. */
+.replay-stage[data-paused] :is(.replay-ghost, .step-row__spin, .logo-mark__ring, .logo-mark__caret),
+.replay-stage[data-paused] .live-dot::after,
+.replay-stage[data-paused] .caret::after { animation-play-state: paused; }
+
 /* Prompt bar send button lights once the sentence is typed. */
 .replay-send { transition: background-color var(--dur-3), color var(--dur-3), scale var(--dur-3) var(--ease-snap); }
 .replay-send[data-ready] { scale: 1.06; }
 
 /* ---------- Mobile template strip ---------- */
 .auth-strip { --marquee-duration: 36s; }
+/* Calm: the three real tiles stand still in one even row (instead of wrapping 2 + 1). */
+@media (prefers-reduced-motion: reduce) {
+  .marquee.auth-strip .marquee__track { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); width: 100%; padding-inline: 1rem; }
+  .marquee.auth-strip .auth-strip__tile { width: auto; }
+}
+[data-motion="reduced"] .marquee.auth-strip .marquee__track { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); width: 100%; padding-inline: 1rem; }
+[data-motion="reduced"] .marquee.auth-strip .auth-strip__tile { width: auto; }
 
 /* ---------- Idea ticket ---------- */
 .idea-ticket { view-transition-name: idea; }
@@ -134,14 +158,14 @@
 
 /* ---------- Calm: final frames, no tilt, no pulse ---------- */
 @media (prefers-reduced-motion: reduce) {
-  .auth-rise > *, .mail-tile__badge, .pw-rule[data-met] .pw-rule__icon, .replay-under { animation: none; }
+  .auth-rise > *, .mail-tile__badge, .pw-rule[data-met] .pw-rule__icon, .replay-under, .replay-ghost { animation: none; }
   .replay-plane, .replay-stage:hover .replay-plane { transform: none; transition: none; }
   .replay-seg[data-state="current"] .replay-seg__fill { animation: none; transform: scaleX(1); }
   .invite-mark::after { display: none; }
   .auth-glow { transition: none; }
   .pw-meter__seg { transition: none; }
 }
-[data-motion="reduced"] :is(.auth-rise > *, .mail-tile__badge, .pw-rule[data-met] .pw-rule__icon, .replay-under) { animation: none; }
+[data-motion="reduced"] :is(.auth-rise > *, .mail-tile__badge, .pw-rule[data-met] .pw-rule__icon, .replay-under, .replay-ghost) { animation: none; }
 [data-motion="reduced"] :is(.replay-plane, .replay-stage:hover .replay-plane) { transform: none; transition: none; }
 [data-motion="reduced"] .replay-seg[data-state="current"] .replay-seg__fill { animation: none; transform: scaleX(1); }
 [data-motion="reduced"] .invite-mark::after { display: none; }

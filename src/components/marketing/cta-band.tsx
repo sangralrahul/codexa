@@ -4,6 +4,8 @@ import { ArrowRight, BookOpen, Mail } from "lucide-react";
 import { buttonClasses } from "@/components/ui/button";
 import { SplitHeading } from "@/components/motion/split-heading";
 import { getCurrentUser } from "@/lib/auth/session";
+import { capabilities } from "@/lib/env";
+import type { IdeaSource } from "@/lib/client/pending-idea";
 import { site } from "@/config/site";
 import type { Tone } from "@/content/marketing/types";
 import { cn } from "@/lib/utils";
@@ -49,16 +51,17 @@ const DEFAULTS: Record<Variant, { title: string; description: string; primary: L
   },
 };
 
-async function PromptSlot() {
+/** The compact composer: the idea passport records where it came from, and the capability line is the real AI state. */
+async function PromptSlot({ source }: { source: IdeaSource }) {
   const user = await getCurrentUser();
-  return <PromptBox signedIn={Boolean(user)} />;
+  return <PromptBox signedIn={Boolean(user)} variant="compact" source={source} aiReady={capabilities.ai} />;
 }
 
 /**
  * Closing call to action (PLAN §5.3): a deep ink card (the dark palette as an island, in both
  * themes) with a pointer spotlight, grain, a blueprint grid, the area's light and a still,
  * CSS-only backdrop (never a second canvas). The headline rises line by line.
- * - prompt: the home PromptBox (idea passport) in a compact wrapper.
+ * - prompt: the home PromptBox, compact variant (idea passport; `source` says which page sent it).
  * - sales / docs: two actions plus a direct line.
  * - links (default when only title/primary are given): the classic two-button band.
  */
@@ -69,6 +72,7 @@ export function CTABand({
   primary,
   secondary,
   tone = "product",
+  source = "cta",
   className,
 }: {
   variant?: Variant;
@@ -77,6 +81,8 @@ export function CTABand({
   primary?: Link_;
   secondary?: Link_ | null;
   tone?: Tone;
+  /** prompt variant: where the idea passport says the idea came from ("solution" on solution pages). */
+  source?: IdeaSource;
   className?: string;
 }) {
   const v: Variant = variant ?? "links";
@@ -109,7 +115,7 @@ export function CTABand({
           {v === "prompt" ? (
             <>
               <div className="mx-auto mt-10 max-w-2xl text-left">
-                <PromptSlot />
+                <PromptSlot source={source} />
               </div>
               <p className="mt-6 flex flex-wrap items-center justify-center gap-x-5 gap-y-2 text-sm text-foreground/60">
                 {[p, s].filter((x): x is Link_ => Boolean(x)).map((l) => (

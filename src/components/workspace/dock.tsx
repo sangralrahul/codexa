@@ -3,7 +3,7 @@
 import { ChevronDown, ChevronUp, CircleAlert, FileWarning, ListChecks, TerminalSquare, TriangleAlert, Wand2 } from "lucide-react";
 import { emit } from "@/lib/client/events";
 import { useLogSnapshot, useRuntime } from "@/lib/client/workspace/runtime";
-import type { Problem } from "@/lib/client/workspace/problems";
+import { stripAnsi, type Problem } from "@/lib/client/workspace/problems";
 import { Tooltip } from "@/components/ui/tooltip";
 import { Kbd } from "@/components/ui/misc";
 import { cn } from "@/lib/utils";
@@ -74,7 +74,7 @@ export function Dock({
                 <Icon className="size-3.5" aria-hidden="true" />
                 {label}
                 {count ? (
-                  <span className={cn("rounded-full px-1.5 font-mono text-[10.5px] tabular-nums", errors ? "bg-danger/12 text-danger" : "bg-warning/12 text-warning")}>{count}</span>
+                  <span className={cn("rounded-full px-1.5 font-mono text-[10.5px] tabular-nums", errors ? "bg-danger/12 text-danger" : "ws-warn-ink bg-warning/12")}>{count}</span>
                 ) : null}
               </button>
             ))}
@@ -96,14 +96,16 @@ export function Dock({
         <button
           type="button"
           onClick={() => onOpenChange(true)}
-          aria-label={`Open the terminal${errors ? ` (${errors} problem${errors === 1 ? "" : "s"})` : ""}`}
+          title="Open the terminal (Ctrl/⌘ J)"
           className="flex h-full min-h-0 w-full items-center gap-2.5 px-3 text-left transition-colors hover:bg-muted/50 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-ring"
         >
           <TerminalSquare className="size-3.5 shrink-0 text-muted-foreground" aria-hidden="true" />
+          {/* Named from its content, so the visible ticker line is part of the button's name. */}
+          <span className="sr-only">Open the terminal. Last line: </span>
           <span className="min-w-0 flex-1 truncate font-mono text-[11.5px] text-muted-foreground">
             {last ? (
               <span key={snap.total} className={cn("ws-ticker-line inline-block", last.stream === "stderr" && "text-danger")}>
-                {last.line}
+                {stripAnsi(last.line)}
               </span>
             ) : snap.conn === "ended" ? (
               "No runtime running"
@@ -114,6 +116,7 @@ export function Dock({
           {errors ? (
             <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-danger/12 px-1.5 py-0.5 font-mono text-[10.5px] font-medium tabular-nums text-danger">
               <CircleAlert className="size-3" aria-hidden="true" /> {errors}
+              <span className="sr-only"> {errors === 1 ? "problem" : "problems"}</span>
             </span>
           ) : null}
           <ChevronUp className="size-3.5 shrink-0 text-muted-foreground" aria-hidden="true" />

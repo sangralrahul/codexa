@@ -472,6 +472,8 @@ export function ChatPanel({
   return (
     <TooltipProvider>
     <section className="@container flex h-full min-h-0 flex-col" aria-label="AI assistant">
+      {/* Outline: h1 project (workspace) → h2 here → h3 run-card sections and AI headings. */}
+      <h2 className="sr-only">AI assistant</h2>
       <header className="flex h-12 shrink-0 items-center gap-1.5 border-b border-border px-2.5">
         <ConversationMenu conversations={conversations} activeId={activeId} disabled={Boolean(running)} onPick={(id) => setActiveId(id)} onNew={newChat} title={active?.title ?? "New chat"} />
         <div className="ml-auto flex items-center gap-1">
@@ -744,7 +746,7 @@ function AssistantMessage({
       ) : null}
       {message.nextSteps?.length ? (
         <section className="space-y-1.5" aria-label="Next steps">
-          <h4 className="text-[13px] font-semibold">Next steps</h4>
+          <h3 className="text-[13px] font-semibold">Next steps</h3>
           <ul className="space-y-1">
             {message.nextSteps.map((s, i) => (
               <li key={i}>

@@ -79,11 +79,13 @@ export function StatusBar({
           <span className="max-w-[10rem] truncate font-mono">{branch}</span>
         </button>
       ) : null}
-      <button type="button" onClick={onOpenProblems} className={item} aria-label={`${errors} error${errors === 1 ? "" : "s"}, ${warnings} warning${warnings === 1 ? "" : "s"}. Open problems`}>
+      <button type="button" onClick={onOpenProblems} className={item} title="Open problems">
         <CircleAlert className={cn("size-3.5", errors && "text-danger")} aria-hidden="true" />
         <span className={cn("font-mono tabular-nums", errors && "text-danger")}>{errors}</span>
+        <span className="sr-only"> error{errors === 1 ? "" : "s"},</span>
         <TriangleAlert className={cn("ml-1 size-3.5", warnings && "text-warning")} aria-hidden="true" />
         <span className={cn("font-mono tabular-nums", warnings && "text-warning")}>{warnings}</span>
+        <span className="sr-only"> warning{warnings === 1 ? "" : "s"}</span>
       </button>
 
       <div className="ml-auto flex items-stretch gap-0.5">
@@ -101,7 +103,7 @@ export function StatusBar({
         ) : null}
         <button type="button" onClick={onOpenAgent} className={item} title={agent.ai ? `AI provider: ${agent.ai.provider}` : "AI agent"}>
           {agent.ai?.mock ? (
-            <span className="inline-flex items-center gap-1 rounded bg-warning/12 px-1.5 font-medium text-warning">
+            <span className="ws-warn-ink inline-flex items-center gap-1 rounded bg-warning/12 px-1.5 font-medium">
               <FlaskConical className="size-3" aria-hidden="true" /> Mock AI (development only)
             </span>
           ) : agent.ai?.configured ? (

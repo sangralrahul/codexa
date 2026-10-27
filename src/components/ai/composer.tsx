@@ -136,7 +136,7 @@ export function Composer({
 
       <div className="ws-composer comet-border" data-active={running && !calm ? "" : undefined}>
         <div className={cn("comet-border__inner", (disabled || running) && "bg-surface")}>
-          {(activeFile || showErrorChip) && onContextChange ? (
+          {(activeFile || showErrorChip) && onContextChange && !(disabled && disabledReason) ? (
             <div className="flex flex-wrap items-center gap-1.5 px-3 pt-2.5" aria-label="Context sent with the message">
               {activeFile ? (
                 <button
@@ -224,7 +224,7 @@ export function Composer({
             </div>
             <div className="min-w-0 flex-1 truncate text-[11.5px] text-muted-foreground">
               {model?.mock ? (
-                <span className="inline-flex items-center gap-1 rounded-md bg-warning/12 px-1.5 py-0.5 font-medium text-warning" title="AI_MOCK=1 is set; responses are scripted and only available outside production.">
+                <span className="ws-warn-ink inline-flex items-center gap-1 rounded-md bg-warning/12 px-1.5 py-0.5 font-medium" title="AI_MOCK=1 is set; responses are scripted and only available outside production.">
                   <FlaskConical className="size-3" aria-hidden="true" /> Mock AI<span className="hidden @[364px]:inline">&nbsp;(development only)</span>
                 </span>
               ) : model ? (
@@ -234,10 +234,15 @@ export function Composer({
               ) : null}
             </div>
             {value.length > COUNTER_FROM ? (
-              <span className={cn("shrink-0 font-mono text-[11px] tabular-nums", value.length >= COMPOSER_MAX ? "text-danger" : "text-warning")} aria-live="polite">
+              <span className={cn("shrink-0 font-mono text-[11px] tabular-nums", value.length >= COMPOSER_MAX ? "text-danger" : "text-warning")}>
                 {value.length.toLocaleString("en-US")} / {COMPOSER_MAX.toLocaleString("en-US")}
+                <span className="sr-only"> characters</span>
               </span>
             ) : null}
+            {/* Announced once when the limit is reached, not on every keystroke near it. */}
+            <span className="sr-only" role="status">
+              {value.length >= COMPOSER_MAX ? `Character limit reached: ${COMPOSER_MAX.toLocaleString("en-US")}.` : ""}
+            </span>
             {running ? (
               <button
                 type="button"

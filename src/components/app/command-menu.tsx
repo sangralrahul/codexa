@@ -136,6 +136,8 @@ export function CommandMenu({
   const [buildError, setBuildError] = useState<CreateError | null>(null);
   const [lastBuild, setLastBuild] = useState("");
   const currentWorkspace = workspaces.find((w) => w.id === currentWorkspaceId);
+  /** Viewers everywhere get no create actions (the hub would only show "No workspace with edit access"). */
+  const canCreateAny = workspaces.some((w) => !w.role || w.role !== "viewer");
 
   const {
     start: launchStart,
@@ -284,7 +286,7 @@ export function CommandMenu({
           )
           .slice(0, 4)
       : templates.slice(0, 3);
-    const templateItems: Item[] = templateList.map((t) => ({
+    const templateItems: Item[] = (canCreateAny ? templateList : []).map((t) => ({
       id: `t-${t.id}`,
       group: "Start from template",
       label: t.name,
@@ -294,31 +296,27 @@ export function CommandMenu({
     }));
 
     const base: Item[] = [
-      {
-        id: "new",
-        group: "Actions",
-        label: "Create new project",
-        icon: Plus,
-        keys: ["N"],
-        keywords: "add start build new",
-        run: go("/new-project"),
-      },
-      {
-        id: "import",
-        group: "Actions",
-        label: "Import from GitHub",
-        icon: FolderGit2,
-        keywords: "repository clone",
-        run: go("/import-project"),
-      },
-      {
-        id: "invite",
-        group: "Actions",
-        label: "Invite a teammate",
-        icon: UserPlus,
-        keywords: "members team share invite",
-        run: go("/settings/members#invite"),
-      },
+      ...(canCreateAny
+        ? [
+            {
+              id: "new",
+              group: "Actions",
+              label: "Create new project",
+              icon: Plus,
+              keys: ["N"],
+              keywords: "add start build new",
+              run: go("/new-project"),
+            },
+            {
+              id: "import",
+              group: "Actions",
+              label: "Import from GitHub",
+              icon: FolderGit2,
+              keywords: "repository clone",
+              run: go("/import-project"),
+            },
+          ]
+        : []),
       {
         id: "shortcuts",
         group: "Actions",
@@ -436,7 +434,7 @@ export function CommandMenu({
         group: "Settings",
         label: "Invite teammate",
         icon: UserPlus,
-        keywords: "members team seats",
+        keywords: "members team seats share invite",
         run: go("/settings/members#invite"),
       },
       {
@@ -525,10 +523,13 @@ export function CommandMenu({
         ]
       : [];
     return [...buildItem, ...rest];
-  }, [query, projects, recent, templates, docs, workspaces, currentWorkspaceId, isStaff, go, router, setTheme, buildWorkspaceId, build]);
+  }, [query, projects, recent, templates, docs, workspaces, currentWorkspaceId, isStaff, go, router, setTheme, buildWorkspaceId, build, canCreateAny]);
 
-  // The highlight starts on the first real match; "Build" is first but only pre-selected when nothing else matches.
-  const firstIndex = items.length > 1 && items[0]?.tone === "build" ? 1 : 0;
+  // Where the highlight starts. "Build" is always the first row when offered; it is pre-selected for a
+  // sentence (3+ words) unless a project, template or command matched it, and when nothing else matched.
+  // Documentation hits are full-text and loose, so they never win over a sentence.
+  const strongMatch = items.some((i) => i.tone !== "build" && i.group !== "Documentation");
+  const firstIndex = items[0]?.tone === "build" && items.length > 1 && (strongMatch || wordCount(query.trim()) < 3) ? 1 : 0;
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect -- keep the highlight inside the new result list
     setActive(firstIndex);

@@ -3,7 +3,7 @@
 import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { ArrowUpRight, Check, ChevronRight, Lock, Mail, MoreHorizontal, Plus, RefreshCw, Trash2, UserPlus, X } from "lucide-react";
+import { ArrowUpRight, Check, ChevronRight, Lock, Mail, MoreHorizontal, Plus, RefreshCw, ShieldCheck, Trash2, UserPlus, Users, X } from "lucide-react";
 import { api, ClientApiError } from "@/lib/client/api";
 import { cn, isValidEmail } from "@/lib/utils";
 import { shakeElement } from "@/lib/client/motion";
@@ -180,16 +180,18 @@ export function MembersPanel({ workspaceId, currentUserId, role, members: initia
   };
 
   return (
-    <div className="space-y-6">
+    <div className="settings-sub space-y-6">
       <SettingsCard
         id="members"
+        icon={<Users />}
         title={
           <>
             Members <span className="font-normal text-muted-foreground">{members.length}</span>
           </>
         }
         description="Everyone with access to this workspace. Pending invitations hold a seat until they are accepted or revoked."
-        bodyClassName="p-0 pt-4"
+        flush
+        bodyClassName="pt-4"
       >
         <SeatStrip members={members} invites={activeInvites} hiddenPending={hiddenPending} limit={seats.limit} plan={plan} canManage={canManage} onAdd={focusInvite} />
         <div className="mt-5 hidden grid-cols-[minmax(0,1fr)_10rem_2.5rem] items-center border-t border-border/80 sm:grid">
@@ -302,7 +304,8 @@ export function MembersPanel({ workspaceId, currentUserId, role, members: initia
             </>
           }
           description="Invitations stay here until they are accepted, revoked or expire after 7 days."
-          bodyClassName={invites.length === 0 ? "pt-2" : "p-0 pt-3"}
+          flush={invites.length > 0}
+          bodyClassName={invites.length === 0 ? "pt-2" : undefined}
         >
           {invites.length === 0 ? (
             <p className="flex items-center gap-2.5 rounded-[12px] border border-dashed border-border-strong px-4 py-3.5 text-[13px] text-muted-foreground">
@@ -498,7 +501,10 @@ function SeatsFullCard({ plan, limit, pending }: { plan?: Plan; limit: number; p
 function RolesMatrix() {
   return (
     <details id="roles" className="settings-card group overflow-hidden rounded-[16px] [&_summary::-webkit-details-marker]:hidden">
-      <summary className="flex cursor-pointer list-none items-center gap-3 px-5 py-4 outline-none focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-ring sm:px-6">
+      <summary className="flex cursor-pointer list-none items-center gap-3.5 px-5 py-4 outline-none transition-colors hover:bg-muted/30 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-ring sm:px-6">
+        <span aria-hidden="true" className="icon-tile flex size-9 shrink-0 items-center justify-center rounded-[10px] [&_svg]:size-[18px]">
+          <ShieldCheck />
+        </span>
         <span className="min-w-0 flex-1">
           <span className="block text-[15px] font-semibold tracking-[-0.01em]">Roles &amp; permissions</span>
           <span className="block text-[13px] text-muted-foreground">What owners, admins, editors and viewers can do. The server enforces these.</span>

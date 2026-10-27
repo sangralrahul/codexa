@@ -194,9 +194,3 @@ export function stageTools(): StageTools {
   for (const n of Object.values(tools)) if (!names.has(n)) throw new Error(`Home stage uses an unknown agent tool: ${n}`);
   return tools;
 }
-
-/** Chips with their thumbnails, limited to starters that exist. */
-export function buildChips() {
-  const ids = new Set(TEMPLATES.map((t) => t.id));
-  return HOME_CHIPS.filter((c) => ids.has(c.templateId)).map((c) => ({ ...c, shot: TEMPLATE_SHOTS.has(c.templateId) }));
-}

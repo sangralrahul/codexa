@@ -17,6 +17,7 @@ import { FRAMEWORK_SHORT } from "@/components/templates/gallery-search";
 import { templatePhoneShotSrc, TEMPLATE_SHOTS } from "@/components/templates/shots";
 import { TEMPLATE_API_ROUTES } from "@/components/templates/api-routes.generated";
 import { buttonClasses } from "@/components/ui/button";
+import { CopyButton } from "@/components/content/code-block";
 import { getCurrentUser } from "@/lib/auth/session";
 import { jsonLd, pageMetadata } from "@/lib/seo";
 import { FRAMEWORKS, getTemplate, searchTemplates, summarizeTemplate, TEMPLATE_CATEGORIES, type Template } from "@/templates";
@@ -128,7 +129,7 @@ export default async function TemplatePreviewPage({ params, searchParams }: { pa
             <div aria-hidden="true" className="pointer-events-none absolute -inset-x-10 -bottom-10 top-16 -z-10 rounded-[48px] bg-[radial-gradient(60%_60%_at_50%_40%,color-mix(in_oklab,var(--signal)_16%,transparent),transparent_70%)] blur-2xl" />
             {routes && !hasShot ? (
               <div className="e4 overflow-hidden">
-                <RouteList routes={routes} className="rounded-none border-0 shadow-none" />
+                <RouteList routes={routes} variant="hero" command={t.settings.devCommand || framework.devCommand} className="rounded-none border-0 shadow-none" />
               </div>
             ) : (
               <BrowserFrame url={url} className={cn("e4 rounded-[18px] shadow-stage", phoneShot && "hidden lg:mr-24 lg:block")} bodyClassName="bg-white">
@@ -151,21 +152,22 @@ export default async function TemplatePreviewPage({ params, searchParams }: { pa
             ) : null}
             <FrameCaption className={cn("mx-0 max-w-none text-left", phoneShot && "lg:mr-24")}>
               {routes && !hasShot
-                ? `The routes below are read from this template's own source files. It is an API, so there is no screen to capture.`
+                ? `These routes are read from this template's own source files. It is an API, so there is no screen to capture.`
                 : `Starter screenshot captured from this template's own build at 1440×900${phoneShot ? ", plus a 390px phone capture" : ""}. It shows the template as it ships, not output generated from a prompt.`}
             </FrameCaption>
           </figure>
 
           {/* Meta rail */}
           <aside aria-label="Template details" className="e1 h-fit rounded-[18px] p-5 lg:sticky lg:top-24">
-            <dl className="grid grid-cols-2 gap-x-4 gap-y-4 lg:grid-cols-1">
+            <p className="text-label text-muted-foreground">Template</p>
+            <dl className="mt-3 divide-y divide-border">
               {meta.map(({ icon: Icon, label, value, mono }) => (
-                <div key={label} className="min-w-0">
-                  <dt className="flex items-center gap-1.5 text-[12px] text-muted-foreground">
+                <div key={label} className="flex min-w-0 items-center justify-between gap-4 py-2.5 first:pt-0">
+                  <dt className="flex shrink-0 items-center gap-2 text-[13px] text-muted-foreground">
                     <Icon className="size-3.5" aria-hidden="true" />
                     {label}
                   </dt>
-                  <dd className={cn("mt-1 truncate text-[14px] font-medium", mono && "font-mono text-[12.5px]")}>{value}</dd>
+                  <dd className={cn("min-w-0 text-balance text-right text-[13.5px] font-medium", mono && "font-mono text-[12.5px]")}>{value}</dd>
                 </div>
               ))}
             </dl>
@@ -229,8 +231,11 @@ export default async function TemplatePreviewPage({ params, searchParams }: { pa
                   <FileGlyph name={selected.split("/").pop() ?? selected} />
                   <span className="truncate">{selected}</span>
                 </span>
-                <span className="text-meta flex items-center px-4 text-code-muted">
-                  {lines} line{lines === 1 ? "" : "s"}
+                <span className="flex items-center gap-2 pl-4 pr-1.5">
+                  <span className="text-meta hidden text-code-muted xs:inline">
+                    {lines} line{lines === 1 ? "" : "s"}
+                  </span>
+                  <CopyButton text={t.files[selected]} label={`Copy ${selected.split("/").pop() ?? selected}`} />
                 </span>
               </div>
               <CodeViewer path={selected} code={t.files[selected]} bare maxHeight="38rem" />

@@ -2,8 +2,9 @@ import Link from "next/link";
 import { BadgeCheck, KeyRound, Laptop, MailWarning } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { BrandMark } from "@/components/brand/brand-mark";
+import { ResendVerificationButton } from "@/components/auth/forms";
 
-type Check = { id: string; ok: boolean | null; title: string; detail: string; href?: string; icon: React.ReactNode };
+type Check = { id: string; ok: boolean | null; title: string; detail: string; href?: string; icon: React.ReactNode; action?: React.ReactNode };
 
 /**
  * Security status: real checks only (password, verified email, other sessions, GitHub link).
@@ -23,8 +24,9 @@ export function SecurityStatus({ passwordSet, emailVerified, email, otherSession
       id: "email",
       ok: emailVerified,
       title: emailVerified ? "Email verified" : "Email not verified",
-      detail: emailVerified ? email : "Check your inbox for the verification link.",
+      detail: emailVerified ? email : `Deployments unlock once ${email} is verified.`,
       icon: emailVerified ? <BadgeCheck /> : <MailWarning />,
+      action: emailVerified ? undefined : <ResendVerificationButton className="mt-2.5 h-7 px-2.5 text-xs" />,
     },
     {
       id: "sessions",
@@ -45,8 +47,9 @@ export function SecurityStatus({ passwordSet, emailVerified, email, otherSession
       icon: <BrandMark id="github" className="size-4" />,
     });
   }
+  const four = checks.length === 4;
   return (
-    <section aria-label="Security status" className={cn("settings-card grid grid-cols-1 overflow-hidden rounded-[16px] sm:grid-cols-2", checks.length === 4 ? "xl:grid-cols-4" : "xl:grid-cols-3")}>
+    <section aria-label="Security status" className={cn("settings-card grid grid-cols-1 overflow-hidden rounded-[16px] sm:grid-cols-2", !four && "xl:grid-cols-3")}>
       {checks.map((c, i) => {
         const body = (
           <>
@@ -58,10 +61,18 @@ export function SecurityStatus({ passwordSet, emailVerified, email, otherSession
                 <span className="sr-only">{c.ok === true ? " (good)" : c.ok === false ? " (needs attention)" : ""}</span>
               </span>
               <span className="mt-0.5 block text-xs leading-relaxed text-muted-foreground [overflow-wrap:anywhere]">{c.detail}</span>
+              {c.action && !c.href ? c.action : null}
             </span>
           </>
         );
-        const cls = cn("flex items-start gap-3 p-4 sm:p-5", i > 0 && "border-t border-border/70 sm:border-t-0", i % 2 === 1 && "sm:border-l sm:border-border/70", i >= 2 && "sm:border-t xl:border-t-0", i > 0 && "xl:border-l xl:border-border/70");
+        // Four checks sit in a 2 × 2 grid; three sit in one row at xl (the third spans both columns below that).
+        const cls = cn(
+          "flex items-start gap-3 p-4 sm:p-5",
+          i > 0 && "border-t border-border/70",
+          i % 2 === 1 && "sm:border-l sm:border-border/70",
+          i < 2 && "sm:border-t-0",
+          !four && i === 2 && "sm:col-span-2 xl:col-span-1 xl:border-l xl:border-t-0",
+        );
         return c.href ? (
           <Link key={c.id} href={c.href} className={cn(cls, "outline-none transition-colors hover:bg-muted/40 focus-visible:bg-muted/40 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-ring")}>
             {body}

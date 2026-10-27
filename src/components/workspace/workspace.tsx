@@ -1,6 +1,7 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { Component, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { Group, Panel, Separator, type GroupImperativeHandle, type Layout, type PanelImperativeHandle } from "react-resizable-panels";
 import {
   ArrowUp,
@@ -24,8 +25,11 @@ import {
   WandSparkles,
   Hash,
   Database,
+  RotateCw,
+  TriangleAlert,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { logger } from "@/lib/logger";
 import { emit, on } from "@/lib/client/events";
 import { useCalm } from "@/lib/client/motion";
 import { projectsApi } from "@/lib/client/workspace/api";
@@ -67,6 +71,75 @@ import { WorkspaceHeader, type CanvasView, type RecentProject, type WorkspaceToo
 type MobileTab = "chat" | "files" | "code" | "preview" | "logs";
 type SplitLayout = { files: number; editor: number; preview: number };
 type DockState = { open: boolean; size: number; tab: DockTab };
+type HostId = "chat" | "explorer" | "editor" | "preview" | "dock";
+type Hosts = Record<HostId, HTMLDivElement>;
+
+/**
+ * One detached DOM node per panel, created once on the client. Each panel is rendered into its
+ * node through a portal and the node is moved into whichever layout slot is current (desktop
+ * panels or mobile tabs), so crossing the 1024px breakpoint (a rotated tablet, a resized window)
+ * never unmounts the chat, its live run, the editor or the terminal.
+ */
+function useHosts(): Hosts | null {
+  const [hosts] = useState<Hosts | null>(() => {
+    if (typeof document === "undefined") return null;
+    const make = (id: HostId) => {
+      const el = document.createElement("div");
+      el.className = "ws-host";
+      el.dataset.wsHost = id;
+      return el;
+    };
+    return { chat: make("chat"), explorer: make("explorer"), editor: make("editor"), preview: make("preview"), dock: make("dock") };
+  });
+  return hosts;
+}
+
+/**
+ * Contains a render error to the one panel that threw, so a bad response in (say) the GitHub
+ * panel can never blank the editor and its unsaved work. "Try again" remounts just that panel.
+ */
+class PanelBoundary extends Component<{ name: string; children: React.ReactNode }, { error: Error | null }> {
+  state: { error: Error | null } = { error: null };
+  static getDerivedStateFromError(error: Error) {
+    return { error };
+  }
+  componentDidCatch(error: Error) {
+    logger.error("workspace panel failed to render", { panel: this.props.name, error });
+  }
+  render() {
+    if (!this.state.error) return this.props.children;
+    return (
+      <div role="alert" className="flex h-full min-h-[160px] flex-col items-center justify-center gap-2 p-6 text-center">
+        <span className="flex size-9 items-center justify-center rounded-xl border border-danger/30 bg-danger/[0.07] text-danger">
+          <TriangleAlert className="size-4" aria-hidden="true" />
+        </span>
+        <p className="text-[13.5px] font-semibold">The {this.props.name} panel hit an error</p>
+        <p className="max-w-xs break-words text-[12px] text-muted-foreground">{this.state.error.message || "Something went wrong while rendering it."} The rest of the workspace is unaffected.</p>
+        <button
+          type="button"
+          onClick={() => this.setState({ error: null })}
+          className="mt-1 inline-flex h-8 items-center gap-1.5 rounded-[10px] border border-border-strong bg-card px-3 text-[12.5px] font-medium transition-colors hover:bg-muted focus-visible:outline-2 focus-visible:outline-ring"
+        >
+          <RotateCw className="size-3.5" aria-hidden="true" /> Try again
+        </button>
+      </div>
+    );
+  }
+}
+
+/** Where a panel's host node lives in the current layout (display: contents, so it adds no box). */
+function Slot({ host }: { host: HTMLDivElement | undefined }) {
+  const ref = useRef<HTMLDivElement>(null);
+  useLayoutEffect(() => {
+    const el = ref.current;
+    if (!el || !host) return;
+    el.appendChild(host);
+    return () => {
+      if (host.parentNode === el) el.removeChild(host);
+    };
+  }, [host]);
+  return <div ref={ref} className="contents" />;
+}
 
 const VIEWS: CanvasView[] = ["preview", "split", "code"];
 const DEVICES: Device[] = ["desktop", "tablet", "mobile"];
@@ -126,6 +199,7 @@ function Shell({
   const isDesktop = useMediaQuery("(min-width: 1024px)", true);
   const isWide = useMediaQuery("(min-width: 1440px)", false);
   const [mounted, setMounted] = useState(false);
+  const hosts = useHosts();
 
   const [view, setView] = useState<CanvasView>("split");
   const [device, setDevice] = useState<Device>("desktop");
@@ -240,6 +314,17 @@ function Shell({
     applyView(view);
   }, [view, mounted, isDesktop, applyView]);
 
+  // Back on a desktop width (a rotated tablet, a widened window): the canvas Group mounts again
+  // with its first layout, so put it back to the view that is current now.
+  const wasDesktop = useRef(isDesktop);
+  useEffect(() => {
+    const returned = isDesktop && !wasDesktop.current;
+    wasDesktop.current = isDesktop;
+    if (!mounted || !returned) return;
+    const raf = requestAnimationFrame(() => canvasGroup.current?.setLayout(layoutFor(view)));
+    return () => cancelAnimationFrame(raf);
+  }, [isDesktop, mounted, view, layoutFor]);
+
   const onCanvasLayout = useCallback(
     (layout: Layout, meta: { isUserInteraction: boolean; requestedLayout?: Layout }) => {
       if (!meta.isUserInteraction) return;
@@ -317,6 +402,25 @@ function Shell({
   useEffect(() => {
     if (!isDesktop && mobileTab === "preview") agent.markSeen();
   }, [isDesktop, mobileTab, agent]);
+
+  // Live build: as each real file_change lands, the tree picks up new files (which then flash) and an
+  // open, unedited tab reloads to the agent's version, without waiting for the run to finish.
+  const stateRef = useRef(state);
+  useEffect(() => {
+    stateRef.current = state;
+  });
+  const touchedSeen = useRef(0);
+  useEffect(() => {
+    const fresh = Object.values(agent.touched).filter((t) => t.at > touchedSeen.current);
+    if (!fresh.length) return;
+    const t = setTimeout(() => {
+      touchedSeen.current = Math.max(touchedSeen.current, ...fresh.map((f) => f.at));
+      const s = stateRef.current;
+      void s.refreshFiles();
+      for (const f of fresh) if (f.action !== "delete" && s.docs[f.path] && !s.dirtyPaths.includes(f.path)) void s.reloadDoc(f.path);
+    }, 250);
+    return () => clearTimeout(t);
+  }, [agent.touched]);
 
   // Files opened from other panels surface the editor.
   const openFile = useCallback(
@@ -510,7 +614,8 @@ function Shell({
 
   const dockEl = <Dock open={isDesktop ? dock.open : true} collapsible={isDesktop} onOpenChange={(o) => setDockOpen(o)} tab={dock.tab} onTabChange={(t) => setDock((d) => ({ ...d, tab: t }))} problems={problems} />;
 
-  const language = state.active ? languageForPath(state.active) : null;
+  // The file actually on screen (null while the Project overview tab is showing).
+  const language = agent.activeFile ? languageForPath(agent.activeFile) : null;
 
   return (
     <PresenceProvider projectId={projectId} activeFile={agent.activeFile}>
@@ -568,7 +673,9 @@ function Shell({
                   data-running-calm={agent.running && calm ? "" : undefined}
                   inert={agentCollapsed}
                 >
-                  <div className="comet-border__inner">{chat}</div>
+                  <div className="comet-border__inner">
+                    <Slot host={hosts?.chat} />
+                  </div>
                 </div>
               </Panel>
               <Separator className="ws-sep ws-sep--x" aria-label="Resize the agent column" />
@@ -608,19 +715,19 @@ function Shell({
                         >
                           <Panel id="files" minSize="150px" maxSize="40%" collapsible collapsedSize={0}>
                             <div className="ws-card h-full" inert={view === "preview"}>
-                              {explorer}
+                              <Slot host={hosts?.explorer} />
                             </div>
                           </Panel>
                           <Separator className="ws-sep ws-sep--x" data-off={view === "preview" ? "" : undefined} disabled={view === "preview"} aria-label="Resize the explorer" />
                           <Panel id="editor" minSize="18%" collapsible collapsedSize={0}>
                             <div className="ws-card h-full" inert={view === "preview"}>
-                              {editor}
+                              <Slot host={hosts?.editor} />
                             </div>
                           </Panel>
                           <Separator className="ws-sep ws-sep--x" data-off={view !== "split" ? "" : undefined} disabled={view !== "split"} aria-label="Resize the preview" />
                           <Panel id="preview" minSize="22%" collapsible collapsedSize={0}>
                             <div className="ws-card h-full" inert={view === "code"}>
-                              {preview}
+                              <Slot host={hosts?.preview} />
                             </div>
                           </Panel>
                         </Group>
@@ -639,16 +746,29 @@ function Shell({
                         setDock((d) => (d.open === open ? d : { ...d, open }));
                       }}
                     >
-                      <div className={cn("h-full", !dock.open && "pt-1.5")}>{dockEl}</div>
+                      <div className={cn("h-full", !dock.open && "pt-1.5")}>
+                        <Slot host={hosts?.dock} />
+                      </div>
                     </Panel>
                   </Group>
                 </div>
               </Panel>
             </Group>
           ) : (
-            <MobileBody tab={mobileTab} chat={chat} explorer={explorer} editor={editor} preview={preview} logs={dockEl} aiReady={Boolean(agent.ai?.configured)} running={agent.running} />
+            <MobileBody tab={mobileTab} hosts={hosts} aiReady={Boolean(agent.ai?.configured)} running={agent.running} />
           )}
         </div>
+
+        {/* Every panel is rendered exactly once, into its own host node (see useHosts). */}
+        {mounted && hosts ? (
+          <>
+            {createPortal(<PanelBoundary name="agent">{chat}</PanelBoundary>, hosts.chat, "chat")}
+            {createPortal(<PanelBoundary name="files">{explorer}</PanelBoundary>, hosts.explorer, "explorer")}
+            {createPortal(<PanelBoundary name="editor">{editor}</PanelBoundary>, hosts.editor, "editor")}
+            {createPortal(<PanelBoundary name="preview">{preview}</PanelBoundary>, hosts.preview, "preview")}
+            {createPortal(<PanelBoundary name="terminal">{dockEl}</PanelBoundary>, hosts.dock, "dock")}
+          </>
+        ) : null}
 
         {mounted && isDesktop ? (
           <StatusBar
@@ -705,10 +825,22 @@ function Shell({
         <ActivityDrawer projectId={projectId} open={tool === "activity"} onOpenChange={(o) => !o && setTool(null)} />
         <DeploymentsSheet open={deploySheet} onOpenChange={setDeploySheet} />
         <Drawer open={tool === "github"} onOpenChange={(o) => !o && setTool(null)} title="GitHub" icon={<FolderGit2 aria-hidden="true" />} description="Push to and pull from a repository. The workspace stays usable while this is open." width={560} modal={false}>
-          <div className="h-full min-h-[320px]">{tool === "github" ? <GithubPanel projectId={projectId} /> : null}</div>
+          <div className="h-full min-h-[320px]">
+            {tool === "github" ? (
+              <PanelBoundary name="GitHub">
+                <GithubPanel projectId={projectId} />
+              </PanelBoundary>
+            ) : null}
+          </div>
         </Drawer>
         <Drawer open={tool === "database"} onOpenChange={(o) => !o && setTool(null)} title="Database" icon={<Database aria-hidden="true" />} description="Browse the schema and run queries. Ask the agent about any error." width={760} modal={false}>
-          <div className="h-full min-h-[320px]">{tool === "database" ? <DatabasePanel projectId={projectId} /> : null}</div>
+          <div className="h-full min-h-[320px]">
+            {tool === "database" ? (
+              <PanelBoundary name="database">
+                <DatabasePanel projectId={projectId} />
+              </PanelBoundary>
+            ) : null}
+          </div>
         </Drawer>
       </div>
     </PresenceProvider>
@@ -718,7 +850,7 @@ function Shell({
 /** Mirrors the shell while localStorage (view, sizes) is read after mount, so nothing jumps. */
 function ShellSkeleton() {
   return (
-    <div className="grid min-h-0 flex-1 grid-cols-[360px_1fr] gap-1.5 pb-1.5 max-lg:grid-cols-1" aria-hidden="true">
+    <div className="grid min-h-0 flex-1 grid-cols-[360px_1fr] gap-1.5 pb-1.5 max-lg:grid-cols-1 min-[1440px]:grid-cols-[400px_1fr]" aria-hidden="true">
       <div className="ws-card max-lg:hidden" />
       <div className="grid grid-cols-[200px_1fr_40%] gap-1.5 max-lg:grid-cols-1">
         <div className="ws-card max-lg:hidden" />
@@ -733,25 +865,7 @@ function ShellSkeleton() {
    Mobile: one panel at a time, all mounted; a gliding tab pill and a mini composer
    --------------------------------------------------------------------------- */
 
-function MobileBody({
-  tab,
-  chat,
-  explorer,
-  editor,
-  preview,
-  logs,
-  aiReady,
-  running,
-}: {
-  tab: MobileTab;
-  chat: React.ReactNode;
-  explorer: React.ReactNode;
-  editor: React.ReactNode;
-  preview: React.ReactNode;
-  logs: React.ReactNode;
-  aiReady: boolean;
-  running: boolean;
-}) {
+function MobileBody({ tab, hosts, aiReady, running }: { tab: MobileTab; hosts: Hosts | null; aiReady: boolean; running: boolean }) {
   const panel = (id: MobileTab, node: React.ReactNode, className?: string) => (
     <div id={`ws-mobile-${id}`} role="tabpanel" aria-labelledby={`ws-mtab-${id}`} className={cn("ws-mobile-panel min-h-0 flex-1", className)} hidden={tab !== id} inert={tab !== id}>
       {node}
@@ -759,17 +873,34 @@ function MobileBody({
   );
   return (
     <div className="flex min-h-0 flex-1 flex-col pb-1.5">
-      {panel("chat", <div className="ws-card h-full">{chat}</div>)}
-      {panel("files", <div className="ws-card h-full">{explorer}</div>)}
-      {panel("code", <div className="ws-card h-full">{editor}</div>)}
+      {panel(
+        "chat",
+        <div className="ws-card h-full">
+          <Slot host={hosts?.chat} />
+        </div>,
+      )}
+      {panel(
+        "files",
+        <div className="ws-card h-full">
+          <Slot host={hosts?.explorer} />
+        </div>,
+      )}
+      {panel(
+        "code",
+        <div className="ws-card h-full">
+          <Slot host={hosts?.editor} />
+        </div>,
+      )}
       {panel(
         "preview",
         <div className="relative flex h-full flex-col gap-1.5">
-          <div className="ws-card min-h-0 flex-1">{preview}</div>
+          <div className="ws-card min-h-0 flex-1">
+            <Slot host={hosts?.preview} />
+          </div>
           <MiniComposer disabled={!aiReady} running={running} />
         </div>,
       )}
-      {panel("logs", logs)}
+      {panel("logs", <Slot host={hosts?.dock} />)}
     </div>
   );
 }
@@ -817,9 +948,19 @@ function MobileNav({ tab, onChange, previewBadge, problems, agentRunning }: { ta
     ["preview", "Preview", Monitor],
     ["logs", "Terminal", TerminalSquare],
   ];
+  // WAI-ARIA tabs: one tab stop; Left/Right (wrapping), Home and End move and select.
+  const onKeyDown = (e: React.KeyboardEvent) => {
+    const i = items.findIndex(([id]) => id === tab);
+    const next = e.key === "ArrowRight" ? (i + 1) % items.length : e.key === "ArrowLeft" ? (i - 1 + items.length) % items.length : e.key === "Home" ? 0 : e.key === "End" ? items.length - 1 : -1;
+    if (next < 0) return;
+    e.preventDefault();
+    const id = items[next][0];
+    onChange(id);
+    document.getElementById(`ws-mtab-${id}`)?.focus();
+  };
   return (
     <nav className="shrink-0 px-1.5 pb-[max(env(safe-area-inset-bottom),6px)]" aria-label="Workspace panels">
-      <div ref={ref} role="tablist" aria-label="Workspace panels" className="glass relative flex rounded-2xl border border-border p-1 shadow-lg">
+      <div ref={ref} role="tablist" aria-label="Workspace panels" onKeyDown={onKeyDown} className="glass relative flex rounded-2xl border border-border p-1 shadow-lg">
         <GlideIndicator ref={glide} className="inset-y-1 rounded-xl bg-muted shadow-[inset_0_0_0_1px_var(--border)]" />
         {items.map(([id, label, Icon]) => (
           <button
@@ -829,9 +970,10 @@ function MobileNav({ tab, onChange, previewBadge, problems, agentRunning }: { ta
             role="tab"
             aria-selected={tab === id}
             aria-controls={`ws-mobile-${id}`}
+            tabIndex={tab === id ? 0 : -1}
             onClick={() => onChange(id)}
             data-no-ripple
-            className={cn("relative z-[1] flex flex-1 flex-col items-center gap-0.5 rounded-xl py-1.5 text-[11px] font-medium transition-colors", tab === id ? "text-foreground" : "text-muted-foreground")}
+            className={cn("relative z-[1] flex flex-1 flex-col items-center gap-0.5 rounded-xl py-1.5 text-[11px] font-medium transition-colors focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-ring", tab === id ? "text-foreground" : "text-muted-foreground")}
           >
             <span className="relative">
               <Icon className="size-[18px]" aria-hidden="true" />

@@ -32,7 +32,7 @@ export function ConfirmDialog({
         onOpenChange(o);
       }}
     >
-      <DialogContent title={title} description={description}>
+      <DialogContent title={title} description={description} className="[--btn-radius:10px]">
         {error ? (
           <p role="alert" className="text-sm text-danger">
             {error}

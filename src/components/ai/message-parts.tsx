@@ -62,7 +62,7 @@ type FilePart = Extract<MessagePart, { type: "file_change" }>;
 export function PlanPart({ steps, done }: { steps: string[]; done: boolean }) {
   return (
     <section className="space-y-2" aria-label="Plan">
-      <h4 className="text-[13px] font-semibold text-foreground">Plan</h4>
+      <h3 className="text-[13px] font-semibold text-foreground">Plan</h3>
       <ol className="space-y-1.5">
         {steps.map((step, i) => (
           <li key={i} className="flex items-start gap-2.5 text-[14px] leading-snug">
@@ -294,10 +294,10 @@ export function WritingFiles({ files, running, stats }: { files: FilePart[]; run
   const statOf = new Map((stats ?? []).map((s) => [s.path, s]));
   return (
     <section aria-label={running ? "Writing files" : "Files changed"} className="space-y-1.5">
-      <h4 className="flex items-center gap-2 text-[13px] font-semibold">
+      <h3 className="flex items-center gap-2 text-[13px] font-semibold">
         {running ? "Writing files" : "Files changed"}
         <span className="rounded-full bg-muted px-1.5 font-mono text-[10.5px] font-medium tabular-nums text-muted-foreground">{rows.length}</span>
-      </h4>
+      </h3>
       <ul className="overflow-hidden rounded-xl border border-border">
         {rows.map((f, i) => {
           const meta = ACTION_META[f.action];

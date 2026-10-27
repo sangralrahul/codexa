@@ -160,8 +160,8 @@ export function TemplatePicker({ templates, value, onChange, columns = 2 }: { te
               >
                 <TemplatePreview id={t.id} category={t.category} sizes="(min-width: 1280px) 360px, (min-width: 640px) 40vw, 100vw" priority={i < 2} className="rounded-none border-0 shadow-none" />
                 {t.featured ? (
-                  <span className="absolute bottom-2.5 left-2.5 inline-flex h-5 items-center gap-1 rounded-full bg-black/70 px-2 font-mono text-[9.5px] font-medium uppercase tracking-[0.1em] text-white backdrop-blur-md">
-                    <Sparkles className="size-2.5 text-signal-2" aria-hidden="true" /> Featured
+                  <span className="absolute bottom-2.5 left-2.5 inline-flex h-5 items-center gap-1 rounded-full bg-background/85 px-2 font-mono text-[9.5px] font-medium uppercase tracking-[0.1em] text-foreground shadow-[inset_0_0_0_1px_var(--border),var(--shadow-sm)] backdrop-blur-md">
+                    <Sparkles className="size-2.5 text-signal-ink" aria-hidden="true" /> Featured
                   </span>
                 ) : null}
                 <span

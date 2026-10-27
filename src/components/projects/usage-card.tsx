@@ -32,7 +32,7 @@ export function UsageCard({ workspaceName, entitlements, projectCount, className
     { label: "Deployments", used: e.used.deployment, limit: e.limits.deploymentsPerMonth },
   ];
   return (
-    <section aria-labelledby="usage-title" className={cn("e1 rounded-[18px] p-5", className)}>
+    <section aria-labelledby="usage-title" className={cn("e1 flex flex-col rounded-[18px] p-5", className)}>
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
           <h2 id="usage-title" className="text-[15px] font-semibold tracking-[-0.01em]">
@@ -51,8 +51,10 @@ export function UsageCard({ workspaceName, entitlements, projectCount, className
           <Meter key={r.label} label={r.label} value={r.used} max={Math.max(0, r.limit)} unlimited={r.limit < 0} format={n} size="sm" warnAt={0.7} dangerAt={0.9} />
         ))}
       </div>
-      <p className="mt-5 border-t border-border pt-3 text-xs text-muted-foreground">
-        Resets <time dateTime={resetDate(e.periodStart).toISOString()}>{resets}</time>. Limits are enforced on the server.
+      <p className="mt-auto pt-5 text-xs text-muted-foreground">
+        <span className="block border-t border-border pt-3">
+          Resets <time dateTime={resetDate(e.periodStart).toISOString()}>{resets}</time>. Limits are enforced on the server.
+        </span>
       </p>
     </section>
   );

@@ -370,14 +370,15 @@ function SavePill({ status, canEdit }: { status: SaveStatus; canEdit: boolean })
       aria-live="polite"
       data-testid="save-status"
       className={cn(
-        "ws-save hidden h-6 shrink-0 items-center gap-1.5 rounded-full px-2 text-[11.5px] font-medium sm:inline-flex",
-        !canEdit ? "bg-muted text-muted-foreground" : status === "error" ? "bg-danger/10 text-danger" : status === "unsaved" ? "bg-warning/10 text-warning" : "text-muted-foreground",
+        "ws-save inline-flex h-6 shrink-0 items-center gap-1.5 rounded-full px-1.5 text-[11.5px] font-medium sm:px-2",
+        !canEdit ? "bg-muted text-muted-foreground" : status === "error" ? "bg-danger/10 text-danger" : status === "unsaved" ? "ws-warn-ink bg-warning/10" : "text-muted-foreground",
       )}
     >
       <span key={`${status}-${justSaved}`} className="ws-save__icon size-3 items-center justify-center" aria-hidden="true">
         {icon}
       </span>
-      {label}
+      {/* Phones keep the morphing icon; the word stays readable to screen readers. */}
+      <span className="max-sm:sr-only">{label}</span>
     </span>
   );
 }

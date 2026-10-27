@@ -9,7 +9,7 @@ import { PROVIDER_ADAPTERS } from "@/lib/integrations/providers";
 import { INTEGRATION_CATEGORIES, INTEGRATIONS } from "@/config/integrations";
 import { getIntegrationDetail } from "@/components/integrations-directory/details";
 import { PLANS } from "@/config/plans";
-import { buildChips, buildScenarios, buildStarters, stageTools } from "./scenarios";
+import { buildScenarios, buildStarters, stageTools } from "./scenarios";
 
 /**
  * Everything the home page shows that comes from code or config (PLAN §1: no hard-coded
@@ -76,7 +76,6 @@ export function getHomeData() {
     scenarios,
     starters,
     tools,
-    chips: buildChips(),
     maxRepairAttempts: LIMITS.maxRepairAttempts,
     proof,
     templateCount: TEMPLATES.length,
@@ -84,7 +83,6 @@ export function getHomeData() {
     wall,
     nodes,
     freePlan: { name: PLANS.free.name, isFree: PLANS.free.prices?.USD.month === 0 && PLANS.free.prices?.INR.month === 0 },
-    defaultScenario: scenarios[0],
   };
 }
 

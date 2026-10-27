@@ -3,6 +3,7 @@ import { ArrowUp, History, Sparkles } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { LogoMark } from "@/components/logo";
 import { StepRow, StepIcon } from "@/components/vignettes/step-row";
+import { templateShotFor } from "@/components/templates/shots";
 import type { Scenario } from "../types";
 import type { AgentRow, StageFrame } from "./script";
 
@@ -31,6 +32,25 @@ export function ToolRow({ row, connector, illustrative }: { row: AgentRow; conne
         ) : undefined
       }
     />
+  );
+}
+
+/**
+ * The top of the thread once the prompt is sent: the project the run works on (the real starter,
+ * its real screenshot and file count). Anchors the column so it never reads as an empty box.
+ */
+export function StarterContext({ scenario, className }: { scenario: Scenario; className?: string }) {
+  return (
+    <div className={cn("flex items-center gap-2.5 rounded-[12px] border border-border bg-background/50 p-1.5 pr-3 shadow-[inset_0_1px_0_var(--hairline)]", className)}>
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img src={templateShotFor(scenario.id, 120)} alt="" width={64} height={40} loading="lazy" decoding="async" className="h-10 w-16 shrink-0 rounded-[7px] bg-white object-cover object-left-top shadow-[0_0_0_1px_var(--border)]" />
+      <span className="min-w-0 flex-1">
+        <span className="block truncate text-[12px] font-medium text-foreground">{scenario.slug}</span>
+        <span className="block truncate text-[11px] text-muted-foreground">
+          {scenario.name} starter · {scenario.fileCount} files
+        </span>
+      </span>
+    </div>
   );
 }
 
@@ -68,22 +88,24 @@ export function AgentPane({ frame, scenario, typed, illustrative, className }: {
         <span className="ml-auto truncate text-[11.5px] text-muted-foreground">{scenario.frameworkName}</span>
       </div>
 
-      {/* Thread: newest at the bottom; older items slide up under a fade. */}
-      <div className="relative min-h-0 flex-1 overflow-hidden [mask-image:linear-gradient(to_bottom,transparent,black_44px)]">
-        <div className="absolute inset-x-0 bottom-0 flex flex-col gap-2.5 p-3">
+      {/* Thread: newest at the bottom; when it overflows, older items slide up under the fade. */}
+      <div className="relative min-h-0 flex-1 overflow-hidden [mask-image:linear-gradient(to_bottom,transparent,black_28px)]">
+        <div className="absolute inset-0 flex flex-col justify-end gap-2.5 p-3 pt-4">
+          <StarterContext scenario={scenario} className="mb-auto" />
           {!frame.sent ? (
-            <div key="welcome" className="flex flex-col items-center gap-3 pb-6 text-center">
+            <div key="welcome" className="mb-auto flex flex-col items-center gap-2.5 text-center">
               <LogoMark size={28} />
               <p className="font-display text-[22px] font-semibold leading-tight tracking-[-0.02em] text-foreground [font-stretch:104%]">
                 What should we <span className="text-dim">build</span> next?
               </p>
-              <p className="max-w-[22ch] text-[12px] text-muted-foreground">Starting from the {scenario.name} starter · {scenario.fileCount} files</p>
+              <p className="max-w-[24ch] text-[12px] text-muted-foreground">Describe a change. The agent plans it, edits the files and checks the build.</p>
             </div>
-          ) : (
+          ) : null}
+          {frame.sent ? (
             <div key="bubble" className="ml-6 rounded-2xl rounded-tr-md bg-muted px-3 py-2 text-[12.5px] leading-relaxed text-foreground shadow-[inset_0_0_0_1px_var(--border)] [animation:pop-in_var(--dur-4)_var(--ease-out)_both]">
               {scenario.prompt}
             </div>
-          )}
+          ) : null}
 
           {frame.working || frame.finished ? (
             <div className="rounded-[12px] border border-border bg-background/60 p-2.5 shadow-[inset_0_1px_0_var(--hairline)] [animation:pop-in_var(--dur-4)_var(--ease-out)_both]">

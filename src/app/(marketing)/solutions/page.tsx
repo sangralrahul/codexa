@@ -1,7 +1,8 @@
 import Link from "next/link";
-import { ArrowUpRight, ShieldAlert } from "lucide-react";
+import { ArrowRight, ArrowUpRight, ShieldAlert } from "lucide-react";
 import { routeMetadata } from "@/lib/seo";
 import { SOLUTIONS } from "@/content/marketing/solutions";
+import { FACTS } from "@/content/marketing/facts";
 import { PageHeader } from "@/components/marketing/page-header";
 import { Section } from "@/components/marketing/section";
 import { CTABand } from "@/components/marketing/cta-band";
@@ -17,7 +18,7 @@ export default function SolutionsIndexPage() {
         crumbs={[{ name: "Solutions", path: "/solutions" }]}
         kicker="Solutions"
         headline="One platform, many kinds of builders."
-        mark="many kinds of builders."
+        mark="builders."
         lede="Codexa is the same product for everyone: prompt, edit, run, deploy. Each page shows the starters that fit, a typical workflow, prompts to try and the limits to know before you start."
         actions={[
           { label: "Start building", href: "/signup" },
@@ -53,6 +54,21 @@ export default function SolutionsIndexPage() {
               </Link>
             </li>
           ))}
+          {/* Closes the grid (no half-empty last row): the same product for anyone not listed above. */}
+          <li className="sm:col-span-2 lg:col-span-1">
+            <Link href="/templates" className="group relative flex h-full min-h-[18rem] flex-col justify-between overflow-hidden rounded-[20px] border border-dashed border-border-strong p-6 transition-colors duration-300 hover:border-foreground/30 hover:bg-foreground/[0.02] focus-visible:border-foreground/30">
+              <div aria-hidden="true" className="bg-blueprint pointer-events-none absolute inset-0 opacity-60" />
+              <p className="text-label relative text-muted-foreground">Not on the list?</p>
+              <div className="relative">
+                <span className="text-display-4 block text-balance">Start from any of {FACTS.templates} starters.</span>
+                <span className="mt-2 block text-[14px] leading-relaxed text-muted-foreground">Every page above is the same product. Pick the closest starter, or describe your own idea and let the agent plan it.</span>
+                <span className="mt-5 inline-flex items-center gap-1.5 text-[14px] font-medium text-foreground">
+                  Browse templates
+                  <ArrowRight className="size-4 transition-transform duration-300 ease-snap group-hover:translate-x-0.5 group-focus-visible:translate-x-0.5" aria-hidden="true" />
+                </span>
+              </div>
+            </Link>
+          </li>
         </ul>
       </Section>
       <CTABand variant="prompt" />

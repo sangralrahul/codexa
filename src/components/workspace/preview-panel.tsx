@@ -31,6 +31,7 @@ import { useAgent } from "@/lib/client/workspace/agent";
 import { useOptionalDeployments } from "@/lib/client/workspace/deployments";
 import { useCalm } from "@/lib/client/motion";
 import type { LogLine } from "@/lib/runtime/types";
+import { stripAnsi } from "@/lib/client/workspace/problems";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/misc";
 import { Switch } from "@/components/ui/switch";
@@ -89,6 +90,7 @@ export function PreviewPanel({
   const [copied, setCopied] = useState(false);
   const [updated, setUpdated] = useState<{ seq: number; count: number } | null>(null);
   const frameRef = useRef<HTMLIFrameElement>(null);
+  const viewportRef = useRef<HTMLDivElement>(null);
   const loadedOnce = useRef(false);
 
   // A new preview URL resets the address bar.
@@ -263,7 +265,8 @@ export function PreviewPanel({
         <div className={cn("relative min-h-0 flex-1 overflow-hidden", framed ? "flex items-start justify-center overflow-y-auto bg-surface p-4" : "bg-card")}>
           {editing && !calm ? <span className="ws-beam" aria-hidden="true" /> : null}
           {editing ? (
-            <div className="ws-drop glass pointer-events-none absolute left-1/2 top-3 z-[4] flex -translate-x-1/2 items-center gap-2 rounded-full border border-border-strong px-3 py-1 text-[12px] font-medium shadow-lg" role="status">
+            // Visual only: the agent column's live region already announces each stage once.
+            <div className="ws-drop glass pointer-events-none absolute left-1/2 top-3 z-[4] flex -translate-x-1/2 items-center gap-2 rounded-full border border-border-strong px-3 py-1 text-[12px] font-medium shadow-lg" aria-hidden="true">
               <Loader2 className="size-3.5 animate-spin text-signal" aria-hidden="true" />
               {agentFiles ? `Agent is editing · ${agentFiles} file${agentFiles === 1 ? "" : "s"}` : "Agent is working…"}
             </div>
@@ -279,8 +282,9 @@ export function PreviewPanel({
             style={{ width: width ? width + (device === "mobile" ? 24 : 20) : "100%", maxWidth: "100%", height: framed ? "min(100%, 900px)" : "100%" }}
             data-device={device}
           >
-            {device === "mobile" ? <span aria-hidden="true" className="absolute left-1/2 top-[18px] z-[2] h-[18px] w-[34%] -translate-x-1/2 rounded-full bg-code-bg" /> : null}
-            <div className={cn("relative h-full overflow-hidden bg-card", framed && (device === "mobile" ? "rounded-[32px]" : "rounded-[18px]"))}>
+            {device === "mobile" ? <span aria-hidden="true" className="absolute left-1/2 top-[19px] z-[2] h-[18px] w-[28%] -translate-x-1/2 rounded-full bg-code-bg" /> : null}
+            {/* On the phone bezel the app starts below a status strip, so the island never covers it. */}
+            <div ref={viewportRef} className={cn("relative h-full overflow-hidden bg-card", framed && (device === "mobile" ? "rounded-[32px] pt-[30px]" : "rounded-[18px]"))}>
               {status === "running" && src ? (
                 <iframe
                   ref={frameRef}
@@ -291,10 +295,18 @@ export function PreviewPanel({
                   onLoad={() => {
                     const el = frameRef.current;
                     if (!el) return;
-                    if (loadedOnce.current && !calm) {
-                      el.classList.remove("ws-frame-develop");
-                      void el.offsetWidth;
-                      el.classList.add("ws-frame-develop");
+                    if (!calm) {
+                      // First real load of this preview URL: the app assembles top-down under a
+                      // scanline (M11). Later loads (reload, sync, restart) develop back into focus.
+                      const target = loadedOnce.current ? el : viewportRef.current;
+                      const cls = loadedOnce.current ? "ws-frame-develop" : "ws-assemble";
+                      if (target) {
+                        target.classList.remove(cls);
+                        void target.offsetWidth;
+                        target.classList.add(cls);
+                        // Drop the wrapper class once played so a later iframe (reload) does not re-assemble.
+                        if (cls === "ws-assemble") setTimeout(() => target.classList.remove(cls), 800);
+                      }
                     }
                     loadedOnce.current = true;
                   }}
@@ -403,10 +415,11 @@ function FrameState({ template, canEdit, showOperatorDetails }: { template: { id
         )}
         <div className="absolute inset-0 bg-[radial-gradient(70%_60%_at_50%_45%,color-mix(in_oklab,var(--card)_55%,transparent),var(--card)_92%)]" />
       </div>
-      {showShot && template ? (
-        <p className="absolute bottom-2.5 left-1/2 z-[2] -translate-x-1/2 whitespace-nowrap rounded-full border border-border bg-card/90 px-2.5 py-0.5 text-[11px] text-muted-foreground shadow-sm">Template starting point — not your live app</p>
-      ) : null}
-      <div className="relative z-[1] flex min-h-full items-center justify-center p-5">{card}</div>
+      {/* The label sits in the flow under the card, so a tall card in a narrow frame never covers it. */}
+      <div className="relative z-[1] flex min-h-full flex-col items-center justify-center gap-3 p-5">
+        {card}
+        {showShot && template ? <p className="max-w-full rounded-full border border-border bg-card/90 px-2.5 py-0.5 text-center text-[11px] text-muted-foreground shadow-sm">Template starting point — not your live app</p> : null}
+      </div>
     </div>
   );
 }
@@ -489,7 +502,7 @@ function LogTail({ lines }: { lines: LogLine[] }) {
     <pre className="mt-4 max-h-44 overflow-auto rounded-xl border border-code-border bg-code-bg p-2.5 text-left font-mono text-[11px] leading-5 text-code-fg" aria-label="Recent log lines">
       {lines.map((l, i) => (
         <div key={`${l.ts}-${i}`} className={cn(l.stream === "stderr" && "text-danger", l.stream === "system" && "text-syn-attr")}>
-          {l.line}
+          {stripAnsi(l.line)}
         </div>
       ))}
     </pre>

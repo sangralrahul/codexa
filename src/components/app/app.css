@@ -7,7 +7,8 @@
    ========================================================================== */
 
 /* ---------- Dashboard: a backdrop that listens (static light, no canvas) ---------- */
-.dash-hero { position: relative; isolation: isolate; --listen: 0; }
+/* overflow-x: clip keeps the wide glow from adding a horizontal scrollbar (desktop and phones) while it still bleeds upward. */
+.dash-hero { position: relative; isolation: isolate; overflow-x: clip; --listen: 0; }
 .dash-hero:has([data-composer][data-active]) { --listen: 0.7; }
 .dash-hero:has([data-composer]:focus-within) { --listen: 1; }
 .dash-glow {

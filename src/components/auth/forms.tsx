@@ -446,7 +446,10 @@ export function ForgotPasswordForm({ emailConfigured, email: initialEmail }: { e
               {resending ? null : <RotateCw className="size-4" aria-hidden="true" />}
               {left > 0 ? (
                 <span className="inline-flex items-baseline gap-1">
-                  Resend in <Odometer value={left} trigger="change" className="tabular-nums" />s
+                  Resend in
+                  <span className="inline-flex items-baseline">
+                    <Odometer value={left} trigger="change" className="tabular-nums" />s
+                  </span>
                 </span>
               ) : (
                 "Resend the link"

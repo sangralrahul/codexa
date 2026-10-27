@@ -5,6 +5,8 @@ import { Check, CircleAlert, Copy, ExternalLink, Globe, Loader2, Rocket, Setting
 import { emit } from "@/lib/client/events";
 import { isCalm, useCalm } from "@/lib/client/motion";
 import { IN_PROGRESS, useDeployments, type ProviderInfo } from "@/lib/client/workspace/deployments";
+import { stripAnsi } from "@/lib/client/workspace/problems";
+import { useNow } from "@/lib/client/workspace/runtime";
 import type { DeploymentDto } from "@/lib/runtime/types";
 import { Button } from "@/components/ui/button";
 import { LiveDot } from "@/components/ui/misc";
@@ -127,7 +129,7 @@ export function PublishPopover({ onManage, className, compact, open: openProp, o
     return () => cancelAnimationFrame(raf);
   }, [d.wentLive, open, tracked?.url]);
 
-  const logTail = useMemo(() => (tracked?.buildLog ?? "").split("\n").filter((l) => l.trim()).slice(-6), [tracked?.buildLog]);
+  const logTail = useMemo(() => stripAnsi(tracked?.buildLog ?? "").split("\n").filter((l) => l.trim()).slice(-6), [tracked?.buildLog]);
 
   const copy = async (url: string) => {
     try {
@@ -145,9 +147,24 @@ export function PublishPopover({ onManage, className, compact, open: openProp, o
   };
 
   const showStepper = Boolean(tracked) && (inProgress || tracked?.status === "failed" || tracked?.status === "live");
+  // Re-render each minute so "Published 2m ago" stays true while the page is open.
+  useNow(60_000, Boolean(live));
   const publishedAgo = live ? relativeTime(live.finishedAt ?? live.createdAt) : null;
 
   return (
+    <>
+    {live?.url && !compact ? (
+      <a
+        href={live.url}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="ws-pill-in hidden h-8 items-center gap-1 rounded-[10px] px-2 text-[12px] text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:outline-2 focus-visible:outline-ring min-[1440px]:inline-flex"
+        aria-label={`Published ${publishedAgo}. Open the live site`}
+      >
+        Published {publishedAgo}
+        <ExternalLink className="size-3" aria-hidden="true" />
+      </a>
+    ) : null}
     <Popover
       open={open}
       onOpenChange={(o) => {
@@ -209,7 +226,8 @@ export function PublishPopover({ onManage, className, compact, open: openProp, o
                 fullWidth
                 value={provider}
                 onValueChange={(v) => setProvider(v)}
-                options={providers.map((p) => ({ value: p.id, label: p.name, disabled: !p.available, title: p.available ? undefined : (p.reason ?? "Not configured") }))}
+                // Short names in the switch ("Codexa hosting (sites.example.com)" → "Codexa hosting"); the host is in the URL pill above.
+                options={providers.map((p) => ({ value: p.id, label: p.name.replace(/\s*\([^)]*\)\s*$/, ""), disabled: !p.available, title: p.available ? p.name : `${p.name}: ${p.reason ?? "not configured"}` }))}
               />
             </div>
           ) : null}
@@ -224,8 +242,12 @@ export function PublishPopover({ onManage, className, compact, open: openProp, o
         </div>
 
         {/* Stepper, from the real deployment.status */}
+        {/* One announcement per real status change (the log tail below is not live). */}
+        <p className="sr-only" role="status" aria-live="polite" aria-atomic="true">
+          {tracked && showStepper ? (tracked.status === "live" ? "Published. Your site is live." : tracked.status === "failed" ? "The deployment failed." : `Publishing: ${STEPS[Math.max(0, stepIndex(tracked.status))].label}`) : ""}
+        </p>
         {showStepper && tracked ? (
-          <div className="border-t border-border px-4 py-3" aria-live="polite">
+          <div className="border-t border-border px-4 py-3">
             <ol className="flex items-center gap-1.5" aria-label="Deployment progress">
               {STEPS.map((s, i) => {
                 const isLive = tracked.status === "live";
@@ -341,5 +363,6 @@ export function PublishPopover({ onManage, className, compact, open: openProp, o
         </div>
       </PopoverContent>
     </Popover>
+    </>
   );
 }

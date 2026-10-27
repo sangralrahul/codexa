@@ -12,7 +12,7 @@ export const metadata = routeMetadata("/learn");
 type HubId = "guides" | "tutorials" | "blog" | "glossary" | "newsletter";
 
 /** Small token-only illustrations, one per hub (decorative). */
-function HubArt({ id }: { id: HubId }) {
+function HubArt({ id, digest = [] }: { id: HubId; digest?: string[] }) {
   const frame = "relative h-36 overflow-hidden rounded-[14px] border border-border bg-surface";
   if (id === "guides") {
     return (
@@ -71,23 +71,26 @@ function HubArt({ id }: { id: HubId }) {
   return (
     <div aria-hidden="true" className={frame}>
       <div className="absolute inset-x-6 top-5 rounded-[10px] border border-border bg-card p-3 shadow-lg">
-        <div className="flex items-center justify-between">
-          <span className="h-2 w-20 rounded-full bg-foreground/70" />
-          <span className="h-2 w-8 rounded-full bg-muted" />
+        <div className="flex items-center justify-between gap-2 border-b border-border pb-2">
+          <span className="text-[11px] font-semibold">Codexa updates</span>
+          <span className="rounded-md bg-signal/15 px-1.5 py-px font-mono text-[9.5px] font-medium text-signal-ink">Changelog digest</span>
         </div>
-        <div className="mt-3 space-y-1.5">
-          <span className="block h-1.5 w-full rounded-full bg-muted" />
-          <span className="block h-1.5 w-11/12 rounded-full bg-muted" />
-          <span className="block h-1.5 w-3/5 rounded-full bg-muted" />
-        </div>
-        <span className="mt-3 inline-block rounded-md bg-signal/15 px-2 py-0.5 text-[10px] font-medium text-signal-ink">Changelog digest</span>
+        {/* The newest changelog entry titles, i.e. what a digest would actually contain. */}
+        <ul className="mt-2 space-y-1">
+          {digest.slice(0, 3).map((t) => (
+            <li key={t} className="flex items-center gap-1.5 truncate text-[10.5px] text-muted-foreground">
+              <span className="size-1 shrink-0 rounded-full bg-foreground-dim" />
+              <span className="truncate">{t}</span>
+            </li>
+          ))}
+        </ul>
       </div>
     </div>
   );
 }
 
 export default async function LearnPage() {
-  const [guides, tutorials, posts] = await Promise.all([listDocs("guides"), listDocs("tutorials"), listDocs("blog")]);
+  const [guides, tutorials, posts, changelog] = await Promise.all([listDocs("guides"), listDocs("tutorials"), listDocs("blog"), listDocs("changelog")]);
   const hubs: { id: HubId; href: string; title: string; description: string; count?: string }[] = [
     { id: "guides", href: "/guides", title: "Guides", description: "Step-by-step projects: first app, SaaS, ecommerce, databases, deployment, AI apps.", count: `${guides.length} guides` },
     { id: "tutorials", href: "/tutorials", title: "Tutorials", description: "Short exercises that show one feature of the agent or editor at a time.", count: `${tutorials.length} tutorials` },
@@ -119,7 +122,7 @@ export default async function LearnPage() {
               data-spotlight-tile
               className="group flex h-full flex-col rounded-[20px] border border-border bg-card p-2.5 shadow-[inset_0_1px_0_var(--hairline)] transition-[border-color,box-shadow,translate] duration-(--dur-3) hover:-translate-y-0.5 hover:border-border-strong hover:shadow-lg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring calm:hover:translate-y-0"
             >
-              <HubArt id={h.id} />
+              <HubArt id={h.id} digest={changelog.map((c) => c.title)} />
               <span className="flex flex-1 flex-col px-2.5 pb-2 pt-4">
                 <span className="flex items-center justify-between gap-2">
                   <span className="text-[17px] font-semibold tracking-[-0.01em]">{h.title}</span>

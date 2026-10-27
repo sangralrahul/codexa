@@ -10,6 +10,7 @@ import { cn } from "@/lib/utils";
 import { cssColor, cssColorAlpha } from "@/lib/client/workspace/css-colors";
 import { useLogSnapshot, useRuntime } from "@/lib/client/workspace/runtime";
 import type { LogLine } from "@/lib/runtime/types";
+import { stripAnsi } from "@/lib/client/workspace/problems";
 import { toolButton } from "./panel-tabs";
 
 /**
@@ -163,14 +164,37 @@ export function LogsPanel({ visible = true }: { visible?: boolean }) {
   const connLabel = snap.conn === "live" ? "Streaming" : snap.conn === "connecting" ? "Connecting" : snap.conn === "ended" ? "No runtime" : "Reconnecting";
 
   return (
-    <section className="flex h-full min-h-0 flex-col" aria-label="Terminal">
+    <section className="flex h-full min-h-0 flex-col bg-code-bg" aria-label="Terminal">
+      {/* A slim terminal bar, so the controls never sit on top of output (phones included). */}
+      <div className="flex h-8 shrink-0 items-center gap-1 border-b border-code-border pl-3 pr-1 text-code-muted">
+        <span className={cn("size-1.5 shrink-0 rounded-full", snap.conn === "live" ? "bg-success" : snap.conn === "error" ? "bg-warning" : "bg-code-muted/60")} aria-hidden="true" />
+        <span className="min-w-0 flex-1 truncate font-mono text-[11px]">
+          {connLabel}
+          {snap.total ? <span className="text-code-muted/70"> · {snap.total.toLocaleString("en-US")} line{snap.total === 1 ? "" : "s"}</span> : null}
+        </span>
+        <Tooltip content={autoscroll ? "Autoscroll on" : "Autoscroll off"}>
+          <button type="button" aria-label="Toggle autoscroll" aria-pressed={autoscroll} onClick={() => setAutoscroll((v) => !v)} className={cn(toolButton, "size-6 text-code-muted hover:bg-code-fg/10 hover:text-code-fg aria-pressed:bg-code-fg/10 aria-pressed:text-code-fg")}>
+            <ArrowDownToLine className="size-3.5" aria-hidden="true" />
+          </button>
+        </Tooltip>
+        <Tooltip content={copied ? "Copied" : "Copy logs"}>
+          <button type="button" aria-label="Copy logs" onClick={() => void copy()} className={cn(toolButton, "size-6 text-code-muted hover:bg-code-fg/10 hover:text-code-fg")}>
+            {copied ? <Check className="pop-in size-3.5 text-success" aria-hidden="true" /> : <Copy className="size-3.5" aria-hidden="true" />}
+          </button>
+        </Tooltip>
+        <Tooltip content="Clear">
+          <button type="button" aria-label="Clear logs" onClick={() => store.clear()} className={cn(toolButton, "size-6 text-code-muted hover:bg-code-fg/10 hover:text-code-fg")}>
+            <Trash2 className="size-3.5" aria-hidden="true" />
+          </button>
+        </Tooltip>
+      </div>
       <div className="relative min-h-0 flex-1 bg-code-bg">
         {fallback ? (
           <pre className="h-full overflow-auto p-3 font-mono text-[12.5px] leading-5 text-code-fg">
             {store.lines.length ? (
               store.lines.slice(-1000).map((l, i) => (
                 <div key={i} className={cn(l.stream === "stderr" && "text-danger", l.stream === "system" && "text-syn-attr")}>
-                  {l.line}
+                  {stripAnsi(l.line)}
                 </div>
               ))
             ) : (
@@ -186,24 +210,6 @@ export function LogsPanel({ visible = true }: { visible?: boolean }) {
             <p className="text-[12.5px]">{snap.conn === "ended" ? "No runtime is running. Start the preview to stream its logs here." : "Waiting for output from the dev server…"}</p>
           </div>
         ) : null}
-        <div className="absolute right-2 top-2 flex items-center gap-0.5 rounded-lg border border-code-border bg-code-bg/90 p-0.5 text-code-muted">
-          <span className="px-1.5 font-mono text-[10.5px]">{connLabel}</span>
-          <Tooltip content={autoscroll ? "Autoscroll on" : "Autoscroll off"}>
-            <button type="button" aria-label="Toggle autoscroll" aria-pressed={autoscroll} onClick={() => setAutoscroll((v) => !v)} className={cn(toolButton, "size-6 text-code-muted hover:bg-code-fg/10 hover:text-code-fg aria-pressed:bg-code-fg/10 aria-pressed:text-code-fg")}>
-              <ArrowDownToLine className="size-3.5" aria-hidden="true" />
-            </button>
-          </Tooltip>
-          <Tooltip content={copied ? "Copied" : "Copy logs"}>
-            <button type="button" aria-label="Copy logs" onClick={() => void copy()} className={cn(toolButton, "size-6 text-code-muted hover:bg-code-fg/10 hover:text-code-fg")}>
-              {copied ? <Check className="pop-in size-3.5 text-success" aria-hidden="true" /> : <Copy className="size-3.5" aria-hidden="true" />}
-            </button>
-          </Tooltip>
-          <Tooltip content="Clear">
-            <button type="button" aria-label="Clear logs" onClick={() => store.clear()} className={cn(toolButton, "size-6 text-code-muted hover:bg-code-fg/10 hover:text-code-fg")}>
-              <Trash2 className="size-3.5" aria-hidden="true" />
-            </button>
-          </Tooltip>
-        </div>
       </div>
     </section>
   );

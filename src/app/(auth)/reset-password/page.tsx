@@ -1,12 +1,12 @@
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
-import { routeMetadata } from "@/lib/seo";
+import { authMetadata } from "@/components/auth/meta";
 import { AuthCard } from "@/components/auth/auth-card";
 import { ResetPasswordForm } from "@/components/auth/forms";
 import { Alert } from "@/components/ui/misc";
 import { buttonClasses } from "@/components/ui/button";
 
-export const metadata = routeMetadata("/reset-password");
+export const metadata = authMetadata("/reset-password");
 
 export default async function ResetPasswordPage({ searchParams }: { searchParams: Promise<{ token?: string }> }) {
   const { token } = await searchParams;

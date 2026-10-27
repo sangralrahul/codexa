@@ -49,7 +49,7 @@ export function IdeaPrompts({ ideas, signedIn, className }: { ideas: string[]; s
               className="inline-flex h-8 items-center gap-1.5 rounded-full bg-foreground px-3.5 text-[13px] font-medium text-background transition-[opacity,translate] duration-200 hover:opacity-90 disabled:opacity-60"
             >
               {going === i ? "Opening…" : "Try this prompt"}
-              <ArrowRight className="size-3.5 transition-transform duration-300 ease-snap group-hover:translate-x-0.5" aria-hidden="true" />
+              <ArrowRight className="size-3.5 transition-transform duration-300 ease-snap group-hover:translate-x-0.5 group-focus-within:translate-x-0.5" aria-hidden="true" />
             </button>
             <button
               type="button"

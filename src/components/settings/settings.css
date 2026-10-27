@@ -8,6 +8,8 @@
 
 /* ---------- Layout ---------- */
 .settings-shell { --settings-nav-w: 236px; }
+/* Deep links (#timezone, #invite, #ws-currency …) land below the sticky app bar, not under it. */
+.settings-shell [id] { scroll-margin-top: 96px; }
 
 /* ---------- Cards: glassy e1 with an inset highlight, staggered entrance ---------- */
 .settings-card {
@@ -37,14 +39,28 @@
 .settings-stack > :nth-child(n + 8) { --card-i: 7; }
 .settings-stack > :not(.settings-card):not(:has(.settings-card)) { animation: settings-in var(--dur-4) var(--ease-out) backwards; animation-delay: calc(var(--card-i, 0) * 50ms); }
 .settings-stack > form, .settings-stack > .settings-plain { animation: none; }
+/* Panels that hold several cards (members, integrations, profile, workspace) continue the stagger inside. */
+.settings-sub > :nth-child(2) { --card-i: 2; }
+.settings-sub > :nth-child(3) { --card-i: 3; }
+.settings-sub > :nth-child(4) { --card-i: 4; }
+.settings-sub > :nth-child(5) { --card-i: 5; }
+.settings-sub > :nth-child(n + 6) { --card-i: 6; }
+.settings-sub > :not(.settings-card):not(form):not(:has(.settings-card)) { animation: settings-in var(--dur-4) var(--ease-out) backwards; animation-delay: calc(var(--card-i, 0) * 50ms); }
 
-/* A deep-linked section (search, command menu, checklist) flashes a signal ring once. */
-.settings-card[data-flash] { animation: settings-flash 1400ms var(--ease-out); }
-@keyframes settings-flash {
-  0% { box-shadow: inset 0 1px 0 var(--hairline), var(--shadow-sm), 0 0 0 0 color-mix(in oklab, var(--signal) 0%, transparent); }
-  18% { box-shadow: inset 0 1px 0 var(--hairline), var(--shadow-sm), 0 0 0 4px color-mix(in oklab, var(--signal) 30%, transparent); }
-  100% { box-shadow: inset 0 1px 0 var(--hairline), var(--shadow-sm), 0 0 0 0 color-mix(in oklab, var(--signal) 0%, transparent); }
+/* A deep-linked section (search, command menu, checklist) flashes a signal ring once. The ring is its own
+   layer (::after), so the card's entrance animation is never replaced and never replays when the flash ends. */
+.settings-card::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  border-radius: inherit;
+  pointer-events: none;
+  opacity: 0;
+  box-shadow: inset 0 0 0 1.5px color-mix(in oklab, var(--signal) 70%, transparent), inset 0 0 28px color-mix(in oklab, var(--signal) 12%, transparent);
 }
+.settings-card[data-flash]::after { animation: settings-flash 1400ms var(--ease-out); }
+@keyframes settings-flash { 0% { opacity: 0; } 14% { opacity: 1; } 100% { opacity: 0; } }
 
 /* Rows: a 2px signal accent slides in on hover / keyboard focus (box-shadow so it works on <tr> too). */
 .settings-row { box-shadow: inset 0 0 0 0 var(--signal); transition: background-color var(--dur-2) var(--ease-out), box-shadow var(--dur-3) var(--ease-snap); }
@@ -57,7 +73,7 @@
   -webkit-overflow-scrolling: touch;
   --fade-l: 0px;
   --fade-r: 0px;
-  mask-image: linear-gradient(to right, transparent 0, #000 var(--fade-l), #000 calc(100% - var(--fade-r)), transparent 100%);
+  mask-image: linear-gradient(to right, transparent 0, black var(--fade-l), black calc(100% - var(--fade-r)), transparent 100%);
 }
 .settings-tabs::-webkit-scrollbar { display: none; }
 .settings-tabs[data-fade-start] { --fade-l: 28px; }
@@ -210,22 +226,22 @@ button.seat:is(:hover, :focus-visible) { transform: translateY(-2px); border-col
 
 /* ---------- Calm: final frames ---------- */
 @media (prefers-reduced-motion: reduce) {
-  .settings-card, .settings-stack > *, .settings-meta, .settings-search-results > *, .setup-item .setup-tick, .setup-progress, .gauge-arc, .period-fill,
+  .settings-card, .settings-stack > *, .settings-sub > *, .settings-meta, .settings-search-results > *, .setup-item .setup-tick, .setup-progress, .gauge-arc, .period-fill,
   .usage-chart .usage-bar, .usage-swap, .unlock-diff .unlock-line, .price-swap, .seat-in, .seat--pending, .chip-in, .role-swap, .unsaved-dock,
   .field-flash :is(input, textarea, button[role="combobox"], [role="radiogroup"]), .avatar-fade img, .mirror-swap, .presence-cursor, .pw-rule svg, .tile-flow > * { animation: none !important; }
   .setup-item .setup-tick path { animation: none !important; stroke-dashoffset: 0; }
   .js .usage-chart:not(.is-visible) .usage-bar, .js .unlock-diff:not(.is-visible) .unlock-line { transform: none; opacity: 1; }
   .row-sweep::after, .unlock-line::after { display: none; }
-  .settings-card[data-flash] { animation: none; outline: 2px solid color-mix(in oklab, var(--signal) 50%, transparent); outline-offset: 2px; }
+  .settings-card[data-flash]::after { animation: none; opacity: 1; }
   .bento-tile, .bento-tile .bento-arrow, .plan-card, .seat, .radio-card, .radio-card .radio-dot::after, .upload-ring, .brand-tile, .ws-step__line, .settings-row, .settings-card, .gauge-arc { transition: none; }
   .plan-card:hover, button.seat:is(:hover, :focus-visible) { transform: none; }
 }
-[data-motion="reduced"] :is(.settings-card, .settings-stack > *, .settings-meta, .settings-search-results > *, .setup-item .setup-tick, .setup-progress, .gauge-arc, .period-fill, .usage-chart .usage-bar, .usage-swap, .unlock-diff .unlock-line, .price-swap, .seat-in, .seat--pending, .chip-in, .role-swap, .unsaved-dock, .avatar-fade img, .mirror-swap, .presence-cursor, .pw-rule svg, .tile-flow > *) { animation: none !important; }
+[data-motion="reduced"] :is(.settings-card, .settings-stack > *, .settings-sub > *, .settings-meta, .settings-search-results > *, .setup-item .setup-tick, .setup-progress, .gauge-arc, .period-fill, .usage-chart .usage-bar, .usage-swap, .unlock-diff .unlock-line, .price-swap, .seat-in, .seat--pending, .chip-in, .role-swap, .unsaved-dock, .avatar-fade img, .mirror-swap, .presence-cursor, .pw-rule svg, .tile-flow > *) { animation: none !important; }
 [data-motion="reduced"] .field-flash :is(input, textarea, button[role="combobox"], [role="radiogroup"]) { animation: none !important; }
 [data-motion="reduced"] .setup-item .setup-tick path { animation: none !important; stroke-dashoffset: 0; }
 [data-motion="reduced"] :is(.usage-chart:not(.is-visible) .usage-bar, .unlock-diff:not(.is-visible) .unlock-line) { transform: none; opacity: 1; }
 [data-motion="reduced"] .row-sweep::after,
 [data-motion="reduced"] .unlock-line::after { display: none; }
-[data-motion="reduced"] .settings-card[data-flash] { animation: none; outline: 2px solid color-mix(in oklab, var(--signal) 50%, transparent); outline-offset: 2px; }
+[data-motion="reduced"] .settings-card[data-flash]::after { animation: none; opacity: 1; }
 [data-motion="reduced"] :is(.bento-tile, .bento-tile .bento-arrow, .plan-card, .seat, .radio-card, .radio-card .radio-dot::after, .upload-ring, .brand-tile, .ws-step__line, .settings-row, .settings-card, .gauge-arc) { transition: none; }
 [data-motion="reduced"] :is(.plan-card:hover, button.seat:hover, button.seat:focus-visible) { transform: none; }

@@ -4,7 +4,7 @@ import { getTemplate } from "@/templates";
 import { TEMPLATE_CATEGORIES } from "@/templates";
 import { TemplatePreview } from "@/components/templates/template-preview";
 import { UseTemplateLink, templatePreviewHref } from "@/components/templates/template-card";
-import { TEMPLATE_SHOTS } from "@/components/templates/shots";
+import { TEMPLATE_SHOTS, templateShotSrc, templateShotSrcSet } from "@/components/templates/shots";
 import { cn } from "@/lib/utils";
 
 /** Real starters for a page: name, category, file count and a captured screenshot. Unknown ids are skipped. */
@@ -24,11 +24,21 @@ export function railTemplates(ids: string[]) {
 export function TemplateRail({ ids, signedIn, className }: { ids: string[]; signedIn: boolean; className?: string }) {
   const items = railTemplates(ids);
   return (
-    <ul data-reveal="stagger" data-spotlight="grid" className={cn("grid gap-4 sm:grid-cols-2 lg:grid-cols-3", className)}>
+    // Below lg a swipeable rail (scroll-snap, one card and a peek of the next); from lg a three-up grid.
+    <ul
+      data-reveal="stagger"
+      data-spotlight="grid"
+      aria-label="Starter templates"
+      className={cn(
+        "-mx-4 flex snap-x snap-mandatory scroll-px-4 gap-3 overflow-x-auto px-4 pb-3 pt-1 [scrollbar-width:none] sm:-mx-6 sm:scroll-px-6 sm:px-6 lg:mx-0 lg:grid lg:grid-cols-3 lg:gap-4 lg:overflow-visible lg:px-0 lg:pb-0 lg:pt-0 [&::-webkit-scrollbar]:hidden",
+        className,
+      )}
+    >
       {items.map((t) => (
-        <li key={t.id} className="glow-card group flex flex-col rounded-[18px] border border-border p-2.5">
-          <div className="shot-pan relative overflow-hidden rounded-[12px] bg-gradient-to-br from-signal/[0.08] via-surface to-info/[0.08] px-4 pt-4">
-            <TemplatePreview id={t.id} category={t.category} className="rounded-b-none border-b-0 shadow-lg" />
+        // .shot-pan on the whole card: the screenshot pans while the card is hovered or anything in it has keyboard focus.
+        <li key={t.id} className="glow-card shot-pan group flex w-[min(84%,22rem)] shrink-0 snap-start flex-col rounded-[18px] border border-border p-2.5 lg:w-auto">
+          <div className="relative overflow-hidden rounded-[12px] bg-gradient-to-br from-signal/[0.08] via-surface to-info/[0.08] px-4 pt-4">
+            <TemplatePreview id={t.id} category={t.category} sizes="(min-width: 1024px) 380px, (min-width: 640px) 45vw, 90vw" className="rounded-b-none border-b-0 shadow-lg" />
           </div>
           <div className="flex flex-1 flex-col px-2.5 pb-2 pt-4">
             <p className="text-label text-muted-foreground">{t.categoryName}</p>
@@ -74,7 +84,17 @@ export function TemplateFan({ ids, className, caption = true, stack = false }: {
               <span className="truncate font-mono text-[10px] text-muted-foreground">{t.name}</span>
             </div>
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={`/templates/${t.id}.webp`} alt="" width={960} height={600} loading={stack ? "lazy" : "eager"} decoding="async" className="aspect-[16/10] w-full bg-white object-cover object-top" />
+            <img
+              src={templateShotSrc(t.id)}
+              srcSet={templateShotSrcSet(t.id)}
+              sizes={stack ? "(min-width: 1024px) 300px, (min-width: 640px) 40vw, 80vw" : "(min-width: 1024px) 460px, 72vw"}
+              alt=""
+              width={960}
+              height={600}
+              loading={stack ? "lazy" : "eager"}
+              decoding="async"
+              className="aspect-[16/10] w-full bg-white object-cover object-top"
+            />
           </div>
           );
         })}

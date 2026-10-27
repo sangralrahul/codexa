@@ -13,19 +13,43 @@ const ROWS = [
   { duration: "90s", reverse: true },
   { duration: "80s", reverse: false },
 ];
+/**
+ * Tiles per row (before the marquee clone). One copy must be wider than the widest screen the wall
+ * spans (8 × 380px ≈ 3040px), or the loop shows a gap at its seam; a short row wraps around the list.
+ */
+const MIN_PER_ROW = 8;
 
-function Tile({ t, clone }: { t: WallTile; clone?: boolean }) {
+/** Rows of tiles; a tile repeated in a later row (because the list wrapped) is a duplicate for AT. */
+function buildRows(tiles: WallTile[]) {
+  const per = Math.max(MIN_PER_ROW, Math.ceil(tiles.length / ROWS.length));
+  const step = Math.ceil(tiles.length / ROWS.length);
+  const seen = new Set<string>();
+  return ROWS.map((r, i) => {
+    const row = tiles.length ? Array.from({ length: per }, (_, k) => tiles[(i * step + k) % tiles.length]) : [];
+    return {
+      ...r,
+      tiles: row.map((t, k) => {
+        const repeat = seen.has(t.id);
+        seen.add(t.id);
+        return { t, key: `${t.id}-${k}`, repeat };
+      }),
+    };
+  }).filter((r) => r.tiles.length > 0);
+}
+
+function Tile({ t, clone, repeat }: { t: WallTile; clone?: boolean; repeat?: boolean }) {
+  const hidden = clone || repeat;
   return (
     <li data-marquee-clone={clone ? "" : undefined} className="wall-cell">
       <Link
         href={t.href}
-        aria-hidden={clone || undefined}
-        tabIndex={clone ? -1 : undefined}
-        aria-label={clone ? undefined : `${t.name} — ${t.frameworkName} starter template`}
+        aria-hidden={hidden || undefined}
+        tabIndex={hidden ? -1 : undefined}
+        aria-label={hidden ? undefined : `${t.name} — ${t.frameworkName} starter template`}
         data-spotlight-tile=""
         className="wall-tile shot-pan"
       >
-        <TemplatePreview id={t.id} category={t.category} className="rounded-none border-0 shadow-none" imgClassName="block" />
+        <TemplatePreview id={t.id} category={t.category} sizes="(min-width: 64rem) 360px, (min-width: 40rem) 300px, 260px" className="rounded-none border-0 shadow-none" imgClassName="block" />
         <span className="wall-tile__caption glass">
           <span className="wall-tile__name">
             <b>{t.name}</b>
@@ -48,8 +72,7 @@ function Tile({ t, clone }: { t: WallTile; clone?: boolean }) {
  */
 export function TemplateWall({ tiles, children }: { tiles: WallTile[]; children?: React.ReactNode }) {
   const [paused, setPaused] = React.useState(false);
-  const per = Math.ceil(tiles.length / ROWS.length);
-  const rows = ROWS.map((r, i) => ({ ...r, tiles: tiles.slice(i * per, (i + 1) * per) })).filter((r) => r.tiles.length > 0);
+  const rows = React.useMemo(() => buildRows(tiles), [tiles]);
 
   return (
     <div className="relative">
@@ -65,11 +88,11 @@ export function TemplateWall({ tiles, children }: { tiles: WallTile[]; children?
                 style={{ "--marquee-duration": row.duration } as React.CSSProperties}
               >
                 <ul className="marquee__track">
-                  {row.tiles.map((t) => (
-                    <Tile key={t.id} t={t} />
+                  {row.tiles.map(({ t, key, repeat }) => (
+                    <Tile key={key} t={t} repeat={repeat} />
                   ))}
-                  {row.tiles.map((t) => (
-                    <Tile key={`${t.id}-clone`} t={t} clone />
+                  {row.tiles.map(({ t, key }) => (
+                    <Tile key={`${key}-clone`} t={t} clone />
                   ))}
                 </ul>
               </div>

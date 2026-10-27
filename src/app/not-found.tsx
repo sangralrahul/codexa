@@ -11,6 +11,7 @@ import { Kicker } from "@/components/marketing/page-header";
 import { getChromeData } from "@/components/marketing/chrome-data";
 import { buildHeaderWells } from "@/components/marketing/header-wells";
 import { getCurrentUser } from "@/lib/auth/session";
+import { capabilities } from "@/lib/env";
 
 export const metadata = pageMetadata({ title: "Page not found", description: "The page you were looking for does not exist.", path: "/404", noindex: true });
 
@@ -40,7 +41,7 @@ export default async function NotFound() {
             </h1>
             <p className="text-lead mx-auto mt-5">The link may be old or mistyped. Or describe the page you were hoping for, and build it.</p>
             <div className="mt-10 w-full max-w-2xl text-left">
-              <PromptBox signedIn={signedIn} />
+              <PromptBox signedIn={signedIn} variant="compact" source="cta" aiReady={capabilities.ai} />
             </div>
             <nav aria-label="Popular pages" className="mt-14 w-full max-w-3xl">
               <ul className="grid gap-3 text-left sm:grid-cols-3">
@@ -51,7 +52,7 @@ export default async function NotFound() {
                         <span className="block font-medium">{getRoute(l.href)?.navLabel ?? l.href}</span>
                         <span className="mt-1 block text-[13.5px] leading-snug text-muted-foreground">{l.body}</span>
                       </span>
-                      <ArrowUpRight className="mt-0.5 size-4 shrink-0 text-muted-foreground transition-[translate,color] duration-300 group-hover:-translate-y-0.5 group-hover:translate-x-0.5 group-hover:text-foreground" aria-hidden="true" />
+                      <ArrowUpRight className="mt-0.5 size-4 shrink-0 text-muted-foreground transition-[translate,color] duration-300 group-hover:-translate-y-0.5 group-hover:translate-x-0.5 group-hover:text-foreground group-focus-visible:-translate-y-0.5 group-focus-visible:translate-x-0.5 group-focus-visible:text-foreground" aria-hidden="true" />
                     </Link>
                   </li>
                 ))}

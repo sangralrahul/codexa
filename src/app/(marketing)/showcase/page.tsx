@@ -68,14 +68,19 @@ function BeTheFirst({ signedIn }: { signedIn: boolean }) {
             </Link>
           </div>
         </div>
-        <figure className="relative">
+        <figure className="group/fan relative">
           <div className="relative mx-auto aspect-[16/12.5] w-full max-w-[560px]">
             {shots.map((t, i) => (
               <div
                 key={t.id}
                 className={[
-                  "absolute w-[72%] overflow-hidden rounded-[14px] border border-border bg-card shadow-xl transition-transform duration-(--dur-4) ease-(--ease-out) calm:transition-none",
-                  i === 0 ? "left-0 top-[16%] -rotate-[6deg]" : i === 1 ? "left-[16%] top-0 z-[1] rotate-0" : "right-0 top-[27%] z-[2] rotate-[4deg]",
+                  "absolute w-[72%] overflow-hidden rounded-[14px] border border-border bg-card shadow-xl transition-[translate,rotate] duration-(--dur-5) ease-(--ease-out) calm:transition-none",
+                  // A loose stack that fans out on hover (transform only; static in calm mode).
+                  i === 0
+                    ? "left-0 top-[16%] -rotate-[6deg] group-hover/fan:-translate-x-[6%] group-hover/fan:-rotate-[9deg] calm:group-hover/fan:translate-x-0 calm:group-hover/fan:-rotate-[6deg]"
+                    : i === 1
+                      ? "left-[16%] top-0 z-[1] rotate-0 group-hover/fan:-translate-y-[5%] calm:group-hover/fan:translate-y-0"
+                      : "right-0 top-[27%] z-[2] rotate-[4deg] group-hover/fan:translate-x-[6%] group-hover/fan:rotate-[7deg] calm:group-hover/fan:translate-x-0 calm:group-hover/fan:rotate-[4deg]",
                 ].join(" ")}
               >
                 <div aria-hidden="true" className="flex h-6 items-center gap-1.5 border-b border-border bg-surface px-2.5">
@@ -183,7 +188,7 @@ export default async function ShowcasePage({ searchParams }: { searchParams: Sea
                     <li key={s.id} className="flex items-center justify-between gap-3 px-3 py-2">
                       <span className="truncate">
                         {s.status === "approved" ? (
-                          <Link href={`/showcase/${s.slug}`} className="hover:text-primary">
+                          <Link href={`/showcase/${s.slug}`} className="link-draw">
                             {s.title}
                           </Link>
                         ) : (

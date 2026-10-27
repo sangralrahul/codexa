@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import { routeMetadata } from "@/lib/seo";
 import { formatDate, listDocs } from "@/lib/content";

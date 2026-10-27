@@ -79,6 +79,9 @@
 /* View switches glide the panel sizes (only while switching, never while dragging). */
 .ws-animating > [data-panel] { transition: flex-grow 320ms var(--ease-out); }
 
+/* Amber text on an amber wash: mixed toward the ink so small labels clear 4.5:1 in both themes. */
+.ws-warn-ink { color: color-mix(in oklab, var(--warning) 68%, var(--foreground)); }
+
 /* ---------- Header ---------- */
 .ws-save { transition: background-color var(--dur-3), color var(--dur-3), border-color var(--dur-3); }
 .ws-save__icon { display: inline-flex; animation: ws-pop var(--dur-3) var(--ease-snap) both; }
@@ -209,6 +212,20 @@
 .ws-frame-develop { animation: ws-frame-develop 300ms var(--ease-out) both; }
 @keyframes ws-frame-develop { from { opacity: 0.6; filter: blur(4px); transform: scale(0.995); } }
 
+/* The first real load of a preview assembles top-down under a 2px signal scanline (M11). */
+.ws-assemble > iframe { animation: ws-assemble 720ms var(--ease-in-out) both; }
+@keyframes ws-assemble { from { clip-path: inset(0 0 100% 0); } to { clip-path: inset(0); } }
+.ws-assemble::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+  background: linear-gradient(to bottom, transparent calc(100% - 28px), color-mix(in oklab, var(--signal) 9%, transparent) calc(100% - 2px), color-mix(in oklab, var(--signal) 85%, transparent) calc(100% - 2px));
+  animation: ws-scan 720ms var(--ease-in-out) both;
+}
+@keyframes ws-scan { from { transform: translateY(-100%); opacity: 1; } 86% { opacity: 1; } to { transform: translateY(0); opacity: 0; } }
+
 /* ---------- Editor ---------- */
 .ws-tab { max-width: 220px; }
 .ws-tab-in { animation: ws-tab-in var(--dur-3) var(--ease-out) both; }
@@ -269,12 +286,16 @@
   white-space: nowrap;
 }
 
+/* Panel host nodes: rendered once (portals) and moved between layout slots. */
+.ws-host { height: 100%; min-height: 0; }
+
 /* ---------- Mobile ---------- */
 .ws-mobile-panel[hidden] { display: none !important; }
 
 /* ---------- Calm: final frames, every state change kept ---------- */
 @media (prefers-reduced-motion: reduce) {
-  .ws-orb::before, .ws-beam, .ws-particle, .ws-flight, .ws-wipe, .ws-node-pulse::after { display: none; }
+  .ws-orb::before, .ws-beam, .ws-particle, .ws-flight, .ws-wipe, .ws-node-pulse::after, .ws-assemble::after { display: none; }
+  .ws-assemble > iframe { animation: none; clip-path: none; }
   .ws-rail-seg::after, .ws-frame, .ws-tree-group, .ws-animating > [data-panel], .ws-sep::after, .ws-ring, .ws-send { transition: none; }
   .ws-pill-in, .ws-msg-user, .ws-msg-agent, .ws-suggest > *, .ws-drop, .ws-frame-develop, .ws-tab-in, .ws-tab-out, .ws-ai-flash, .ws-ticker-line, .ws-check-pop, .ws-save__icon, .ws-rail-seg::after, .ws-write-caret::after, .ws-reload[data-spin] svg { animation: none; }
 }
@@ -283,7 +304,9 @@
 [data-motion="reduced"] .ws-particle,
 [data-motion="reduced"] .ws-flight,
 [data-motion="reduced"] .ws-wipe,
-[data-motion="reduced"] .ws-node-pulse::after { display: none; }
+[data-motion="reduced"] .ws-node-pulse::after,
+[data-motion="reduced"] .ws-assemble::after { display: none; }
+[data-motion="reduced"] .ws-assemble > iframe { animation: none; clip-path: none; }
 [data-motion="reduced"] .ws-rail-seg::after,
 [data-motion="reduced"] .ws-frame,
 [data-motion="reduced"] .ws-tree-group,

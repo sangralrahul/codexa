@@ -79,9 +79,10 @@ function Block({ b, flip }: { b: ContentBlock; flip?: boolean }) {
       );
     case "links":
       return (
+        // An odd last card spans both columns, so the grid never ends on a half-empty row.
         <ul data-spotlight="grid" className="grid gap-3 sm:grid-cols-2">
           {b.items.map((l) => (
-            <li key={l.href}>
+            <li key={l.href} className="sm:[&:last-child:nth-child(odd)]:col-span-2">
               <Link href={l.href} className="glow-card group flex h-full items-start justify-between gap-3 rounded-[14px] border border-border p-5">
                 <span>
                   <span className="block font-medium">{l.label}</span>

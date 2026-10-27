@@ -25,11 +25,14 @@ export function BlogCover({
   category,
   size = "md",
   link,
+  label = "Codexa · Blog",
   className,
 }: {
   title: string;
   category: string;
   size?: "lg" | "md";
+  /** Mono label in the top-right corner. */
+  label?: string;
   link?: { href: string; level: 2 | 3 };
   className?: string;
 }) {
@@ -51,7 +54,7 @@ export function BlogCover({
       <div aria-hidden="true" className="bg-dots opacity-50 [grid-area:1/1] [mask-image:linear-gradient(to_bottom,black,transparent_75%)]" />
       <div aria-hidden="true" className="flex items-center justify-between self-start px-5 pt-4 font-mono text-[11px] uppercase tracking-[0.12em] text-foreground/60 [grid-area:1/1] sm:px-6">
         <span>{category}</span>
-        <span>Codexa · Blog</span>
+        <span>{label}</span>
       </div>
       {link ? (
         <Tag className={titleClass}>
@@ -64,6 +67,31 @@ export function BlogCover({
           {text}
         </p>
       )}
+    </div>
+  );
+}
+
+/**
+ * Article header for a blog post: the post's real h1 set in display type over the same area
+ * gradient as its index cover, so the card and the article read as one object. Pure CSS.
+ */
+export function BlogHero({ title, category, label = "Codexa · Blog", className, children }: { title: string; category: string; label?: string; className?: string; children?: React.ReactNode }) {
+  const [a, b] = areaTones(category);
+  const style = {
+    "--tone-a": a,
+    "--tone-b": b,
+    backgroundImage:
+      "radial-gradient(120% 95% at 0% 0%, color-mix(in oklab, var(--tone-a) 42%, transparent), transparent 62%), radial-gradient(90% 90% at 100% 100%, color-mix(in oklab, var(--tone-b) 34%, transparent), transparent 66%)",
+  } as React.CSSProperties;
+  return (
+    <div style={style} className={cn("relative isolate overflow-hidden rounded-[24px] border border-border bg-surface", className)}>
+      <div aria-hidden="true" className="bg-dots absolute inset-0 -z-10 opacity-50 [mask-image:linear-gradient(to_bottom,black,transparent_80%)]" />
+      <div className="flex items-center justify-between px-6 pt-5 font-mono text-[11px] uppercase tracking-[0.12em] text-foreground/60 sm:px-10">
+        <span>{category}</span>
+        <span aria-hidden="true">{label}</span>
+      </div>
+      <h1 className="font-display max-w-[20ch] px-6 pb-8 pt-20 text-[clamp(34px,5.2vw,60px)] font-bold leading-[0.98] tracking-[-0.045em] text-foreground sm:px-10 sm:pb-10 sm:pt-28">{title}</h1>
+      {children ? <div className="-mt-4 px-6 pb-8 sm:-mt-6 sm:px-10 sm:pb-10">{children}</div> : null}
     </div>
   );
 }

@@ -22,6 +22,15 @@ function basename(p: string) {
   return p.split("/").pop() ?? p;
 }
 
+/** CodeLines rows are 12.5px × 1.7. With the terminal open about nine rows stay visible above it. */
+const CODE_ROW = 21.25;
+const ROWS_ABOVE_TERMINAL = 9;
+function revealShift(frame: StageFrame) {
+  const line = frame.errorLine ?? frame.fixedLine;
+  if (!frame.terminalOpen || line === null) return 0;
+  return Math.max(0, line - ROWS_ABOVE_TERMINAL) * CODE_ROW;
+}
+
 /** The decorative Preview | Code switch with a gliding pill (driven by the script, not clickable). */
 export function ViewSwitch({ view, className }: { view: "code" | "preview"; className?: string }) {
   return (
@@ -40,13 +49,14 @@ export function ViewSwitch({ view, className }: { view: "code" | "preview"; clas
   );
 }
 
-function Terminal({ frame, illustrative, className }: { frame: StageFrame; illustrative: string; className?: string }) {
+function Terminal({ frame, illustrative, devCommand, port, className }: { frame: StageFrame; illustrative: string; devCommand: string; port: number; className?: string }) {
   const errors = frame.errorLine !== null ? 1 : 0;
   return (
     <div
       className={cn(
-        "absolute inset-x-0 bottom-0 z-[2] border-t border-code-border bg-code-bg transition-[translate,opacity] duration-(--dur-4) ease-out calm:transition-none",
-        frame.terminalOpen ? "translate-y-0 opacity-100" : "translate-y-full opacity-0",
+        "absolute inset-x-0 bottom-0 z-[2] border-t border-code-border bg-code-bg shadow-[0_-12px_24px_-16px_rgb(0_0_0/0.5)] transition-[translate] duration-(--dur-4) ease-out calm:transition-none",
+        // Docked like the IDE: collapsed to its header until the checks run, then it slides up.
+        frame.terminalOpen ? "translate-y-0" : "translate-y-[calc(100%-2rem)]",
         className,
       )}
     >
@@ -56,7 +66,11 @@ function Terminal({ frame, illustrative, className }: { frame: StageFrame; illus
           Problems
           <span className={cn("rounded-full px-1.5 tabular-nums leading-4", errors ? "bg-syn-tag/20 text-syn-tag" : "bg-code-fg/10 text-code-muted")}>{errors}</span>
         </span>
-        {frame.errorLine !== null || frame.repairing ? <span className="ml-auto font-mono text-[10px] uppercase tracking-[0.1em] text-syn-tag/90">{illustrative}</span> : null}
+        {frame.errorLine !== null || frame.repairing ? (
+          <span className="ml-auto font-mono text-[10px] uppercase tracking-[0.1em] text-syn-tag/90">{illustrative}</span>
+        ) : !frame.terminalOpen ? (
+          <span className="ml-auto truncate font-mono text-[10.5px] text-code-muted">{`$ ${devCommand} · :${port}`}</span>
+        ) : null}
       </div>
       <div className="flex min-h-[7.25rem] flex-col justify-end gap-0.5 px-3 py-2 font-mono text-[11.5px] leading-[1.6]">
         {frame.terminal.slice(-5).map((l, i, arr) => (
@@ -111,13 +125,16 @@ function CodeView({ frame, scenario, tokens, illustrative }: { frame: StageFrame
         {/* Editor body */}
         <div className="relative min-h-0 flex-1 overflow-hidden px-1 py-2.5">
           {frame.activeTab === scenario.mainFile && frame.revealed > 0 ? (
-            <CodeLines
-              tokens={tokens}
-              revealed={frame.streaming ? frame.revealed : undefined}
-              caret={frame.streaming}
-              errorLines={frame.errorLine !== null ? [frame.errorLine] : undefined}
-              highlight={frame.fixedLine !== null ? [frame.fixedLine] : undefined}
-            />
+            // When the terminal docks open over a low error line, the editor scrolls it into view (as the IDE does).
+            <div className="transition-transform duration-(--dur-4) ease-out calm:transition-none" style={{ transform: `translateY(-${revealShift(frame)}px)` }}>
+              <CodeLines
+                tokens={tokens}
+                revealed={frame.streaming ? frame.revealed : undefined}
+                caret={frame.streaming}
+                errorLines={frame.errorLine !== null ? [frame.errorLine] : undefined}
+                highlight={frame.fixedLine !== null ? [frame.fixedLine] : undefined}
+              />
+            </div>
           ) : frame.writing ? (
             <div className="space-y-2 px-3 pt-1">
               <p className="mb-3 font-mono text-[11px] text-code-muted">
@@ -140,7 +157,7 @@ function CodeView({ frame, scenario, tokens, illustrative }: { frame: StageFrame
             </span>
           ) : null}
         </div>
-        <Terminal frame={frame} illustrative={illustrative} />
+        <Terminal frame={frame} illustrative={illustrative} devCommand={scenario.devCommand} port={scenario.port} />
       </div>
     </div>
   );
@@ -187,7 +204,7 @@ function PreviewView({ frame, scenario, urlRef }: { frame: StageFrame; scenario:
           {frame.previewShown ? (
             <div className="absolute inset-0 flex items-start justify-center p-3 [container-type:size]">
               <DeviceFrame device={frame.device} fit="height" className={cn(frame.previewWipe && "wipe-in")}>
-                <TemplatePreview id={scenario.id} category={scenario.categoryName} className="size-full rounded-none border-0 shadow-none" imgClassName="size-full aspect-auto object-cover object-top" />
+                <TemplatePreview id={scenario.id} category={scenario.categoryName} sizes="(min-width: 80rem) 720px, (min-width: 64rem) 56vw, 64vw" className="size-full rounded-none border-0 shadow-none" imgClassName="size-full aspect-auto object-cover object-top" />
               </DeviceFrame>
             </div>
           ) : (
@@ -233,12 +250,21 @@ function PreviewView({ frame, scenario, urlRef }: { frame: StageFrame; scenario:
             {[
               { id: "v2", note: "This run" },
               { id: "v1", note: "Starter" },
-            ].map((v, i) => (
-              <div key={v.id} className={cn("flex h-8 items-center gap-2 rounded-[8px] border px-2 text-[11.5px]", (i === 0) === frame.liveOnNew ? "border-success/30 bg-success/[0.05]" : "border-border bg-card/80")}>
-                <span className="w-5 font-mono font-semibold">{v.id}</span>
-                <span className="min-w-0 truncate text-muted-foreground">{v.note}</span>
-              </div>
-            ))}
+            ].map((v, i) => {
+              const isLive = (i === 0) === frame.liveOnNew;
+              return (
+                <div key={v.id} className={cn("flex h-8 items-center gap-2 rounded-[8px] border px-2 text-[11.5px] transition-colors duration-(--dur-4)", isLive ? "border-success/30 bg-success/[0.05]" : "border-border bg-card/80")}>
+                  <span className="w-5 font-mono font-semibold">{v.id}</span>
+                  <span className="min-w-0 truncate text-muted-foreground">{v.note}</span>
+                  {/* Once the new version is live, the previous one offers "Roll back" (after the badge has glided away). */}
+                  {i === 1 ? (
+                    <span className={cn("ml-auto shrink-0 rounded-[6px] border border-border px-1.5 text-[10.5px] leading-[18px] text-foreground/80 transition-opacity", isLive ? "opacity-0 duration-100" : "opacity-100 delay-300 duration-(--dur-3)")}>
+                      Roll back
+                    </span>
+                  ) : null}
+                </div>
+              );
+            })}
           </div>
           <p className="px-1 pt-1.5 text-[10.5px] text-muted-foreground">Sample domain · roll back any version</p>
         </div>
@@ -266,18 +292,18 @@ export function CanvasPane({
   const crumb = frame.view === "code" ? (frame.activeTab ?? "") : "";
   return (
     <div className={cn("flex min-h-0 min-w-0 flex-col overflow-hidden rounded-[12px] border border-border bg-card shadow-sm", className)}>
-      <div className="flex h-10 shrink-0 items-center gap-3 border-b border-border px-2.5">
+      {/* From lg the window's honesty badge sits at the right end of this row: keep that space clear. */}
+      <div className="flex h-10 shrink-0 items-center gap-3 border-b border-border px-2.5 lg:pr-[19rem]">
         <ViewSwitch view={frame.view} />
-        <span className="min-w-0 truncate font-mono text-[11px] text-muted-foreground">{crumb}</span>
-        <span className="ml-auto hidden shrink-0 items-center gap-1.5 text-[11px] text-muted-foreground xl:inline-flex">
-          {frame.previewShown ? (
-            <span className="inline-flex items-center gap-1.5 rounded-full border border-border bg-background/70 px-2 py-0.5 [animation:pop-in_var(--dur-4)_var(--ease-out)_both]">
-              <span className="size-1.5 rounded-full bg-success" /> Updated · {scenario.writes.length} files
-            </span>
-          ) : (
-            <span>{scenario.frameworkName}</span>
-          )}
-        </span>
+        {frame.view === "code" ? (
+          <span key="crumb" className="min-w-0 truncate font-mono text-[11px] text-muted-foreground">
+            {crumb}
+          </span>
+        ) : frame.previewShown ? (
+          <span key="updated" className="inline-flex min-w-0 items-center gap-1.5 truncate rounded-full border border-border bg-background/70 px-2 py-0.5 text-[11px] text-muted-foreground [animation:pop-in_var(--dur-4)_var(--ease-out)_both]">
+            <span className="size-1.5 shrink-0 rounded-full bg-success" /> Updated · {scenario.writes.length} files
+          </span>
+        ) : null}
       </div>
       <div className="relative min-h-0 flex-1">
         <div className={cn("absolute inset-0 transition-[opacity,translate] duration-(--dur-4) ease-out calm:transition-none", frame.view === "code" ? "opacity-100" : "pointer-events-none -translate-x-3 opacity-0")}>

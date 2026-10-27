@@ -30,17 +30,22 @@ export function buildTree(paths: string[]): Node[] {
   return root;
 }
 
-/** Icon and syntax-token colour for a file name (presentation only). */
-export function FileGlyph({ name, className }: { name: string; className?: string }) {
+/**
+ * Icon and colour for a file name (presentation only). `tone="code"` (default) uses the syntax
+ * palette, which is tuned for the dark code pane; `tone="default"` sits on theme surfaces, where
+ * those pastels would wash out in light mode, so it keeps one quiet colour.
+ */
+export function FileGlyph({ name, className, tone = "code" }: { name: string; className?: string; tone?: "default" | "code" }) {
   const ext = name.includes(".") ? name.split(".").pop()!.toLowerCase() : "";
   const cls = cn("size-3.5 shrink-0", className);
-  if (/^(package|tsconfig|vite\.config|\.gitignore|\.env)/.test(name)) return <Settings2 className={cn(cls, "text-code-muted")} aria-hidden="true" />;
-  if (["ts", "tsx", "js", "jsx", "mjs"].includes(ext)) return <FileCode2 className={cn(cls, "text-syn-fn")} aria-hidden="true" />;
-  if (ext === "json") return <Braces className={cn(cls, "text-syn-number")} aria-hidden="true" />;
-  if (ext === "css") return <Hash className={cn(cls, "text-syn-keyword")} aria-hidden="true" />;
-  if (ext === "html") return <Globe className={cn(cls, "text-syn-tag")} aria-hidden="true" />;
-  if (ext === "md") return <FileText className={cn(cls, "text-code-muted")} aria-hidden="true" />;
-  return <File className={cn(cls, "text-code-muted")} aria-hidden="true" />;
+  const c = (syn: string) => (tone === "code" ? syn : "text-muted-foreground");
+  if (/^(package|tsconfig|vite\.config|\.gitignore|\.env)/.test(name)) return <Settings2 className={cn(cls, c("text-code-muted"))} aria-hidden="true" />;
+  if (["ts", "tsx", "js", "jsx", "mjs"].includes(ext)) return <FileCode2 className={cn(cls, c("text-syn-fn"))} aria-hidden="true" />;
+  if (ext === "json") return <Braces className={cn(cls, c("text-syn-number"))} aria-hidden="true" />;
+  if (ext === "css") return <Hash className={cn(cls, c("text-syn-keyword"))} aria-hidden="true" />;
+  if (ext === "html") return <Globe className={cn(cls, c("text-syn-tag"))} aria-hidden="true" />;
+  if (ext === "md") return <FileText className={cn(cls, c("text-code-muted"))} aria-hidden="true" />;
+  return <File className={cn(cls, c("text-code-muted"))} aria-hidden="true" />;
 }
 
 /**
@@ -111,12 +116,12 @@ function Branch({ nodes, selected, hrefFor, depth, tone }: { nodes: Node[]; sele
                       : "text-muted-foreground hover:bg-muted hover:text-foreground",
                 )}
               >
-                <FileGlyph name={n.name} className="ml-[18px]" />
+                <FileGlyph name={n.name} tone={tone} className="ml-[18px]" />
                 <span className="truncate">{n.name}</span>
               </Link>
             ) : (
               <span className={cn("flex h-7 items-center gap-1.5 px-1.5", code ? "text-code-fg/75" : "text-foreground/80")}>
-                <FileGlyph name={n.name} className="ml-[18px]" />
+                <FileGlyph name={n.name} tone={tone} className="ml-[18px]" />
                 <span className="truncate">{n.name}</span>
               </span>
             )}

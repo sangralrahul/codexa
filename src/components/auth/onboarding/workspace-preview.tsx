@@ -20,12 +20,12 @@ export type PreviewState = {
 };
 
 /** The project thumbnail: the chosen starter's real screenshot, developing in when it changes. */
-function Thumb({ template, className }: { template: PreviewState["template"]; className?: string }) {
+function Thumb({ template, className, sizes }: { template: PreviewState["template"]; className?: string; sizes: string }) {
   return (
     <div className={cn("relative overflow-hidden rounded-[10px] bg-surface", className)}>
       {template ? (
         <div key={template.id} className="ob-shot-in">
-          <StarterShot id={template.id} category={template.category} />
+          <StarterShot id={template.id} category={template.category} sizes={sizes} priority />
         </div>
       ) : (
         <div className="aspect-[16/10] w-full">
@@ -57,7 +57,7 @@ export function WorkspacePreview({ state, variant = "window", className }: { sta
     return (
       <figure className={cn("e1 flex h-[120px] items-center gap-3.5 overflow-hidden rounded-2xl p-2.5 pr-4", className)}>
         <div aria-hidden="true" className="w-[150px] shrink-0">
-          <Thumb template={state.template} />
+          <Thumb template={state.template} sizes="150px" />
         </div>
         <div className="min-w-0 flex-1">
           <p className="text-label truncate text-muted-foreground">{state.workspaceName}</p>
@@ -111,7 +111,7 @@ export function WorkspacePreview({ state, variant = "window", className }: { sta
               <span className="text-meta text-muted-foreground">1 project</span>
             </div>
             <div className="rounded-xl border border-border bg-card p-2 shadow-sm">
-              <Thumb template={state.template} />
+              <Thumb template={state.template} sizes="440px" />
               <div className="flex items-center gap-2 px-1 pb-0.5 pt-2.5">
                 <span key={project} className="ob-swap min-w-0 flex-1 truncate text-[13px] font-medium text-foreground">
                   {project}

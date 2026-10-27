@@ -294,6 +294,7 @@ export function PlanCards({
   const providerName = (c: Currency) => (c === "INR" ? "Razorpay" : "Stripe");
   const anyProvider = providers.stripe || providers.razorpay;
   const current = overview.plan;
+  const sub = overview.subscription;
 
   async function checkout(plan: Plan) {
     await run(
@@ -388,20 +389,39 @@ export function PlanCards({
           const q = getPlanPrice(p, currency, interval);
           if (!q) return null;
           const isCurrent = current === p;
+          // The server refuses a checkout for the plan and interval you already pay for.
+          const isSame = isCurrent && Boolean(sub && sub.provider !== "manual" && !sub.cancelAtPeriodEnd && sub.interval === interval && (sub.status === "active" || sub.status === "trialing" || sub.status === "past_due"));
           const isDowngrade = current === "team" && p === "pro";
-          const label = isCurrent ? `Switch to ${interval === "year" ? "annual" : "monthly"}` : isDowngrade ? "Downgrade to Pro" : `Choose ${def.name}`;
+          const label = isSame ? "Current plan" : isCurrent ? `Switch to ${interval === "year" ? "annual" : "monthly"}` : isDowngrade ? "Downgrade to Pro" : `Choose ${def.name}`;
           const busyHere = busy === `checkout:${p}`;
+          const reason = isSame ? null : disabledReason;
+          const reasonId = `plan-${p}-reason`;
           const button = (
-            <Button className="w-full" variant={def.highlight && !isCurrent ? "primary" : "outline"} disabled={Boolean(disabledReason) || busy !== null} loading={busyHere} onClick={() => checkout(p)}>
-              {disabledReason ? <Lock className="size-3.5" aria-hidden="true" /> : null}
-              {disabledReason && !anyProvider ? "Checkout not configured" : label}
+            <Button
+              className="w-full aria-disabled:cursor-not-allowed aria-disabled:opacity-55"
+              variant={def.highlight && !isCurrent && !reason ? "primary" : "outline"}
+              disabled={isSame || (busy !== null && !busyHere)}
+              loading={busyHere}
+              aria-disabled={reason ? true : undefined}
+              aria-describedby={reason ? reasonId : undefined}
+              data-no-ripple={reason ? "" : undefined}
+              onClick={() => {
+                if (!reason) void checkout(p);
+              }}
+            >
+              {reason ? <Lock className="size-3.5" aria-hidden="true" /> : isSame ? <Check className="size-3.5" aria-hidden="true" /> : null}
+              {reason && !anyProvider ? "Checkout not configured" : label}
             </Button>
           );
           return (
             <li key={p} className={cn("plan-card relative flex flex-col rounded-[16px] border bg-card p-5 shadow-[inset_0_1px_0_var(--hairline)]", def.highlight ? "rim border-border-strong" : "border-border", isCurrent && "ring-1 ring-foreground/20")}>
               <div className="flex items-center justify-between gap-2">
                 <h3 className="text-[15px] font-semibold tracking-[-0.01em]">{def.name}</h3>
-                {isCurrent ? <span className="text-xs text-muted-foreground">Your plan</span> : def.highlight ? <span className="rounded-full bg-signal/12 px-2 py-0.5 text-[11px] font-medium text-signal-ink">Most popular</span> : null}
+                {isCurrent ? (
+                  <span className="rounded-full bg-foreground/[0.06] px-2 py-0.5 text-[11px] font-medium text-muted-foreground">Your plan</span>
+                ) : def.highlight ? (
+                  <span className="rounded-full bg-signal/12 px-2 py-0.5 text-[11px] font-medium text-signal-ink">Recommended</span>
+                ) : null}
               </div>
               <p className="mt-1 text-[13px] text-muted-foreground">{def.tagline}</p>
               <p className="mt-4 flex items-baseline gap-1">
@@ -421,16 +441,14 @@ export function PlanCards({
                 ))}
               </ul>
               <div className="mt-5">
-                {disabledReason ? (
-                  <Tooltip content={disabledReason}>
-                    <span tabIndex={0} className="block rounded-[10px] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring" aria-label={`${label}: ${disabledReason}`}>
-                      {button}
-                    </span>
-                  </Tooltip>
-                ) : (
-                  button
-                )}
-                {disabledReason ? <p className="mt-2 text-center text-[11.5px] text-muted-foreground">{disabledReason}</p> : null}
+                {reason ? <Tooltip content={reason}>{button}</Tooltip> : button}
+                {reason ? (
+                  <p id={reasonId} className="mt-2 text-center text-[11.5px] text-muted-foreground">
+                    {reason}
+                  </p>
+                ) : isSame ? (
+                  <p className="mt-2 text-center text-[11.5px] text-muted-foreground">You pay {interval === "year" ? "annually" : "monthly"} for this plan.</p>
+                ) : null}
               </div>
             </li>
           );

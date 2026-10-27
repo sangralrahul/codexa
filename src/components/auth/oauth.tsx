@@ -72,7 +72,8 @@ export function GitHubButton({ href, onNavigate }: { href: string; onNavigate?: 
     >
       <BrandMark id="github" className="size-[18px] transition-transform duration-300 ease-out group-hover:-rotate-6 group-hover:scale-110" />
       Continue with GitHub
-      {last === "github" ? <LastUsed className="absolute right-3 top-1/2 -translate-y-1/2" /> : null}
+      {/* A tag sitting on the top border, so it never covers the label on a narrow phone. */}
+      {last === "github" ? <LastUsed className="absolute -top-2.5 right-4 bg-background shadow-[inset_0_0_0_1px_var(--border-strong)]" /> : null}
     </a>
   );
 }

@@ -4,6 +4,7 @@ import * as React from "react";
 import { Check, LayoutTemplate, Pencil } from "lucide-react";
 import { Textarea } from "@/components/ui/input";
 import { IDEA_MAX, clampIdea } from "@/lib/client/pending-idea";
+import { cn } from "@/lib/utils";
 
 /**
  * The idea passport on sign-up (PLAN §4.1): the sentence typed on the homepage, quoted on a
@@ -17,8 +18,22 @@ export function IdeaTicket({ text, onChange, templateName }: { text: string; onC
   const [expanded, setExpanded] = React.useState(false);
   const areaRef = React.useRef<HTMLTextAreaElement>(null);
   const editRef = React.useRef<HTMLButtonElement>(null);
-  const long = text.length > 110 || text.includes("\n");
+  const quoteRef = React.useRef<HTMLParagraphElement>(null);
+  // Whether the quote is actually cut by the two-line clamp at the current width (measured, so a
+  // 90-character idea on a phone gets "Show all" too). Text-length heuristic until measured.
+  const [clamped, setClamped] = React.useState(text.length > 110 || text.includes("\n"));
   const textId = React.useId();
+
+  React.useEffect(() => {
+    const el = quoteRef.current;
+    if (!el || expanded || editing) return;
+    if (typeof ResizeObserver === "undefined") return;
+    // The observer reports once as soon as it starts, then on every width change.
+    const ro = new ResizeObserver(() => setClamped(el.scrollHeight > el.clientHeight + 1));
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, [text, expanded, editing]);
+  const long = clamped || expanded;
 
   const startEdit = () => {
     setDraft(text);
@@ -86,7 +101,14 @@ export function IdeaTicket({ text, onChange, templateName }: { text: string; onC
           />
         ) : (
           <>
-            <p id={textId} data-expanded={expanded ? "" : undefined} className="idea-ticket__text mt-2 whitespace-pre-line text-pretty text-[15px] leading-6 text-foreground">
+            <p
+              ref={quoteRef}
+              id={textId}
+              data-expanded={expanded ? "" : undefined}
+              // A click anywhere on a cut-off quote opens it in full (the "Show all" button is the keyboard path).
+              onClick={long && !expanded ? () => setExpanded(true) : undefined}
+              className={cn("idea-ticket__text mt-2 whitespace-pre-line text-pretty text-[15px] leading-6 text-foreground", long && !expanded && "cursor-pointer")}
+            >
               <span aria-hidden="true" className="text-muted-foreground">“</span>
               {text}
               <span aria-hidden="true" className="text-muted-foreground">”</span>

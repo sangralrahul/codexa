@@ -40,7 +40,17 @@ export function ProofStrip({ facts, changelog, status }: { facts: ProofFact[]; c
               <dd className="order-3 mt-auto flex items-start gap-1.5 font-mono text-[11px] leading-snug text-muted-foreground">
                 <Braces className="mt-px size-3 shrink-0" aria-hidden="true" />
                 <span className="min-w-0 [overflow-wrap:anywhere]">
-                  {f.symbol}
+                  {/* Break long symbols after a dot (LIMITS.<wbr>maxRepairAttempts), not mid-word. */}
+                  {f.symbol.split(".").map((part, k) => (
+                    <React.Fragment key={k}>
+                      {k > 0 ? (
+                        <>
+                          .<wbr />
+                        </>
+                      ) : null}
+                      {part}
+                    </React.Fragment>
+                  ))}
                   <span className="hidden sm:inline"> · {f.file}</span>
                 </span>
               </dd>

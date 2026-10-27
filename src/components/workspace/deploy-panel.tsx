@@ -29,7 +29,7 @@ export function DeploymentsSheet({ open, onOpenChange }: { open: boolean; onOpen
   const selected = d.tracked;
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent title={<SheetHeading icon={<Rocket className="size-4" aria-hidden="true" />} title="Deployments" />} description="Every published version, its build log, rollback and your domain." width={560}>
+      <SheetContent className="[--btn-radius:10px]" title={<SheetHeading icon={<Rocket className="size-4" aria-hidden="true" />} title="Deployments" />} description="Every published version, its build log, rollback and your domain." width={560}>
         <div className="space-y-6">
           {d.loadError && !d.data ? <Alert variant="danger" title="Could not load deployments">{d.loadError}</Alert> : null}
           {d.publishError ? <Alert variant="danger" title="Something went wrong">{d.publishError}</Alert> : null}

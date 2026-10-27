@@ -95,10 +95,10 @@ export default async function UsageSettingsPage() {
       </SettingsCard>
 
       <section id="breakdown" aria-label="Breakdown" className="settings-plain grid scroll-mt-24 gap-5">
-        <SettingsCard id="breakdown-projects" icon={<FolderKanban />} title="Top projects" description="This period, by AI requests." bodyClassName="p-0 pt-3">
+        <SettingsCard id="breakdown-projects" icon={<FolderKanban />} title="Top projects" description="This period, by AI requests." flush>
           <UsageBreakdown kind="projects" rows={history.projects} />
         </SettingsCard>
-        <SettingsCard id="breakdown-members" icon={<Users />} title="By member" description="Who used metered features this period." bodyClassName="p-0 pt-3">
+        <SettingsCard id="breakdown-members" icon={<Users />} title="By member" description="Who used metered features this period." flush>
           <UsageBreakdown kind="members" rows={history.members} />
         </SettingsCard>
       </section>

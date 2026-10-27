@@ -1,10 +1,10 @@
-import { routeMetadata } from "@/lib/seo";
+import { authMetadata } from "@/components/auth/meta";
 import { AuthCard } from "@/components/auth/auth-card";
 import { ForgotPasswordForm } from "@/components/auth/forms";
 import { one } from "@/components/auth/params";
 import { capabilities } from "@/lib/env";
 
-export const metadata = routeMetadata("/forgot-password");
+export const metadata = authMetadata("/forgot-password");
 
 export default async function ForgotPasswordPage({ searchParams }: { searchParams: Promise<{ email?: string | string[] }> }) {
   const sp = await searchParams;

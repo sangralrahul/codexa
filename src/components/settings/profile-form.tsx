@@ -1,7 +1,7 @@
 "use client";
 
 import { useRef, useState } from "react";
-import { Camera, ImageUp, Trash2 } from "lucide-react";
+import { Camera, ImageUp, Trash2, UserRound } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { api, ClientApiError } from "@/lib/client/api";
 import { cn } from "@/lib/utils";
@@ -67,7 +67,7 @@ function TeammateMirror({ name, email, avatarUrl, timezone, role, workspaceName 
   const display = name.trim() || email;
   const first = display.split(/\s+/)[0];
   return (
-    <aside aria-labelledby="mirror-title" className="settings-card settings-mirror rounded-[16px] p-5">
+    <aside aria-labelledby="mirror-title" className="settings-card settings-mirror rounded-[16px] p-5 [--card-i:2]">
       <div className="flex items-start justify-between gap-2">
         <h2 id="mirror-title" className="text-[15px] font-semibold tracking-[-0.01em]">
           How teammates see you
@@ -162,7 +162,6 @@ export function ProfileForm({
       await api("/api/v1/account/profile", { method: "PATCH", json: { name: submitted.name, timezone: submitted.timezone, locale: submitted.locale } });
       form.commit(submitted);
       setStatus({ kind: "saved", message: "Profile saved." });
-      toast.success("Profile saved");
       router.refresh();
       window.setTimeout(() => setStatus((s) => (s.kind === "saved" ? { kind: "idle" } : s)), 2400);
     } catch (err) {
@@ -212,10 +211,11 @@ export function ProfileForm({
 
   return (
     <div className="grid grid-cols-1 items-start gap-5 xl:grid-cols-[minmax(0,1fr)_300px]">
-      <div className="min-w-0 space-y-5">
+      <div className="settings-sub min-w-0 space-y-5">
       <form ref={formRef} onSubmit={onSubmit} noValidate className="min-w-0">
         <SettingsCard
           id="profile-details"
+          icon={<UserRound />}
           title="Personal details"
           description="Visible to members of every workspace you belong to."
           bodyClassName="space-y-6"

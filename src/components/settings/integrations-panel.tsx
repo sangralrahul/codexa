@@ -157,7 +157,7 @@ export function IntegrationsPanel({ workspaceId, canManage, canTest }: { workspa
   const connections = state.kind === "ready" ? state.connections : [];
 
   return (
-    <div className="space-y-6">
+    <div className="settings-sub space-y-6">
       <SettingsCard
         id="connections"
         icon={<Plug />}
@@ -167,7 +167,7 @@ export function IntegrationsPanel({ workspaceId, canManage, canTest }: { workspa
           </>
         }
         description="Credentials are encrypted before storage and never returned to the browser."
-        bodyClassName={state.kind === "ready" && connections.length > 0 ? "p-0 pt-3" : undefined}
+        flush={state.kind === "ready" && connections.length > 0}
       >
         {state.kind === "loading" ? (
           <div className="space-y-2" aria-busy="true" aria-label="Loading connections">
@@ -276,12 +276,28 @@ export function IntegrationsPanel({ workspaceId, canManage, canTest }: { workspa
             options={[{ value: "all", label: "All", count: available.length }, ...categories.map((c) => ({ value: c.id, label: c.name, count: c.count }))]}
           />
         </div>
+        <p className="sr-only" aria-live="polite">
+          {shown.length ? `${shown.length} integration${shown.length === 1 ? "" : "s"} shown` : "No integration matches"}
+        </p>
         {shown.length ? (
-          <ul key={`${category}:${query}`} className="tile-flow grid gap-3 sm:grid-cols-2 xl:grid-cols-3" aria-live="polite">
+          <ul key={`${category}:${query}`} className="tile-flow grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
             {shown.map((i) => {
               const cat = INTEGRATION_CATEGORIES.find((c) => c.id === i.category)?.name ?? i.category;
+              const secret = i.configFields.some((f) => f.type === "password");
+              const reasonId = `connect-${i.id}-reason`;
               const button = (
-                <Button variant="outline" size="sm" disabled={Boolean(disabledReason)} onClick={() => setAdding(i)} aria-label={`Connect ${i.name}`}>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="shrink-0 aria-disabled:cursor-not-allowed aria-disabled:opacity-55"
+                  aria-disabled={disabledReason ? true : undefined}
+                  aria-describedby={disabledReason ? reasonId : undefined}
+                  data-no-ripple={disabledReason ? "" : undefined}
+                  onClick={() => {
+                    if (!disabledReason) setAdding(i);
+                  }}
+                  aria-label={`Connect ${i.name}`}
+                >
                   {disabledReason ? <Lock className="size-3" aria-hidden="true" /> : null}
                   Connect
                 </Button>
@@ -297,19 +313,16 @@ export function IntegrationsPanel({ workspaceId, canManage, canTest }: { workspa
                   </div>
                   <p className="relative z-[2] mt-3 line-clamp-2 flex-1 text-[13px] leading-relaxed text-muted-foreground">{i.description}</p>
                   <div className="relative z-[2] mt-4 flex items-center justify-between gap-2">
-                    <span className="font-mono text-[11px] text-foreground-dim">
+                    <span className="min-w-0 truncate font-mono text-[11px] text-foreground-dim" title={secret ? "Secret values are encrypted at rest" : undefined}>
                       {i.configFields.length} field{i.configFields.length === 1 ? "" : "s"}
-                      {i.configFields.some((f) => f.type === "password") ? " · encrypted" : ""}
+                      {secret ? " · encrypted" : ""}
                     </span>
+                    {disabledReason ? <Tooltip content={disabledReason}>{button}</Tooltip> : button}
                     {disabledReason ? (
-                      <Tooltip content={disabledReason}>
-                        <span tabIndex={0} className="rounded-[10px] outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring">
-                          {button}
-                        </span>
-                      </Tooltip>
-                    ) : (
-                      button
-                    )}
+                      <span id={reasonId} className="sr-only">
+                        {disabledReason}
+                      </span>
+                    ) : null}
                   </div>
                 </li>
               );
@@ -320,7 +333,7 @@ export function IntegrationsPanel({ workspaceId, canManage, canTest }: { workspa
             No integration matches “{query}”{category !== "all" ? " in this category" : ""}.{" "}
             <button
               type="button"
-              className="font-medium text-foreground underline underline-offset-2"
+              className="rounded font-medium text-foreground underline underline-offset-2 outline-none focus-visible:outline-2 focus-visible:outline-ring"
               onClick={() => {
                 setQuery("");
                 setCategory("all");

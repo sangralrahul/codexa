@@ -33,7 +33,7 @@ export function HomeHero({ signedIn, announcement }: { signedIn: boolean; announ
         <div className="bg-blueprint absolute inset-0" />
         <div className="bg-noise absolute inset-0" />
       </div>
-      <div className="container-x relative pt-6 text-center sm:pt-8 lg:pt-5">
+      <div className="container-x relative pb-4 pt-6 text-center sm:pt-8 md:pb-3 lg:pt-5">
         <div className="scroll-fade">
           {announcement ? (
             <Eyebrow href={announcement.href} className="max-w-[min(100%,34rem)]">
@@ -49,7 +49,7 @@ export function HomeHero({ signedIn, announcement }: { signedIn: boolean; announ
           </SplitHeading>
           <p className="text-lead mx-auto mt-6 max-w-[62ch]! sm:mt-5">{HOME_HERO.lead}</p>
         </div>
-        <div className="mt-6 sm:mt-7">
+        <div className="mt-6 lg:mt-5">
           <PromptBox signedIn={signedIn} variant="hero" source="home" footer={links} />
         </div>
       </div>

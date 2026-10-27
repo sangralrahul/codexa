@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { ArrowUpRight } from "lucide-react";
-import { TEMPLATE_SHOTS } from "@/components/templates/shots";
+import { TEMPLATE_SHOTS, templateShotFor } from "@/components/templates/shots";
+import { FEATURE_GROUPS } from "@/content/marketing/features";
 import { cn } from "@/lib/utils";
 
 /** Tiny CSS pictures for related links (decorative). */
@@ -9,7 +10,7 @@ function Mini({ href }: { href: string }) {
     return (
       <div className="relative h-full overflow-hidden rounded-lg bg-white shadow-[inset_0_0_0_1px_var(--border)]">
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src="/templates/vite-react-crm.webp" alt="" width={320} height={200} loading="lazy" decoding="async" className="h-full w-full object-cover object-top transition-transform duration-700 ease-out group-hover:scale-[1.04]" />
+        <img src={templateShotFor("vite-react-crm", 320)} alt="" width={320} height={200} loading="lazy" decoding="async" className="h-full w-full object-cover object-top transition-transform duration-700 ease-out group-hover:scale-[1.04] group-focus-visible:scale-[1.04]" />
       </div>
     );
   }
@@ -17,7 +18,7 @@ function Mini({ href }: { href: string }) {
     return (
       <div className="flex h-full items-end gap-2 px-4 pb-3">
         {[28, 52, 76].map((h, i) => (
-          <span key={h} className={cn("flex-1 rounded-t-md border border-b-0 border-border bg-background/70 transition-transform duration-500 ease-out group-hover:-translate-y-1", i === 1 && "border-signal/40 bg-signal/10")} style={{ height: `${h}%`, transitionDelay: `${i * 50}ms` }} />
+          <span key={h} className={cn("flex-1 rounded-t-md border border-b-0 border-border bg-background/70 transition-transform duration-500 ease-out group-hover:-translate-y-1 group-focus-visible:-translate-y-1", i === 1 && "border-signal/40 bg-signal/10")} style={{ height: `${h}%`, transitionDelay: `${i * 50}ms` }} />
         ))}
       </div>
     );
@@ -27,18 +28,33 @@ function Mini({ href }: { href: string }) {
       <div className="flex h-full items-center gap-1.5 px-4">
         {[0, 1, 2, 3, 4].map((i) => (
           <span key={i} className="flex flex-1 items-center gap-1.5">
-            <span className={cn("size-2.5 shrink-0 rounded-full border border-border-strong bg-background transition-colors duration-300", i < 3 && "group-hover:border-signal group-hover:bg-signal/30")} style={{ transitionDelay: `${i * 70}ms` }} />
+            <span className={cn("size-2.5 shrink-0 rounded-full border border-border-strong bg-background transition-colors duration-300", i < 3 && "group-hover:border-signal group-hover:bg-signal/30 group-focus-visible:border-signal group-focus-visible:bg-signal/30")} style={{ transitionDelay: `${i * 70}ms` }} />
             {i < 4 ? <span className="h-px flex-1 bg-border-strong" /> : null}
           </span>
         ))}
       </div>
     );
   }
-  // Features (and anything else): a small grid of tiles.
+  if (href === "/features") {
+    // The spec sheet's own index: group names and how many features each lists (from the content model).
+    return (
+      <ol className="flex h-full flex-col justify-center gap-1 px-4 py-3 font-mono text-[10.5px]">
+        {FEATURE_GROUPS.slice(0, 4).map((g, i) => (
+          <li key={g.id} className="flex items-center gap-2.5 transition-transform duration-500 ease-out group-hover:translate-x-1 group-focus-visible:translate-x-1" style={{ transitionDelay: `${i * 40}ms` }}>
+            <span className="text-signal-ink">{String(i + 1).padStart(2, "0")}</span>
+            <span className="truncate text-foreground/80">{g.navLabel}</span>
+            <span className="h-px flex-1 bg-border" />
+            <span className="tabular-nums text-muted-foreground">{g.features.length}</span>
+          </li>
+        ))}
+      </ol>
+    );
+  }
+  // Anything else: a small grid of tiles.
   return (
     <div className="grid h-full grid-cols-3 gap-1.5 p-3">
       {Array.from({ length: 6 }, (_, i) => (
-        <span key={i} className={cn("rounded-md border border-border bg-background/70 transition-colors duration-300", i === 1 && "group-hover:border-signal/40 group-hover:bg-signal/10")} />
+        <span key={i} className={cn("rounded-md border border-border bg-background/70 transition-colors duration-300", i === 1 && "group-hover:border-signal/40 group-hover:bg-signal/10 group-focus-visible:border-signal/40 group-focus-visible:bg-signal/10")} />
       ))}
     </div>
   );

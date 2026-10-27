@@ -90,7 +90,7 @@ export async function SolutionPageTemplate({ solution }: { solution: Solution })
         </div>
       </Section>
 
-      <CTABand variant="prompt" title={`Build your first ${solution.ctaNoun}.`} description="Start on the Free plan. Upgrade when you need more AI requests, runtime, or collaborators." />
+      <CTABand variant="prompt" source="solution" title={`Build your first ${solution.ctaNoun}.`} description="Start on the Free plan. Upgrade when you need more AI requests, runtime, or collaborators." />
     </div>
   );
 }

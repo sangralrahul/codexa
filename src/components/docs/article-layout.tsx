@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import { Markdown, TableOfContents } from "@/components/content";
+import { BlogHero } from "@/components/content/blog-cover";
 import { ReadingProgress } from "@/components/marketing/reading-progress";
 import type { ContentDoc, ContentSummary, Heading } from "@/lib/content/types";
 import { Breadcrumbs, type Crumb } from "./breadcrumbs";
@@ -33,6 +34,7 @@ export function ArticleBody({
   footer,
   aside,
   kicker,
+  blogCover,
 }: {
   crumbs: Crumb[];
   title: string;
@@ -44,6 +46,8 @@ export function ArticleBody({
   aside?: ReactNode;
   /** Small mono label above the title (section or category). */
   kicker?: string;
+  /** Blog posts: set the h1 in the post's typographic cover (the area gradient of its index card). */
+  blogCover?: { category: string };
 }) {
   const hasToc = headings.length >= 2;
   return (
@@ -51,12 +55,22 @@ export function ArticleBody({
       <ReadingProgress />
       <article className="min-w-0">
         <Breadcrumbs items={crumbs} className="mb-8" />
-        <header className="max-w-3xl">
-          {kicker ? <p className="text-label mb-4 text-signal-ink">{kicker}</p> : null}
-          <h1 className="text-display-3">{title}</h1>
-          {description ? <p className="text-lead mt-4">{description}</p> : null}
-          {meta ? <div className="mt-5">{meta}</div> : null}
-        </header>
+        {blogCover ? (
+          <header>
+            <BlogHero title={title} category={blogCover.category} />
+            <div className="max-w-3xl">
+              {description ? <p className="text-lead mt-6">{description}</p> : null}
+              {meta ? <div className="mt-5">{meta}</div> : null}
+            </div>
+          </header>
+        ) : (
+          <header className="max-w-3xl">
+            {kicker ? <p className="text-label mb-4 text-signal-ink">{kicker}</p> : null}
+            <h1 className="text-display-3">{title}</h1>
+            {description ? <p className="text-lead mt-4">{description}</p> : null}
+            {meta ? <div className="mt-5">{meta}</div> : null}
+          </header>
+        )}
         {hasToc ? (
           <details className="group mt-8 rounded-xl border border-border bg-card/60 xl:hidden">
             <summary className="flex cursor-pointer list-none items-center justify-between px-4 py-3 text-sm font-medium">
@@ -114,7 +128,8 @@ export function ContentArticle({
         title={doc.title}
         description={doc.description}
         headings={doc.headings}
-        kicker={doc.category}
+        kicker={doc.section === "changelog" && doc.version ? `v${doc.version} · ${doc.category}` : doc.category}
+        blogCover={doc.section === "blog" ? { category: doc.category } : undefined}
         meta={<ArticleMeta doc={doc} />}
         aside={<EditOnGitHub sourceId={doc.sourceId} />}
         footer={

@@ -23,7 +23,7 @@ export function UtilityPage({
   actions: { label: string; href: string }[];
 }) {
   return (
-    <section className="relative overflow-hidden">
+    <section data-tone="docs" className="relative overflow-hidden">
       <div aria-hidden="true" className="bg-blueprint pointer-events-none absolute inset-0 -z-10" />
       <div className="container-x flex min-h-[64vh] flex-col items-center justify-center py-20 text-center">
         <span className={cn("inline-flex size-14 items-center justify-center rounded-[18px] border bg-card shadow-lg", tone === "danger" ? "border-danger/30 text-danger" : "border-warning/30 text-warning")}>

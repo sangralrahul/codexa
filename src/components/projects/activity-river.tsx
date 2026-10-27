@@ -88,11 +88,11 @@ export function ActivityRiver({ items, className }: { items: RiverItem[]; classN
         <p className="text-meta text-foreground-dim">Across your workspaces</p>
       </div>
       {items.length === 0 ? (
-        <p className="m-5 rounded-[14px] border border-dashed border-border-strong px-4 py-8 text-center text-[13px] text-muted-foreground">
+        <p className="m-5 flex flex-1 items-center justify-center rounded-[14px] border border-dashed border-border-strong px-4 py-8 text-center text-[13px] text-muted-foreground">
           Edits, AI runs, previews and deploys from your projects show up here as they happen.
         </p>
       ) : (
-        <ol className="river-in relative mt-3 px-2 pb-3">
+        <ol className="river-in relative mt-3 px-2 pb-2">
           {items.map((a, i) => {
             const v = VERBS[a.kind] ?? { icon: Activity, verb: () => "updated" };
             const Icon = v.icon;
@@ -124,6 +124,14 @@ export function ActivityRiver({ items, className }: { items: RiverItem[]; classN
           })}
         </ol>
       )}
+      {items.length ? (
+        <p className="text-meta mt-auto flex items-center justify-between gap-3 border-t border-border px-5 py-3 text-foreground-dim">
+          <span>Newest first · consecutive file edits are grouped</span>
+          <Link href="/projects" className="link-draw shrink-0 text-muted-foreground hover:text-foreground">
+            All projects
+          </Link>
+        </p>
+      ) : null}
     </section>
   );
 }

@@ -127,7 +127,7 @@ export function OnboardingFlow({ user, workspaceId, workspaceName, templates, de
   const promptRef = useRef<HTMLTextAreaElement>(null);
   const typingTimer = useRef(0);
   const progress = useRef<{ saved: boolean }>({ saved: false });
-  const firstStep = useRef(true);
+  const shownStep = useRef<0 | 1>(0);
 
   // The browser's own zone, once, when the stored one is empty or UTC (the server can't know it).
   useEffect(() => {
@@ -164,12 +164,10 @@ export function OnboardingFlow({ user, workspaceId, workspaceName, templates, de
     el.setSelectionRange(el.value.length, el.value.length);
   }, []);
 
-  // Focus follows the step change (not on first load); the card's top comes into view below the sticky header.
+  // Focus follows a step change (not the first load, and not a calm-mode flip after hydration); the card's top comes into view below the sticky header.
   useEffect(() => {
-    if (firstStep.current) {
-      firstStep.current = false;
-      return;
-    }
+    if (shownStep.current === step) return;
+    shownStep.current = step;
     titleRef.current?.focus({ preventScroll: true });
     const top = cardRef.current?.getBoundingClientRect().top ?? 0;
     if (top < 80) window.scrollTo({ top: window.scrollY + top - 88, behavior: calm ? "auto" : "smooth" });
@@ -265,7 +263,12 @@ export function OnboardingFlow({ user, workspaceId, workspaceName, templates, de
     const text = prompt.trim();
     const steps: LaunchStep[] = [
       { id: "setup", label: "Saving your setup", state: progress.current.saved ? "done" : "active" },
-      { id: "create", label: `Creating ${finalName} from ${template?.name ?? "a starter"}`, state: progress.current.saved ? "active" : "pending" },
+      {
+        id: "create",
+        // "Creating Invoice tracker from Analytics dashboard"; when the name is still the starter's own, say it once.
+        label: !template ? `Creating ${finalName}` : finalName === template.name ? `Creating your ${template.name} project` : `Creating ${finalName} from ${template.name}`,
+        state: progress.current.saved ? "active" : "pending",
+      },
       { id: "open", label: "Opening the editor", state: "pending" },
     ];
     launch.start(cardRef.current, steps);
@@ -367,7 +370,7 @@ export function OnboardingFlow({ user, workspaceId, workspaceName, templates, de
                   Skip setup
                 </Button>
               </PopoverTrigger>
-              <PopoverContent align="end" className="w-72">
+              <PopoverContent align="end" className="w-72 [--btn-radius:10px]">
                 <p className="text-[13px] font-semibold text-foreground">Skip setup?</p>
                 <p className="mt-1 text-xs leading-relaxed text-muted-foreground">You&apos;ll land on your dashboard. You can create a project there any time, and change your profile in Settings.</p>
                 <div className="mt-4 flex justify-end gap-2">
@@ -522,7 +525,7 @@ export function OnboardingFlow({ user, workspaceId, workspaceName, templates, de
                             )}
                           >
                             <span aria-hidden="true" className="shot-pan relative block overflow-hidden rounded-[10px]">
-                              <StarterShot id={g.templateId} category={t?.category ?? g.category} />
+                              <StarterShot id={g.templateId} category={t?.category ?? g.category} sizes="(min-width: 640px) 130px, 45vw" priority />
                               <Kbd className="glass absolute left-1.5 top-1.5 hidden h-[18px] min-w-[18px] border border-border px-1 text-[10px] text-foreground shadow-sm sm:inline-flex">{i + 1}</Kbd>
                               {on ? (
                                 <span className="ob-goal__check absolute right-1.5 top-1.5 flex size-5 items-center justify-center rounded-full bg-signal text-background shadow-md">
@@ -541,7 +544,7 @@ export function OnboardingFlow({ user, workspaceId, workspaceName, templates, de
                     <p className="text-xs text-muted-foreground sm:flex-1">
                       {prompt.trim() ? "Next: choose how to start." : goals.length ? "No description yet? You can start from a suggested template." : "Both are optional. You can also skip setup."}
                     </p>
-                    <Button type="button" onClick={next} className="sm:min-w-[9.5rem]">
+                    <Button type="button" onClick={next} aria-keyshortcuts="Control+Enter Meta+Enter" className="sm:min-w-[9.5rem]">
                       Continue <ArrowRight className="size-4" aria-hidden="true" />
                     </Button>
                   </div>
@@ -589,7 +592,7 @@ export function OnboardingFlow({ user, workspaceId, workspaceName, templates, de
                         )}
                         <div className="mt-4 flex items-center gap-3 border-t border-border pt-3">
                           <div aria-hidden="true" className="w-16 shrink-0">
-                            <StarterShot id={template.id} category={template.category} className="rounded-md" />
+                            <StarterShot id={template.id} category={template.category} className="rounded-md" sizes="64px" priority />
                           </div>
                           <p className="min-w-0 flex-1 text-xs text-muted-foreground">
                             Builds on <span className="font-medium text-foreground">{template.name}</span>
@@ -655,14 +658,23 @@ export function OnboardingFlow({ user, workspaceId, workspaceName, templates, de
                   ) : null}
 
                   <div className="mt-8 flex flex-col-reverse items-stretch gap-3 border-t border-border pt-5 sm:flex-row sm:items-center">
-                    <Button type="button" variant="ghost" onClick={() => goTo(0)} disabled={launching}>
-                      <ArrowLeft className="size-4" aria-hidden="true" /> Back
+                    <Button type="button" variant="ghost" onClick={() => goTo(0)} disabled={launching} aria-keyshortcuts="Escape" className="group">
+                      <ArrowLeft className="size-4 transition-transform duration-200 group-hover:-translate-x-0.5" aria-hidden="true" /> Back
+                      <span aria-hidden="true" className="ml-1 hidden [@media(pointer:fine)]:sm:inline-flex">
+                        <Kbd className="bg-muted text-[10px]">Esc</Kbd>
+                      </span>
                     </Button>
                     <div className="flex flex-col-reverse gap-2 sm:ml-auto sm:flex-row">
                       <Button type="button" variant="outline" onClick={() => void skip()} loading={skipping} disabled={launching}>
                         Skip for now
                       </Button>
-                      <Button type="button" onClick={create} disabled={!workspaceId || launching || (effectiveMode === "prompt" && !prompt.trim())} className="sm:min-w-[11rem]">
+                      <Button
+                        type="button"
+                        onClick={create}
+                        disabled={!workspaceId || launching || (effectiveMode === "prompt" && !prompt.trim())}
+                        aria-keyshortcuts="Control+Enter Meta+Enter"
+                        className="sm:min-w-[11rem]"
+                      >
                         Create project
                         <span aria-hidden="true" className="hidden sm:inline-flex">
                           <Kbd mod className="bg-primary-foreground/15 text-primary-foreground/80">

@@ -76,7 +76,7 @@ export function ContinueBuilding({ projects, canCreate = false }: { projects: Re
               category={lead.category}
               priority
               sizes="(min-width: 1280px) 440px, (min-width: 768px) 45vw, 100vw"
-              className="h-full rounded-none border-0 shadow-none md:absolute md:inset-0 [&_img]:h-full"
+              className="h-full rounded-none border-0 shadow-none md:absolute md:inset-0 [&_img]:h-full md:[&_img]:object-left-top"
             />
             {needsTemplateCaption(lead.templateId) ? (
               <span className="pointer-events-none absolute right-2.5 top-2.5 inline-flex h-5 items-center rounded-full bg-background/80 px-2 text-[10.5px] font-medium text-muted-foreground shadow-[inset_0_0_0_1px_var(--border)] backdrop-blur-md">

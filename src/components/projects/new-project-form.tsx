@@ -15,6 +15,7 @@ import { Segmented } from "@/components/ui/segmented";
 import { SelectMenu } from "@/components/ui/select-menu";
 import { useLaunch } from "@/components/motion/launch";
 import { TemplatePreview } from "@/components/templates/template-preview";
+import { ProjectThumb } from "@/components/app/project-thumb";
 import { cn } from "@/lib/utils";
 import { CATEGORY_NAMES, pickerMeta, TemplatePicker, type PickerTemplate } from "./template-picker";
 import { PromptBox, type PromptPreset } from "./prompt-box";
@@ -161,6 +162,31 @@ export function NewProjectForm({
               <p className="text-meta text-foreground-dim">{templates.length} runnable templates</p>
             </div>
             <TemplatePicker templates={templates} value={selected?.id ?? ""} onChange={pickTemplate} />
+            {/* Below 1024px the Inspector follows the whole grid, so a docked bar keeps Create in reach while you browse. */}
+            {selected ? (
+              <div className="sticky bottom-[max(12px,env(safe-area-inset-bottom))] z-20 mt-8 lg:hidden">
+                <div className="flex items-center gap-3 rounded-[16px] border border-border-strong bg-card/90 p-2 pl-2.5 shadow-xl backdrop-blur-md">
+                  <span key={selected.id} className="inspect-swap flex">
+                    <ProjectThumb templateId={selected.id} framework={selected.framework} size="lg" />
+                  </span>
+                  <span className="min-w-0 flex-1">
+                    <span className="block truncate text-[13px] font-medium">{name.trim() || selected.name}</span>
+                    <span className="text-meta block truncate text-muted-foreground">
+                      {name.trim() && name.trim() !== selected.name ? `From ${selected.name} · ` : ""}
+                      {pickerMeta(selected)}
+                    </span>
+                  </span>
+                  <a href="#np-form" className={buttonClasses("ghost", "sm", "hidden h-9 px-2.5 text-muted-foreground sm:inline-flex")}>
+                    Edit details
+                  </a>
+                  <Button type="submit" size="sm" disabled={busy} className="h-9 shrink-0 gap-1.5 px-4">
+                    {busy ? "Creating…" : "Create"}
+                    <span className="sr-only"> project from {selected.name}</span>
+                    <ArrowRight className="size-4" aria-hidden="true" />
+                  </Button>
+                </div>
+              </div>
+            ) : null}
           </section>
 
           <aside aria-label="Project details" className="scrollbar-thin lg:sticky lg:top-[68px] lg:max-h-[calc(100dvh-84px)] lg:overflow-y-auto lg:rounded-[18px]">
@@ -207,7 +233,7 @@ export function NewProjectForm({
                 </div>
               ) : null}
 
-              <div id="np-form" className="space-y-4 px-5 py-4">
+              <div id="np-form" className="scroll-mt-20 space-y-4 px-5 py-4">
                 <Field label="Project name" htmlFor="np-name" error={fieldErrors.name}>
                   <Input
                     id="np-name"

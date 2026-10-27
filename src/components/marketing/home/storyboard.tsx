@@ -53,14 +53,19 @@ function StoryboardBody() {
   const repairWord = timesWord(maxRepair);
   const atEnd = !clock.poster && shown === CHAPTERS - 1 && clock.segmentDone;
 
+  // While the pinned scene is still scrolling to a chapter, further arrow presses continue from that target.
+  const keyTarget = React.useRef<{ step: number; at: number } | null>(null);
   const onTabKey = (e: React.KeyboardEvent) => {
     const keys: Record<string, number> = { ArrowRight: 1, ArrowLeft: -1 };
+    const pending = keyTarget.current;
+    const base = pending && pending.step !== shown && e.timeStamp - pending.at < 1200 ? pending.step : shown;
     let next = -1;
-    if (e.key in keys) next = (shown + keys[e.key] + CHAPTERS) % CHAPTERS;
+    if (e.key in keys) next = (base + keys[e.key] + CHAPTERS) % CHAPTERS;
     else if (e.key === "Home") next = 0;
     else if (e.key === "End") next = CHAPTERS - 1;
     if (next < 0) return;
     e.preventDefault();
+    keyTarget.current = { step: next, at: e.timeStamp };
     scene.setStep(next);
     tabsRef.current?.querySelector<HTMLElement>(`[data-step="${next}"]`)?.focus({ preventScroll: true });
   };

@@ -106,9 +106,9 @@ export function GettingStarted({ milestones, canCreate, resumeHref, layout = "ro
               <div className="min-w-0 flex-1">
                 <p className={cn("text-[13.5px] font-medium", s.done && "text-muted-foreground line-through decoration-border-strong")}>
                   {s.title}
-                  <span className="sr-only">{s.done ? " (done)" : " (to do)"}</span>
+                  {s.done ? null : <span className="sr-only"> (to do)</span>}
                 </p>
-                {!s.done ? <p className="mt-0.5 text-xs leading-relaxed text-muted-foreground">{s.body}</p> : null}
+                {s.done ? <p className="mt-0.5 text-xs font-medium text-success">Done</p> : <p className="mt-0.5 text-xs leading-relaxed text-muted-foreground">{s.body}</p>}
                 {!s.done && isNext && s.cta ? (
                   "href" in s.cta && s.cta.href ? (
                     <Link href={s.cta.href} className="link-draw mt-2 inline-flex items-center gap-1 text-xs font-medium text-foreground">

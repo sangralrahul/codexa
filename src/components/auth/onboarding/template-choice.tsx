@@ -70,7 +70,7 @@ export function TemplateChoice({
               )}
             >
               <span className="shot-pan block overflow-hidden rounded-[10px]">
-                <StarterShot id={t.id} category={t.category} />
+                <StarterShot id={t.id} category={t.category} sizes="(min-width: 640px) 250px, 90vw" priority={i < 4} />
               </span>
               <span className="mt-2.5 block min-w-0 truncate px-1 text-[13px] font-medium text-foreground">{t.name}</span>
               <span className="flex min-w-0 items-center gap-1.5 px-1 pb-1 pt-0.5 text-xs">

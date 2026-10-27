@@ -8,7 +8,6 @@ import { Button } from "@/components/ui/button";
 import { Field, Input } from "@/components/ui/input";
 import { Alert } from "@/components/ui/misc";
 import { Avatar } from "@/components/ui/avatar";
-import { toast } from "@/components/ui/toast";
 import { SettingsCard } from "./section";
 import { UnsavedDock, useDirtyForm } from "./dirty-form";
 import { RadioCards } from "./radio-cards";
@@ -66,7 +65,6 @@ export function WorkspaceGeneralForm({
       await api(`/api/v1/workspaces/${workspaceId}/billing/settings`, { method: "PATCH", json: submitted });
       form.commit(submitted);
       setStatus({ kind: "saved", message: "Workspace settings saved." });
-      toast.success("Workspace saved");
       router.refresh();
       window.setTimeout(() => setStatus((s) => (s.kind === "saved" ? { kind: "idle" } : s)), 2400);
     } catch (err) {
@@ -79,7 +77,7 @@ export function WorkspaceGeneralForm({
 
   const name = values.name.trim() || "Untitled workspace";
   return (
-    <div className="space-y-5">
+    <div className="settings-sub space-y-5">
       <section aria-label="Workspace identity" className="settings-card relative overflow-hidden rounded-[18px] p-5 sm:p-6">
         <div aria-hidden="true" className="bg-dots pointer-events-none absolute inset-y-0 right-0 w-1/2 opacity-60" />
         <div className="relative flex flex-col gap-4 sm:flex-row sm:items-center">

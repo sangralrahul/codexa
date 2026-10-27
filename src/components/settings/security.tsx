@@ -121,7 +121,7 @@ export function PasswordForm({ hasPassword }: { hasPassword: boolean }) {
         <ul id="password-rules" className="flex flex-wrap gap-x-5 gap-y-1.5 text-xs" aria-label="Password rules">
           {[...RULES.map((r) => ({ id: r.id, label: r.label, ok: r.test(next) })), { id: "match", label: "Both entries match", ok: matches }].map((r) => (
             <li key={r.id} data-ok={r.ok ? "" : undefined} className={cn("pw-rule inline-flex items-center gap-1.5 transition-colors", r.ok ? "text-foreground" : "text-muted-foreground")}>
-              <span className={cn("flex size-4 items-center justify-center rounded-full transition-colors", r.ok ? "bg-success text-white" : "border border-border-strong")}>
+              <span className={cn("flex size-4 items-center justify-center rounded-full transition-colors", r.ok ? "bg-success text-background" : "border border-border-strong")}>
                 {r.ok ? (
                   <svg key="ok" viewBox="0 0 16 16" className="check-draw size-2.5" aria-hidden="true">
                     <path d="M3.5 8.5 6.6 11.5 12.5 5" pathLength={1} fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" />
@@ -199,7 +199,7 @@ export function SessionsList({ initial }: { initial: SessionItem[] }) {
         </>
       }
       description="Devices currently signed in to your account. Sessions expire after 30 days."
-      bodyClassName="p-0 pt-3"
+      flush
       hint={
         status.kind === "ok" ? (
           <span role="status" className="pop-in inline-block text-success">

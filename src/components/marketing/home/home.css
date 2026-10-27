@@ -30,7 +30,9 @@
 [data-motion="reduced"] .stage-fade { animation: none; }
 
 /* Focus pull (M4) for the stage, without the opacity dip: the window holds real text and controls
-   (the honesty badge), which must keep full contrast while tilted. Phones get no tilt (PLAN §5.2). */
+   (the honesty badge), which must keep full contrast while tilted. Phones get no tilt (PLAN §5.2).
+   The stage wrapper's negative top margin is sized against the 48px drop, so the tilted window's
+   top edge lands just under the hero's links row. */
 @supports (animation-timeline: scroll()) {
   .js #watch-it-build .scroll-tilt { animation-name: home-stage-tilt; }
 }
@@ -228,6 +230,14 @@
   #watch-it-build .scroll-scene__sticky { top: 0 !important; }
 }
 [data-motion="reduced"] #watch-it-build .scroll-scene__sticky { top: 0 !important; }
+
+/* Calm, wider screens: two rows of three starters. */
+@media (prefers-reduced-motion: reduce) and (width >= 40rem) {
+  .wall-cell:nth-child(n + 7) { display: none; }
+}
+@media (width >= 40rem) {
+  [data-motion="reduced"] .wall-cell:nth-child(n + 7) { display: none; }
+}
 
 /* Calm on phones: the static wall is a compact two-column grid of four starters. */
 @media (prefers-reduced-motion: reduce) and (width < 40rem) {

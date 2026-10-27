@@ -18,9 +18,11 @@ function Frame({ children, className }: { children: React.ReactNode; className?:
 export function PromptArt() {
   return (
     <Frame>
-      <div className="rim absolute inset-x-5 top-6 rounded-[14px] border border-border-strong bg-card p-3 shadow-lg [--rim-opacity:0.8]">
+      <div className="rim absolute inset-x-5 top-6 rounded-[14px] border border-border-strong bg-card p-3 shadow-lg transition-[translate,box-shadow] duration-(--dur-4) ease-out [--rim-opacity:0.8] group-hover:-translate-y-1 group-hover:shadow-xl calm:group-hover:translate-y-0">
         <p className="text-[12.5px] leading-snug text-foreground/85">
-          A habit tracker with weekly streaks and a progress chart<span className="ml-0.5 inline-block h-[1.05em] w-[2px] translate-y-[0.18em] bg-signal" />
+          A habit tracker with weekly streaks and a progress chart
+          {/* The caret blinks only while the tile is hovered or focused (never on its own). */}
+          <span className="ml-0.5 inline-block h-[1.05em] w-[2px] translate-y-[0.18em] bg-signal group-focus-visible:animate-[caret_1s_steps(1)_infinite] group-hover:animate-[caret_1s_steps(1)_infinite] calm:animate-none!" />
         </p>
         <div className="mt-3 flex items-center justify-between">
           <span className="rounded-md bg-muted px-1.5 py-0.5 font-mono text-[10px] text-muted-foreground">Starter: Auto</span>
@@ -57,7 +59,7 @@ export function DeployArt() {
   ];
   return (
     <Frame>
-      <div className="absolute inset-x-5 top-5 rounded-[12px] border border-border-strong bg-card p-1.5 shadow-lg">
+      <div className="absolute inset-x-5 top-5 rounded-[12px] border border-border-strong bg-card p-1.5 shadow-lg transition-[translate,box-shadow] duration-(--dur-4) ease-out group-hover:-translate-y-1 group-hover:shadow-xl calm:group-hover:translate-y-0">
         {rows.map((r) => (
           <div key={r.v} className={cn("flex items-center gap-2 rounded-md px-2 py-1.5 text-[11.5px]", r.live && "bg-surface-2")}>
             <span className="font-mono text-muted-foreground">{r.v}</span>

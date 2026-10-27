@@ -12,7 +12,7 @@ import { AutoGrowTextarea } from "@/components/ui/autogrow-textarea";
 import { useCalm, shakeElement, isCalm } from "@/lib/client/motion";
 import { IDEA_MAX, clampIdea, ideaHref, stashPendingIdea, type IdeaSource } from "@/lib/client/pending-idea";
 import { HOME_CHIPS } from "@/content/marketing/home";
-import { TEMPLATE_SHOTS } from "@/components/templates/shots";
+import { TEMPLATE_SHOTS, templateShotFor } from "@/components/templates/shots";
 import { useHomeStore } from "@/components/marketing/home/home-store";
 import type { StarterLite } from "@/components/marketing/home/types";
 
@@ -66,7 +66,7 @@ function useTypedPlaceholder(active: boolean, ref: React.RefObject<HTMLElement |
 function Thumb({ id, shot, className }: { id: string | null; shot: boolean; className?: string }) {
   if (id && shot) {
     // eslint-disable-next-line @next/next/no-img-element
-    return <img src={`/templates/${id}.webp`} alt="" width={28} height={18} loading="lazy" decoding="async" className={cn("shrink-0 rounded-[3px] bg-white object-cover object-top shadow-[0_0_0_1px_var(--border)]", className)} />;
+    return <img src={templateShotFor(id, 56)} alt="" width={28} height={18} loading="lazy" decoding="async" className={cn("shrink-0 rounded-[3px] bg-white object-cover object-top shadow-[0_0_0_1px_var(--border)]", className)} />;
   }
   const Icon = id ? Code2 : Sparkles;
   return (
@@ -159,7 +159,7 @@ function StarterPicker({
                 <span className="relative block aspect-[16/10] w-full overflow-hidden rounded-md bg-muted shadow-[0_0_0_1px_var(--border)]">
                   {s?.shot ? (
                     // eslint-disable-next-line @next/next/no-img-element
-                    <img src={`/templates/${s.id}.webp`} alt="" loading="lazy" decoding="async" width={160} height={100} className="size-full bg-white object-cover object-top transition-transform duration-500 group-hover/opt:scale-[1.04]" />
+                    <img src={templateShotFor(s.id, 320)} alt="" loading="lazy" decoding="async" width={160} height={100} className="size-full bg-white object-cover object-top transition-transform duration-500 group-hover/opt:scale-[1.04]" />
                   ) : (
                     <span aria-hidden="true" className="flex size-full items-center justify-center text-muted-foreground">
                       {s ? <Code2 className="size-5" /> : <Sparkles className="size-5 text-signal" />}
@@ -236,9 +236,13 @@ export function PromptBox({
   const shakeRef = React.useRef<HTMLDivElement>(null);
   const areaRef = React.useRef<HTMLTextAreaElement | null>(null);
   const typing = React.useRef(0);
+  /** The chip prompt being typed in (submit mid-typing sends all of it, not the half-typed text). */
+  const typingTarget = React.useRef<string | null>(null);
   const matchTimer = React.useRef(0);
 
   const closest = closestId ? starters.find((s) => s.id === closestId) ?? null : null;
+  // On the home page the chips are checked against the real starter list (an unknown id is dropped).
+  const chips = React.useMemo(() => (starters.length ? HOME_CHIPS.filter((c) => starters.some((s) => s.id === c.templateId)) : HOME_CHIPS), [starters]);
 
   // Register the hero prompt so the stage's "Build your own" can focus it.
   React.useEffect(() => {
@@ -277,6 +281,7 @@ export function PromptBox({
 
   const typeChip = (chip: (typeof HOME_CHIPS)[number]) => {
     clearInterval(typing.current);
+    typingTarget.current = null;
     setError(null);
     const tag = { id: chip.templateId, prompt: chip.prompt };
     setChipTemplate(tag);
@@ -294,12 +299,19 @@ export function PromptBox({
     }
     let n = 0;
     setValue("");
+    typingTarget.current = chip.prompt;
+    // Time-based (12ms per character), so a slow tick catches up instead of stretching the typing.
+    let started = -1;
     typing.current = window.setInterval(() => {
-      n = Math.min(chip.prompt.length, n + 1);
+      const now = performance.now();
+      if (started < 0) started = now - CHIP_TYPE_MS;
+      const next = Math.min(chip.prompt.length, Math.max(n + 1, Math.floor((now - started) / CHIP_TYPE_MS)));
+      if (drivesStage) store?.horizon.typed(next - n);
+      n = next;
       setValue(chip.prompt.slice(0, n));
-      if (drivesStage) store?.horizon.typed(1);
       if (n >= chip.prompt.length) {
         clearInterval(typing.current);
+        typingTarget.current = null;
         scheduleMatch(chip.prompt, tag);
         done();
       }
@@ -315,7 +327,10 @@ export function PromptBox({
     e.preventDefault();
     if (submitting) return;
     clearInterval(typing.current);
-    const prompt = clampIdea(value);
+    const typedTo = typingTarget.current;
+    typingTarget.current = null;
+    if (typedTo !== null) setValue(typedTo);
+    const prompt = clampIdea(typedTo ?? value);
     if (prompt.length < MIN_CHARS) {
       setError("Describe your idea in at least a sentence so we can create a useful starting point.");
       shakeElement(shakeRef.current, 6);
@@ -325,7 +340,8 @@ export function PromptBox({
     setError(null);
     setSubmitting(true);
     const fromChip = chipTemplate && clampIdea(chipTemplate.prompt) === prompt ? chipTemplate.id : undefined;
-    const templateId = picked ?? fromChip ?? closestId ?? undefined;
+    // The live match is debounced; on submit, score the final text directly so a fast submit keeps its starter.
+    const templateId = picked ?? fromChip ?? (store ? store.match(prompt)?.id : closestId) ?? undefined;
     stashPendingIdea(prompt, source ?? (hero ? "home" : "cta"), templateId);
     router.push(ideaHref(signedIn ? "/dashboard" : "/signup", prompt, templateId));
     // If navigation is slow or cancelled, give the button back.
@@ -361,6 +377,7 @@ export function PromptBox({
               placeholder={placeholder}
               onChange={(e) => {
                 clearInterval(typing.current);
+                typingTarget.current = null;
                 change(e.target.value);
               }}
               onKeyDown={(e) => {
@@ -438,7 +455,7 @@ export function PromptBox({
 
       {hero ? (
         <ul aria-label="Example ideas" className="-mx-4 mt-3 flex snap-x snap-mandatory scroll-px-4 gap-2 overflow-x-auto px-4 pb-1 [scrollbar-width:none] sm:mx-0 sm:flex-wrap sm:justify-center sm:overflow-visible sm:px-0 sm:pb-0 lg:-mx-20 [&::-webkit-scrollbar]:hidden">
-          {HOME_CHIPS.map((chip) => {
+          {chips.map((chip) => {
             const starter = starters.find((s) => s.id === chip.templateId);
             const active = chipTemplate?.id === chip.templateId && value === chip.prompt;
             return (
@@ -462,7 +479,7 @@ export function PromptBox({
                     className="pointer-events-none absolute left-1/2 top-full z-30 mt-2 hidden w-[260px] origin-top -translate-x-1/2 translate-y-1 scale-[0.97] rounded-[14px] border border-border-strong bg-card p-1.5 opacity-0 shadow-xl transition-[opacity,translate,scale] duration-(--dur-3) ease-out peer-hover:translate-y-0 peer-hover:scale-100 peer-hover:opacity-100 peer-focus-visible:translate-y-0 peer-focus-visible:scale-100 peer-focus-visible:opacity-100 md:block calm:transition-none"
                   >
                     {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src={`/templates/${chip.templateId}.webp`} alt="" width={248} height={155} loading="lazy" decoding="async" className="aspect-[16/10] w-full rounded-[9px] bg-white object-cover object-top" />
+                    <img src={templateShotFor(chip.templateId, 360)} alt="" width={248} height={155} loading="lazy" decoding="async" className="aspect-[16/10] w-full rounded-[9px] bg-white object-cover object-top" />
                     <span className="flex items-center justify-between gap-2 px-1 pb-0.5 pt-1.5 text-[11.5px]">
                       <span className="truncate font-medium text-foreground">{starter?.name ?? chip.label}</span>
                       <span className="shrink-0 text-muted-foreground">Starter</span>
@@ -475,7 +492,7 @@ export function PromptBox({
         </ul>
       ) : null}
 
-      <div className={cn("flex flex-wrap items-center justify-center gap-x-4 gap-y-1.5 px-1 text-xs text-muted-foreground", hero ? "mt-3 lg:-mx-28" : "mt-3")}>
+      <div className={cn("flex flex-wrap items-center justify-center gap-x-4 gap-y-1.5 px-1 text-xs text-muted-foreground", drivesStage ? "mt-3 lg:-mx-28 xl:-mx-40" : "mt-3")}>
         {aiReady === undefined ? null : aiReady ? (
           <span className="inline-flex items-center gap-1.5">
             <span aria-hidden="true" className="size-1.5 rounded-full bg-success shadow-[0_0_0_3px_color-mix(in_oklab,var(--success)_18%,transparent)]" />

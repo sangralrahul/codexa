@@ -10,6 +10,8 @@ export type TemplateSheetDetail = {
   dependencyCount: number;
   devCommand: string;
   frameworkName: string;
+  /** Where the dev server opens it, e.g. `localhost:5173/` (the same address the detail page shows). */
+  url: string;
 };
 
 /**
@@ -63,11 +65,13 @@ export function readmeExcerpt(t: Template, max = 6): ReadmeBlock[] {
 }
 
 export function templateSheetDetail(t: Template): TemplateSheetDetail {
+  const fw = FRAMEWORKS[t.framework];
   return {
     readme: readmeExcerpt(t),
     paths: Object.keys(t.files),
     dependencyCount: Object.keys(t.dependencies).length,
-    devCommand: t.settings.devCommand || FRAMEWORKS[t.framework].devCommand,
-    frameworkName: FRAMEWORKS[t.framework].name,
+    devCommand: t.settings.devCommand || fw.devCommand,
+    frameworkName: fw.name,
+    url: `localhost:${t.settings.port ?? fw.port}${t.previewPath ?? "/"}`,
   };
 }

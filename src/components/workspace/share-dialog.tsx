@@ -85,7 +85,7 @@ export function ShareDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent title="Share project" description="Share links open a read-only copy of the files for anyone with the link.">
+      <DialogContent title="Share project" description="Share links open a read-only copy of the files for anyone with the link." className="[--btn-radius:10px]">
         <div className="space-y-5">
           <Field label="Visibility" htmlFor="share-visibility" hint="Private: workspace members only. Unlisted/public: readable by anyone with a share link.">
             <Select

@@ -94,7 +94,7 @@ export default async function DocsIndexPage() {
               <Link
                 href={href}
                 data-spotlight-tile
-                className="group flex h-full flex-col rounded-[20px] border border-border bg-card p-2.5 shadow-[inset_0_1px_0_var(--hairline)] transition-[border-color,box-shadow,translate] duration-(--dur-3) hover:-translate-y-0.5 hover:border-border-strong hover:shadow-lg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring calm:hover:translate-y-0"
+                className="group shot-pan flex h-full flex-col rounded-[20px] border border-border bg-card p-2.5 shadow-[inset_0_1px_0_var(--hairline)] transition-[border-color,box-shadow,translate] duration-(--dur-3) hover:-translate-y-0.5 hover:border-border-strong hover:shadow-lg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring calm:hover:translate-y-0"
               >
                 <Art />
                 <span className="flex flex-1 flex-col px-2.5 pb-2 pt-4">

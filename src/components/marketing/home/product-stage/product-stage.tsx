@@ -14,6 +14,7 @@ import { CanvasPane } from "./canvas-pane";
 import { DepthCards } from "./depth-cards";
 import { PhoneStage } from "./phone-stage";
 import { phoneTabFor, type StageFrame } from "./script";
+import { StageStatusBar } from "./stage-status-bar";
 import { StatusPill } from "./status-pill";
 
 /** The honesty label for the stage (PLAN §4.4). Rendered on the window (lg+) and next to the Pause button below lg. */
@@ -174,13 +175,14 @@ export function ProductStage({
               <span className="ml-1 hidden size-7 items-center justify-center rounded-full bg-gradient-to-br from-signal/80 to-signal-2/80 text-[11px] font-semibold text-[var(--ember-ink)] shadow-[0_0_0_2px_var(--card)] lg:inline-flex">Y</span>
             </span>
           }
-          bodyClassName="p-1.5"
+          bodyClassName="px-1.5 pt-1.5"
         >
-          <div aria-hidden="true" key={phaseKey} className="stage-fade h-full min-h-0">
-            <div key={swapKey} className="stage-swap grid h-full min-h-0 grid-cols-[256px_minmax(0,1fr)] gap-1.5 lg:grid-cols-[300px_minmax(0,1fr)]">
+          <div aria-hidden="true" key={phaseKey} className="stage-fade flex h-full min-h-0 flex-col">
+            <div key={swapKey} className="stage-swap grid min-h-0 flex-1 grid-cols-[256px_minmax(0,1fr)] gap-1.5 lg:grid-cols-[300px_minmax(0,1fr)]">
               <AgentPane frame={frame} scenario={scenario} typed={typed} illustrative={HOME_STAGE_COPY.illustrativeError} />
               <CanvasPane frame={frame} scenario={scenario} tokens={tokens} illustrative={HOME_STAGE_COPY.illustrativeError} urlRef={urlRef} />
             </div>
+            <StageStatusBar frame={frame} scenario={scenario} />
           </div>
         </AppWindow>
         <DepthCards frame={frame} scenario={scenario} />

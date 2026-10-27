@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useId, useMemo, useRef, useState } from "react";
 import { ChevronRight, FilePlus2, Folder, FolderOpen, FolderPlus, MoreHorizontal, Pencil, RefreshCw, Trash2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { buildTree, dirname, joinPath, validateName, type TreeNode } from "@/lib/client/workspace/paths";
@@ -410,6 +410,7 @@ function Node({ node, depth, index, setSize, ctx }: { node: TreeNode; depth: num
   const change = !isFolder ? ctx.changeMap.get(node.path) : undefined;
   const aiTouched = !isFolder && ctx.touched[node.path];
   const flashAt = ctx.flash[node.path];
+  const nameId = useId();
 
   if (isRenaming) return <NameInput depth={depth} placeholder="name" initial={node.name} onSubmit={ctx.submitPending} onCancel={ctx.cancelPending} />;
 
@@ -421,7 +422,14 @@ function Node({ node, depth, index, setSize, ctx }: { node: TreeNode; depth: num
       aria-posinset={index}
       aria-expanded={isFolder ? !isCollapsed : undefined}
       aria-selected={isActive}
-      aria-label={isFolder ? undefined : node.path}
+      // A folder is named by its own label (never its whole subtree); a file's name carries the states
+      // its dots and letters show, which are therefore hidden from assistive tech below.
+      aria-labelledby={isFolder ? nameId : undefined}
+      aria-label={
+        isFolder
+          ? undefined
+          : [node.path, ctx.dirty.has(node.path) ? "unsaved changes" : null, aiTouched ? "changed by the AI" : null, change ? CHANGE_LETTER[change].label.toLowerCase() : null].filter(Boolean).join(", ")
+      }
       tabIndex={ctx.tabStop === node.path ? 0 : -1}
       data-path={node.path}
       className="outline-none [&:focus-visible>div:first-child]:outline-2 [&:focus-visible>div:first-child]:-outline-offset-2 [&:focus-visible>div:first-child]:outline-ring"
@@ -450,13 +458,13 @@ function Node({ node, depth, index, setSize, ctx }: { node: TreeNode; depth: num
             <FileIcon name={node.name} />
           </>
         )}
-        <span className={cn("truncate", change === "create" && "text-success", change === "update" && "text-warning")}>{node.name}</span>
+        <span id={nameId} className={cn("truncate", change === "create" && "text-success", change === "update" && "text-warning")}>{node.name}</span>
         <span className="ml-auto flex shrink-0 items-center gap-1.5 pl-1">
-          {aiTouched ? <span className="ws-ai-dot" title="Changed by the AI in this session" aria-label="Changed by the AI" role="img" /> : null}
-          {!isFolder && ctx.dirty.has(node.path) ? <span className="size-1.5 rounded-full bg-warning" aria-label="Unsaved changes" role="img" /> : null}
+          {aiTouched ? <span className="ws-ai-dot" title="Changed by the AI in this session" aria-hidden="true" /> : null}
+          {!isFolder && ctx.dirty.has(node.path) ? <span className="size-1.5 rounded-full bg-warning" title="Unsaved changes" aria-hidden="true" /> : null}
           {isFolder && isCollapsed && ctx.changedDirs.has(node.path) ? <span className="size-1.5 rounded-full bg-warning/70" aria-hidden="true" /> : null}
           {change ? (
-            <span className={cn("w-3 text-center font-mono text-[10.5px] font-semibold", CHANGE_LETTER[change].tone)} title={CHANGE_LETTER[change].label} aria-label={CHANGE_LETTER[change].label}>
+            <span className={cn("w-3 text-center font-mono text-[10.5px] font-semibold", CHANGE_LETTER[change].tone)} title={CHANGE_LETTER[change].label} aria-hidden="true">
               {CHANGE_LETTER[change].letter}
             </span>
           ) : null}

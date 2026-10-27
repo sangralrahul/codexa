@@ -51,7 +51,9 @@ export function TemplatePreview({
           data-develop=""
           // MotionEffects may mark a cached image as developed before React hydrates it.
           suppressHydrationWarning
-          className={cn("aspect-[16/10] w-full object-cover object-top", imgClassName)}
+          // Once developed, drop the develop animation's forwards fill: a filled `transform` would
+          // override the .shot-pan transition, so the hover pan would jump instead of gliding.
+          className={cn("aspect-[16/10] w-full object-cover object-top [&[data-developed]]:[animation-fill-mode:backwards]!", imgClassName)}
         />
       </div>
     );
@@ -69,36 +71,50 @@ const METHOD_TONE: Record<ApiRoute["method"], string> = {
   DELETE: "text-syn-tag",
 };
 
-/** The template's real routes as a terminal listing. Scales with its own width (container units). */
-export function RouteList({ routes, className, label = true }: { routes: ApiRoute[]; className?: string; label?: boolean }) {
-  const shown = routes.slice(0, 7);
+/**
+ * The template's real routes as a terminal listing. `thumb` (default) is a 16:10 tile that scales
+ * with its own width (container units); `hero` is a full-size listing for the detail page, sized
+ * like a real terminal and showing every route, with the real dev command when given.
+ */
+export function RouteList({ routes, className, label = true, variant = "thumb", command }: { routes: ApiRoute[]; className?: string; label?: boolean; variant?: "thumb" | "hero"; command?: string }) {
+  const hero = variant === "hero";
+  const shown = hero ? routes : routes.slice(0, 7);
+  const methods = new Set(routes.map((r) => r.method)).size;
   return (
-    <div aria-hidden="true" className={cn("overflow-hidden rounded-lg border border-border bg-code-bg text-code-fg shadow-sm [container-type:inline-size]", className)}>
-      <div className="relative flex aspect-[16/10] flex-col font-mono text-[length:max(8px,2.55cqw)] leading-[1.75]">
+    <div aria-hidden={hero ? undefined : true} className={cn("overflow-hidden rounded-lg border border-border bg-code-bg text-code-fg shadow-sm [container-type:inline-size]", className)}>
+      <div className={cn("relative flex flex-col font-mono", hero ? "text-[13px] leading-[1.9] sm:text-[14px]" : "aspect-[16/10] text-[length:max(8px,2.55cqw)] leading-[1.75]")}>
         <div aria-hidden="true" className="pointer-events-none absolute inset-0 bg-[radial-gradient(70%_60%_at_80%_0%,color-mix(in_oklab,var(--syn-fn)_10%,transparent),transparent_70%)]" />
-        <div className="relative flex items-center gap-[1.4cqw] border-b border-code-border px-[4cqw] py-[2.2cqw]">
-          <span className="size-[1.6cqw] min-h-1 min-w-1 rounded-full bg-code-muted/50" />
-          <span className="size-[1.6cqw] min-h-1 min-w-1 rounded-full bg-code-muted/50" />
-          <span className="size-[1.6cqw] min-h-1 min-w-1 rounded-full bg-code-muted/50" />
-          <span className="ml-[1.6cqw] truncate text-code-muted">routes · read from the template&apos;s source</span>
+        <div className={cn("relative flex items-center border-b border-code-border", hero ? "h-11 gap-2 px-4" : "gap-[1.4cqw] px-[4cqw] py-[2.2cqw]")}>
+          <span aria-hidden="true" className={cn("rounded-full bg-code-muted/50", hero ? "size-2.5" : "size-[1.6cqw] min-h-1 min-w-1")} />
+          <span aria-hidden="true" className={cn("rounded-full bg-code-muted/50", hero ? "size-2.5" : "size-[1.6cqw] min-h-1 min-w-1")} />
+          <span aria-hidden="true" className={cn("rounded-full bg-code-muted/50", hero ? "size-2.5" : "size-[1.6cqw] min-h-1 min-w-1")} />
+          <span className={cn("truncate text-code-muted", hero ? "ml-2 text-[12px]" : "ml-[1.6cqw]")}>routes · read from the template&apos;s source</span>
         </div>
-        <div className="relative min-h-0 flex-1 px-[4cqw] py-[3cqw]">
+        <div className={cn("relative min-h-0 flex-1", hero ? "px-5 py-5 sm:px-7 sm:py-6" : "px-[4cqw] py-[3cqw]")}>
           <p className="text-code-muted">
             <span className="text-syn-keyword">$</span> express routes
           </p>
-          <ul className="mt-[1.2cqw]">
+          <ul className={hero ? "mt-3" : "mt-[1.2cqw]"} aria-label={hero ? `${routes.length} routes` : undefined}>
             {shown.map((r) => (
-              <li key={`${r.method} ${r.path}`} className="flex gap-[2.4cqw] whitespace-nowrap">
+              <li key={`${r.method} ${r.path}`} className={cn("flex whitespace-nowrap", hero ? "gap-5" : "gap-[2.4cqw]")}>
                 <span className={cn("w-[6.2ch] shrink-0 font-medium", METHOD_TONE[r.method])}>{r.method}</span>
                 <span className="truncate text-code-fg/90">{r.path.split(/(:\w+)/).map((part, i) => (part.startsWith(":") ? <span key={i} className="text-syn-attr">{part}</span> : part))}</span>
               </li>
             ))}
             {routes.length > shown.length ? <li className="text-code-muted">+ {routes.length - shown.length} more</li> : null}
           </ul>
+          {hero && command ? (
+            <p className="mt-5 text-code-muted">
+              <span className="text-syn-keyword">$</span> <span className="text-code-fg/90">{command}</span>
+            </p>
+          ) : null}
         </div>
         {label ? (
-          <p className="relative border-t border-code-border px-[4cqw] py-[1.8cqw] text-code-muted">
-            {routes.length} route{routes.length === 1 ? "" : "s"} · API only, no screen to capture
+          <p className={cn("relative border-t border-code-border text-code-muted", hero ? "flex flex-wrap justify-between gap-x-4 px-5 py-3 text-[12px] sm:px-7" : "px-[4cqw] py-[1.8cqw]")}>
+            <span>
+              {routes.length} route{routes.length === 1 ? "" : "s"} · API only, no screen to capture
+            </span>
+            {hero ? <span>{methods} HTTP method{methods === 1 ? "" : "s"}</span> : null}
           </p>
         ) : null}
       </div>

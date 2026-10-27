@@ -16,8 +16,10 @@ export type Problem = {
   context: string[];
 };
 
-const ANSI = /\x1b\[[0-9;]*[A-Za-z]/g;
-const strip = (s: string) => s.replace(ANSI, "").trimEnd();
+const ANSI = /\x1b\[[0-9;?]*[A-Za-z]|\x1b\][^\x07]*\x07/g;
+/** Remove terminal colour/control sequences for places that show a log line as plain text. */
+export const stripAnsi = (s: string) => s.replace(ANSI, "");
+const strip = (s: string) => stripAnsi(s).trimEnd();
 
 /** Map an absolute/sandbox path to a project-relative one when we can recognise it. */
 export function projectPath(raw: string, known?: Set<string>): string | undefined {

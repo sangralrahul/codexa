@@ -19,7 +19,7 @@ import { Avatar } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { useLaunch } from "@/components/motion/launch";
 import { ProjectThumb } from "@/components/app/project-thumb";
-import { isCalm } from "@/lib/client/motion";
+import { isCalm, useCalm } from "@/lib/client/motion";
 import { clampIdea, readPendingIdea, type IdeaSource } from "@/lib/client/pending-idea";
 import { usePlatformMod } from "@/lib/client/platform";
 import type { ProjectVisibility } from "@/lib/client/workspace/types";
@@ -62,34 +62,66 @@ const SOURCE_LABEL: Record<IdeaSource, string> = {
   command: "the command menu",
 };
 
-/** Placeholder that types example ideas while the box is empty and idle (static when calm). */
-function useTypedPlaceholder(active: boolean) {
-  const [text, setText] = useState(`Describe your app, e.g. ${IDEAS[0]}`);
+const STATIC_PLACEHOLDER = `Describe your app, e.g. ${IDEAS[0]}`;
+
+/**
+ * Placeholder that types the example ideas once each, then settles on a static example. It only runs
+ * while the box is empty, unfocused, on screen and the tab is visible, and never when calm, so focusing
+ * the box (or switching motion off) stops it at once.
+ */
+function useTypedPlaceholder(active: boolean, ref: React.RefObject<HTMLElement | null>) {
+  const calm = useCalm();
+  const [text, setText] = useState(STATIC_PLACEHOLDER);
+  const [visible, setVisible] = useState(false);
+  const [done, setDone] = useState(false);
   useEffect(() => {
-    if (!active || isCalm()) return;
+    const el = ref.current;
+    if (!el || typeof IntersectionObserver === "undefined") return;
+    let inView = false;
+    const sync = () => setVisible(inView && document.visibilityState === "visible");
+    const io = new IntersectionObserver(([entry]) => {
+      inView = entry.isIntersecting;
+      sync();
+    });
+    io.observe(el);
+    document.addEventListener("visibilitychange", sync);
+    return () => {
+      io.disconnect();
+      document.removeEventListener("visibilitychange", sync);
+    };
+  }, [ref]);
+  const on = active && visible && !calm && !done;
+  useEffect(() => {
+    if (!on) return;
     let idea = 0;
     let pos = 0;
     let erasing = false;
     let timer = 0;
     const tick = () => {
       const full = IDEAS[idea];
-      pos += erasing ? -1 : 1;
+      pos += erasing ? -2 : 1;
       setText(`Ask Codexa to build ${full.slice(0, Math.max(0, pos))}`);
       if (!erasing && pos >= full.length) {
+        // The last idea stays typed out: one pass, then it rests.
+        if (idea === IDEAS.length - 1) {
+          setDone(true);
+          return;
+        }
         erasing = true;
-        timer = window.setTimeout(tick, 2200);
+        timer = window.setTimeout(tick, 2000);
         return;
       }
       if (erasing && pos <= 0) {
         erasing = false;
-        idea = (idea + 1) % IDEAS.length;
+        idea += 1;
       }
-      timer = window.setTimeout(tick, erasing ? 18 : 42);
+      timer = window.setTimeout(tick, erasing ? 16 : 40);
     };
     timer = window.setTimeout(tick, 900);
     return () => clearTimeout(timer);
-  }, [active]);
-  return text;
+  }, [on]);
+  if (done) return `Ask Codexa to build ${IDEAS[IDEAS.length - 1]}`;
+  return on ? text : STATIC_PLACEHOLDER;
 }
 
 const chip =
@@ -143,9 +175,10 @@ export function PromptBox({
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<CreateError | null>(null);
   const [carried, setCarried] = useState<string | null>(initialPrompt ? SOURCE_LABEL.home : null);
+  const [focused, setFocused] = useState(false);
   const launch = useLaunch({ title: "Building from your prompt" });
   const enabled = Boolean(wsId);
-  const placeholder = useTypedPlaceholder(!prompt && enabled && !carried);
+  const placeholder = useTypedPlaceholder(!prompt && enabled && !carried && !focused && !busy, areaRef);
   const template = templates.find((t) => t.id === templateId);
   const workspace = workspaces.find((w) => w.id === wsId);
   const length = prompt.length;
@@ -288,6 +321,8 @@ export function PromptBox({
                   setPrompt(e.target.value);
                   if (error) setError(null);
                 }}
+                onFocus={() => setFocused(true)}
+                onBlur={() => setFocused(false)}
                 onKeyDown={(e) => {
                   if ((e.metaKey || e.ctrlKey) && e.key === "Enter") {
                     e.preventDefault();
@@ -307,10 +342,10 @@ export function PromptBox({
                   {templates.length ? (
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild disabled={!enabled}>
-                        <button type="button" className={cn(chip, "max-w-[156px] pl-1 sm:max-w-[220px]")} aria-label={`Template: ${template?.name ?? "React starter"}. Change template`}>
+                        <button type="button" className={cn(chip, "max-w-[144px] pl-1 sm:max-w-[220px]")} aria-label={`Template: ${template?.name ?? "React starter"}. Change template`}>
                           <ProjectThumb key={templateId} templateId={templateId} framework={template?.framework} size="lg" className="thumb-swap h-6 w-[38px] rounded-[6px]" />
                           <span className="truncate font-medium text-foreground">{template?.name ?? "React starter"}</span>
-                          <ChevronDown className="size-3.5 shrink-0 transition-transform duration-(--dur-2) group-data-[state=open]/chip:rotate-180" aria-hidden="true" />
+                          <ChevronDown className="hidden size-3.5 shrink-0 transition-transform duration-(--dur-2) group-data-[state=open]/chip:rotate-180 sm:block" aria-hidden="true" />
                         </button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="start" className="scrollbar-thin max-h-[360px] w-80 overflow-y-auto">
@@ -342,7 +377,7 @@ export function PromptBox({
                       <DropdownMenuTrigger asChild disabled={busy}>
                         <button type="button" className={cn(chip, "max-w-[180px]")} aria-label={`Workspace: ${workspace.name}. Change workspace`}>
                           <Avatar name={workspace.name} seed={workspace.id} shape="square" size="xs" />
-                          <span className="truncate">{workspace.name}</span>
+                          <span className="hidden truncate sm:inline">{workspace.name}</span>
                           <ChevronDown className="size-3.5 shrink-0" aria-hidden="true" />
                         </button>
                       </DropdownMenuTrigger>
@@ -406,10 +441,10 @@ export function PromptBox({
                     disabled={!prompt.trim() || !enabled || busy}
                     aria-label="Start building"
                     aria-keyshortcuts="Control+Enter Meta+Enter"
-                    className="composer-build h-9 gap-2 px-4"
+                    className="composer-build h-9 gap-2 px-3.5 sm:px-4"
                   >
                     <span>Build</span>
-                    <span data-spark-icon className="hidden items-center gap-0.5 rounded-[6px] bg-black/10 px-1.5 py-0.5 text-[11px] font-semibold leading-none sm:inline-flex">
+                    <span data-spark-icon className="hidden items-center gap-0.5 rounded-[6px] bg-current/12 px-1.5 py-0.5 text-[11px] font-semibold leading-none sm:inline-flex">
                       {mod}
                       <CornerDownLeft className="size-3" aria-hidden="true" />
                     </span>

@@ -114,11 +114,9 @@ export function GithubAccountCard({ configured, account, next, errorCode }: { co
           ) : (
             <TooltipProvider delayDuration={200}>
               <Tooltip content="GitHub is not configured on this server">
-                <span tabIndex={0} className="inline-flex rounded-[10px] outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring">
-                  <Button size="sm" disabled>
-                    <Lock className="size-3.5" aria-hidden="true" /> Connect GitHub
-                  </Button>
-                </span>
+                <Button size="sm" aria-disabled data-no-ripple="" className="cursor-not-allowed opacity-55" onClick={(e) => e.preventDefault()}>
+                  <Lock className="size-3.5" aria-hidden="true" /> Connect GitHub
+                </Button>
               </Tooltip>
             </TooltipProvider>
           )}

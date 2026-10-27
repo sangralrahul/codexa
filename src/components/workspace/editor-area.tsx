@@ -16,7 +16,9 @@ import { ConfirmDialog } from "./confirm-dialog";
 import { FileIcon } from "./file-icon";
 import { toolButton } from "./panel-tabs";
 
-const OVERVIEW = "\u0000overview";
+// ":" is rejected in file names (validateName), so this id can never collide with a path, and unlike
+// a NUL sentinel it survives CSS.escape() in the roving-focus lookups.
+const OVERVIEW = ":overview";
 
 /**
  * Tabs (a "Project overview" start tab plus open files) and the Monaco editor. Tabs grow in
@@ -162,7 +164,7 @@ export function EditorArea({
   const marks = active ? (gutter[active] ?? null) : null;
 
   return (
-    <div className="flex h-full min-h-0 flex-col" data-testid="editor-area">
+    <div className="@container flex h-full min-h-0 flex-col" data-testid="editor-area">
       <div className="flex h-10 shrink-0 items-stretch border-b border-border">
         <div ref={stripRef} className="flex min-w-0 flex-1 [scrollbar-width:none] items-end gap-0.5 overflow-x-auto px-1.5 pt-1.5" role="tablist" aria-label="Open files">
           <div
@@ -197,6 +199,8 @@ export function EditorArea({
                 onKeyDown={(e) => onTabKey(e, path)}
                 onAuxClick={(e) => e.button === 1 && requestClose(path)}
                 title={path}
+                aria-label={`${basename(path)}${isDirty ? ", unsaved changes" : ""}${ai ? ", changed by the AI" : ""}`}
+                aria-keyshortcuts="Delete"
                 className={cn(
                   "ws-tab group relative flex h-[33px] shrink-0 cursor-default items-center gap-1.5 overflow-hidden rounded-t-lg pl-2.5 pr-1 text-[12.5px] transition-colors focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-ring",
                   isActive ? "bg-background text-foreground shadow-[inset_0_1px_0_var(--border),inset_1px_0_0_var(--border),inset_-1px_0_0_var(--border)]" : "text-muted-foreground hover:bg-muted/60 hover:text-foreground",
@@ -207,26 +211,28 @@ export function EditorArea({
                 {isActive ? <span className="absolute inset-x-2 top-0 h-[2px] rounded-b-full bg-signal" aria-hidden="true" /> : null}
                 <FileIcon name={basename(path)} className="size-3.5" />
                 <span className={cn("truncate", isDirty && "italic")}>{basename(path)}</span>
-                {ai ? <span className="ws-ai-dot" title="Changed by the AI" aria-label="Changed by the AI" role="img" /> : null}
-                <button
-                  type="button"
-                  tabIndex={-1}
+                {ai ? <span className="ws-ai-dot" title="Changed by the AI" aria-hidden="true" /> : null}
+                {/* The pointer's close target. It is not a nested control: keyboard and screen-reader users
+                    close the focused tab with Delete (announced through aria-keyshortcuts on the tab). */}
+                <span
+                  aria-hidden="true"
+                  title={`Close ${basename(path)} (Delete)`}
                   onClick={(e) => {
                     e.stopPropagation();
                     requestClose(path);
                   }}
-                  aria-label={`Close ${basename(path)}${isDirty ? " (unsaved changes)" : ""}`}
-                  className={cn("ml-0.5 flex size-5 items-center justify-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground", !isActive && !isDirty && "opacity-0 group-hover:opacity-100")}
+                  className={cn("ml-0.5 flex size-5 cursor-pointer items-center justify-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground", !isActive && !isDirty && "opacity-0 group-hover:opacity-100")}
                 >
-                  {isDirty ? <span className="size-2 rounded-full bg-warning group-hover:hidden" aria-hidden="true" /> : null}
-                  <X className={cn("size-3.5", isDirty && "hidden group-hover:block")} aria-hidden="true" />
-                </button>
+                  {isDirty ? <span className="size-2 rounded-full bg-warning group-hover:hidden" /> : null}
+                  <X className={cn("size-3.5", isDirty && "hidden group-hover:block")} />
+                </span>
               </div>
             );
           })}
         </div>
         {viewing !== OVERVIEW ? (
-          <div className="flex shrink-0 items-center gap-0.5 px-1.5">
+          // Narrow editors give the room to the tabs (Monaco's own Ctrl/⌘ F, H and Shift+Alt+F still work).
+          <div className="hidden shrink-0 items-center gap-0.5 px-1.5 @[340px]:flex">
             <Tooltip content="Find (Ctrl/⌘ F)">
               <button type="button" aria-label="Find in file" onClick={() => runAction("actions.find")} className={cn(toolButton, "size-7")}>
                 <Search className="size-4" aria-hidden="true" />
