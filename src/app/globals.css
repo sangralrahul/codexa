@@ -240,8 +240,8 @@ body:has(main [data-tone="company"]) { --silk-1: #ff8a66; --silk-2: #ffc070; --s
   --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
   --font-mono: var(--font-geist-mono), ui-monospace, SFMono-Regular, Menlo, monospace;
   --font-display: var(--font-inter-tight), var(--font-inter), ui-sans-serif, system-ui, sans-serif;
-  /* No serif face ships (Instrument Serif is retired); font-serif is the system serif. */
-  --font-serif: ui-serif, Georgia, serif;
+  /* Accent serif: Instrument Serif italic, for the highlighted words of a page H1 (.mark-select). */
+  --font-serif: var(--font-instrument-serif), ui-serif, Georgia, serif;
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
@@ -572,6 +572,14 @@ body:has(main [data-tone="company"]) { --silk-1: #ff8a66; --silk-2: #ffc070; --s
 /* Selection mark: once per page, H1 only. The marked words are set in a signal → amber gradient
    that slowly shimmers, then the signal caret blinks three times after the last glyph. */
 .mark-select {
+  font-family: var(--font-serif);
+  font-style: italic;
+  font-weight: 400;
+  font-synthesis: none;
+  font-size: 1.08em;
+  line-height: 0;
+  letter-spacing: -0.01em;
+  padding-inline: 0.02em 0.08em;
   background-image: linear-gradient(100deg, var(--mark-ink-1) 0%, var(--mark-ink-2) 45%, var(--mark-ink-1) 90%);
   background-size: 220% 100%;
   background-position: 100% 0;
@@ -579,7 +587,6 @@ body:has(main [data-tone="company"]) { --silk-1: #ff8a66; --silk-2: #ffc070; --s
   background-clip: text;
   color: transparent;
   -webkit-text-fill-color: transparent;
-  padding-inline-end: 0.04em;
   animation: mark-shine 8s ease-in-out var(--mark-delay, 450ms) infinite alternate;
   -webkit-box-decoration-break: clone;
   box-decoration-break: clone;
@@ -856,47 +863,83 @@ body:has(main [data-tone="company"]) { --silk-1: #ff8a66; --silk-2: #ffc070; --s
 
 /* ==========================================================================
    Aurora: the hero light (src/components/marketing/aurora.tsx).
-   One soft, slowly breathing glow above the headline and a faint grid.
+   Soft curtains of colour drifting slowly across the top of the page (two layers at
+   different speeds), a faint grid and a quiet glow. Transform-only animation; the
+   stripe and colour periods are in px so each layer loops seamlessly.
    ========================================================================== */
 .aurora {
   --aurora-grid: color-mix(in oklab, var(--foreground) 5%, transparent);
+  --aurora-violet: color-mix(in oklab, var(--silk-1) 60%, var(--signal));
+  --aurora-colors: repeating-linear-gradient(100deg, var(--signal) 0px, var(--aurora-violet) 200px, var(--silk-1) 400px, var(--signal-2) 600px, var(--signal) 800px);
+  --aurora-stripes: repeating-linear-gradient(100deg, var(--background) 0px, var(--background) 50px, transparent 120px, transparent 140px, var(--background) 200px);
   position: absolute;
   inset: 0;
   overflow: hidden;
   pointer-events: none;
 }
+.aurora__curtain {
+  position: absolute;
+  inset: 0 0 auto;
+  height: 780px;
+  overflow: hidden;
+  opacity: 0.55;
+  mask-image: radial-gradient(ellipse 80% 75% at 50% 0%, #000 10%, rgba(0, 0, 0, 0.45) 50%, transparent 80%);
+}
+.dark .aurora__curtain { opacity: 0.6; }
+.aurora__curtain::before,
+.aurora__curtain::after {
+  content: "";
+  position: absolute;
+  top: -20px;
+  bottom: -20px;
+  left: 0;
+  /* 812px = one shared period (800px along the 100deg gradient line) / sin(100deg). */
+  width: calc(100% + 812px);
+  background-image: var(--aurora-stripes), var(--aurora-colors);
+  filter: blur(28px) saturate(1.2);
+  will-change: transform;
+  animation: aurora-flow 30s linear infinite;
+}
+.aurora__curtain::after {
+  background-image: var(--aurora-colors);
+  opacity: 0.45;
+  mix-blend-mode: soft-light;
+  animation-duration: 19s;
+  animation-direction: reverse;
+}
+@keyframes aurora-flow { to { transform: translateX(-812px); } }
+
 .aurora__glow {
   position: absolute;
   left: 50%;
-  top: -18rem;
-  width: min(72rem, 140vw);
-  height: 36rem;
+  top: -16rem;
+  width: min(64rem, 130vw);
+  height: 30rem;
   translate: -50% 0;
   border-radius: 9999px;
-  background:
-    radial-gradient(closest-side at 50% 50%, color-mix(in oklab, var(--signal) 32%, transparent), transparent),
-    radial-gradient(closest-side at 22% 60%, color-mix(in oklab, var(--silk-1) 22%, transparent), transparent),
-    radial-gradient(closest-side at 78% 60%, color-mix(in oklab, var(--signal-2) 20%, transparent), transparent);
-  filter: blur(40px);
-  opacity: 0.7;
-  animation: aurora-breathe 14s ease-in-out infinite alternate;
+  background: radial-gradient(closest-side, color-mix(in oklab, var(--signal) 30%, transparent), transparent);
+  filter: blur(30px);
+  animation: aurora-breathe 9s ease-in-out infinite alternate;
 }
-.dark .aurora__glow { opacity: 0.7; }
-@keyframes aurora-breathe { from { transform: scale(0.94); opacity: 0.5; } to { transform: scale(1.06); opacity: 0.75; } }
+@keyframes aurora-breathe { from { transform: scale(0.92); opacity: 0.55; } to { transform: scale(1.08); opacity: 1; } }
 .aurora__grid {
   position: absolute;
   inset: 0;
   background-image: linear-gradient(var(--aurora-grid) 1px, transparent 1px), linear-gradient(90deg, var(--aurora-grid) 1px, transparent 1px);
   background-size: 72px 72px;
   background-position: center top;
-  mask-image: radial-gradient(60% 50% at 50% 0%, #000 0%, transparent 100%);
+  mask-image: radial-gradient(60% 55% at 50% 0%, #000 0%, transparent 100%);
 }
+/* Readability: a soft pool behind the headline and lead, and a clean fade into the page. */
 .aurora__fade {
   position: absolute;
   inset: 0;
-  background: linear-gradient(to bottom, transparent 50%, var(--background) 100%);
+  background:
+    radial-gradient(38% 22% at 50% 30%, color-mix(in oklab, var(--background) 50%, transparent), transparent 85%),
+    linear-gradient(to bottom, transparent 50%, var(--background) 100%);
 }
 .aurora * { @variant calm { animation: none !important; } }
+.aurora__curtain { @variant calm { &::before, &::after { animation: none; } } }
 
 .bg-noise {
   background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/></filter><rect width='100%' height='100%' filter='url(%23n)' opacity='0.5'/></svg>");

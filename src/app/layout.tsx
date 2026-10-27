@@ -28,6 +28,14 @@ const interTight = localFont({
   preload: true,
   adjustFontFallback: "Arial",
 });
+// Accent face: Instrument Serif italic (OFL), used only for the highlighted words of a page H1.
+const instrumentSerif = localFont({
+  src: [{ path: "../../node_modules/@fontsource/instrument-serif/files/instrument-serif-latin-400-italic.woff2", weight: "400", style: "italic" }],
+  variable: "--font-instrument-serif",
+  display: "swap",
+  preload: true,
+  adjustFontFallback: "Times New Roman",
+});
 
 export const metadata: Metadata = {
   metadataBase: new URL(site.url),
@@ -59,7 +67,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
       lang="en"
       suppressHydrationWarning
       data-motion={motion}
-      className={`${inter.variable} ${interTight.variable} ${GeistMono.variable} h-full antialiased ${theme === "dark" ? "dark" : ""}`}
+      className={`${inter.variable} ${interTight.variable} ${instrumentSerif.variable} ${GeistMono.variable} h-full antialiased ${theme === "dark" ? "dark" : ""}`}
     >
       <head>
         <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />
