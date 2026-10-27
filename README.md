@@ -1,101 +1,245 @@
-# Codexa
+<div align="center">
 
-**Turn ideas into working software.** Codexa is an AI-native software development platform:
-describe an application in natural language, generate a full-stack project, edit the code in a real
-editor, run it in an isolated sandbox with a live preview, review and revert AI changes, connect
-services, collaborate, and deploy.
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/brand/codexa-logo-on-dark.png">
+  <img src="docs/brand/codexa-logo-on-light.png" alt="Codexa" width="300">
+</picture>
 
-![Workspace](docs/screenshots/workspace.png)
+### From one sentence to a running app.
 
-## What is in this repository
+Codexa is an AI-native app builder. Describe what you want, and Codexa plans the files, writes real code,<br>
+checks it in a sandbox, runs a live preview and deploys it. Every change is yours to read, edit or undo.
 
-| Area | Where | Status |
-| --- | --- | --- |
-| Public website (product, solutions, pricing, company, trust, support, forms, SEO) | `src/app/(marketing)` | ✅ 130 routes, tested |
-| Documentation, guides, blog, help, changelog, roadmap, API reference, global search | `content/`, `src/lib/content`, `src/app/(marketing)/docs` … | ✅ |
-| Templates gallery, integrations directory, community showcase | `src/templates`, `src/app/(marketing)/templates` … | ✅ 18 runnable starters |
-| Accounts, sessions, email verification, password reset, GitHub sign-in (when configured) | `src/lib/auth`, `src/app/(auth)` | ✅ |
-| Workspace: dashboard, projects, files, Monaco editor, snapshots/diff/restore, env vars, share links | `src/app/(app)`, `src/components/workspace` | ✅ |
-| AI engine: Anthropic/OpenAI providers, tool-using agent, SSE streaming, review & revert, bounded repair | `src/lib/ai`, `src/components/ai` | ✅ (needs an API key; dev mock available) |
-| Runtime: one Cloudflare Container per project (preview, run, logs, allow-listed exec); local runner for development | `services/runner`, `containers/runner`, `worker/sandbox.ts`, `src/lib/runtime` | ✅ verified in Cloudflare's local runtime with real containers; Docker/E2B drivers unverified |
-| Deployment: Codexa static hosting (built in the container, served from R2) with history and rollback; Vercel adapter | `src/lib/deploy`, `worker/sites.ts` | ✅ Codexa hosting verified; Vercel unverified |
-| Integrations: GitHub import/commit/push, PostgreSQL/Supabase schema + SQL runner, provider connections | `src/lib/github`, `src/lib/integrations` | ✅ (GitHub OAuth needs an app) |
-| Billing: Free/Pro/Team/Enterprise, INR + USD, Stripe + Razorpay, idempotent webhooks, server-side quotas | `src/config/plans.ts`, `src/lib/billing` | ✅ logic tested; live provider calls unverified |
-| Teams: roles, invitations, settings; staff admin area; background jobs (Cron Trigger); realtime presence (Durable Object) | `src/app/(app)/settings`, `src/app/admin`, `src/lib/jobs`, `worker/presence.ts` | ✅ |
+[**Website**](https://codexa.creditvault.tech) · [Docs](https://codexa.creditvault.tech/docs) · [Templates](https://codexa.creditvault.tech/templates) · [Changelog](https://codexa.creditvault.tech/changelog) · [Status](https://codexa.creditvault.tech/status)
 
-See `docs/IMPLEMENTATION_PLAN.md`, `docs/AI_ENGINE.md`, `docs/RUNTIME.md`, `docs/INTEGRATIONS.md`,
-`docs/BILLING.md` and `docs/API_CONTRACT.md` for details.
+![Next.js](https://img.shields.io/badge/Next.js_16-000000?style=flat-square&logo=nextdotjs&logoColor=white)
+![React](https://img.shields.io/badge/React_19-149ECA?style=flat-square&logo=react&logoColor=white)
+![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?style=flat-square&logo=typescript&logoColor=white)
+![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS_4-06B6D4?style=flat-square&logo=tailwindcss&logoColor=white)
+![Cloudflare](https://img.shields.io/badge/Cloudflare_Workers-F38020?style=flat-square&logo=cloudflare&logoColor=white)
+![CI](https://github.com/sangralrahul/codexa/actions/workflows/ci.yml/badge.svg)
 
-## Stack
+<br>
 
-Next.js 16 (App Router, Turbopack) · React 19 · TypeScript · Tailwind CSS v4 · Drizzle ORM + Cloudflare D1 ·
-Monaco (self-hosted) · Vitest · Playwright. Production runs entirely on Cloudflare (Workers, D1, R2,
-Containers, Durable Objects, Cron Triggers); email goes through Customer.io (or Resend). For local
-development the sandbox **runner** and the WebSocket **realtime** server also run as plain Node processes.
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/screenshots/home-dark.png">
+  <img src="docs/screenshots/home-light.png" alt="The Codexa home page: a prompt box under the headline 'From one sentence to a running app.'" width="100%">
+</picture>
 
-## Run locally
+</div>
 
-Requirements: Node 22+. For live previews with `npm run dev`: Linux (the local sandbox driver uses user
-namespaces + cgroups; run the runner as root or with the needed capabilities). On Windows or macOS use
-`npm run cf:preview` instead, which runs previews in Docker containers (needs Docker Desktop).
+## How it works
 
-```bash
-cp .env.example .env.local            # fill SESSION_SECRET and ENCRYPTION_KEY (openssl rand -base64 32)
-cp .env.local .env                    # side services read .env
-npm install                           # also copies Monaco into public/monaco
-npm run db:migrate                    # creates the local D1 database under .wrangler/
-npm run db:seed                       # optional: admin@codexa.local / admin12345, demo@codexa.local / demo12345
-npm run runner:prepare                # once: prebuilt dependency sets for templates (needs npm registry)
-npm run dev:all                       # web :3000, runner :4000/:4100, realtime :4200
+| | Step | What happens |
+|---|---|---|
+| 1 | **Describe** | Say what you want in plain words. Codexa picks the closest starter, or you choose one. |
+| 2 | **Plan** | The agent reads the project and lists the files it will create or change. |
+| 3 | **Generate** | It writes real, readable code in a full-stack project you own. |
+| 4 | **Validate** | Type checks and builds run in an isolated sandbox; failures are repaired a bounded number of times. |
+| 5 | **Preview** | A live preview runs in its own container, next to the code. |
+| 6 | **Ship** | Deploy to Codexa hosting with history and one-click rollback, or push to GitHub. |
+
+<p align="center">
+  <img src="docs/screenshots/workspace.png" alt="The Codexa workspace: agent panel, file tree and code editor" width="100%">
+  <br>
+  <sub>The workspace, as shown in the scripted replay on the home page (illustration, not a recording).</sub>
+</p>
+
+## Features
+
+<table>
+<tr>
+<td width="50%" valign="top">
+
+**AI agent**
+- Anthropic and OpenAI providers, bring your own key
+- Tool-using agent with streamed steps (SSE)
+- Review every change as a diff; revert with one click
+- Bounded self-repair when a build or type check fails
+
+**Editor & workspace**
+- Monaco editor (self-hosted), file tree, quick open, terminal
+- Snapshots, version history, diff and restore
+- Environment variables, encrypted at rest
+- Share links and realtime presence
+
+</td>
+<td width="50%" valign="top">
+
+**Run & deploy**
+- One sandboxed Cloudflare Container per project
+- Live preview on its own address
+- Codexa hosting on R2 with history and rollback
+- GitHub import, commit and push
+
+**Platform**
+- 18 runnable starter templates
+- 9 integrations: AI, payments, email, databases, hosting
+- Teams with roles and invitations, admin area
+- Plans in INR and USD with Stripe and Razorpay
+
+</td>
+</tr>
+</table>
+
+<p align="center">
+  <img src="docs/screenshots/templates.png" alt="The Codexa templates gallery" width="100%">
+</p>
+
+## Architecture
+
+Everything runs on Cloudflare. Generated code never runs inside the web app: only inside a per-project container.
+
+```mermaid
+flowchart LR
+  U([Browser]) --> W["Next.js app<br/>Cloudflare Worker"]
+  W --> D[(D1<br/>database)]
+  W --> R[(R2<br/>files & sites)]
+  W --> AI["Anthropic / OpenAI"]
+  W --> S["ProjectSandbox<br/>Durable Object"]
+  S --> C["Runner container<br/>build · run · preview"]
+  W --> P["PresenceRoom<br/>Durable Object"]
+  W --> CR["Cron Trigger<br/>background jobs"]
+  W --> E["Customer.io<br/>email"]
 ```
 
-Open http://localhost:3000. Without an email provider (`CUSTOMERIO_APP_API_KEY` or `RESEND_API_KEY`), verification and invite emails are stored in the
-database and can be opened at http://localhost:3000/dev/mailbox (development only).
+| Layer | Technology |
+|---|---|
+| Web app | Next.js 16 (App Router, Turbopack), React 19, TypeScript (strict), Tailwind CSS v4 |
+| Hosting | Cloudflare Workers via `@opennextjs/cloudflare` |
+| Data | Cloudflare D1 (SQLite) with Drizzle ORM; R2 for files, avatars and hosted sites |
+| Runtime | Cloudflare Containers, one per project, owned by the `ProjectSandbox` Durable Object |
+| Realtime & jobs | `PresenceRoom` Durable Object; Cron Trigger draining a job queue |
+| Email | Customer.io (or Resend) |
+| Testing | Vitest (unit and integration), Playwright (end to end) |
 
-To run the production build in Cloudflare's runtime on your machine (real containers through Docker,
-D1/R2 emulated locally): copy `.dev.vars.example` to `.dev.vars`, then `npm run cf:preview` and open
-http://localhost:8787.
+## Getting started
 
-To exercise the AI pipeline without a provider key during development set `AI_MOCK=1`
-(development/test only; the UI shows a "Mock AI" badge). Real generation needs `ANTHROPIC_API_KEY` or
-`OPENAI_API_KEY`.
-
-## Checks
+**Requirements:** Node.js 22+. On Windows or macOS, use `npm run cf:preview` for live previews (needs Docker Desktop). On Linux, `npm run dev:all` runs everything natively.
 
 ```bash
-npm run lint
-npm run typecheck        # app and worker
-npm run test             # unit + integration tests on a local D1 copy (.wrangler/test-state)
-npm run build
-npm run test:e2e         # Playwright; core journey needs AI_MOCK=1 and the runner running
-# Against `npm run cf:preview` or a deployed instance:
-E2E_NO_SERVER=1 E2E_BASE_URL=http://localhost:8787 E2E_D1=local npx playwright test tests/e2e/serverless-smoke.spec.ts --project=desktop
+git clone https://github.com/sangralrahul/codexa.git
+cd codexa
+cp .env.example .env.local      # set SESSION_SECRET and ENCRYPTION_KEY (openssl rand -base64 32)
+cp .env.local .env              # side services read .env
+npm install                     # also copies Monaco into public/monaco
+npm run db:migrate              # creates the local D1 database
+npm run db:seed                 # optional demo accounts
+npm run runner:prepare          # once: prebuilt dependencies for the templates
+npm run dev:all                 # web :3000 · runner :4000/:4100 · realtime :4200
 ```
 
-One integration test (connecting an external PostgreSQL database) needs a Postgres server at
-`TEST_DATABASE_URL`; it is skipped when none is reachable.
+Open http://localhost:3000.
 
-## Environment variables
+<details>
+<summary><b>Run the production build locally (Cloudflare runtime)</b></summary>
 
-All variables are documented in `.env.example` (local development) and `.dev.vars.example` / `wrangler.jsonc`
-(Cloudflare). Required: `SESSION_SECRET`, `ENCRYPTION_KEY`, `APP_URL`. Optional integrations (each enables
-a capability and otherwise renders an explicit "not configured" state): `ANTHROPIC_API_KEY`, `OPENAI_API_KEY`,
-`CUSTOMERIO_APP_API_KEY` or `RESEND_API_KEY`, `GITHUB_CLIENT_ID/SECRET`, `STRIPE_*`, `RAZORPAY_*`, `VERCEL_TOKEN`, `E2B_API_KEY`.
+<br>
 
-## Deployment
+Copy `.dev.vars.example` to `.dev.vars`, then:
 
-**Cloudflare**: follow `docs/CLOUDFLARE.md` (step by step, plain language). In short: Workers Paid plan,
-secrets via `wrangler secret put`, then `npm run cf:deploy` and `npm run db:migrate:remote`. It runs on
-`workers.dev` without a domain; live previews and Codexa hosting additionally need a domain on Cloudflare
-(one `*` DNS record, free certificate) and Docker when deploying. CI (`.github/workflows/ci.yml`) runs lint, typecheck, tests and both builds.
+```bash
+npm run cf:preview              # production build in local workerd, real containers via Docker
+```
 
-## Security model (summary)
+Open http://localhost:8787.
 
-Server-side authorization on every route (`assertProjectAccess` / `assertWorkspaceRole`), httpOnly
-session cookies with hashed tokens, scrypt passwords, AES-256-GCM for stored secrets, zod validation,
-database-backed rate limiting, audit logs, sandboxed execution outside the web process, destructive SQL
-confirmation, idempotent payment webhooks. No third-party certifications are claimed.
+</details>
+
+<details>
+<summary><b>Try the AI pipeline without a provider key</b></summary>
+
+<br>
+
+Set `AI_MOCK=1` (development and test only; the UI shows a "Mock AI" badge). Real generation needs `ANTHROPIC_API_KEY` or `OPENAI_API_KEY`.
+
+Without an email provider, verification and invite emails are stored and readable at http://localhost:3000/dev/mailbox (development only).
+
+</details>
+
+## Configuration
+
+All variables are documented in `.env.example` (local) and `.dev.vars.example` / `wrangler.jsonc` (Cloudflare).
+
+| Variable | Required | Enables |
+|---|---|---|
+| `SESSION_SECRET`, `ENCRYPTION_KEY`, `APP_URL` | Yes | Sessions, encrypted secrets, absolute links |
+| `ANTHROPIC_API_KEY` / `OPENAI_API_KEY` | No | AI generation |
+| `CUSTOMERIO_APP_API_KEY` or `RESEND_API_KEY` | No | Verification, reset and invite emails |
+| `GITHUB_CLIENT_ID`, `GITHUB_CLIENT_SECRET` | No | GitHub sign-in, import and push |
+| `STRIPE_*`, `RAZORPAY_*` | No | Paid plans |
+
+Every optional capability shows an explicit "not configured" state when its keys are missing; nothing is faked.
+
+## Deploy to Cloudflare
+
+Follow [`docs/CLOUDFLARE.md`](docs/CLOUDFLARE.md): a step-by-step guide in plain language. In short:
+
+```bash
+npm run setup                   # guided: secrets, D1, R2, build and deploy
+npm run db:migrate:remote       # apply migrations to the production database
+```
+
+Needs the Workers Paid plan. Codexa runs on `workers.dev` without a domain; live previews and Codexa hosting also need your own domain on Cloudflare (one wildcard DNS record).
+
+## Scripts
+
+| Command | What it does |
+|---|---|
+| `npm run dev` / `npm run dev:all` | Web app / web + runner + realtime |
+| `npm run cf:preview` | Production build in the local Cloudflare runtime |
+| `npm run cf:deploy` | Build and deploy to Cloudflare |
+| `npm run lint` · `npm run typecheck` | ESLint · TypeScript (app and worker) |
+| `npm run test` | Unit and integration tests on a local D1 copy |
+| `npm run test:e2e` | Playwright end-to-end tests |
+| `npm run db:generate` · `npm run db:migrate` | Drizzle migrations |
+
+## Project structure
+
+```text
+src/
+  app/            Routes: (marketing) site, (auth), (app) workspace, admin, api
+  components/     UI primitives, marketing, workspace, editor, AI, settings
+  lib/            auth, ai, runtime, deploy, billing, integrations, jobs, services
+  db/             Drizzle schema and D1 helpers
+  templates/      Runnable starter templates
+worker/           Worker entry, ProjectSandbox, PresenceRoom, hosted sites
+containers/       Runner container image
+services/         Runner and realtime servers (local development)
+content/          Docs, guides, blog and changelog (Markdown)
+tests/            unit · integration · e2e
+docs/             Architecture, runtime, AI engine, billing, Cloudflare, design system
+```
+
+## Security
+
+- Authorization checked on the server for every route and action (`assertProjectAccess`, `assertWorkspaceRole`)
+- `__Host-` httpOnly session cookies with hashed tokens; scrypt password hashing
+- AES-256-GCM for stored secrets, which are never sent back to the browser
+- Zod validation on every request body; rate limits on auth, AI and public forms
+- HSTS, Content-Security-Policy and Cross-Origin-Opener-Policy headers
+- Generated code runs only in isolated containers, never in the web process
+- Audit logs, idempotent payment webhooks, confirmation for destructive SQL
+
+To report a vulnerability, see [responsible disclosure](https://codexa.creditvault.tech/responsible-disclosure). No third-party security certifications are claimed.
+
+## Documentation
+
+| Guide | Covers |
+|---|---|
+| [`docs/CLOUDFLARE.md`](docs/CLOUDFLARE.md) | Deploying and operating on Cloudflare |
+| [`docs/RUNTIME.md`](docs/RUNTIME.md) | Sandbox, previews and the runner |
+| [`docs/AI_ENGINE.md`](docs/AI_ENGINE.md) | Agent, tools, streaming and repair |
+| [`docs/INTEGRATIONS.md`](docs/INTEGRATIONS.md) | Provider connections, GitHub, databases |
+| [`docs/BILLING.md`](docs/BILLING.md) | Plans, quotas, Stripe and Razorpay |
+| [`docs/API_CONTRACT.md`](docs/API_CONTRACT.md) | HTTP API |
+| [`docs/DESIGN.md`](docs/DESIGN.md) | Design system, tokens and motion |
 
 ## License
 
-Proprietary. All rights reserved.
+Proprietary. © Codexa. All rights reserved.
+
+<div align="center">
+<br>
+<sub>Built on Cloudflare. Trademarks belong to their owners; no partnership implied.</sub>
+</div>
