@@ -276,3 +276,7 @@
   [data-motion="reduced"] .wall-cell:nth-child(n + 5) { display: none; }
   [data-motion="reduced"] :is(.wall-tile__open, .wall-tile__name > span) { display: none; }
 }
+
+/* Keep the hero clean: no arc across the composer, a softer stage light. */
+.home-horizon .horizon__rim { display: none; }
+.home-horizon .horizon { opacity: calc(min(1, calc(var(--silk-opacity) + var(--horizon-boost, 0) * 0.8)) * 0.55); }
