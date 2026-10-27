@@ -14,7 +14,7 @@ import { Field, Input, Textarea } from "@/components/ui/input";
 import { Alert, Kbd } from "@/components/ui/misc";
 import { Popover, PopoverClose, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Segmented } from "@/components/ui/segmented";
-import { LogoMark } from "@/components/logo";
+import { LogoMark, Wordmark } from "@/components/logo";
 import { useLaunch, type LaunchStep } from "@/components/motion/launch";
 import { GOALS, ideasFor, nameFromPrompt, rankTemplates, type GoalId } from "@/components/auth/onboarding/goals";
 import { OB_STEPS, OnboardingProgress } from "@/components/auth/onboarding/progress";
@@ -371,7 +371,7 @@ export function OnboardingFlow({ user, workspaceId, workspaceName, templates, de
         <div className="mx-auto flex h-16 w-full max-w-[1240px] items-center gap-4 px-4 sm:px-8">
           <span className="flex shrink-0 items-center gap-2.5">
             <LogoMark size={26} state={launching ? "running" : "idle"} />
-            <span className="hidden text-[13px] font-semibold uppercase tracking-[0.2em] sm:inline">Codexa</span>
+            <Wordmark className="hidden text-[18px] sm:inline" />
           </span>
           <OnboardingProgress current={progressStep} className="mx-auto hidden max-w-sm md:flex" />
           <div className="ml-auto flex shrink-0 items-center gap-1.5 md:ml-0">

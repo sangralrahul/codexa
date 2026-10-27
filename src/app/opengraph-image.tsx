@@ -1,4 +1,5 @@
 import { ImageResponse } from "next/og";
+import { CODEXA_MARK_PATH } from "@/components/brand/codexa-mark";
 import { site } from "@/config/site";
 
 // Rendered per request: these are cheap, and serving them from the prerender
@@ -38,13 +39,10 @@ export default function OpenGraphImage() {
         <div style={{ position: "absolute", left: 0, right: 0, top: 452, height: 1, display: "flex", background: `linear-gradient(90deg, transparent, ${SIGNAL}, ${COBALT}, transparent)` }} />
         <div style={{ display: "flex", flexDirection: "column", justifyContent: "space-between", padding: 72, width: "100%", position: "relative" }}>
           <div style={{ display: "flex", alignItems: "center", gap: 20 }}>
-            <div style={{ display: "flex", width: 64, height: 64, borderRadius: 16, background: FG, alignItems: "center", justifyContent: "center" }}>
-              <svg width="44" height="44" viewBox="0 0 32 32" fill="none">
-                <path d="M21 10H13a4 4 0 0 0-4 4v4a4 4 0 0 0 4 4h8" stroke={INK} strokeWidth="3" strokeLinecap="round" />
-                <rect x="18" y="14.5" width="6" height="3" rx="1.5" fill={SIGNAL} />
-              </svg>
-            </div>
-            <div style={{ fontSize: 34, fontWeight: 600, letterSpacing: "0.18em" }}>CODEXA</div>
+            <svg width="64" height="64" viewBox="0 0 100 100">
+              <path d={CODEXA_MARK_PATH} fill={FG} />
+            </svg>
+            <div style={{ fontSize: 46, fontWeight: 700, letterSpacing: "-0.035em" }}>codexa</div>
           </div>
           <div style={{ display: "flex", flexDirection: "column", gap: 18 }}>
             <div style={{ fontSize: 84, fontWeight: 700, lineHeight: 1, letterSpacing: "-0.04em", maxWidth: 980 }}>Turn ideas into working software.</div>

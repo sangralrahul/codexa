@@ -3,7 +3,7 @@ import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import { routeMetadata } from "@/lib/seo";
 import { site } from "@/config/site";
-import { Logo, LogoMark } from "@/components/logo";
+import { Logo, LogoMark, Wordmark } from "@/components/logo";
 import { PageHeader } from "@/components/marketing/page-header";
 import { Section, SectionHeader } from "@/components/marketing/section";
 import { buttonClasses } from "@/components/ui/button";
@@ -31,8 +31,8 @@ export default function BrandPage() {
         lede="Everything on this page is rendered live by the same components the product uses, so what you see is what ships."
         meta={[
           { label: "Name", value: `"${site.name}", one word, capital C` },
-          { label: "Display face", value: "Mona Sans" },
-          { label: "Interface", value: "Geist and Geist Mono" },
+          { label: "Display face", value: "Inter Tight, with Instrument Serif italic for the H1 accent" },
+          { label: "Interface", value: "Inter and Geist Mono" },
         ]}
       />
       <Section size="sm">
@@ -40,14 +40,14 @@ export default function BrandPage() {
           <figure className="flex flex-col items-center justify-center gap-6 rounded-[20px] border border-border bg-white p-12" style={{ "--foreground": "black", "--background": "white", color: "black" } as React.CSSProperties}>
             <div className="flex items-center gap-5">
               <LogoMark size={64} />
-              <span className="text-2xl font-semibold uppercase tracking-[0.18em]">Codexa</span>
+              <Wordmark className="text-[34px]" />
             </div>
             <figcaption className="font-mono text-[11px] uppercase tracking-[0.08em] opacity-60">On paper</figcaption>
           </figure>
           <figure className="dark flex flex-col items-center justify-center gap-6 rounded-[20px] border border-border-strong bg-background p-12 text-foreground">
             <div className="flex items-center gap-5">
               <LogoMark size={64} />
-              <span className="text-2xl font-semibold uppercase tracking-[0.18em]">Codexa</span>
+              <Wordmark className="text-[34px]" />
             </div>
             <figcaption className="font-mono text-[11px] uppercase tracking-[0.08em] text-muted-foreground">On ink</figcaption>
           </figure>

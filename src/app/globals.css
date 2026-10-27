@@ -1297,15 +1297,15 @@ img[data-developed], .develop { animation: develop 700ms var(--ease-out) backwar
 
 /* LogoMark states (components/logo.tsx). */
 .logo-mark { transform-origin: 50% 50%; }
-.logo-mark__ring { stroke-dasharray: 16 84; animation: logo-ring 1.15s linear infinite; filter: drop-shadow(0 0 3px color-mix(in oklab, var(--signal) 70%, transparent)); }
-@keyframes logo-ring { to { stroke-dashoffset: -100; } }
-.logo-mark[data-state="running"] .logo-mark__caret { animation: caret 1s steps(1) infinite; }
+.logo-mark__glyph { transform-box: view-box; transform-origin: 50% 50%; }
+.logo-mark[data-state="running"] .logo-mark__glyph { animation: logo-turn 1.6s var(--ease-in-out) infinite; }
+@keyframes logo-turn { 0%, 15% { transform: rotate(0deg); } 85%, 100% { transform: rotate(180deg); } }
 .logo-mark[data-state="success"] { animation: logo-settle var(--dur-4) var(--ease-spring) both; }
 @keyframes logo-settle { from { transform: scale(0.88); } }
-.logo-mark__halo { transform-origin: 50% 50%; animation: logo-halo 900ms var(--ease-out) both; }
+.logo-mark__halo { transform-origin: 50% 50%; transform-box: view-box; animation: logo-halo 900ms var(--ease-out) both; }
 @keyframes logo-halo { from { opacity: 0.9; transform: scale(0.9); } to { opacity: 0; transform: scale(1.12); } }
 .logo-mark[data-state="error"] { animation: shake 360ms var(--ease-out); --shake: 2px; }
-.logo-mark__notch { transform-origin: 30px 2px; animation: pop-in var(--dur-3) var(--ease-snap) both; }
+.logo-mark__notch { transform-origin: 29px 3px; animation: pop-in var(--dur-3) var(--ease-snap) both; }
 .logo-mark { @variant calm { animation: none; & * { animation: none !important; } & .logo-mark__halo { display: none; } } }
 
 /* Text shimmer: the current stage label while an agent works. */
