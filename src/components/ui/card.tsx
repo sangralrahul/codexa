@@ -1,14 +1,15 @@
 import * as React from "react";
 import { cn } from "@/lib/utils";
 
+/** Elevation e1 card (16px radius, hairline border, inner top highlight). Add `e2`/`e3` or `data-spotlight` for more. */
 export function Card({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) {
-  return <div className={cn("rounded-2xl border border-border bg-card text-card-foreground shadow-[inset_0_1px_0_0_var(--hairline),var(--shadow-sm)]", className)} {...props} />;
+  return <div className={cn("rounded-xl border border-border bg-card text-card-foreground shadow-[inset_0_1px_0_0_var(--hairline),var(--shadow-sm)]", className)} {...props} />;
 }
 export function CardHeader({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) {
   return <div className={cn("flex flex-col gap-1.5 p-5", className)} {...props} />;
 }
 export function CardTitle({ className, ...props }: React.HTMLAttributes<HTMLHeadingElement>) {
-  return <h3 className={cn("text-base font-semibold leading-tight tracking-tight", className)} {...props} />;
+  return <h3 className={cn("text-[15px] font-semibold leading-tight tracking-tight", className)} {...props} />;
 }
 export function CardDescription({ className, ...props }: React.HTMLAttributes<HTMLParagraphElement>) {
   return <p className={cn("text-sm text-muted-foreground", className)} {...props} />;

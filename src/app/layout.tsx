@@ -11,14 +11,17 @@ import { MotionEffects } from "@/components/marketing/motion-effects";
 import { NavProgress } from "@/components/marketing/nav-progress";
 import { Toaster } from "@/components/ui/toast";
 
-// Editorial accent face for headline words (self-hosted from @fontsource).
-const instrumentSerif = localFont({
-  src: [
-    { path: "../../node_modules/@fontsource/instrument-serif/files/instrument-serif-latin-400-normal.woff2", weight: "400", style: "normal" },
-    { path: "../../node_modules/@fontsource/instrument-serif/files/instrument-serif-latin-400-italic.woff2", weight: "400", style: "italic" },
-  ],
-  variable: "--font-instrument-serif",
+// Display face for headings, prices and big numerals: Mona Sans Variable (OFL, self-hosted from
+// @fontsource-variable). The latin "standard" file carries both the weight (200–900) and width
+// (75–125%) axes, so display utilities can set font-stretch. Exposed as --font-mona-sans; the
+// design system reads it through --font-display (globals.css).
+const monaSans = localFont({
+  src: [{ path: "../../node_modules/@fontsource-variable/mona-sans/files/mona-sans-latin-standard-normal.woff2", weight: "200 900", style: "normal" }],
+  variable: "--font-mona-sans",
   display: "swap",
+  preload: true,
+  adjustFontFallback: "Arial",
+  declarations: [{ prop: "font-stretch", value: "75% 125%" }],
 });
 
 export const metadata: Metadata = {
@@ -34,8 +37,8 @@ export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
   themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#ffffff" },
-    { media: "(prefers-color-scheme: dark)", color: "#0b0c0f" },
+    { media: "(prefers-color-scheme: light)", color: "#fbfaf7" },
+    { media: "(prefers-color-scheme: dark)", color: "#08090b" },
   ],
 };
 
@@ -43,8 +46,16 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   const store = await cookies();
   const raw = store.get("codexa_theme")?.value;
   const theme: Theme = raw === "light" || raw === "dark" || raw === "system" ? raw : "system";
+  // Site motion preference (MotionToggle). "reduced" turns on calm mode everywhere, on top of the OS setting.
+  // Same name as MOTION_COOKIE in @/lib/client/motion (that module holds client hooks, so it is not imported here).
+  const motion = store.get("codexa_motion")?.value === "reduced" ? "reduced" : undefined;
   return (
-    <html lang="en" suppressHydrationWarning className={`${GeistSans.variable} ${GeistMono.variable} ${instrumentSerif.variable} h-full antialiased ${theme === "dark" ? "dark" : ""}`}>
+    <html
+      lang="en"
+      suppressHydrationWarning
+      data-motion={motion}
+      className={`${GeistSans.variable} ${GeistMono.variable} ${monaSans.variable} h-full antialiased ${theme === "dark" ? "dark" : ""}`}
+    >
       <head>
         <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />
         {/* Scroll-reveal styles only hide content once JS is known to run. */}

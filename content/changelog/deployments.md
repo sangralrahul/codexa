@@ -12,7 +12,7 @@ related: [runtime-and-previews, integrations]
 
 ## Codexa hosting
 
-- Builds in a fresh sandbox and serves the static output at a subdomain.
+- Builds in a fresh sandbox and serves the static output at a subdomain. Since [0.2.0](/changelog/cloudflare-platform) the build runs in the project's Cloudflare Container and the output is served from R2.
 - Build log per deployment, deployment history, one-click rollback without rebuilding.
 - Supports Vite + React and static projects. Node + Express projects are not deployable to static hosting; Next.js is not available yet.
 

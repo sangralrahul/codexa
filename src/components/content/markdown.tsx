@@ -25,11 +25,59 @@ function languageOf(node?: HastNode): string | undefined {
   return list.find((c) => c.startsWith("language-"))?.slice("language-".length);
 }
 
-function Heading({ level, id, children, className }: { level: 2 | 3; id?: string; children: React.ReactNode; className?: string }) {
+/** Leading "1. " of a numbered step heading, written by the author in the markdown. */
+const STEP_PREFIX = /^(\d+)\.\s+/;
+
+/**
+ * rehype plugin (steps mode): wraps each numbered H2 ("## 1. Create a project") and everything up to
+ * the next H2 in a `div[data-step]`, so the step can draw a continuous rail down its left edge. The
+ * heading keeps its text and id (rehype-slug runs first), so the table of contents is unchanged.
+ */
+function rehypeSteps() {
+  return (tree: HastNode) => {
+    const out: HastNode[] = [];
+    let current: HastNode | null = null;
+    for (const node of tree.children ?? []) {
+      if (node.type === "element" && node.tagName === "h2") {
+        const m = STEP_PREFIX.exec(hastText(node));
+        if (m) {
+          node.properties = { ...node.properties, dataStepHeading: m[1] };
+          current = { type: "element", tagName: "div", properties: { dataStep: m[1] }, children: [node] };
+          out.push(current);
+          continue;
+        }
+        current = null;
+      }
+      if (current) current.children!.push(node);
+      else out.push(node);
+    }
+    tree.children = out;
+  };
+}
+
+/** Drops the author's "1. " from the first text child (the step badge shows the number instead). */
+function stripStepPrefix(children: React.ReactNode): React.ReactNode {
+  const arr = React.Children.toArray(children);
+  if (typeof arr[0] === "string") arr[0] = arr[0].replace(STEP_PREFIX, "");
+  return arr;
+}
+
+function Heading({ level, id, step, children, className }: { level: 2 | 3; id?: string; step?: string; children: React.ReactNode; className?: string }) {
   const Tag = level === 2 ? "h2" : "h3";
   return (
     <Tag id={id} className={cn("group flex items-baseline gap-2", className)}>
-      <span>{children}</span>
+      {step ? (
+        <>
+          <span
+            aria-hidden="true"
+            className="absolute -left-[15px] grid size-[29px] -translate-y-px place-items-center rounded-full border border-border-strong bg-background font-mono text-[12px] font-medium text-foreground shadow-[0_0_0_4px_var(--background)]"
+          >
+            {step}
+          </span>
+          <span className="sr-only">Step {step}: </span>
+        </>
+      ) : null}
+      <span>{step ? stripStepPrefix(children) : children}</span>
       {id ? (
         <a href={`#${id}`} aria-label={`Link to section`} className="!text-muted-foreground opacity-0 transition hover:!text-foreground focus-visible:opacity-100 group-hover:opacity-100 !no-underline">
           <LinkIcon className="size-3.5" aria-hidden="true" />
@@ -40,11 +88,14 @@ function Heading({ level, id, children, className }: { level: 2 | 3; id?: string
 }
 
 const components: Components = {
-  h2: ({ node: _n, children, id }) => (
-    <Heading level={2} id={id}>
-      {children}
-    </Heading>
-  ),
+  h2: ({ node, children, id }) => {
+    const step = (node as HastNode | undefined)?.properties?.dataStepHeading;
+    return (
+      <Heading level={2} id={id} step={typeof step === "string" ? step : undefined}>
+        {children}
+      </Heading>
+    );
+  },
   h3: ({ node: _n, children, id }) => (
     <Heading level={3} id={id}>
       {children}
@@ -115,11 +166,26 @@ function stripPrefix(children: React.ReactNode, prefix: string): React.ReactNode
 /**
  * Server-rendered markdown with GitHub tables/task lists, heading ids, syntax
  * highlighting, copyable code blocks and callouts.
+ * `steps`: numbered H2s ("## 1. …") become a step rail: a numbered badge on a vertical line that
+ * runs down each step's content (for quickstarts, guides and tutorials).
  */
-export function Markdown({ children, className }: { children: string; className?: string }) {
+export function Markdown({ children, className, steps = false }: { children: string; className?: string; steps?: boolean }) {
   return (
-    <div className={cn("prose-codexa", className)}>
-      <ReactMarkdown remarkPlugins={[remarkGfm]} rehypePlugins={[rehypeSlug, [rehypeHighlight, { detect: false, ignoreMissing: true }]]} components={components}>
+    <div
+      className={cn(
+        "prose-codexa",
+        steps &&
+          // Each step is a block with a left rail; the heading's top margin stays inside it (pt-px) so the
+          // rail runs unbroken from step to step. Step 1's rail starts at its badge.
+          "[&_[data-step]]:relative [&_[data-step]]:ml-3.5 [&_[data-step]]:border-l [&_[data-step]]:border-border [&_[data-step]]:pb-2 [&_[data-step]]:pl-8 [&_[data-step]]:pt-px [&_[data-step='1']]:mt-10 [&_[data-step='1']>h2:first-child]:mt-0",
+        className,
+      )}
+    >
+      <ReactMarkdown
+        remarkPlugins={[remarkGfm]}
+        rehypePlugins={steps ? [rehypeSlug, rehypeSteps, [rehypeHighlight, { detect: false, ignoreMissing: true }]] : [rehypeSlug, [rehypeHighlight, { detect: false, ignoreMissing: true }]]}
+        components={components}
+      >
         {children}
       </ReactMarkdown>
     </div>

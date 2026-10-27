@@ -9,8 +9,9 @@ export default async function TemplatesPage({ searchParams }: { searchParams: Pr
     <PublicGalleryPage
       searchParams={sp}
       category="all"
-      title="Starter templates"
-      intro="Pick a runnable starting point — React single-page apps, static sites, or Express APIs — then describe what to change. Filter by category, framework and difficulty."
+      title="Start from a real app."
+      dim="real app."
+      intro="Runnable starters for React single-page apps, static sites and Express APIs. Pick one, then describe what to change: the agent edits real files you can read, run and keep."
       crumbs={[{ name: "Templates", path: "/templates" }]}
     />
   );

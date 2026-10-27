@@ -1,3 +1,6 @@
+import Link from "next/link";
+import { ArrowRight } from "lucide-react";
+import { Meter } from "@/components/ui/meter";
 import { cn } from "@/lib/utils";
 
 type Entitlements = {
@@ -7,55 +10,52 @@ type Entitlements = {
   used: { ai_request: number; runtime_minutes: number; deployment: number };
 };
 
-function Meter({ label, used, limit, unit }: { label: string; used: number; limit: number; unit?: string }) {
-  const unlimited = limit < 0;
-  const pct = unlimited ? 0 : Math.min(100, Math.round((used / Math.max(1, limit)) * 100));
-  const r = 22;
-  const c = 2 * Math.PI * r;
-  return (
-    <div className="flex items-center gap-4 bg-card p-5">
-      <svg viewBox="0 0 56 56" className="size-14 shrink-0 -rotate-90" role="img" aria-label={`${label}: ${pct}% used`}>
-        <circle cx="28" cy="28" r={r} fill="none" strokeWidth="5" className="stroke-muted" />
-        <circle
-          cx="28"
-          cy="28"
-          r={r}
-          fill="none"
-          strokeWidth="5"
-          strokeLinecap="round"
-          strokeDasharray={c}
-          strokeDashoffset={c * (1 - Math.max(pct, used > 0 ? 3 : 0) / 100)}
-          className={cn("ring-fill", pct >= 90 ? "stroke-danger" : pct >= 70 ? "stroke-warning" : "stroke-signal")}
-        />
-      </svg>
-      <div className="min-w-0">
-        <p className="text-xs text-muted-foreground">{label}</p>
-        <p className="mt-1 flex items-baseline gap-1.5">
-          <span className="text-xl font-semibold tabular-nums tracking-tight">{used.toLocaleString()}</span>
-          <span className="truncate text-xs tabular-nums text-muted-foreground">
-            / {unlimited ? "unlimited" : limit.toLocaleString()}
-            {unit ? ` ${unit}` : ""}
-          </span>
-        </p>
-      </div>
-    </div>
-  );
+/** The first day of the next calendar month (UTC), when usage counters reset. */
+function resetDate(periodStart: Date) {
+  return new Date(Date.UTC(periodStart.getUTCFullYear(), periodStart.getUTCMonth() + 1, 1));
 }
 
-/** Server-rendered usage summary for the current workspace (data from getWorkspaceEntitlements). */
-export function UsageCard({ workspaceName, entitlements, projectCount }: { workspaceName: string; entitlements: Entitlements; projectCount: number }) {
+const n = (v: number) => v.toLocaleString("en-US");
+
+/**
+ * "This month": the current workspace's usage as horizontal bars (data from
+ * getWorkspaceEntitlements). Bars turn warning at 70% and danger at 90%; unlimited
+ * limits read "Unlimited" as text. Server-safe.
+ */
+export function UsageCard({ workspaceName, entitlements, projectCount, className }: { workspaceName: string; entitlements: Entitlements; projectCount: number; className?: string }) {
   const e = entitlements;
+  const resets = resetDate(e.periodStart).toLocaleDateString("en-US", { month: "short", day: "numeric", timeZone: "UTC" });
+  const rows = [
+    { label: "Projects", used: projectCount, limit: e.limits.projects },
+    { label: "AI requests", used: e.used.ai_request, limit: e.limits.aiRequestsPerMonth },
+    { label: "Preview minutes", used: e.used.runtime_minutes, limit: e.limits.runtimeMinutesPerMonth },
+    { label: "Deployments", used: e.used.deployment, limit: e.limits.deploymentsPerMonth },
+  ];
   return (
-    <div className="overflow-hidden rounded-xl border border-border bg-card">
-      <div className="grid gap-px bg-border sm:grid-cols-2">
-        <Meter label="Projects" used={projectCount} limit={e.limits.projects} />
-        <Meter label="AI requests" used={e.used.ai_request} limit={e.limits.aiRequestsPerMonth} />
-        <Meter label="Preview runtime" used={e.used.runtime_minutes} limit={e.limits.runtimeMinutesPerMonth} unit="min" />
-        <Meter label="Deployments" used={e.used.deployment} limit={e.limits.deploymentsPerMonth} />
+    <section aria-labelledby="usage-title" className={cn("e1 flex min-w-0 flex-col rounded-[18px] p-5", className)}>
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0">
+          <h2 id="usage-title" className="text-[15px] font-semibold tracking-[-0.01em]">
+            This month
+          </h2>
+          <p className="mt-0.5 truncate text-[13px] text-muted-foreground">
+            <span className="capitalize">{e.plan}</span> plan · {workspaceName}
+          </p>
+        </div>
+        <Link href="/settings/usage" className="link-draw inline-flex shrink-0 items-center gap-1 text-xs font-medium text-muted-foreground hover:text-foreground">
+          Details <ArrowRight className="size-3" aria-hidden="true" />
+        </Link>
       </div>
-      <p className="border-t border-border bg-surface/60 px-5 py-2.5 text-xs text-muted-foreground">
-        <span className="capitalize">{e.plan}</span> plan · {workspaceName} · period started {e.periodStart.toLocaleDateString("en-US", { month: "short", day: "numeric" })}
+      <div className="mt-5 space-y-4">
+        {rows.map((r) => (
+          <Meter key={r.label} label={r.label} value={r.used} max={Math.max(0, r.limit)} unlimited={r.limit < 0} format={n} size="sm" warnAt={0.7} dangerAt={0.9} />
+        ))}
+      </div>
+      <p className="mt-auto pt-5 text-xs text-muted-foreground">
+        <span className="block border-t border-border pt-3">
+          Resets <time dateTime={resetDate(e.periodStart).toISOString()}>{resets}</time>. Limits are enforced on the server.
+        </span>
       </p>
-    </div>
+    </section>
   );
 }

@@ -20,7 +20,7 @@ Projects are the main resource. These endpoints create, list, update and delete 
 \`\`\`bash
 curl -b cookies.txt -X POST "$HOST/api/v1/projects" \\
   -H 'Content-Type: application/json' \\
-  -d '{"workspaceId":"ws_…","name":"task-tracker","templateId":"vite-react-minimal"}'
+  -d '{"workspaceId":"ws_…","name":"task-tracker","templateId":"vite-react-starter"}'
 \`\`\`
 
 Creating beyond the plan limit returns \`402 quota_exceeded\` with \`details.kind = "projects"\`.
@@ -62,7 +62,7 @@ Environment variable values are never included in any other response, including 
 
 ## Templates
 
-\`GET /api/v1/templates?q=&category=&framework=&sort=\` is public and returns template metadata without files. It is listed as planned until its handler lands; the [templates](/templates) pages are served from the same data.
+\`GET /api/v1/templates?q=&category=&framework=&sort=\` is public and returns template metadata without files: \`{ templates, total, query, categories }\`. The [templates](/templates) pages are served from the same data, and responses are cacheable for five minutes.
 `;
 
 export default function ApiProjectsPage() {

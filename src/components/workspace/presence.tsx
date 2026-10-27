@@ -1,153 +1,74 @@
 "use client";
 
-import { useEffect } from "react";
-import { RefreshCw, Users } from "lucide-react";
-import { usePresence, type PresencePeer } from "@/lib/client/presence";
+import * as React from "react";
+import { usePresence, type PresencePeer, type UsePresence } from "@/lib/client/presence";
 import { on } from "@/lib/client/events";
-import { Tooltip, TooltipProvider } from "@/components/ui/tooltip";
-import { cn } from "@/lib/utils";
-
-function initials(name: string) {
-  const parts = name.trim().split(/\s+/).filter(Boolean);
-  return ((parts[0]?.[0] ?? "?") + (parts[1]?.[0] ?? "")).toUpperCase();
-}
-
-function Avatar({ peer, className }: { peer: PresencePeer; className?: string }) {
-  return (
-    <span
-      className={cn("inline-flex size-7 shrink-0 items-center justify-center rounded-full border-2 border-background text-[11px] font-semibold text-white", className)}
-      style={{ backgroundColor: peer.color }}
-      aria-hidden="true"
-    >
-      {initials(peer.name)}
-    </span>
-  );
-}
+import { Tooltip } from "@/components/ui/tooltip";
+import { Avatar } from "@/components/ui/avatar";
 
 /**
- * Live collaborators for a project: avatar stack with names and active files, and a "Live: N" indicator.
- * Mirrors the local editor's open file to peers (listens to codexa:open-file) and relays codexa:files-changed.
+ * One realtime connection per workspace, shared by the header avatars and the status bar.
+ * Mirrors the local editor's open file to peers and relays codexa:files-changed. Peers are
+ * only ever the real ones the server reports; nothing renders until the socket is connected.
  */
-export function Presence({ projectId, activeFile, compact }: { projectId: string; activeFile?: string | null; compact?: boolean }) {
-  const { status, peers, self, error, send, reconnect } = usePresence(projectId);
+const PresenceContext = React.createContext<UsePresence | null>(null);
 
-  useEffect(() => {
+export function PresenceProvider({ projectId, activeFile, children }: { projectId: string; activeFile?: string | null; children: React.ReactNode }) {
+  const presence = usePresence(projectId);
+  const { status, send } = presence;
+
+  React.useEffect(() => {
     if (status !== "connected") return;
     send({ type: "presence", activeFile: activeFile ?? null });
   }, [status, activeFile, send]);
 
-  useEffect(() => {
-    const offOpen = on("codexa:open-file", (d) => {
-      send({ type: "presence", activeFile: d.path });
-    });
+  React.useEffect(() => {
     const offChanged = on("codexa:files-changed", (d) => {
       if (d.source !== "github" && d.paths.length) send({ type: "file-changed", paths: d.paths.slice(0, 200) });
     });
-    return () => {
-      offOpen();
-      offChanged();
-    };
+    return () => offChanged();
   }, [send]);
 
-  const others = peers.filter((p) => p.id !== self?.id);
-  // Distinct users (a user with two tabs counts once).
-  const distinct = new Map<string, PresencePeer>();
-  for (const p of others) if (!distinct.has(p.userId)) distinct.set(p.userId, p);
-  const live = distinct.size + (self ? 1 : 0);
+  return <PresenceContext.Provider value={presence}>{children}</PresenceContext.Provider>;
+}
 
-  // Realtime is optional: deployments without it (e.g. Vercel) simply show nothing.
-  if (status === "not_configured") return null;
+export function usePresenceContext() {
+  return React.useContext(PresenceContext);
+}
 
-  // In the top bar, connection problems collapse to a dot with a tooltip instead of a sentence.
-  if (compact && status !== "connected") {
-    const text = status === "unauthorized" ? "Presence unavailable" : status === "unavailable" ? "Realtime server not reachable" : status === "reconnecting" ? "Reconnecting to realtime…" : "Connecting to realtime…";
-    return (
-      <TooltipProvider>
-        <Tooltip content={error ? `${text} (${error})` : text}>
-          <button
-            type="button"
-            onClick={status === "unavailable" ? reconnect : undefined}
-            className="inline-flex size-8 items-center justify-center rounded-md text-muted-foreground hover:bg-muted"
-            aria-label={status === "unavailable" ? `${text}. Retry` : text}
-          >
-            <Users className="size-4" aria-hidden="true" />
-            <span className={cn("-ml-1 mt-3 size-1.5 rounded-full", status === "unavailable" || status === "unauthorized" ? "bg-muted-foreground/60" : "animate-pulse bg-warning")} aria-hidden="true" />
-          </button>
-        </Tooltip>
-      </TooltipProvider>
-    );
-  }
+/** Distinct other people in the room (a user with two tabs counts once). */
+export function usePeers() {
+  const p = usePresenceContext();
+  return React.useMemo(() => {
+    if (!p || p.status !== "connected") return { connected: false, others: [] as PresencePeer[], self: null as PresencePeer | null };
+    const distinct = new Map<string, PresencePeer>();
+    for (const peer of p.peers) if (peer.id !== p.self?.id && peer.userId !== p.self?.userId && !distinct.has(peer.userId)) distinct.set(peer.userId, peer);
+    return { connected: true, others: [...distinct.values()], self: p.self };
+  }, [p]);
+}
 
-  if (status === "unavailable" || status === "unauthorized") {
-    return (
-      <div className={cn("flex items-center gap-2 text-xs text-muted-foreground", compact && "max-w-[12rem]")} role="status" aria-live="polite">
-        <Users className="size-3.5 shrink-0" aria-hidden="true" />
-        <span className="truncate" title={error ?? undefined}>
-          {status === "unauthorized" ? "Presence unavailable" : "Realtime server not reachable"}
-        </span>
-        {status === "unavailable" ? (
-          <button type="button" onClick={reconnect} className="rounded p-0.5 hover:bg-muted" aria-label="Retry realtime connection">
-            <RefreshCw className="size-3" aria-hidden="true" />
-          </button>
-        ) : null}
-      </div>
-    );
-  }
-
-  if (status !== "connected") {
-    return (
-      <div className="flex items-center gap-2 text-xs text-muted-foreground" role="status" aria-live="polite">
-        <span className="size-2 animate-pulse rounded-full bg-muted-foreground/60" aria-hidden="true" />
-        {status === "reconnecting" ? "Reconnecting…" : "Connecting…"}
-      </div>
-    );
-  }
-
-  const visible = [...distinct.values()].slice(0, 5);
-  const extra = distinct.size - visible.length;
-
+/** Header avatar stack: only when connected and only real peers (nothing for a solo session). */
+export function PresenceAvatars() {
+  const { connected, others } = usePeers();
+  if (!connected || !others.length) return null;
+  const visible = others.slice(0, 4);
+  const extra = others.length - visible.length;
   return (
-    <TooltipProvider>
-      <div className="flex items-center gap-2" role="status" aria-live="polite" aria-label={`${live} ${live === 1 ? "person" : "people"} live in this project`}>
-        <span className="inline-flex h-6 items-center gap-1.5 rounded-full border border-border px-2 text-[11px] font-medium">
-          <span className="size-1.5 rounded-full bg-success" aria-hidden="true" />
-          Live · {live}
-        </span>
-        {visible.length ? (
-          <ul className="flex -space-x-2" aria-label="Collaborators">
-            {self ? (
-              <li>
-                <Tooltip content={`${self.name} (you)`}>
-                  <span tabIndex={0} className="inline-flex rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
-                    <Avatar peer={self} />
-                    <span className="sr-only">{self.name} (you)</span>
-                  </span>
-                </Tooltip>
-              </li>
-            ) : null}
-            {visible.map((p) => (
-              <li key={p.id}>
-                <Tooltip content={p.activeFile ? `${p.name} — editing ${p.activeFile}` : p.name}>
-                  <span tabIndex={0} className="inline-flex rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
-                    <Avatar peer={p} />
-                    <span className="sr-only">
-                      {p.name}
-                      {p.activeFile ? `, editing ${p.activeFile}` : ""}
-                    </span>
-                  </span>
-                </Tooltip>
-              </li>
-            ))}
-            {extra > 0 ? (
-              <li className="inline-flex size-7 items-center justify-center rounded-full border-2 border-background bg-muted text-[11px] font-medium" aria-label={`${extra} more`}>
-                +{extra}
-              </li>
-            ) : null}
-          </ul>
-        ) : compact ? null : (
-          <span className="text-xs text-muted-foreground">Only you</span>
-        )}
-      </div>
-    </TooltipProvider>
+    <ul className="ws-pill-in flex items-center -space-x-1.5" aria-label={`${others.length} other ${others.length === 1 ? "person" : "people"} in this project`}>
+      {visible.map((p) => (
+        <li key={p.id}>
+          <Tooltip content={p.activeFile ? `${p.name} · ${p.activeFile}` : p.name}>
+            <span tabIndex={0} className="inline-flex rounded-full ring-2 ring-background focus-visible:outline-2 focus-visible:outline-ring">
+              <Avatar name={p.name} seed={p.userId} size="sm" presence="online" labelled />
+            </span>
+          </Tooltip>
+        </li>
+      ))}
+      {extra > 0 ? (
+        <li className="inline-flex size-6 items-center justify-center rounded-full bg-muted text-[10px] font-medium ring-2 ring-background" aria-label={`${extra} more`}>
+          +{extra}
+        </li>
+      ) : null}
+    </ul>
   );
 }

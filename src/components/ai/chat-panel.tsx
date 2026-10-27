@@ -2,18 +2,44 @@
 
 import * as React from "react";
 import Link from "next/link";
-import { ChevronDown, FlaskConical, KeyRound, MessageSquarePlus, RefreshCw, Sparkles } from "lucide-react";
+import {
+  ArrowRight,
+  BarChart3,
+  Bolt,
+  Check,
+  ChevronDown,
+  FormInput,
+  Image as ImageIcon,
+  KeyRound,
+  LayoutTemplate,
+  Lightbulb,
+  Mail,
+  MessageSquarePlus,
+  Palette,
+  RefreshCw,
+  Route,
+  Search,
+  ShieldCheck,
+  ShoppingBag,
+  Smartphone,
+  Sparkles,
+  Users,
+  Wrench,
+  type LucideIcon,
+} from "lucide-react";
 import { api, ClientApiError } from "@/lib/client/api";
 import { emit, on as subscribeEvent } from "@/lib/client/events";
 import { INITIAL_PROMPT_KEY } from "@/lib/client/workspace/storage";
+import { RAIL, railIndex, useAgent } from "@/lib/client/workspace/agent";
+import { relativeTime } from "@/components/projects/format";
 import { cn } from "@/lib/utils";
-import { Alert, Badge, Button, DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger, Skeleton, Spinner } from "@/components/ui";
-import { LogoMark } from "@/components/logo";
-import { Composer, FIX_DEFAULT_PROMPT } from "./composer";
-import { AssistantParts } from "./message-parts";
-import { ReviewChanges } from "./review-changes";
+import { Alert, Button, Popover, PopoverContent, PopoverTrigger, Skeleton, Spinner, Tooltip, TooltipProvider } from "@/components/ui";
+import { Composer, FIX_DEFAULT_PROMPT, splitContext, withContext, type ComposerContext } from "./composer";
+import { AssistantParts, stageLabel } from "./message-parts";
+import { RunFooter, useRunDetails } from "./review-changes";
 import { streamGenerate } from "./stream-client";
-import type { AgentMode, AiStatus, ConversationView, MessagePart, MessageView, RunView, SseEvent } from "./types";
+import { suggestionsFor, type Suggestion, type SuggestionIcon } from "./suggestions";
+import type { AgentMode, AiStatus, ConversationView, MessagePart, MessageView, RunValidation, RunView, SseEvent } from "./types";
 
 type SendError = { kind: "not_configured" | "quota" | "rate_limited" | "generic"; message: string; prompt: string; mode: AgentMode };
 
@@ -41,7 +67,37 @@ function takeInitialPrompt(projectId: string): string | null {
   }
 }
 
-export function ChatPanel({ projectId, conversationId: initialConversationId }: { projectId: string; conversationId?: string }) {
+const fixPrompt = (error: string, logs?: string[]) => {
+  const tail = logs?.length ? `\n\nRecent logs:\n${logs.slice(-40).join("\n")}` : "";
+  return `Fix this error:\n${error}${tail}`;
+};
+
+const ms = (iso?: string | null) => {
+  if (!iso) return null;
+  const t = Date.parse(iso);
+  return Number.isNaN(t) ? null : t;
+};
+
+export function ChatPanel({
+  projectId,
+  conversationId: initialConversationId,
+  projectName,
+  templateCategory,
+  framework,
+  canEdit = true,
+  showOperatorDetails = false,
+}: {
+  projectId: string;
+  conversationId?: string;
+  projectName?: string;
+  templateCategory?: string | null;
+  framework?: string | null;
+  canEdit?: boolean;
+  /** Owners and admins see the server setup details in not-configured states. */
+  showOperatorDetails?: boolean;
+}) {
+  const agent = useAgent();
+  const { report, setAi, activeFile } = agent;
   const [status, setStatus] = React.useState<AiStatus | null>(null);
   const [statusError, setStatusError] = React.useState<string | null>(null);
   const [conversations, setConversations] = React.useState<ConversationView[]>([]);
@@ -54,10 +110,21 @@ export function ChatPanel({ projectId, conversationId: initialConversationId }: 
   const [running, setRunning] = React.useState<{ runId: string | null; abort: AbortController } | null>(null);
   const [sendError, setSendError] = React.useState<SendError | null>(null);
   const [lastError, setLastError] = React.useState<string | null>(null);
+  const [context, setContext] = React.useState<ComposerContext>({ activeFile: true, error: false });
+  const [queued, setQueued] = React.useState<{ prompt: string; mode: AgentMode } | null>(null);
+  const [announcement, setAnnouncement] = React.useState("");
+  const lastAnnounced = React.useRef("");
   const listRef = React.useRef<HTMLDivElement>(null);
+  const stick = React.useRef(true);
   const textareaRef = React.useRef<HTMLTextAreaElement>(null);
   const initialPromptRef = React.useRef<string | null>(null);
   const autoSentRef = React.useRef(false);
+
+  const announce = React.useCallback((text: string) => {
+    if (!text || text === lastAnnounced.current) return;
+    lastAnnounced.current = text;
+    setAnnouncement(text);
+  }, []);
 
   // ---- loading -----------------------------------------------------------
   const loadStatus = React.useCallback(async () => {
@@ -65,11 +132,12 @@ export function ChatPanel({ projectId, conversationId: initialConversationId }: 
     try {
       const s = await api<AiStatus>(`${base(projectId)}/status`);
       setStatus(s);
+      setAi(s);
       setLastError(s.lastError);
     } catch (err) {
       setStatusError(err instanceof Error ? err.message : "Could not load AI status.");
     }
-  }, [projectId]);
+  }, [projectId, setAi]);
 
   const loadConversations = React.useCallback(async () => {
     try {
@@ -88,7 +156,15 @@ export function ChatPanel({ projectId, conversationId: initialConversationId }: 
       try {
         const r = await api<{ messages: MessageView[]; runs: RunView[] }>(`${base(projectId)}/conversations/${encodeURIComponent(cid)}/messages`);
         const runsByMessage = new Map(r.runs.filter((x) => x.messageId).map((x) => [x.messageId as string, x]));
-        setMessages(r.messages.map((m) => ({ ...m, run: runsByMessage.get(m.id) })));
+        setMessages((prev) => {
+          // Keep what only the live stream knew (validation, next steps, client start time).
+          const liveById = new Map(prev.filter((m) => m.run?.id).map((m) => [m.run!.id, m]));
+          return r.messages.map((m) => {
+            const run = runsByMessage.get(m.id);
+            const live = run ? liveById.get(run.id) : undefined;
+            return { ...m, run, validation: live?.validation, nextSteps: live?.nextSteps, startedAt: live?.startedAt };
+          });
+        });
       } catch (err) {
         setMessagesError(err instanceof Error ? err.message : "Could not load messages.");
       } finally {
@@ -127,11 +203,26 @@ export function ChatPanel({ projectId, conversationId: initialConversationId }: 
     };
   }, [activeId, loadMessages]);
 
-  // Auto-scroll while streaming / after loading.
+  // Follow the stream only while the reader is at the bottom (never yank them while reading).
+  // With no messages there is no stream to follow: the welcome / not-configured state reads from the top.
+  const hasMessages = React.useRef(false);
+  React.useEffect(() => {
+    hasMessages.current = messages.length > 0;
+    const el = listRef.current;
+    if (!el) return;
+    if (!messages.length) el.scrollTop = 0;
+    else if (stick.current) el.scrollTop = el.scrollHeight;
+  }, [messages]);
+  // Keep the bottom in view when the column itself resizes (revealed, dragged, rotated).
   React.useEffect(() => {
     const el = listRef.current;
-    if (el) el.scrollTop = el.scrollHeight;
-  }, [messages]);
+    if (!el || typeof ResizeObserver === "undefined") return;
+    const ro = new ResizeObserver(() => {
+      if (hasMessages.current && stick.current && el.clientWidth > 0) el.scrollTop = el.scrollHeight;
+    });
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
 
   // ---- streaming ---------------------------------------------------------
   const updateStreaming = React.useCallback((tempId: string, fn: (m: MessageView) => MessageView) => {
@@ -139,21 +230,39 @@ export function ChatPanel({ projectId, conversationId: initialConversationId }: 
   }, []);
 
   const send = React.useCallback(
-    async (promptIn: string, sendMode: AgentMode) => {
+    async (promptIn: string, sendMode: AgentMode, restoreDraft?: string) => {
       const prompt = promptIn.trim() || (sendMode === "fix" ? FIX_DEFAULT_PROMPT : "");
-      if (!prompt || running) return;
+      if (!prompt) return;
+      if (running) {
+        setQueued({ prompt, mode: sendMode });
+        return;
+      }
       setSendError(null);
       setDraft("");
+      stick.current = true;
       const abort = new AbortController();
       setRunning({ runId: null, abort });
-      const userTemp = `tmp-user-${Date.now()}`;
-      const asstTemp = `tmp-asst-${Date.now()}`;
-      const now = new Date().toISOString();
+      const now = Date.now();
+      const userTemp = `tmp-user-${now}`;
+      const asstTemp = `tmp-asst-${now}`;
+      const iso = new Date(now).toISOString();
       setMessages((prev) => [
         ...prev,
-        { id: userTemp, role: "user", content: prompt, parts: [{ type: "text", text: prompt }], createdAt: now },
-        { id: asstTemp, role: "assistant", content: "", parts: [], createdAt: now, streaming: true, run: { id: "", messageId: null, status: "queued", stage: "queued", changedFiles: [], snapshotBeforeId: null, error: null, tokensIn: 0, tokensOut: 0, repairAttempts: 0 } },
+        { id: userTemp, role: "user", content: prompt, parts: [{ type: "text", text: prompt }], createdAt: iso },
+        {
+          id: asstTemp,
+          role: "assistant",
+          content: "",
+          parts: [],
+          createdAt: iso,
+          streaming: true,
+          startedAt: now,
+          run: { id: "", messageId: null, status: "queued", stage: "queued", changedFiles: [], snapshotBeforeId: null, error: null, tokensIn: 0, tokensOut: 0, repairAttempts: 0, createdAt: iso, finishedAt: null },
+        },
       ]);
+      report.start(sendMode);
+      lastAnnounced.current = "";
+      announce("Agent started");
 
       let textOpen = false;
       let newConversationId: string | null = null;
@@ -166,11 +275,14 @@ export function ChatPanel({ projectId, conversationId: initialConversationId }: 
             newConversationId = ev.data.conversationId;
             setRunning({ runId: ev.data.runId, abort });
             updateStreaming(asstTemp, (m) => ({ ...m, run: { ...(m.run as RunView), id: ev.data.runId, messageId: ev.data.messageId, status: "running" } }));
+            report.identify(ev.data.runId);
             emit("codexa:ai-run", { runId: ev.data.runId, status: "running" });
             break;
           case "stage":
             textOpen = false;
             updateStreaming(asstTemp, (m) => ({ ...m, parts: [...m.parts, { type: "stage", stage: ev.data.stage, detail: ev.data.detail }], run: m.run ? { ...m.run, stage: ev.data.stage } : m.run }));
+            report.stage(ev.data.stage, ev.data.detail);
+            if (ev.data.stage !== "done" && ev.data.stage !== "failed" && ev.data.stage !== "cancelled") announce(stageLabel(ev.data.stage));
             break;
           case "text":
             if (textOpen) {
@@ -195,6 +307,7 @@ export function ChatPanel({ projectId, conversationId: initialConversationId }: 
             break;
           case "file_change":
             pushPart({ type: "file_change", path: ev.data.path, action: ev.data.action, summary: ev.data.summary });
+            report.file(ev.data.path, ev.data.action);
             break;
           case "plan":
             textOpen = false;
@@ -209,17 +322,27 @@ export function ChatPanel({ projectId, conversationId: initialConversationId }: 
             break;
           case "done": {
             finalStatus = ev.data.status;
-            const { status: s, runId, changedFiles, summary, nextSteps, error } = ev.data;
+            const { status: s, runId, changedFiles, summary, nextSteps, error, validation } = ev.data;
+            const finishedIso = new Date().toISOString();
             updateStreaming(asstTemp, (m) => ({
               ...m,
               streaming: false,
               content: summary ?? m.content,
               nextSteps,
-              run: { ...(m.run as RunView), id: runId, status: s, changedFiles, error: error ?? null, stage: s === "succeeded" ? "done" : s },
+              validation,
+              run: { ...(m.run as RunView), id: runId, status: s, changedFiles, error: error ?? null, stage: s === "succeeded" ? "done" : s, finishedAt: finishedIso },
             }));
             if (changedFiles.length) emit("codexa:files-changed", { paths: changedFiles.map((f) => f.path), source: "ai" });
             emit("codexa:ai-run", { runId, status: s });
+            report.done(s, runId, changedFiles, validation);
             if (error) setLastError(error);
+            announce(
+              s === "succeeded"
+                ? `Run finished. ${changedFiles.length ? `${changedFiles.length} file${changedFiles.length === 1 ? "" : "s"} changed.` : "No files changed."}${validation && !validation.ok ? " Checks failed." : ""}`
+                : s === "cancelled"
+                  ? "Run cancelled."
+                  : `Run failed. ${error ?? ""}`,
+            );
             break;
           }
         }
@@ -229,11 +352,14 @@ export function ChatPanel({ projectId, conversationId: initialConversationId }: 
         await streamGenerate(projectId, { prompt, mode: sendMode, conversationId: activeId }, { signal: abort.signal, onEvent });
         if (!finalStatus) {
           updateStreaming(asstTemp, (m) => ({ ...m, streaming: false, parts: [...m.parts, { type: "error", message: "The connection closed before the run finished. Reload the conversation to see its final state." }], run: m.run ? { ...m.run, status: "failed" } : m.run }));
+          report.done("failed", null, []);
+          announce("The connection closed before the run finished.");
         }
       } catch (err) {
         // Pre-stream JSON errors: remove the optimistic messages and show a state the user can act on.
         setMessages((prev) => prev.filter((m) => m.id !== userTemp && m.id !== asstTemp));
-        setDraft(promptIn);
+        setDraft(restoreDraft ?? promptIn);
+        report.done(abort.signal.aborted ? "cancelled" : "failed", null, []);
         if (err instanceof ClientApiError) {
           const kind: SendError["kind"] = err.code === "ai_not_configured" ? "not_configured" : err.code === "quota_exceeded" ? "quota" : err.code === "rate_limited" ? "rate_limited" : "generic";
           setSendError({ kind, message: err.message, prompt: promptIn, mode: sendMode });
@@ -243,6 +369,7 @@ export function ChatPanel({ projectId, conversationId: initialConversationId }: 
         } else {
           setSendError({ kind: "generic", message: err instanceof Error ? err.message : "The AI request failed.", prompt: promptIn, mode: sendMode });
         }
+        announce("The AI request failed.");
       } finally {
         setRunning(null);
         if (newConversationId) {
@@ -253,30 +380,53 @@ export function ChatPanel({ projectId, conversationId: initialConversationId }: 
         }
       }
     },
-    [projectId, activeId, running, updateStreaming, loadConversations, loadMessages, loadStatus],
+    [projectId, activeId, running, updateStreaming, loadConversations, loadMessages, loadStatus, report, announce],
   );
 
-  // Other panels can ask the chat to run a fix or a question.
+  // A request that arrived mid-run goes out as soon as the run ends.
   React.useEffect(() => {
-    const offFix = subscribeEvent("codexa:ai-fix-request", ({ error, logs }) => {
-      const tail = logs?.length ? `\n\nRecent logs:\n${logs.slice(-40).join("\n")}` : "";
-      const prompt = `Fix this error:\n${error}${tail}`;
+    if (running || !queued || !status?.configured) return;
+    const q = queued;
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- dequeue exactly once when the previous run has ended
+    setQueued(null);
+    setMode(q.mode);
+    void send(q.prompt, q.mode);
+  }, [running, queued, status, send]);
+
+  const requestFix = React.useCallback(
+    (error: string, logs?: string[]) => {
+      const prompt = fixPrompt(error, logs);
       setMode("fix");
-      setDraft(prompt);
-      if (status?.configured && !running) void send(prompt, "fix");
-    });
+      if (status?.configured) void send(prompt, "fix");
+      else setDraft(prompt);
+    },
+    [status, send],
+  );
+
+  // Other panels reach the agent: Fix requests, questions and plain prompts (always, even mid-run: they queue).
+  React.useEffect(() => {
+    const offFix = subscribeEvent("codexa:ai-fix-request", ({ error, logs }) => requestFix(error, logs));
     const offAsk = subscribeEvent("codexa:ai-ask", ({ text }) => {
       setMode("ask");
-      setDraft(text);
-      if (status?.configured && !running) void send(text, "ask");
+      if (status?.configured) void send(text, "ask");
+      else setDraft(text);
+    });
+    const offSend = subscribeEvent("codexa:ai-send", ({ text, mode: m }) => {
+      const sendMode = m ?? "build";
+      if (status?.configured) void send(text, sendMode);
+      else {
+        setMode(sendMode);
+        setDraft(text);
+      }
     });
     return () => {
       offFix();
       offAsk();
+      offSend();
     };
-  }, [status, running, send]);
+  }, [status, send, requestFix]);
 
-  // Auto-send the dashboard prompt once the status says AI is available.
+  // Auto-send the dashboard prompt once the status says AI is available (pre-filled otherwise).
   React.useEffect(() => {
     if (autoSentRef.current || !status || !initialPromptRef.current) return;
     autoSentRef.current = true;
@@ -296,62 +446,67 @@ export function ChatPanel({ projectId, conversationId: initialConversationId }: 
     }
   }, [projectId, running]);
 
-  const newChat = () => {
+  const newChat = React.useCallback(() => {
     if (running) return;
     setActiveId(null);
     setMessages([]);
     setSendError(null);
     textareaRef.current?.focus();
-  };
+  }, [running]);
+
+  React.useEffect(
+    () =>
+      subscribeEvent("codexa:agent-command", ({ command }) => {
+        if (command === "new-chat") newChat();
+        else requestAnimationFrame(() => textareaRef.current?.focus());
+      }),
+    [newChat],
+  );
 
   const active = conversations.find((c) => c.id === activeId) ?? null;
   const notConfigured = status ? !status.configured : false;
+  const streamingMsg = messages.find((m) => m.streaming);
+  const progress = React.useMemo(() => {
+    if (!streamingMsg) return 0;
+    const reached = new Set(streamingMsg.parts.filter((p) => p.type === "stage").map((p) => railIndex((p as { stage: string }).stage)).filter((i) => i >= 0));
+    return reached.size / RAIL.length;
+  }, [streamingMsg]);
+  const latestAssistantId = [...messages].reverse().find((m) => m.role === "assistant" && m.run?.id)?.id;
+  const onFix = React.useCallback((v: RunValidation) => requestFix(`${v.command ?? "Validation"} failed after the last AI run`, v.output?.split("\n").slice(-60)), [requestFix]);
 
   return (
-    <section className="flex h-full min-h-0 flex-col bg-background" aria-label="AI assistant">
-      <header className="flex h-10 shrink-0 items-center gap-1.5 border-b border-border px-2">
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <button type="button" className="flex min-w-0 flex-1 items-center gap-1.5 rounded-md px-1.5 py-1 text-left text-[13px] font-medium transition-colors hover:bg-muted focus-visible:outline-2 focus-visible:outline-ring" aria-label="Choose conversation">
-              <Sparkles className="size-3.5 shrink-0 text-signal" aria-hidden="true" />
-              <span className="truncate">{active?.title ?? "New chat"}</span>
-              <ChevronDown className="size-3.5 shrink-0 text-muted-foreground" aria-hidden="true" />
+    <TooltipProvider>
+    <section className="@container flex h-full min-h-0 flex-col" aria-label="AI assistant">
+      {/* Outline: h1 project (workspace) → h2 here → h3 run-card sections and AI headings. */}
+      <h2 className="sr-only">AI assistant</h2>
+      <header className="flex h-12 shrink-0 items-center gap-1.5 border-b border-border px-2.5">
+        <ConversationMenu conversations={conversations} activeId={activeId} disabled={Boolean(running)} onPick={(id) => setActiveId(id)} onNew={newChat} title={active?.title ?? "New chat"} />
+        {/* No "Not configured" badge here: the empty state below says it once, in full. */}
+        <div className="ml-auto flex items-center gap-1">
+          <Tooltip content="New chat">
+            <button
+              type="button"
+              onClick={newChat}
+              disabled={Boolean(running)}
+              aria-label="New chat"
+              className="inline-flex size-8 shrink-0 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:outline-2 focus-visible:outline-ring disabled:opacity-40"
+            >
+              <MessageSquarePlus className="size-4" aria-hidden="true" />
             </button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="start" className="max-h-72 w-72 overflow-y-auto">
-            <DropdownMenuItem onSelect={newChat} disabled={Boolean(running)}>
-              <MessageSquarePlus className="size-4" aria-hidden="true" /> New chat
-            </DropdownMenuItem>
-            {conversations.length ? <DropdownMenuSeparator /> : null}
-            {conversations.map((c) => (
-              <DropdownMenuItem key={c.id} onSelect={() => !running && setActiveId(c.id)} disabled={Boolean(running)} className={cn(c.id === activeId && "bg-muted")}>
-                <span className="truncate">{c.title}</span>
-              </DropdownMenuItem>
-            ))}
-          </DropdownMenuContent>
-        </DropdownMenu>
-        {status?.mock ? (
-          <Badge variant="warning" title="AI_MOCK=1 is set; responses are scripted and only available outside production.">
-            <FlaskConical className="size-3" aria-hidden="true" /> Mock AI (development only)
-          </Badge>
-        ) : status?.configured ? (
-          <Badge variant="outline" title={`Provider: ${status.provider}`} className="max-w-[9rem] truncate font-mono text-[10px]">
-            {status.model}
-          </Badge>
-        ) : null}
-        <button
-          type="button"
-          onClick={newChat}
-          disabled={Boolean(running)}
-          aria-label="New chat"
-          title="New chat"
-          className="inline-flex size-7 shrink-0 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:outline-2 focus-visible:outline-ring disabled:opacity-40"
-        >
-          <MessageSquarePlus className="size-4" aria-hidden="true" />
-        </button>
+          </Tooltip>
+        </div>
       </header>
 
-      <div ref={listRef} className="min-h-0 flex-1 overflow-y-auto px-3 py-4 scrollbar-thin" aria-live="polite" aria-busy={Boolean(running)}>
+      <div
+        ref={listRef}
+        onScroll={(e) => {
+          const el = e.currentTarget;
+          if (el.clientWidth === 0) return; // collapsed column: not a reading position
+          stick.current = el.scrollHeight - el.scrollTop - el.clientHeight < 96;
+        }}
+        className={cn("scrollbar-thin min-h-0 flex-1 overflow-y-auto px-3.5 py-4", notConfigured && !messages.length && "flex flex-col")}
+        aria-busy={Boolean(running)}
+      >
         {statusError ? (
           <Alert variant="danger" title="Could not load AI status">
             {statusError}{" "}
@@ -360,11 +515,13 @@ export function ChatPanel({ projectId, conversationId: initialConversationId }: 
             </button>
           </Alert>
         ) : null}
-        {notConfigured ? <NotConfigured missingEnv={status?.missingEnv ?? []} /> : null}
+        {notConfigured ? (
+          <NotConfigured missingEnv={status?.missingEnv ?? []} showOperatorDetails={showOperatorDetails} centered={!messages.length} suggestions={messages.length ? null : suggestionsFor(templateCategory, framework)} />
+        ) : null}
         {messagesLoading ? (
           <div className="space-y-3" aria-label="Loading messages">
-            <Skeleton className="h-12 w-3/4" />
-            <Skeleton className="h-24 w-full" />
+            <Skeleton className="ml-auto h-10 w-2/3 rounded-2xl" />
+            <Skeleton className="h-32 w-full rounded-2xl" />
           </div>
         ) : messagesError ? (
           <Alert variant="danger" title="Could not load this conversation">
@@ -375,6 +532,9 @@ export function ChatPanel({ projectId, conversationId: initialConversationId }: 
           </Alert>
         ) : !messages.length && !notConfigured && status ? (
           <ChatWelcome
+            projectName={projectName}
+            category={templateCategory}
+            framework={framework}
             onPick={(text, m) => {
               setMode(m);
               setDraft(text);
@@ -383,18 +543,39 @@ export function ChatPanel({ projectId, conversationId: initialConversationId }: 
           />
         ) : null}
         {!status && !statusError ? (
-          <p className="flex items-center gap-2 text-xs text-muted-foreground">
+          <p className="flex items-center gap-2 py-2 text-[13px] text-muted-foreground">
             <Spinner /> Checking AI configuration…
           </p>
         ) : null}
-        <ol className="space-y-5">
+        <ol className="space-y-6">
           {messages.map((m) => (
             <li key={m.id}>
-              {m.role === "user" ? <UserMessage content={m.content} /> : <AssistantMessage projectId={projectId} message={m} onReverted={() => activeId && void loadMessages(activeId)} />}
+              {m.role === "user" ? (
+                <UserMessage content={m.content} fresh={m.id.startsWith("tmp-")} />
+              ) : (
+                <AssistantMessage
+                  projectId={projectId}
+                  message={m}
+                  canEdit={canEdit}
+                  latest={m.id === latestAssistantId}
+                  onReverted={() => activeId && void loadMessages(activeId)}
+                  onFix={onFix}
+                  onNextStep={(text) => {
+                    setMode("build");
+                    setDraft(text);
+                    textareaRef.current?.focus();
+                  }}
+                />
+              )}
             </li>
           ))}
         </ol>
         {sendError ? <SendErrorState error={sendError} onRetry={() => void send(sendError.prompt, sendError.mode)} /> : null}
+      </div>
+
+      {/* One announcement per stage change and at completion (the list itself is not live). */}
+      <div className="sr-only" role="status" aria-live="polite" aria-atomic="true">
+        {announcement}
       </div>
 
       <Composer
@@ -402,127 +583,347 @@ export function ChatPanel({ projectId, conversationId: initialConversationId }: 
         onChange={setDraft}
         mode={mode}
         onModeChange={setMode}
-        onSend={() => void send(draft, mode)}
+        onSend={() => void send(withContext(draft, context, activeFile, lastError, mode), mode, draft)}
         onCancel={() => void cancel()}
         running={Boolean(running)}
         disabled={notConfigured || !status}
-        disabledReason={notConfigured ? "AI is not configured on this server." : undefined}
+        disabledReason={notConfigured ? "Chat turns on once AI is configured" : undefined}
         lastError={lastError}
         textareaRef={textareaRef}
+        model={status?.configured ? { name: status.model, provider: status.provider, mock: status.mock } : null}
+        activeFile={activeFile}
+        context={context}
+        onContextChange={setContext}
+        progress={progress}
+        queued={queued?.prompt ?? null}
+        onClearQueued={() => setQueued(null)}
       />
     </section>
+    </TooltipProvider>
   );
 }
 
-function UserMessage({ content }: { content: string }) {
+/* ---------------------------------------------------------------------------
+   Pieces
+   --------------------------------------------------------------------------- */
+
+function ConversationMenu({ conversations, activeId, disabled, onPick, onNew, title }: { conversations: ConversationView[]; activeId: string | null; disabled: boolean; onPick: (id: string) => void; onNew: () => void; title: string }) {
+  const [open, setOpen] = React.useState(false);
+  const [q, setQ] = React.useState("");
+  const list = conversations.filter((c) => c.title.toLowerCase().includes(q.trim().toLowerCase()));
   return (
-    <div className="flex justify-end">
-      <div className="max-w-[88%] whitespace-pre-wrap break-words rounded-2xl rounded-br-md bg-muted px-3.5 py-2 text-sm leading-relaxed">
+    <Popover
+      open={open}
+      onOpenChange={(o) => {
+        setOpen(o);
+        if (!o) setQ("");
+      }}
+    >
+      <PopoverTrigger asChild>
+        <button
+          type="button"
+          className="flex min-w-0 items-center gap-2 rounded-lg px-2 py-1.5 text-left text-[13.5px] font-semibold transition-colors hover:bg-muted focus-visible:outline-2 focus-visible:outline-ring"
+          aria-label={`Conversation: ${title}. Choose conversation`}
+        >
+          <Sparkles className="size-4 shrink-0 text-signal" aria-hidden="true" />
+          <span className="truncate">{title}</span>
+          <ChevronDown className="size-3.5 shrink-0 text-muted-foreground" aria-hidden="true" />
+        </button>
+      </PopoverTrigger>
+      <PopoverContent align="start" className="w-80 p-1.5">
+        <div className="relative mb-1">
+          <Search className="pointer-events-none absolute left-2.5 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground" aria-hidden="true" />
+          <label htmlFor="conv-search" className="sr-only">
+            Search conversations
+          </label>
+          <input
+            id="conv-search"
+            value={q}
+            onChange={(e) => setQ(e.target.value)}
+            placeholder="Search conversations"
+            className="h-8 w-full rounded-lg bg-muted pl-8 pr-2 text-[13px] outline-none placeholder:text-muted-foreground focus-visible:ring-2 focus-visible:ring-ring"
+          />
+        </div>
+        <button
+          type="button"
+          disabled={disabled}
+          onClick={() => {
+            onNew();
+            setOpen(false);
+          }}
+          className="flex w-full items-center gap-2 rounded-lg px-2 py-1.5 text-left text-[13px] font-medium transition-colors hover:bg-muted disabled:opacity-50"
+        >
+          <MessageSquarePlus className="size-4 text-muted-foreground" aria-hidden="true" /> New chat
+          <span className="ml-auto text-[11px] text-muted-foreground">Starts fresh; files stay</span>
+        </button>
+        {conversations.length ? <div className="my-1 h-px bg-border" /> : null}
+        <ul className="scrollbar-thin max-h-72 overflow-y-auto" aria-label="Conversations">
+          {list.map((c) => (
+            <li key={c.id}>
+              <button
+                type="button"
+                disabled={disabled}
+                aria-current={c.id === activeId ? "true" : undefined}
+                onClick={() => {
+                  onPick(c.id);
+                  setOpen(false);
+                }}
+                className={cn("flex w-full items-center gap-2 rounded-lg px-2 py-1.5 text-left text-[13px] transition-colors hover:bg-muted disabled:opacity-50", c.id === activeId && "bg-muted")}
+              >
+                <span className="min-w-0 flex-1 truncate">{c.title}</span>
+                <span className="shrink-0 text-[11px] tabular-nums text-muted-foreground">{relativeTime(c.updatedAt)}</span>
+                {c.id === activeId ? <Check className="size-3.5 shrink-0 text-foreground" aria-hidden="true" /> : null}
+              </button>
+            </li>
+          ))}
+          {conversations.length && !list.length ? <li className="px-2 py-3 text-center text-[12.5px] text-muted-foreground">No conversation matches “{q}”.</li> : null}
+          {!conversations.length ? <li className="px-2 py-3 text-center text-[12.5px] text-muted-foreground">No earlier conversations.</li> : null}
+        </ul>
+      </PopoverContent>
+    </Popover>
+  );
+}
+
+function UserMessage({ content, fresh }: { content: string; fresh: boolean }) {
+  const { text, file, error } = splitContext(content);
+  return (
+    <div className={cn("flex flex-col items-end gap-1.5", fresh && "ws-msg-user")}>
+      <div className="max-w-[88%] whitespace-pre-wrap break-words rounded-2xl rounded-br-md bg-muted px-3.5 py-2.5 text-[15px] leading-[1.6] shadow-[inset_0_0_0_1px_var(--border)]">
         <span className="sr-only">You: </span>
-        {content}
+        {text}
       </div>
+      {file || error ? (
+        <div className="flex max-w-[88%] flex-wrap justify-end gap-1.5" aria-label="Context sent with this message">
+          {file ? (
+            <span className="inline-flex max-w-full items-center gap-1 rounded-md bg-muted/70 px-1.5 py-0.5 font-mono text-[11px] text-muted-foreground shadow-[inset_0_0_0_1px_var(--border)]">
+              <span aria-hidden="true">@</span>
+              <span className="truncate">{file}</span>
+            </span>
+          ) : null}
+          {error ? (
+            <details className="group max-w-full rounded-md bg-danger/[0.06] text-[11px] text-danger shadow-[inset_0_0_0_1px_color-mix(in_oklab,var(--danger)_25%,transparent)]">
+              <summary className="cursor-pointer list-none px-1.5 py-0.5 font-medium [&::-webkit-details-marker]:hidden">Latest error attached</summary>
+              <pre className="max-h-32 overflow-auto border-t border-danger/20 px-2 py-1 font-mono text-[10.5px] text-muted-foreground">{error}</pre>
+            </details>
+          ) : null}
+        </div>
+      ) : null}
     </div>
   );
 }
 
-function AssistantMessage({ projectId, message, onReverted }: { projectId: string; message: MessageView; onReverted: () => void }) {
+function AssistantMessage({
+  projectId,
+  message,
+  canEdit,
+  latest,
+  onReverted,
+  onFix,
+  onNextStep,
+}: {
+  projectId: string;
+  message: MessageView;
+  canEdit: boolean;
+  latest: boolean;
+  onReverted: () => void;
+  onFix: (v: RunValidation) => void;
+  onNextStep: (text: string) => void;
+}) {
   const run = message.run;
   const status = run?.status;
   const changed = run?.changedFiles ?? [];
-  const showReview = run && run.id && !message.streaming && (status === "succeeded" || status === "failed" || status === "cancelled") && (changed.length > 0 || run.snapshotBeforeId);
-  const hasParts = message.parts.length > 0;
+  const finished = status === "succeeded" || status === "failed" || status === "cancelled";
+  const live = message.startedAt !== undefined;
+  const { details } = useRunDetails(projectId, run?.id || null, Boolean(run?.id) && finished && changed.length > 0 && (latest || live));
+  const showFooter = run && run.id && !message.streaming && finished && (changed.length > 0 || run.snapshotBeforeId || run.tokensIn || run.tokensOut);
+  const startedAt = message.startedAt ?? ms(run?.createdAt);
+  const finishedAt = ms(run?.finishedAt) ?? null;
   return (
-    <div className="min-w-0">
-      <p className="mb-1.5 flex items-center gap-1.5 text-xs font-semibold">
-        <LogoMark size={16} />
-        Codexa
-        {message.streaming ? <Spinner className="size-3 text-muted-foreground" /> : null}
-      </p>
-      <div className="min-w-0 space-y-2.5">
-        {hasParts ? <AssistantParts parts={message.parts} status={status} streaming={message.streaming} /> : message.streaming ? (
-          <p className="flex items-center gap-2 text-xs text-muted-foreground">
-            <Spinner /> Starting…
-          </p>
-        ) : message.content ? (
-          <p className="whitespace-pre-wrap text-sm">{message.content}</p>
-        ) : null}
-        {message.nextSteps?.length ? (
-          <div className="rounded-lg border border-border bg-surface p-3 text-sm">
-            <p className="mb-1 text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">Next steps</p>
-            <ul className="list-disc space-y-0.5 pl-5">
-              {message.nextSteps.map((s, i) => (
-                <li key={i}>{s}</li>
-              ))}
-            </ul>
-          </div>
-        ) : null}
-        {run && !message.streaming && (run.tokensIn || run.tokensOut) ? (
-          <p className="text-[11px] text-muted-foreground">
-            {status === "succeeded" ? "Completed" : status === "cancelled" ? "Cancelled" : status === "failed" ? "Failed" : status} · {(run.tokensIn + run.tokensOut).toLocaleString()} tokens
-            {run.repairAttempts ? ` · ${run.repairAttempts} repair attempt${run.repairAttempts === 1 ? "" : "s"}` : ""}
-          </p>
-        ) : null}
-        {showReview ? <ReviewChanges projectId={projectId} runId={run.id} changedCount={changed.length} onReverted={onReverted} /> : null}
-      </div>
+    <div className={cn("min-w-0 space-y-3", message.id.startsWith("tmp-") && "ws-msg-agent")}>
+      <span className="sr-only">Codexa: </span>
+      {message.parts.length || message.streaming ? (
+        <AssistantParts
+          parts={message.parts}
+          status={status}
+          streaming={message.streaming}
+          meta={{ startedAt, finishedAt, live, validation: message.validation, runError: run?.error, stats: details?.stats, onFix }}
+        />
+      ) : message.content ? (
+        <p className="whitespace-pre-wrap text-[15px] leading-[1.65]">{message.content}</p>
+      ) : null}
+      {message.nextSteps?.length ? (
+        <section className="space-y-1.5" aria-label="Next steps">
+          <h3 className="text-[13px] font-semibold">Next steps</h3>
+          <ul className="space-y-1">
+            {message.nextSteps.map((s, i) => (
+              <li key={i}>
+                <button
+                  type="button"
+                  onClick={() => onNextStep(s)}
+                  className="group flex w-full items-start gap-2 rounded-lg px-2 py-1.5 text-left text-[13.5px] transition-colors hover:bg-muted focus-visible:outline-2 focus-visible:outline-ring"
+                  title="Put this in the composer"
+                >
+                  <ArrowRight className="mt-0.5 size-3.5 shrink-0 text-muted-foreground transition-transform group-hover:translate-x-0.5" aria-hidden="true" />
+                  <span>{s}</span>
+                </button>
+              </li>
+            ))}
+          </ul>
+        </section>
+      ) : null}
+      {showFooter ? (
+        <RunFooter
+          projectId={projectId}
+          runId={run.id}
+          snapshotBeforeId={run.snapshotBeforeId}
+          changedCount={changed.length}
+          tokens={run.tokensIn + run.tokensOut}
+          startedAt={startedAt}
+          finishedAt={finishedAt}
+          canEdit={canEdit}
+          autoLoad={false}
+          onReverted={onReverted}
+        />
+      ) : null}
     </div>
   );
 }
 
-function NotConfigured({ missingEnv }: { missingEnv: string[] }) {
+/**
+ * AI not configured: one honest explanation, centred in the column, then what the agent will do
+ * for this project (the same template-aware starting points as the welcome) shown dimmed and
+ * inert, so the column shows the product without pretending it works.
+ */
+function NotConfigured({ missingEnv, showOperatorDetails, centered, suggestions }: { missingEnv: string[]; showOperatorDetails: boolean; centered: boolean; suggestions: Suggestion[] | null }) {
+  // Compact by default so the honest heading and copy always fit the column; the rest is one click away.
+  const [showAll, setShowAll] = React.useState(false);
+  const listId = React.useId();
+  const shown = suggestions ? (showAll ? suggestions : suggestions.slice(0, 2)) : [];
+  const hiddenCount = suggestions ? suggestions.length - shown.length : 0;
   return (
-    <div className="pop-in mx-auto mb-4 flex max-w-sm flex-col items-center px-2 pt-6 text-center">
-      <span className="flex size-12 items-center justify-center rounded-xl border border-border bg-surface text-muted-foreground shadow-sm">
+    <div className={cn("pop-in mx-auto mb-4 flex w-full max-w-sm flex-col items-center px-2 text-center", centered ? "my-auto py-2" : "pt-8")}>
+      <span className="flex size-12 items-center justify-center rounded-2xl border border-border-strong bg-card text-muted-foreground shadow-lg">
         <KeyRound className="size-5" aria-hidden="true" />
       </span>
-      <p className="mt-4 text-sm font-semibold">AI is not configured</p>
-      <p className="mt-1 text-xs leading-relaxed text-muted-foreground">The AI assistant isn&apos;t set up on this server yet. Your files, the editor, previews and version history still work.</p>
-      <Button asChild variant="outline" size="sm" className="mt-4 h-8 rounded-md">
+      <h2 className="mt-5 font-display text-[22px] font-[650] tracking-tight">AI is not configured</h2>
+      <p className="mt-1.5 text-[13.5px] leading-relaxed text-muted-foreground">The AI assistant isn&apos;t set up on this server yet. Your files, the editor, previews and version history still work.</p>
+      <Button asChild variant="outline" size="sm" className="mt-5">
         <Link href="/docs/ai-agent">Read the AI agent setup guide</Link>
       </Button>
-      <details className="group mt-6 w-full rounded-lg border border-border text-left text-xs">
-        <summary className="flex cursor-pointer list-none items-center justify-between px-3 py-2 font-medium text-muted-foreground hover:text-foreground [&::-webkit-details-marker]:hidden">
-          Details for the server operator
-          <span className="transition-transform group-open:rotate-90" aria-hidden="true">›</span>
-        </summary>
-        <p className="border-t border-border px-3 py-2.5 leading-relaxed text-muted-foreground">
-          No AI provider key is set. Add {missingEnv.length ? missingEnv.join(" or ") : "ANTHROPIC_API_KEY or OPENAI_API_KEY"} to the server environment and restart the app to enable the agent.
-        </p>
-      </details>
+      {showOperatorDetails ? (
+        <details className="group mt-6 w-full rounded-xl border border-border text-left text-xs">
+          <summary className="flex cursor-pointer list-none items-center justify-between px-3 py-2 font-medium text-muted-foreground hover:text-foreground [&::-webkit-details-marker]:hidden">
+            Details for the server operator
+            <span className="transition-transform group-open:rotate-90" aria-hidden="true">
+              ›
+            </span>
+          </summary>
+          <p className="border-t border-border px-3 py-2.5 leading-relaxed text-muted-foreground">
+            No AI provider key is set. Add {missingEnv.length ? missingEnv.join(" or ") : "ANTHROPIC_API_KEY or OPENAI_API_KEY"} to the server environment and restart the app to enable the agent.
+          </p>
+        </details>
+      ) : null}
+      {suggestions?.length ? (
+        <div className="mt-7 w-full text-left [@media(max-height:560px)]:hidden">
+          <p id="ai-preview-caption" className="flex items-center gap-2 text-[11.5px] font-medium text-muted-foreground">
+            <span className="h-px flex-1 bg-border" aria-hidden="true" />
+            Available once AI is configured
+            <span className="h-px flex-1 bg-border" aria-hidden="true" />
+          </p>
+          {/* Not buttons: nothing here can be sent until a provider is set up. */}
+          <ul id={listId} className="mt-2.5 space-y-1.5 opacity-70" aria-labelledby="ai-preview-caption">
+            {shown.map((sg) => {
+              const Icon = SUGGESTION_ICONS[sg.icon];
+              return (
+                <li key={sg.title} className="flex items-center gap-2.5 rounded-xl border border-dashed border-border px-2.5 py-2">
+                  <span className="flex size-7 shrink-0 items-center justify-center rounded-lg bg-muted text-muted-foreground" aria-hidden="true">
+                    <Icon className="size-3.5" />
+                  </span>
+                  <span className="min-w-0 flex-1">
+                    <span className="flex items-center gap-1.5 text-[13px] font-medium">
+                      <span className="truncate">{sg.title}</span>
+                      {sg.mode !== "build" ? <span className="shrink-0 rounded-md bg-muted px-1.5 py-px text-[10.5px] font-medium capitalize text-muted-foreground">{sg.mode}</span> : null}
+                    </span>
+                    <span className="block truncate text-[12px] text-muted-foreground">{sg.prompt}</span>
+                  </span>
+                </li>
+              );
+            })}
+          </ul>
+          {hiddenCount > 0 || showAll ? (
+            <button
+              type="button"
+              aria-expanded={showAll}
+              aria-controls={listId}
+              onClick={() => setShowAll((v) => !v)}
+              className="mx-auto mt-2 flex rounded-md px-2 py-1 text-[12px] font-medium text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-2 focus-visible:outline-ring"
+            >
+              {showAll ? "Show fewer" : `Show ${hiddenCount} more`}
+            </button>
+          ) : null}
+        </div>
+      ) : null}
     </div>
   );
 }
 
-const SUGGESTIONS: { text: string; mode: AgentMode }[] = [
-  { text: "Add a dark mode toggle to the header", mode: "build" },
-  { text: "Explain how this project is structured", mode: "ask" },
-  { text: FIX_DEFAULT_PROMPT, mode: "fix" },
-];
+const SUGGESTION_ICONS: Record<SuggestionIcon, LucideIcon> = {
+  layout: LayoutTemplate,
+  palette: Palette,
+  chart: BarChart3,
+  cart: ShoppingBag,
+  form: FormInput,
+  search: Search,
+  sparkles: Sparkles,
+  shield: ShieldCheck,
+  users: Users,
+  phone: Smartphone,
+  route: Route,
+  explain: Lightbulb,
+  fix: Wrench,
+  bolt: Bolt,
+  image: ImageIcon,
+  mail: Mail,
+};
 
-/** First-run state: what the agent does, plus a few starting points that fill the composer. */
-function ChatWelcome({ onPick }: { onPick: (text: string, mode: AgentMode) => void }) {
+/** First-run state: the project, one display line, and four starting points that fit this template. */
+function ChatWelcome({ projectName, category, framework, onPick }: { projectName?: string; category?: string | null; framework?: string | null; onPick: (text: string, mode: AgentMode) => void }) {
+  const suggestions = suggestionsFor(category, framework);
   return (
-    <div className="pop-in mx-auto flex max-w-sm flex-col items-center px-2 pt-6 text-center">
-      <span className="flex size-12 items-center justify-center rounded-xl border border-border bg-surface shadow-sm">
-        <Sparkles className="size-5 text-signal" aria-hidden="true" />
-      </span>
-      <p className="mt-4 text-sm font-semibold">What should we build?</p>
-      <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
-        Describe a feature, ask about the code, or fix the latest error. The agent plans first, edits files through reviewable tools, and snapshots the project before every change.
+    <div className="mx-auto flex max-w-xl flex-col px-0.5 pt-6">
+      {projectName ? <p className="truncate font-mono text-[12px] text-muted-foreground">{projectName}</p> : null}
+      <h2 className="mt-1.5 font-display text-[24px] font-[680] leading-[1.15] tracking-[-0.025em] text-balance">
+        What should we <span className="text-dim">build</span> next?
+      </h2>
+      <p className="mt-2 text-[13.5px] leading-relaxed text-muted-foreground text-pretty">
+        Describe a feature, ask about the code, or fix the latest error. The agent plans first, edits files through reviewable tools and saves a checkpoint before every change.
       </p>
-      <ul className="mt-5 w-full space-y-1.5 text-left">
-        {SUGGESTIONS.map((s) => (
-          <li key={s.text}>
-            <button
-              type="button"
-              onClick={() => onPick(s.text, s.mode)}
-              className="group flex w-full items-center justify-between gap-2 rounded-lg border border-border bg-background px-3 py-2 text-xs transition-colors hover:border-border-strong hover:bg-muted/50 focus-visible:outline-2 focus-visible:outline-ring"
-            >
-              <span className="truncate">{s.text}</span>
-              <span className="shrink-0 rounded bg-muted px-1.5 py-0.5 text-[10px] font-medium capitalize text-muted-foreground">{s.mode}</span>
-            </button>
-          </li>
-        ))}
+      <ul className="ws-suggest mt-5 grid grid-cols-1 gap-2 @[440px]:grid-cols-2" aria-label="Suggestions">
+        {suggestions.map((s) => {
+          const Icon = SUGGESTION_ICONS[s.icon];
+          return (
+            <li key={s.title}>
+              <button
+                type="button"
+                onClick={() => onPick(s.prompt, s.mode)}
+                className="group flex h-full w-full items-start gap-3 rounded-xl border border-border bg-card p-3 text-left shadow-[inset_0_1px_0_var(--hairline)] transition-[border-color,box-shadow,transform] duration-200 hover:-translate-y-px hover:border-border-strong hover:shadow-md focus-visible:outline-2 focus-visible:outline-ring calm:hover:translate-y-0"
+              >
+                <span className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-muted text-muted-foreground shadow-[inset_0_0_0_1px_var(--border)] transition-colors group-hover:text-signal">
+                  <Icon className="size-4" aria-hidden="true" />
+                </span>
+                <span className="min-w-0">
+                  <span className="flex items-center gap-1.5 text-[13.5px] font-semibold">
+                    {s.title}
+                    {s.mode !== "build" ? <span className="rounded-md bg-muted px-1.5 py-px text-[10.5px] font-medium capitalize text-muted-foreground">{s.mode}</span> : null}
+                  </span>
+                  <span className="mt-0.5 line-clamp-2 text-[12.5px] leading-snug text-muted-foreground">{s.prompt}</span>
+                </span>
+              </button>
+            </li>
+          );
+        })}
       </ul>
+      <p className="mt-3 text-[11.5px] text-muted-foreground">Picking one only fills the composer. Nothing is sent until you press Enter.</p>
     </div>
   );
 }

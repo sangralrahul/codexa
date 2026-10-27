@@ -4,7 +4,8 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Field, Input, Select } from "@/components/ui/input";
+import { Field, Input } from "@/components/ui/input";
+import { SelectMenu } from "@/components/ui/select-menu";
 import { Alert } from "@/components/ui/misc";
 import { api, ClientApiError } from "@/lib/client/api";
 import { RepoList, type RepoItem } from "./repo-list";
@@ -117,30 +118,20 @@ export function ImportProjectForm({
           </Field>
           <Field label="Branch" htmlFor="import-branch" error={fieldErrors.branch ?? branchError} hint={branches === null && repoName ? "Loading branches…" : undefined}>
             {branches && branches.length ? (
-              <Select id="import-branch" value={branch} onChange={(e) => setBranch(e.target.value)}>
-                {branches.map((b) => (
-                  <option key={b.name} value={b.name}>
-                    {b.name}
-                    {b.protected ? " (protected)" : ""}
-                  </option>
-                ))}
-              </Select>
+              <SelectMenu id="import-branch" value={branch} onValueChange={setBranch} options={branches.map((b) => ({ value: b.name, label: b.name, description: b.protected ? "Protected branch" : undefined }))} />
             ) : (
               <Input id="import-branch" value={branch} onChange={(e) => setBranch(e.target.value)} placeholder="main" autoComplete="off" />
             )}
           </Field>
           <Field label="Workspace" htmlFor="import-workspace" error={fieldErrors.workspaceId}>
-            <Select id="import-workspace" value={workspaceId} onChange={(e) => setWorkspaceId(e.target.value)} disabled={!workspaces.length}>
-              {workspaces.length ? (
-                workspaces.map((w) => (
-                  <option key={w.id} value={w.id}>
-                    {w.name}
-                  </option>
-                ))
-              ) : (
-                <option value="">No workspace where you can create projects</option>
-              )}
-            </Select>
+            <SelectMenu
+              id="import-workspace"
+              value={workspaceId}
+              onValueChange={setWorkspaceId}
+              disabled={!workspaces.length}
+              placeholder="No workspace where you can create projects"
+              options={workspaces.map((w) => ({ value: w.id, label: w.name, description: w.role ? `Your role: ${w.role}` : undefined }))}
+            />
           </Field>
           <Field label="Project name" htmlFor="import-name" error={fieldErrors.name} hint="Defaults to the repository name.">
             <Input id="import-name" value={name} onChange={(e) => setName(e.target.value)} maxLength={100} placeholder={repo?.name ?? "my-app"} />

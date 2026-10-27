@@ -1,323 +1,726 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, ArrowRight, BookOpen, Check, Code2, LayoutDashboard, LayoutTemplate, Megaphone, Rocket, Server, Sparkles, Users, Wrench } from "lucide-react";
+import { ArrowLeft, ArrowRight, Check, LayoutTemplate, Pencil, Sparkles, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { accountApi, projectsApi } from "@/lib/client/workspace/api";
 import { stashInitialPrompt } from "@/lib/client/workspace/storage";
 import type { TemplateSummary } from "@/lib/client/workspace/types";
+import { useCalm } from "@/lib/client/motion";
+import { IDEA_MAX, clearPendingIdea, readPendingIdea, type IdeaSource } from "@/lib/client/pending-idea";
 import { Button } from "@/components/ui/button";
-import { Field, Input, Select, Textarea } from "@/components/ui/input";
-import { Alert } from "@/components/ui/misc";
-import { TemplatePicker } from "./template-picker";
+import { Field, Input, Textarea } from "@/components/ui/input";
+import { Alert, Kbd } from "@/components/ui/misc";
+import { Popover, PopoverClose, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Segmented } from "@/components/ui/segmented";
+import { LogoMark } from "@/components/logo";
+import { useLaunch, type LaunchStep } from "@/components/motion/launch";
+import { GOALS, ideasFor, nameFromPrompt, rankTemplates, type GoalId } from "@/components/auth/onboarding/goals";
+import { OB_STEPS, OnboardingProgress } from "@/components/auth/onboarding/progress";
+import { ProfileChip } from "@/components/auth/onboarding/profile-chip";
+import { TemplateChoice } from "@/components/auth/onboarding/template-choice";
+import { WorkspacePreview, type PreviewState } from "@/components/auth/onboarding/workspace-preview";
+import { AnimatedHeight } from "@/components/auth/onboarding/animated-height";
+import { StarterShot } from "@/components/auth/onboarding/starter-shot";
 
-const GOALS = [
-  { label: "A SaaS product", icon: Rocket },
-  { label: "A landing page", icon: Megaphone },
-  { label: "An internal tool", icon: Wrench },
-  { label: "A portfolio", icon: Sparkles },
-  { label: "A dashboard", icon: LayoutDashboard },
-  { label: "An API / backend", icon: Server },
-  { label: "Learning to code", icon: BookOpen },
-  { label: "A prototype for a client", icon: Users },
-];
-
-const STEPS = [
-  { label: "Profile", title: "Welcome to", accent: "Codexa", sub: "Tell us a little about you. You can change this later in Settings." },
-  { label: "Goals", title: "What are you", accent: "building?", sub: "Pick anything that applies. We use it to suggest templates." },
-  { label: "First project", title: "Create your first", accent: "project", sub: "Describe it and let the AI agent start, or begin from a template." },
-];
-
-const TIMEZONES = [
-  "UTC",
-  "Asia/Kolkata",
-  "Asia/Singapore",
-  "Asia/Tokyo",
-  "Asia/Dubai",
-  "Europe/London",
-  "Europe/Berlin",
-  "Europe/Paris",
-  "Africa/Lagos",
-  "America/New_York",
-  "America/Chicago",
-  "America/Denver",
-  "America/Los_Angeles",
-  "America/Sao_Paulo",
-  "Australia/Sydney",
-];
-
-const LOCALES: { id: string; name: string }[] = [
-  { id: "en", name: "English" },
-  { id: "en-IN", name: "English (India)" },
-  { id: "hi", name: "Hindi" },
-  { id: "es", name: "Spanish" },
-  { id: "fr", name: "French" },
-  { id: "de", name: "German" },
-  { id: "pt-BR", name: "Portuguese (Brazil)" },
-  { id: "ja", name: "Japanese" },
-];
+type Mode = "template" | "prompt";
 
 type Props = {
-  user: { name: string; timezone: string; locale: string };
+  user: { name: string; email?: string; timezone: string; locale: string };
+  /** Null when the person cannot create projects here (no workspace, or a viewer). */
   workspaceId: string | null;
+  workspaceName: string | null;
   templates: TemplateSummary[];
   defaultTemplateId: string;
+  aiConfigured: boolean;
+  /** An idea carried in the URL (only when the browser could not store it): already clamped on the server. */
+  carried?: { prompt?: string; templateId?: string };
+  /** The account menu for the header (server-rendered element). */
+  userMenu?: React.ReactNode;
 };
 
-export function OnboardingFlow({ user, workspaceId, templates, defaultTemplateId }: Props) {
+const SOURCE_LABEL: Record<IdeaSource, string> = { home: "From the homepage", cta: "From the homepage", solution: "From a solutions page", command: "From the command menu" };
+
+const EXAMPLES = ["an invoice tracker with GST totals", "a habit tracker with streaks and weekly charts", "a booking page for a yoga studio", "a CRM for a two-person sales team"];
+
+/**
+ * Step actions (Back / Continue / Create). Sticky to the bottom of the viewport inside the
+ * card on a glass surface, so the primary action is on the first screen even when the step
+ * runs past the fold (1440x900, phones). It spans the card's padding edge to edge.
+ */
+const STEP_FOOTER =
+  "ob-footer sticky bottom-0 z-10 -mx-5 mt-8 flex flex-col-reverse items-stretch gap-3 border-t border-border bg-card/85 px-5 pb-[max(1rem,env(safe-area-inset-bottom))] pt-4 backdrop-blur-xl sm:-mx-7 sm:flex-row sm:items-center sm:px-7";
+
+/** Placeholder that types example ideas while the prompt box is empty (static when calm). */
+function useTypedPlaceholder(active: boolean) {
+  const calm = useCalm();
+  const [text, setText] = useState("Describe your app in a sentence or two…");
+  useEffect(() => {
+    if (!active || calm) return;
+    let idea = 0;
+    let pos = 0;
+    let erasing = false;
+    let timer = 0;
+    const tick = () => {
+      const full = EXAMPLES[idea];
+      pos += erasing ? -1 : 1;
+      setText(`e.g. ${full.slice(0, Math.max(0, pos))}`);
+      if (!erasing && pos >= full.length) {
+        erasing = true;
+        timer = window.setTimeout(tick, 2200);
+        return;
+      }
+      if (erasing && pos <= 0) {
+        erasing = false;
+        idea = (idea + 1) % EXAMPLES.length;
+      }
+      timer = window.setTimeout(tick, erasing ? 16 : 44);
+    };
+    timer = window.setTimeout(tick, 900);
+    return () => clearTimeout(timer);
+  }, [active, calm]);
+  return text;
+}
+
+/**
+ * First-run onboarding, "Mission control" (PLAN §5.5):
+ *  1. "What are you building?" A prompt box, goal image cards (keys 1–8) and goal-derived
+ *     ideas, with the profile chip on top (ob-name / ob-tz / ob-locale in a popover).
+ *  2. "How do you want to start?" Describe it or start from a template; the templates are
+ *     ranked by the goals (GOAL_TO_CATEGORY) and the project name is derived, editable.
+ *  3. Launch: honest rows that tick as each real request resolves.
+ * The right-hand preview follows every choice. Contracts kept: the onboarding PATCH fields,
+ * finish(false) → /dashboard, codexa:initialPrompt only in prompt mode, timezone detection
+ * only when the stored zone is empty or UTC, no Create for viewers.
+ */
+export function OnboardingFlow({ user, workspaceId, workspaceName, templates, defaultTemplateId, aiConfigured, carried, userMenu }: Props) {
   const router = useRouter();
-  const [step, setStep] = useState(0);
+  const calm = useCalm();
+  const known = useMemo(() => new Set(templates.map((t) => t.id)), [templates]);
+  const byId = useMemo(() => new Map(templates.map((t) => [t.id, t])), [templates]);
+
+  // Profile
   const [name, setName] = useState(user.name);
   const [timezone, setTimezone] = useState(user.timezone || "UTC");
+  const [detected, setDetected] = useState<string | null>(null);
+  const [locale, setLocale] = useState(user.locale || "en");
+  const [profileOpen, setProfileOpen] = useState(false);
+  const [profileError, setProfileError] = useState<string | null>(null);
+
+  // Idea and goals
+  const [prompt, setPrompt] = useState(carried?.prompt ?? "");
+  const [ideaTemplateId, setIdeaTemplateId] = useState<string | null>(carried?.templateId && known.has(carried.templateId) ? carried.templateId : null);
+  const [ideaChip, setIdeaChip] = useState<string | null>(carried?.prompt ? "From the homepage" : null);
+  const [goals, setGoals] = useState<GoalId[]>([]);
+  const [lastGoal, setLastGoal] = useState<GoalId | null>(null);
+  const [promptFocused, setPromptFocused] = useState(false);
+
+  // Start
+  const [mode, setMode] = useState<Mode | null>(null);
+  const [pickedTemplate, setPickedTemplate] = useState<string | null>(null);
+  const [projectName, setProjectName] = useState<string | null>(null);
+  const [editingName, setEditingName] = useState(false);
+
+  // Flow
+  const [step, setStep] = useState<0 | 1>(0);
+  const [dir, setDir] = useState<"forward" | "back" | "none">("none");
+  const [announce, setAnnounce] = useState("");
+  const [error, setError] = useState<string | null>(null);
+  const [launching, setLaunching] = useState(false);
+  const [skipping, setSkipping] = useState(false);
+
+  const cardRef = useRef<HTMLDivElement>(null);
+  const titleRef = useRef<HTMLHeadingElement>(null);
+  const promptRef = useRef<HTMLTextAreaElement>(null);
+  const typingTimer = useRef(0);
+  const progress = useRef<{ saved: boolean }>({ saved: false });
+  const shownStep = useRef<0 | 1>(0);
+
+  // The browser's own zone, once, when the stored one is empty or UTC (the server can't know it).
   useEffect(() => {
     if (user.timezone && user.timezone !== "UTC") return;
-    // Default to the browser's own zone after mount (the server can't know it); the user can still change it.
     try {
-      const detected = Intl.DateTimeFormat().resolvedOptions().timeZone;
-      // eslint-disable-next-line react-hooks/set-state-in-effect -- one-time read of a browser-only value
-      if (detected) setTimezone(detected);
+      const zone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+      if (zone) {
+        // eslint-disable-next-line react-hooks/set-state-in-effect -- one-time read of a browser-only value
+        setTimezone(zone);
+        setDetected(zone);
+      }
     } catch {
       // keep UTC
     }
   }, [user.timezone]);
-  const [locale, setLocale] = useState(user.locale || "en");
-  const [goals, setGoals] = useState<string[]>([]);
-  const [mode, setMode] = useState<"template" | "prompt">("prompt");
-  const [templateId, setTemplateId] = useState(defaultTemplateId);
-  const [prompt, setPrompt] = useState("");
-  const [projectName, setProjectName] = useState("My first project");
-  const [busy, setBusy] = useState(false);
-  const [error, setError] = useState<string | null>(null);
 
-  const tzOptions = TIMEZONES.includes(timezone) ? TIMEZONES : [timezone, ...TIMEZONES];
-  const meta = STEPS[step];
+  // The idea passport: an idea stashed by the homepage (or carried through sign-up / GitHub) pre-fills step 1.
+  useEffect(() => {
+    if (carried?.prompt) return;
+    const pending = readPendingIdea();
+    if (!pending) return;
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- one-time read of browser storage after hydration
+    setPrompt((p) => p || pending.text);
+    setIdeaChip(SOURCE_LABEL[pending.source] ?? "From the homepage");
+    if (pending.templateId && known.has(pending.templateId)) setIdeaTemplateId(pending.templateId);
+  }, [carried?.prompt, known]);
 
-  const saveProfile = async () => {
-    setBusy(true);
+  // Desktop: the cursor waits in the prompt box.
+  useEffect(() => {
+    if (!window.matchMedia("(pointer: fine)").matches) return;
+    const el = promptRef.current;
+    if (!el) return;
+    el.focus({ preventScroll: true });
+    el.setSelectionRange(el.value.length, el.value.length);
+  }, []);
+
+  // Focus follows a step change (not the first load, and not a calm-mode flip after hydration); the card's top comes into view below the sticky header.
+  useEffect(() => {
+    if (shownStep.current === step) return;
+    shownStep.current = step;
+    titleRef.current?.focus({ preventScroll: true });
+    const top = cardRef.current?.getBoundingClientRect().top ?? 0;
+    if (top < 80) window.scrollTo({ top: window.scrollY + top - 88, behavior: calm ? "auto" : "smooth" });
+  }, [step, calm]);
+
+  useEffect(() => () => clearInterval(typingTimer.current), []);
+
+  const ranked = useMemo(() => rankTemplates(templates, goals, lastGoal), [templates, goals, lastGoal]);
+  const autoTemplate = ideaTemplateId ?? (goals.length ? ranked.list[0]?.id : null) ?? defaultTemplateId;
+  const templateId = pickedTemplate && known.has(pickedTemplate) ? pickedTemplate : autoTemplate;
+  const template = byId.get(templateId) ?? byId.get(defaultTemplateId) ?? templates[0];
+  const effectiveMode: Mode = mode ?? (prompt.trim() ? "prompt" : "template");
+  const derivedName = (effectiveMode === "prompt" && prompt.trim() ? nameFromPrompt(prompt) : template?.name) || "My first project";
+  const finalName = (projectName ?? derivedName).trim() || "My first project";
+  const ideas = ideasFor(goals);
+  const placeholder = useTypedPlaceholder(!prompt && !promptFocused);
+  const progressStep = launching ? 2 : step;
+  // The same seed as the account menu in the header (stored name, else email): every avatar of this person shares one colour.
+  const avatarSeed = user.name.trim() || user.email || undefined;
+
+  const launch = useLaunch({
+    title: "Setting up your workspace",
+    onRetry: () => void run(),
+    onCancel: () => setLaunching(false),
+  });
+
+  function goTo(next: 0 | 1) {
+    setDir(calm ? "none" : next > step ? "forward" : "back");
+    setStep(next);
     setError(null);
-    try {
-      await accountApi.onboarding({ name: name.trim(), timezone, locale });
-      setStep(1);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Could not save your profile");
-    } finally {
-      setBusy(false);
+    setAnnounce(`Step ${next + 1} of 3, ${OB_STEPS[next]}`);
+  }
+
+  function toggleGoal(id: GoalId) {
+    const on = goals.includes(id);
+    setGoals(on ? goals.filter((g) => g !== id) : [...goals, id]);
+    setLastGoal(on ? null : id);
+  }
+
+  function typeIdea(text: string, goal: GoalId) {
+    clearInterval(typingTimer.current);
+    if (!goals.includes(goal)) {
+      setGoals([...goals, goal]);
+      setLastGoal(goal);
     }
-  };
+    const done = () => {
+      const el = promptRef.current;
+      el?.focus({ preventScroll: true });
+      el?.setSelectionRange(text.length, text.length);
+    };
+    if (calm) {
+      setPrompt(text);
+      done();
+      return;
+    }
+    let n = 0;
+    setPrompt("");
+    typingTimer.current = window.setInterval(() => {
+      n = Math.min(text.length, n + 2);
+      setPrompt(text.slice(0, n));
+      if (n >= text.length) {
+        clearInterval(typingTimer.current);
+        done();
+      }
+    }, 14);
+  }
 
-  const finish = async (createProject: boolean) => {
-    setBusy(true);
+  function next() {
+    if (!name.trim()) {
+      setProfileError("Add your name so teammates know who they're working with.");
+      setProfileOpen(true);
+      return;
+    }
+    setProfileError(null);
+    // Saved silently: the same fields go again with `completed` at the end, so a failure here loses nothing.
+    void accountApi.onboarding({ name: name.trim(), timezone, locale }).catch(() => {});
+    goTo(1);
+  }
+
+  async function skip() {
+    if (skipping) return;
+    setSkipping(true);
     setError(null);
     try {
-      await accountApi.onboarding({ completed: true });
-      if (createProject && workspaceId) {
-        const text = prompt.trim();
-        const res = await projectsApi.create({
-          workspaceId,
-          name: projectName.trim() || "My first project",
-          description: mode === "prompt" ? text.slice(0, 500) : goals.length ? `Building: ${goals.join(", ")}` : undefined,
-          templateId: mode === "prompt" ? defaultTemplateId : templateId,
-        });
-        if (mode === "prompt" && text) stashInitialPrompt(text);
-        router.push(`/projects/${res.project.id}`);
-        return;
-      }
+      await accountApi.onboarding({ ...(name.trim() ? { name: name.trim() } : {}), timezone, locale, completed: true });
       router.push("/dashboard");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Something went wrong");
-      setBusy(false);
+      setError(err instanceof Error ? err.message : "Could not finish setup. Please try again.");
+      setSkipping(false);
     }
+  }
+
+  async function run() {
+    if (!workspaceId) return;
+    const text = prompt.trim();
+    const steps: LaunchStep[] = [
+      { id: "setup", label: "Saving your setup", state: progress.current.saved ? "done" : "active" },
+      {
+        id: "create",
+        // "Creating Invoice tracker from Analytics dashboard"; when the name is still the starter's own, say it once.
+        label: !template ? `Creating ${finalName}` : finalName === template.name ? `Creating your ${template.name} project` : `Creating ${finalName} from ${template.name}`,
+        state: progress.current.saved ? "active" : "pending",
+      },
+      { id: "open", label: "Opening the editor", state: "pending" },
+    ];
+    launch.start(cardRef.current, steps);
+    setLaunching(true);
+    if (!progress.current.saved) {
+      try {
+        await accountApi.onboarding({ ...(name.trim() ? { name: name.trim() } : {}), timezone, locale, completed: true });
+        progress.current.saved = true;
+        launch.update("setup", "done");
+        launch.update("create", "active");
+      } catch (err) {
+        launch.fail("setup", err instanceof Error ? err.message : "Could not save your setup");
+        return;
+      }
+    }
+    try {
+      const res = await projectsApi.create({
+        workspaceId,
+        name: finalName,
+        description: effectiveMode === "prompt" ? text.slice(0, 500) || undefined : goals.length ? `Building: ${GOALS.filter((g) => goals.includes(g.id)).map((g) => g.label).join(", ")}` : undefined,
+        templateId: template?.id ?? defaultTemplateId,
+      });
+      launch.update("create", "done");
+      // The IDE's chat panel reads this once and hands it to the agent (prompt mode only).
+      if (effectiveMode === "prompt" && text) stashInitialPrompt(text);
+      clearPendingIdea();
+      launch.update("open", "active");
+      router.push(`/projects/${res.project.id}`);
+    } catch (err) {
+      launch.fail("create", err instanceof Error ? err.message : "Could not create the project");
+    }
+  }
+
+  function create() {
+    if (!workspaceId || launching) return;
+    if (effectiveMode === "prompt" && !prompt.trim()) {
+      setError("Describe your app first, or start from a template.");
+      return;
+    }
+    setError(null);
+    void run();
+  }
+
+  // Keyboard: 1–8 toggle goals, Ctrl/⌘+Enter continues or creates, Esc goes back.
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (launch.open || e.defaultPrevented) return;
+      if (document.querySelector("[data-radix-popper-content-wrapper], [role='dialog']")) return;
+      if ((e.metaKey || e.ctrlKey) && e.key === "Enter") {
+        e.preventDefault();
+        if (step === 0) next();
+        else create();
+        return;
+      }
+      const t = e.target as HTMLElement | null;
+      if (t?.closest("input, textarea, select, [contenteditable='true']") || e.altKey || e.metaKey || e.ctrlKey || e.shiftKey) return;
+      if (step === 0 && /^[1-8]$/.test(e.key)) {
+        const goal = GOALS[Number(e.key) - 1];
+        if (goal) {
+          e.preventDefault();
+          toggleGoal(goal.id);
+        }
+      } else if (step === 1 && e.key === "Escape") {
+        e.preventDefault();
+        goTo(0);
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  });
+
+  const preview: PreviewState = {
+    workspaceName: workspaceName ?? `${name.trim() || "Your"}'s workspace`,
+    userName: name.trim() || "You",
+    avatarSeed,
+    projectName: step === 0 && !prompt.trim() && !goals.length ? "" : finalName,
+    // Always the starter that Create would use, so the preview never shows something else.
+    template: template ? { id: template.id, name: template.name, category: template.category } : null,
+    prompt: effectiveMode === "prompt" || step === 0 ? prompt.trim() : "",
+    typing: promptFocused,
+    mode: effectiveMode,
   };
 
-  const card = "glass rounded-2xl border border-border/80 p-1.5 shadow-[0_40px_100px_-40px_rgba(0,0,0,0.55)]";
-  const inner = "rounded-[14px] border border-border/60 bg-card/90 p-6 sm:p-8";
-  const footer = "mt-8 flex items-center justify-between gap-3 border-t border-border pt-5";
-
   return (
-    <div className="mx-auto w-full max-w-2xl">
-      <ol className="mx-auto mb-10 flex max-w-sm items-center gap-2" aria-label="Progress">
-        {STEPS.map((st, i) => (
-          <li key={st.label} aria-current={step === i ? "step" : undefined} className="flex flex-1 items-center gap-2">
-            <span
-              className={cn(
-                "flex size-7 shrink-0 items-center justify-center rounded-full border text-[11px] font-medium transition-all duration-500",
-                step > i ? "border-foreground bg-foreground text-background" : step === i ? "border-foreground text-foreground shadow-[0_0_0_4px_color-mix(in_oklab,var(--foreground)_10%,transparent)]" : "border-border text-muted-foreground",
-              )}
-            >
-              {step > i ? <Check className="pop-in size-3.5" aria-hidden="true" /> : i + 1}
-              <span className="sr-only">{st.label}</span>
-            </span>
-            {i < STEPS.length - 1 ? (
-              <span className="h-px flex-1 overflow-hidden bg-border">
-                <span className={cn("block h-full bg-foreground transition-[width] duration-700 ease-out", step > i ? "w-full" : "w-0")} />
-              </span>
-            ) : null}
-          </li>
-        ))}
-      </ol>
+    <div className="relative isolate flex min-h-dvh flex-col [--btn-radius:10px]">
+      <div aria-hidden="true" className="app-atmosphere pointer-events-none absolute inset-0 -z-10" />
+      <div aria-hidden="true" className="bg-blueprint pointer-events-none absolute inset-x-0 top-0 -z-10 h-[560px] opacity-60" />
 
-      <div key={step} className="pop-in text-center">
-        <p className="font-mono text-[11px] uppercase tracking-[0.16em] text-muted-foreground">
-          Step {step + 1} of 3 · {meta.label}
-        </p>
-        <h1 className="mt-3 text-balance text-3xl font-semibold tracking-[-0.03em] sm:text-4xl">
-          {meta.title} <span className="serif-accent">{meta.accent}</span>
-        </h1>
-        <p className="mx-auto mt-3 max-w-md text-pretty text-sm text-muted-foreground">{meta.sub}</p>
-      </div>
-
-      {error ? (
-        <Alert variant="danger" className="mt-6">
-          {error}
-        </Alert>
-      ) : null}
-
-      <div key={`card-${step}`} className={cn(card, "pop-in mt-8")} style={{ animationDelay: "80ms" }}>
-        {step === 0 ? (
-          <form
-            onSubmit={(e) => {
-              e.preventDefault();
-              void saveProfile();
-            }}
-            className={cn(inner, "space-y-5")}
-          >
-            <Field label="Your name" htmlFor="ob-name">
-              <Input id="ob-name" value={name} onChange={(e) => setName(e.target.value)} required maxLength={80} autoFocus className="h-11" />
-            </Field>
-            <div className="grid gap-4 sm:grid-cols-2">
-              <Field label="Timezone" htmlFor="ob-tz" hint="Detected from your browser.">
-                <Select id="ob-tz" value={timezone} onChange={(e) => setTimezone(e.target.value)}>
-                  {tzOptions.map((tz) => (
-                    <option key={tz} value={tz}>
-                      {tz.replace(/_/g, " ")}
-                    </option>
-                  ))}
-                </Select>
-              </Field>
-              <Field label="Language" htmlFor="ob-locale">
-                <Select id="ob-locale" value={locale} onChange={(e) => setLocale(e.target.value)}>
-                  {LOCALES.map((l) => (
-                    <option key={l.id} value={l.id}>
-                      {l.name}
-                    </option>
-                  ))}
-                </Select>
-              </Field>
-            </div>
-            <div className={footer}>
-              <span className="text-xs text-muted-foreground">Takes under a minute.</span>
-              <Button type="submit" loading={busy} disabled={!name.trim()} className="rounded-lg">
-                Continue <ArrowRight className="size-4" />
-              </Button>
-            </div>
-          </form>
-        ) : null}
-
-        {step === 1 ? (
-          <div className={inner}>
-            <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-4" role="group" aria-label="What are you building">
-              {GOALS.map((g, i) => {
-                const on = goals.includes(g.label);
-                return (
-                  <button
-                    key={g.label}
-                    type="button"
-                    aria-pressed={on}
-                    onClick={() => setGoals((s) => (on ? s.filter((x) => x !== g.label) : [...s, g.label]))}
-                    style={{ animationDelay: `${120 + i * 40}ms` }}
-                    className={cn(
-                      "pop-in group relative flex flex-col items-start gap-3 rounded-xl border p-3.5 text-left text-[13px] transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring active:scale-[0.97]",
-                      on ? "border-foreground bg-foreground/[0.06] text-foreground shadow-[0_0_0_1px_var(--foreground)]" : "border-border text-muted-foreground hover:-translate-y-0.5 hover:border-border-strong hover:text-foreground",
-                    )}
-                  >
-                    <span className={cn("flex size-8 items-center justify-center rounded-lg border transition-colors", on ? "border-foreground bg-foreground text-background" : "border-border bg-surface")}>
-                      <g.icon className="size-4" aria-hidden="true" />
-                    </span>
-                    {g.label}
-                    {on ? (
-                      <span className="pop-in absolute right-2.5 top-2.5 flex size-4 items-center justify-center rounded-full bg-foreground text-background">
-                        <Check className="size-3" aria-hidden="true" />
-                      </span>
-                    ) : null}
-                  </button>
-                );
-              })}
-            </div>
-            <div className={footer}>
-              <Button type="button" variant="ghost" onClick={() => setStep(0)}>
-                <ArrowLeft className="size-4" /> Back
-              </Button>
-              <Button type="button" onClick={() => setStep(2)} className="rounded-lg">
-                {goals.length ? "Continue" : "Skip this step"} <ArrowRight className="size-4" />
-              </Button>
-            </div>
+      <header className="sticky top-0 z-30 border-b border-border/60 bg-background/75 backdrop-blur-xl">
+        <div className="mx-auto flex h-16 w-full max-w-[1240px] items-center gap-4 px-4 sm:px-8">
+          <span className="flex shrink-0 items-center gap-2.5">
+            <LogoMark size={26} state={launching ? "running" : "idle"} />
+            <span className="hidden text-[13px] font-semibold uppercase tracking-[0.2em] sm:inline">Codexa</span>
+          </span>
+          <OnboardingProgress current={progressStep} className="mx-auto hidden max-w-sm md:flex" />
+          <div className="ml-auto flex shrink-0 items-center gap-1.5 md:ml-0">
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button variant="ghost" size="sm" disabled={launching || skipping} className="text-muted-foreground hover:text-foreground">
+                  Skip setup
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent align="end" className="w-72 [--btn-radius:10px]">
+                <p className="text-[13px] font-semibold text-foreground">Skip setup?</p>
+                <p className="mt-1 text-xs leading-relaxed text-muted-foreground">You&apos;ll land on your dashboard. You can create a project there any time, and change your profile in Settings.</p>
+                <div className="mt-4 flex justify-end gap-2">
+                  <PopoverClose asChild>
+                    <Button variant="ghost" size="sm">
+                      Keep going
+                    </Button>
+                  </PopoverClose>
+                  <Button size="sm" onClick={() => void skip()} loading={skipping}>
+                    Go to dashboard
+                  </Button>
+                </div>
+              </PopoverContent>
+            </Popover>
+            {userMenu}
           </div>
-        ) : null}
+        </div>
+      </header>
 
-        {step === 2 ? (
-          <form
-            onSubmit={(e) => {
-              e.preventDefault();
-              void finish(true);
-            }}
-            className={cn(inner, "space-y-5")}
-          >
-            {!workspaceId ? <Alert variant="warning">You do not have a workspace yet, so we will take you to the dashboard instead.</Alert> : null}
-            <div className="grid gap-2.5 sm:grid-cols-2" role="tablist" aria-label="How to start">
-              {(
-                [
-                  ["prompt", "Describe it", "The AI agent builds from your words", Code2],
-                  ["template", "Start from a template", "Pick a runnable starter", LayoutTemplate],
-                ] as const
-              ).map(([m, title, body, Icon]) => (
-                <button
-                  key={m}
-                  type="button"
-                  role="tab"
-                  aria-selected={mode === m}
-                  onClick={() => setMode(m)}
-                  className={cn(
-                    "flex items-start gap-3 rounded-xl border p-3.5 text-left transition-all duration-200",
-                    mode === m ? "border-foreground bg-foreground/[0.05] shadow-[0_0_0_1px_var(--foreground)]" : "border-border hover:border-border-strong",
-                  )}
-                >
-                  <span className={cn("flex size-8 shrink-0 items-center justify-center rounded-lg border", mode === m ? "border-foreground bg-foreground text-background" : "border-border bg-surface")}>
-                    <Icon className="size-4" aria-hidden="true" />
-                  </span>
-                  <span>
-                    <span className="block text-sm font-medium">{title}</span>
-                    <span className="block text-xs text-muted-foreground">{body}</span>
-                  </span>
-                </button>
-              ))}
+      <div className="mx-auto grid w-full max-w-[1240px] flex-1 items-start gap-8 px-4 pb-16 pt-6 sm:px-8 lg:pt-8 lg:grid-cols-[minmax(0,560px)_minmax(0,1fr)] lg:gap-14 xl:gap-16">
+        <section aria-labelledby="ob-step-title" className="min-w-0">
+          <OnboardingProgress current={progressStep} className="mb-5 md:hidden" />
+          <WorkspacePreview state={preview} variant="strip" className="mb-5 lg:hidden" />
+
+          <AnimatedHeight ref={cardRef} className="e2 rim rounded-[22px] shadow-[inset_0_1px_0_var(--hairline),var(--shadow-xl)]" innerClassName="p-5 sm:p-7">
+            <div key={step} data-dir={dir} className={cn("ob-step", dir === "none" && "ob-rise")}>
+              {step === 0 ? (
+                <>
+                  <div className="mb-6">
+                    <ProfileChip
+                      name={name}
+                      timezone={timezone}
+                      locale={locale}
+                      detected={detected}
+                      error={profileError}
+                      open={profileOpen}
+                      onOpenChange={(o) => {
+                        setProfileOpen(o);
+                        if (o) setProfileError(null);
+                      }}
+                      onName={(v) => {
+                        setName(v);
+                        if (v.trim()) setProfileError(null);
+                      }}
+                      onTimezone={setTimezone}
+                      onLocale={setLocale}
+                      avatarSeed={avatarSeed}
+                    />
+                  </div>
+                  <p className="text-label text-muted-foreground">Step 1 of 3 · Idea</p>
+                  <h1 id="ob-step-title" ref={titleRef} tabIndex={-1} className="text-app-display mt-3 outline-none">
+                    What are you <span className="text-dim">building?</span>
+                  </h1>
+                  <p className="mt-3 text-pretty text-[15px] leading-relaxed text-muted-foreground">
+                    Describe it in a sentence, pick what it&apos;s closest to, or both. Your picks put the matching starters first.
+                  </p>
+
+                  {ideaChip ? (
+                    <div className="ob-chip mt-5 inline-flex items-center gap-1.5 rounded-full bg-signal/12 py-1 pl-2.5 pr-1 text-xs font-medium text-signal-ink">
+                      <span aria-hidden="true" className="size-1.5 rounded-full bg-signal" />
+                      {ideaChip}
+                      <button
+                        type="button"
+                        aria-label="Dismiss the carried-over note"
+                        onClick={() => {
+                          setIdeaChip(null);
+                          clearPendingIdea();
+                        }}
+                        className="ml-0.5 flex size-5 items-center justify-center rounded-full transition-colors hover:bg-signal/20"
+                      >
+                        <X className="size-3" aria-hidden="true" />
+                      </button>
+                    </div>
+                  ) : null}
+
+                  <div suppressHydrationWarning className={cn("comet-border rounded-[18px] shadow-md", ideaChip ? "mt-3" : "mt-6")} data-active={prompt ? "" : undefined}>
+                    <div className="comet-border__inner rounded-[17px]">
+                      <label htmlFor="ob-prompt" className="sr-only">
+                        Describe what you want to build
+                      </label>
+                      <Textarea
+                        id="ob-prompt"
+                        ref={promptRef}
+                        value={prompt}
+                        rows={3}
+                        maxLength={IDEA_MAX}
+                        placeholder={placeholder}
+                        aria-describedby="ob-prompt-hint"
+                        onFocus={() => setPromptFocused(true)}
+                        onBlur={() => setPromptFocused(false)}
+                        onChange={(e) => {
+                          clearInterval(typingTimer.current);
+                          setPrompt(e.target.value);
+                        }}
+                        className="min-h-[132px] resize-none lg:min-h-[96px] rounded-[17px] border-0 bg-transparent px-4 pt-4 text-[15px] shadow-none focus-visible:shadow-none"
+                      />
+                      <div className="flex items-center gap-3 border-t border-border px-4 py-2.5">
+                        <p id="ob-prompt-hint" className="min-w-0 flex-1 truncate text-xs text-muted-foreground [@media(pointer:coarse)]:invisible">
+                          <span aria-hidden="true" className="inline-flex items-center gap-1 align-middle">
+                            <Kbd mod className="bg-muted" />
+                            <Kbd className="bg-muted">Enter</Kbd>
+                          </span>{" "}
+                          <span className="sr-only">Control or Command plus Enter</span> to continue
+                        </p>
+                        {prompt.length >= 1800 ? (
+                          <span className={cn("text-meta shrink-0", prompt.length >= IDEA_MAX ? "text-danger" : "text-muted-foreground")}>
+                            {prompt.length.toLocaleString("en-US")} / {IDEA_MAX.toLocaleString("en-US")}
+                          </span>
+                        ) : null}
+                      </div>
+                    </div>
+                  </div>
+
+                  <ul aria-label="Prompt ideas" className="mt-3 flex flex-wrap gap-2">
+                    {ideas.map((idea) => (
+                      <li key={idea.goal}>
+                        <button
+                          type="button"
+                          onClick={() => typeIdea(idea.text, idea.goal)}
+                          title={idea.text}
+                          className="inline-flex h-8 items-center gap-1.5 rounded-full border border-border bg-card px-3 text-xs font-medium text-muted-foreground shadow-[inset_0_1px_0_var(--hairline)] transition-[color,border-color,translate] duration-200 hover:-translate-y-px hover:border-border-strong hover:text-foreground"
+                        >
+                          <Sparkles className="size-3.5 text-signal" aria-hidden="true" />
+                          {idea.label}
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+
+                  <div className="mt-8 lg:mt-6">
+                    <div className="flex items-baseline justify-between gap-3">
+                      <h2 id="ob-goals-label" className="text-[13px] font-semibold text-foreground">
+                        What is it closest to?
+                      </h2>
+                      <span className="hidden text-xs text-muted-foreground sm:inline">
+                        Pick any · keys <Kbd>1</Kbd>–<Kbd>8</Kbd>
+                      </span>
+                    </div>
+                    <div role="group" aria-labelledby="ob-goals-label" className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-4">
+                      {GOALS.map((g, i) => {
+                        const on = goals.includes(g.id);
+                        const t = byId.get(g.templateId);
+                        return (
+                          <button
+                            key={g.id}
+                            type="button"
+                            aria-pressed={on}
+                            aria-keyshortcuts={String(i + 1)}
+                            onClick={() => toggleGoal(g.id)}
+                            className={cn(
+                              "ob-goal group relative flex flex-col rounded-[14px] border bg-card p-1 text-left focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring",
+                              on ? "border-transparent" : "border-border hover:-translate-y-0.5 hover:border-border-strong",
+                            )}
+                          >
+                            <span aria-hidden="true" className="shot-pan relative block overflow-hidden rounded-[10px]">
+                              <StarterShot id={g.templateId} category={t?.category ?? g.category} sizes="(min-width: 640px) 130px, 45vw" priority routesFooter={false} />
+                              {on ? (
+                                <span className="ob-goal__check absolute right-1.5 top-1.5 flex size-5 items-center justify-center rounded-full bg-signal text-background shadow-md">
+                                  <Check className="size-3" />
+                                </span>
+                              ) : null}
+                            </span>
+                            {/* The shortcut key sits in the label row, never over the screenshot. */}
+                            <span className="flex items-center gap-1.5 px-1 pb-0.5 pt-2">
+                              <span className={cn("min-w-0 flex-1 truncate text-[12px] font-medium transition-colors", on ? "text-foreground" : "text-muted-foreground group-hover:text-foreground")}>{g.label}</span>
+                              <span aria-hidden="true" className="hidden shrink-0 sm:inline-flex">
+                                <Kbd className={cn("h-4 min-w-4 rounded-[4px] border px-1 text-[10px] tabular-nums transition-colors", on ? "border-signal/40 bg-signal/10 text-signal-ink" : "border-border bg-muted")}>{i + 1}</Kbd>
+                              </span>
+                            </span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  <div className={STEP_FOOTER}>
+                    <p className="text-xs text-muted-foreground sm:flex-1">
+                      {prompt.trim() ? "Next: choose how to start." : goals.length ? "No description yet? You can start from a suggested template." : "Both are optional. You can also skip setup."}
+                    </p>
+                    <Button type="button" onClick={next} aria-keyshortcuts="Control+Enter Meta+Enter" className="sm:min-w-[9.5rem]">
+                      Continue <ArrowRight className="size-4" aria-hidden="true" />
+                    </Button>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <p className="text-label text-muted-foreground">Step 2 of 3 · Start</p>
+                  <h1 id="ob-step-title" ref={titleRef} tabIndex={-1} className="text-app-display mt-3 outline-none">
+                    How do you want to <span className="text-dim">start?</span>
+                  </h1>
+                  <p className="mt-3 text-pretty text-[15px] leading-relaxed text-muted-foreground">Either way you get a real project with files you own. You can change everything later.</p>
+
+                  <Segmented
+                    aria-label="How to start"
+                    value={effectiveMode}
+                    onValueChange={(v) => setMode(v)}
+                    fullWidth
+                    className="mt-6"
+                    options={[
+                      { value: "prompt", label: "Describe it", icon: <Sparkles /> },
+                      { value: "template", label: "Start from a template", icon: <LayoutTemplate /> },
+                    ]}
+                  />
+
+                  <div className="mt-5">
+                    {effectiveMode === "prompt" ? (
+                      <div className="rounded-2xl border border-border bg-surface/60 p-4">
+                        <div className="flex items-center justify-between gap-3">
+                          <p className="text-label text-muted-foreground">Your description</p>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              goTo(0);
+                              requestAnimationFrame(() => promptRef.current?.focus());
+                            }}
+                            className="inline-flex h-7 items-center gap-1 rounded-full px-2.5 text-xs font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+                          >
+                            <Pencil className="size-3" aria-hidden="true" /> Edit
+                          </button>
+                        </div>
+                        {prompt.trim() ? (
+                          <p className="mt-2 line-clamp-4 whitespace-pre-line text-pretty text-[15px] leading-relaxed text-foreground">{prompt.trim()}</p>
+                        ) : (
+                          <p className="mt-2 text-sm text-muted-foreground">Nothing yet. Go back and describe your app in a sentence, or start from a template.</p>
+                        )}
+                        <div className="mt-4 flex items-center gap-3 border-t border-border pt-3">
+                          <div aria-hidden="true" className="w-16 shrink-0">
+                            <StarterShot id={template.id} category={template.category} className="rounded-md" sizes="64px" priority routesFooter={false} />
+                          </div>
+                          <p className="min-w-0 flex-1 text-xs text-muted-foreground">
+                            Builds on <span className="font-medium text-foreground">{template.name}</span>
+                            {ideaTemplateId === template.id ? " (the closest starter to your idea)" : null}.
+                          </p>
+                          <button type="button" onClick={() => setMode("template")} className="shrink-0 text-xs font-medium text-foreground underline-offset-4 hover:underline">
+                            Change
+                          </button>
+                        </div>
+                      </div>
+                    ) : (
+                      <TemplateChoice templates={ranked.list} suggested={ranked.suggested} value={template.id} onChange={setPickedTemplate} />
+                    )}
+                  </div>
+
+                  <div className="mt-5">
+                    {editingName ? (
+                      <Field label="Project name" htmlFor="ob-project">
+                        <Input
+                          id="ob-project"
+                          value={projectName ?? derivedName}
+                          onChange={(e) => setProjectName(e.target.value)}
+                          onBlur={() => setEditingName(false)}
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter" || e.key === "Escape") {
+                              e.preventDefault();
+                              setEditingName(false);
+                            }
+                          }}
+                          maxLength={100}
+                          required
+                          autoFocus
+                        />
+                      </Field>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={() => setEditingName(true)}
+                        aria-label={`Project name: ${finalName}. Edit`}
+                        className="group inline-flex h-9 max-w-full items-center gap-2 rounded-full border border-border bg-card pl-3 pr-2.5 text-sm shadow-[inset_0_1px_0_var(--hairline)] transition-colors hover:border-border-strong"
+                      >
+                        <span className="text-muted-foreground">Name</span>
+                        <span key={finalName} className="ob-swap min-w-0 truncate font-medium text-foreground">
+                          {finalName}
+                        </span>
+                        <Pencil className="size-3.5 shrink-0 text-muted-foreground transition-colors group-hover:text-foreground" aria-hidden="true" />
+                      </button>
+                    )}
+                  </div>
+
+                  {effectiveMode === "prompt" ? (
+                    <p className="mt-4 text-xs leading-relaxed text-muted-foreground">
+                      {aiConfigured
+                        ? "Codexa creates the project, opens the editor and hands your description to the AI agent."
+                        : "AI generation isn't set up on this server yet. The project is still created and your description is saved in the chat panel."}
+                    </p>
+                  ) : null}
+                  {!workspaceId ? (
+                    <Alert variant="warning" className="mt-4">
+                      You don&apos;t have edit access to a workspace yet, so a project can&apos;t be created here. Skip to your dashboard; a workspace owner can give you
+                      editor access.
+                    </Alert>
+                  ) : null}
+
+                  <div className={STEP_FOOTER}>
+                    <Button type="button" variant="ghost" onClick={() => goTo(0)} disabled={launching} aria-keyshortcuts="Escape" className="group">
+                      <ArrowLeft className="size-4 transition-transform duration-200 group-hover:-translate-x-0.5" aria-hidden="true" /> Back
+                      <span aria-hidden="true" className="ml-1 hidden [@media(pointer:fine)]:sm:inline-flex">
+                        <Kbd className="bg-muted text-[10px]">Esc</Kbd>
+                      </span>
+                    </Button>
+                    <div className="flex flex-col-reverse gap-2 sm:ml-auto sm:flex-row">
+                      <Button type="button" variant="outline" onClick={() => void skip()} loading={skipping} disabled={launching}>
+                        Skip for now
+                      </Button>
+                      <Button
+                        type="button"
+                        onClick={create}
+                        disabled={!workspaceId || launching || (effectiveMode === "prompt" && !prompt.trim())}
+                        aria-keyshortcuts="Control+Enter Meta+Enter"
+                        className="sm:min-w-[11rem]"
+                      >
+                        Create project
+                        <span aria-hidden="true" className="hidden sm:inline-flex">
+                          <Kbd mod className="bg-primary-foreground/15 text-primary-foreground/80">
+                            ↵
+                          </Kbd>
+                        </span>
+                      </Button>
+                    </div>
+                  </div>
+                </>
+              )}
+              {error ? (
+                <Alert variant="danger" className="mt-4">
+                  {error}
+                </Alert>
+              ) : null}
             </div>
-            <Field label="Project name" htmlFor="ob-project">
-              <Input id="ob-project" value={projectName} onChange={(e) => setProjectName(e.target.value)} maxLength={100} required />
-            </Field>
-            {mode === "template" ? (
-              <TemplatePicker templates={templates} value={templateId} onChange={setTemplateId} compact />
-            ) : (
-              <Field label="Describe what you want to build" htmlFor="ob-prompt" hint="The AI agent picks this up as soon as your project opens.">
-                <Textarea id="ob-prompt" value={prompt} onChange={(e) => setPrompt(e.target.value)} rows={4} maxLength={2000} placeholder="A recipe app where I can save and tag recipes…" />
-              </Field>
-            )}
-            <div className={cn(footer, "flex-col-reverse sm:flex-row")}>
-              <Button type="button" variant="ghost" onClick={() => setStep(1)} disabled={busy}>
-                <ArrowLeft className="size-4" /> Back
-              </Button>
-              <div className="flex flex-col gap-2 sm:flex-row">
-                <Button type="button" variant="outline" onClick={() => void finish(false)} disabled={busy} className="rounded-lg">
-                  Skip for now
-                </Button>
-                <Button type="submit" loading={busy} disabled={!workspaceId || (mode === "prompt" && !prompt.trim())} className="rounded-lg">
-                  Create project <ArrowRight className="size-4" />
-                </Button>
-              </div>
-            </div>
-          </form>
-        ) : null}
+          </AnimatedHeight>
+        </section>
+
+        <aside aria-label="Preview of your workspace" className="hidden lg:sticky lg:top-24 lg:block">
+          <WorkspacePreview state={preview} />
+        </aside>
       </div>
+
+      <p className="sr-only" aria-live="polite">
+        {announce}
+      </p>
+      {launch.element}
     </div>
   );
 }

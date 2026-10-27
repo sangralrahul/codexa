@@ -27,17 +27,24 @@ export default async function MembersSettingsPage() {
   const ws = current.workspace;
   const [team, plan] = await Promise.all([getTeam(ws.id), getEffectivePlan(ws)]);
   const canManage = current.role === "owner" || current.role === "admin";
+  const limit = PLANS[plan].limits.members;
   return (
-    <div>
-      <PageHeader title="Members" description={`People with access to ${ws.name}. ${PLANS[plan].name} plan: ${PLANS[plan].limits.members < 0 ? "unlimited seats" : `${PLANS[plan].limits.members} seat${PLANS[plan].limits.members === 1 ? "" : "s"}`}.`} />
+    <div className="settings-stack space-y-6">
+      <PageHeader
+        eyebrow={`Workspace · ${ws.name}`}
+        title="Members"
+        description={`People with access to ${ws.name}. ${PLANS[plan].name} plan: ${limit < 0 ? "unlimited seats" : `${limit} seat${limit === 1 ? "" : "s"}`}.`}
+      />
       <MembersPanel
         workspaceId={ws.id}
         currentUserId={user.id}
         role={current.role}
         members={team.members}
         invites={canManage ? team.invites : []}
-        seats={{ used: team.members.length, limit: PLANS[plan].limits.members }}
+        seats={{ used: team.members.length, limit }}
         emailConfigured={capabilities.email}
+        plan={plan}
+        pendingCount={team.invites.filter((i) => !i.expired).length}
       />
     </div>
   );

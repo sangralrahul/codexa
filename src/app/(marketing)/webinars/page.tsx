@@ -6,29 +6,27 @@ import { ArticleShell } from "@/components/docs/article-layout";
 import { Breadcrumbs } from "@/components/docs/breadcrumbs";
 import { NewsletterForm } from "@/components/docs/newsletter-form";
 import { EmptyState } from "@/components/ui/misc";
-import { PageTitle } from "@/components/marketing/backdrop";
+import { buttonClasses } from "@/components/ui/button";
+import { HubHeader } from "@/components/docs/hub-header";
 
 export const metadata = routeMetadata("/webinars");
 
 export default function WebinarsPage() {
   return (
     <ArticleShell sidebar={LEARN_SIDEBAR}>
-      <Breadcrumbs items={[{ name: "Learn", path: "/learn" }, { name: "Webinars", path: "/webinars" }]} className="mb-4" />
-      <header className="max-w-3xl">
-        <PageTitle>Webinars</PageTitle>
-        <p className="mt-3 text-base text-muted-foreground sm:text-lg">Live sessions and recordings about building with Codexa.</p>
-      </header>
-      <div className="mt-8 max-w-3xl">
+      <Breadcrumbs items={[{ name: "Learn", path: "/learn" }, { name: "Webinars", path: "/webinars" }]} className="mb-8" />
+      <HubHeader kicker="Webinars" title="Webinars." lead="Live sessions and recordings about building with Codexa." />
+      <div className="mt-10 max-w-3xl">
         <EmptyState
           icon={<Video className="size-6" aria-hidden="true" />}
           title="No webinars have been recorded yet"
           description="Codexa is an early-stage product built by a small team. When we schedule the first live session, subscribers to the newsletter will hear about it first. Until then, the guides and tutorials cover the same ground in writing."
           action={
             <div className="flex flex-wrap gap-3">
-              <Link href="/guides" className="text-sm text-primary underline">
+              <Link href="/guides" className={buttonClasses("secondary", "sm")}>
                 Browse guides
               </Link>
-              <Link href="/tutorials" className="text-sm text-primary underline">
+              <Link href="/tutorials" className={buttonClasses("outline", "sm")}>
                 Browse tutorials
               </Link>
             </div>

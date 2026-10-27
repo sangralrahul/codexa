@@ -1,0 +1,531 @@
+/* ==========================================================================
+   Marketing chrome and page templates (marketing-pages package).
+   Plain CSS on top of the design system in src/app/globals.css: tokens only,
+   transform / opacity / clip-path animations, and every effect has a calm
+   (OS reduced motion or <html data-motion="reduced">) final frame.
+   Class prefix: mk-. Imported by src/app/(marketing)/layout.tsx and src/app/not-found.tsx.
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   Header: transparent bar at the top; after 24px it condenses into a floating
+   glass capsule (1040px, 56px tall, pill radius). The glass lives on its own
+   layer so the mega menus keep a working backdrop-filter of their own.
+   -------------------------------------------------------------------------- */
+.mk-header {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  display: flex;
+  justify-content: center;
+  height: 64px;
+  pointer-events: none;
+  --mk-top: 70px;
+}
+.mk-bar {
+  position: relative;
+  pointer-events: auto;
+  width: 100%;
+  max-width: 80rem;
+  height: 64px;
+  margin-top: 0;
+  padding-inline: 1rem;
+  transition:
+    max-width var(--dur-4) var(--ease-out),
+    height var(--dur-4) var(--ease-out),
+    margin-top var(--dur-4) var(--ease-out),
+    padding var(--dur-4) var(--ease-out);
+}
+.mk-bar__glass {
+  position: absolute;
+  inset: 0;
+  border-radius: 999px;
+  border: 1px solid transparent;
+  background: transparent;
+  opacity: 0;
+  pointer-events: none;
+  -webkit-backdrop-filter: blur(16px) saturate(150%);
+  backdrop-filter: blur(16px) saturate(150%);
+  transition: opacity var(--dur-4) var(--ease-out), background-color var(--dur-4) var(--ease-out), border-color var(--dur-4) var(--ease-out), box-shadow var(--dur-4) var(--ease-out);
+}
+.mk-header:is([data-scrolled], [data-sheet]) .mk-bar {
+  max-width: min(1040px, calc(100% - 1rem));
+  height: 54px;
+  margin-top: 6px;
+  padding-inline: 0.875rem 0.375rem;
+}
+.mk-header:is([data-scrolled], [data-sheet]) .mk-bar__glass {
+  opacity: 1;
+  background: var(--glass);
+  border-color: var(--border);
+  box-shadow: inset 0 1px 0 var(--hairline), var(--shadow-lg);
+}
+/* Scrims behind the bar (decorative, never hit-tested). At the top of the page a soft wash of the page
+   colour keeps the nav legible over the saturated backdrop blobs; once the bar condenses, a firmer
+   fade takes over so text scrolling under the capsule dissolves instead of being cut mid-glyph in
+   the gap above it. Opacity crossfade only. */
+.mk-header::before,
+.mk-header::after {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto 0;
+  z-index: -1;
+  pointer-events: none;
+  transition: opacity var(--dur-4) var(--ease-out);
+}
+.mk-header::before {
+  height: 96px;
+  background: linear-gradient(to bottom, color-mix(in oklab, var(--background) 60%, transparent), transparent);
+}
+.mk-header::after {
+  height: 76px;
+  opacity: 0;
+  background: linear-gradient(
+    to bottom,
+    var(--background) 0,
+    color-mix(in oklab, var(--background) 88%, transparent) 22%,
+    color-mix(in oklab, var(--background) 45%, transparent) 62%,
+    transparent
+  );
+}
+.mk-header[data-scrolled]::before { opacity: 0; }
+.mk-header[data-scrolled]::after { opacity: 1; }
+@media (min-width: 40rem) {
+  .mk-bar { padding-inline: 1.5rem; }
+}
+@media (min-width: 64rem) {
+  .mk-header { height: 68px; --mk-top: 72px; }
+  .mk-bar { height: 68px; padding-inline: 2rem; }
+  .mk-header[data-scrolled] { --mk-top: 74px; }
+  .mk-header:is([data-scrolled], [data-sheet]) .mk-bar {
+    height: 56px;
+    margin-top: 10px;
+    padding-inline: 1.125rem 0.5rem;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   Mega menus (disclosure): one shared glass background that resizes to the
+   open panel, and per-group content that slides in from the side it came from.
+   -------------------------------------------------------------------------- */
+.mk-mega-bg,
+.mk-mega {
+  position: fixed;
+  left: 50%;
+  top: var(--mk-top);
+  width: min(680px, calc(100vw - 2rem));
+}
+.mk-mega-bg {
+  z-index: 0;
+  height: var(--mk-h, 340px);
+  translate: -50% 0;
+  border-radius: 18px;
+  border: 1px solid var(--border-strong);
+  /* Near-opaque: page content (stat cards, headings) must not ghost through behind the items. */
+  background: color-mix(in oklab, var(--card) 95%, transparent);
+  -webkit-backdrop-filter: blur(24px) saturate(160%);
+  backdrop-filter: blur(24px) saturate(160%);
+  box-shadow: inset 0 1px 0 var(--hairline), var(--shadow-xl);
+  transform-origin: 50% 0;
+  opacity: 0;
+  scale: 0.98;
+  visibility: hidden;
+  transition:
+    opacity 140ms var(--ease-in),
+    scale 140ms var(--ease-in),
+    height var(--dur-3) var(--ease-out),
+    visibility 0s linear 140ms;
+}
+/* Invisible bridge over the gap between the bar and the panel, so the pointer can cross it. */
+.mk-mega-bg::before {
+  content: "";
+  position: absolute;
+  inset: -14px 0 auto 0;
+  height: 14px;
+}
+.mk-header[data-mega] .mk-mega-bg {
+  opacity: 1;
+  scale: 1;
+  visibility: visible;
+  transition:
+    opacity 160ms var(--ease-out),
+    scale 200ms var(--ease-out),
+    height var(--dur-3) var(--ease-out),
+    visibility 0s;
+}
+.mk-mega {
+  z-index: 1;
+  translate: calc(-50% + var(--mk-shift, 0px)) 0;
+  opacity: 0;
+  visibility: hidden;
+  transition:
+    opacity 120ms var(--ease-in),
+    translate var(--dur-3) var(--ease-out),
+    visibility 0s linear 120ms;
+}
+.mk-mega[data-open] {
+  opacity: 1;
+  visibility: visible;
+  transition:
+    opacity 160ms var(--ease-out) 40ms,
+    translate var(--dur-3) var(--ease-out),
+    visibility 0s;
+}
+
+/* Featured wells (260×180), stacked; the hovered item's well crossfades in and replays. */
+.mk-wells {
+  position: relative;
+  height: 180px;
+  overflow: hidden;
+  border-radius: 12px;
+  background:
+    radial-gradient(120% 90% at 100% 0%, color-mix(in oklab, var(--signal) 9%, transparent), transparent 60%),
+    var(--surface);
+  box-shadow: inset 0 0 0 1px var(--border), inset 0 1px 0 var(--hairline);
+}
+.mk-well {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  opacity: 0;
+  transition: opacity 160ms var(--ease-out);
+}
+.mk-well > * { flex: 1; min-height: 0; }
+/* Lazy images still load when they are laid out near the viewport, and the closed panels are laid out
+   (visibility: hidden) under the bar: keep the screenshots out of layout until a menu is first reached for. */
+.mk-header:not([data-armed]) .mk-wells img { display: none; }
+.mk-well[data-on] { opacity: 1; }
+.mk-well .mk-in { opacity: 0; }
+.mk-well[data-on] .mk-in { animation: mk-in 420ms var(--ease-out) calc(var(--d, 0) * 60ms + 60ms) both; }
+.mk-well[data-on] .mk-pan { animation: mk-pan 5s var(--ease-in-out) 300ms both; }
+@keyframes mk-in {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: none; }
+}
+@keyframes mk-pan {
+  to { transform: translateY(-8%) scale(1.06); }
+}
+
+/* --------------------------------------------------------------------------
+   Mobile sheet: rows rise in with a 40ms stagger.
+   -------------------------------------------------------------------------- */
+.mk-sheet { animation: mk-sheet-in var(--dur-3) var(--ease-out) both; }
+.mk-sheet__row { animation: mk-row-in var(--dur-5) var(--ease-out) calc(80ms + var(--i, 0) * 40ms) both; }
+@keyframes mk-sheet-in { from { opacity: 0; } }
+@keyframes mk-row-in { from { opacity: 0; transform: translateY(14px); } }
+
+/* --------------------------------------------------------------------------
+   Footer wordmark: Mona Sans at full width, clipped at 55% of its height;
+   letters rise 30ms apart once it is in view and carry the light as a fill.
+   -------------------------------------------------------------------------- */
+.mk-wordmark {
+  display: flex;
+  justify-content: center;
+  height: 0.55em;
+  overflow: hidden;
+  margin-top: 0.5rem;
+  font-family: var(--font-display);
+  font-size: min(22vw, 21rem);
+  font-weight: 800;
+  font-stretch: 125%;
+  line-height: 0.82;
+  letter-spacing: -0.055em;
+  user-select: none;
+  pointer-events: none;
+}
+.mk-wordmark__l {
+  display: inline-block;
+  color: transparent;
+  background-image: linear-gradient(100deg, var(--silk-1), var(--signal) 55%, var(--signal-2));
+  background-size: calc(var(--n, 6) * 100%) 100%;
+  background-position: calc(var(--i, 0) / (var(--n, 6) - 1) * 100%) 0;
+  -webkit-background-clip: text;
+  background-clip: text;
+  opacity: 0.14;
+  transition:
+    transform 1100ms var(--ease-out) calc(var(--i, 0) * 30ms),
+    opacity 900ms var(--ease-out) calc(var(--i, 0) * 30ms);
+}
+.dark .mk-wordmark__l { opacity: 0.16; }
+/* The trigger is .mk-foot-end (bottom bar + wordmark, data-play="view"): tall enough to cross the reveal
+   line even when the page ends exactly at the wordmark on a phone. */
+.js .mk-foot-end:not(.is-visible) .mk-wordmark__l { transform: translateY(62%); opacity: 0; }
+
+/* --------------------------------------------------------------------------
+   Calm: final frames.
+   -------------------------------------------------------------------------- */
+@media (prefers-reduced-motion: reduce) {
+  .mk-well .mk-in,
+  .mk-sheet,
+  .mk-sheet__row { opacity: 1; animation: none !important; }
+  .mk-well[data-on] .mk-pan { animation: none !important; }
+  .js .mk-foot-end:not(.is-visible) .mk-wordmark__l { transform: none; opacity: 0.14; }
+}
+[data-motion="reduced"] :is(.mk-well .mk-in, .mk-sheet, .mk-sheet__row) { opacity: 1; animation: none !important; }
+[data-motion="reduced"] .mk-well[data-on] .mk-pan { animation: none !important; }
+[data-motion="reduced"].js .mk-foot-end:not(.is-visible) .mk-wordmark__l { transform: none; opacity: 0.14; }
+
+/* --------------------------------------------------------------------------
+   Steps film strip: frames rise in order once in view, then one light sweeps
+   across the strip. ".is-visible" comes from MotionEffects (data-play="view").
+   -------------------------------------------------------------------------- */
+.mk-strip { isolation: isolate; }
+.mk-frame { transition: border-color var(--dur-3), box-shadow var(--dur-3); }
+.js .mk-strip:not(.is-visible) .mk-frame { opacity: 0; transform: translateY(16px); }
+.mk-strip.is-visible .mk-frame { animation: mk-frame-in var(--dur-5) var(--ease-out) calc(var(--i, 0) * 90ms) both; }
+@keyframes mk-frame-in { from { opacity: 0; transform: translateY(16px); } }
+.mk-strip__sweep {
+  position: absolute;
+  inset: -1px 0;
+  z-index: 2;
+  pointer-events: none;
+  overflow: hidden;
+  border-radius: 16px;
+}
+.mk-strip__sweep::before {
+  content: "";
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 28%;
+  background: linear-gradient(100deg, transparent, color-mix(in oklab, var(--signal) 14%, transparent) 45%, color-mix(in oklab, var(--signal-2) 10%, transparent) 55%, transparent);
+  transform: translateX(-110%);
+  opacity: 0;
+}
+.mk-strip.is-visible .mk-strip__sweep::before { animation: mk-sweep 1600ms var(--ease-in-out) 520ms both; }
+@keyframes mk-sweep {
+  0% { transform: translateX(-110%); opacity: 1; }
+  85% { opacity: 1; }
+  100% { transform: translateX(400%); opacity: 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .js .mk-strip:not(.is-visible) .mk-frame { opacity: 1; transform: none; }
+  .mk-strip .mk-frame, .mk-strip .mk-strip__sweep::before { animation: none !important; }
+}
+[data-motion="reduced"] .mk-strip .mk-frame { opacity: 1 !important; transform: none !important; animation: none !important; }
+[data-motion="reduced"] .mk-strip .mk-strip__sweep::before { animation: none !important; }
+
+/* --------------------------------------------------------------------------
+   Template fan: real starter screenshots fanned behind each other. --k is the
+   card's offset from the centre (−1…1), --a its absolute value.
+   -------------------------------------------------------------------------- */
+.mk-fan__card {
+  position: absolute;
+  left: 50%;
+  top: 4%;
+  width: 72%;
+  overflow: hidden;
+  border-radius: 12px;
+  border: 1px solid var(--border-strong);
+  background: var(--card);
+  box-shadow: inset 0 1px 0 var(--hairline), var(--shadow-lg);
+  transform: translateX(calc(-50% + var(--k, 0) * 19%)) translateY(calc(var(--a, 0) * 9%)) rotate(calc(var(--k, 0) * 4deg));
+  transition: transform 700ms var(--ease-spring);
+}
+.mk-fan--stack .mk-fan__card {
+  top: 0;
+  width: 78%;
+  transform: translateX(calc(-50% + var(--k, 0) * 8%)) translateY(calc(var(--a, 0) * 7%)) rotate(0deg);
+}
+.group:is(:hover, :focus-within) .mk-fan--stack .mk-fan__card {
+  transform: translateX(calc(-50% + var(--k, 0) * 22%)) translateY(calc(var(--a, 0) * 5% - 6px)) rotate(calc(var(--k, 0) * 4deg));
+}
+@media (prefers-reduced-motion: reduce) {
+  .mk-fan__card { transition: none; }
+}
+[data-motion="reduced"] .mk-fan__card { transition: none; }
+
+/* Pricing limit meters: bars grow (log scale, --share) once the card is revealed. */
+.mk-meter { transform: scaleX(var(--share, 1)); transition: transform 1100ms var(--ease-out) 200ms; }
+.js [data-reveal]:not(.is-visible) .mk-meter { transform: scaleX(0); }
+@media (prefers-reduced-motion: reduce) { .js [data-reveal]:not(.is-visible) .mk-meter { transform: scaleX(var(--share, 1)); } }
+[data-motion="reduced"] .mk-meter { transform: scaleX(var(--share, 1)) !important; }
+
+/* Plan finder sliders: a hairline track filled with the signal light up to the value (--fill, set
+   inline), and a paper thumb with a signal core. Hover lifts a halo; keyboard focus draws the ring. */
+.mk-range {
+  -webkit-appearance: none;
+  appearance: none;
+  height: 22px;
+  background: transparent;
+  cursor: pointer;
+  touch-action: pan-y;
+}
+.mk-range:focus-visible { outline: none; }
+.mk-range::-webkit-slider-runnable-track {
+  height: 6px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, var(--signal), var(--signal-2)) 0 0 / var(--fill, 0%) 100% no-repeat, var(--muted);
+  box-shadow: inset 0 0 0 1px var(--border);
+}
+.mk-range::-moz-range-track { height: 6px; border-radius: 999px; background: var(--muted); box-shadow: inset 0 0 0 1px var(--border); }
+.mk-range::-moz-range-progress { height: 6px; border-radius: 999px; background: linear-gradient(90deg, var(--signal), var(--signal-2)); }
+.mk-range::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 20px;
+  height: 20px;
+  margin-top: -7px;
+  border-radius: 999px;
+  border: 1px solid var(--border-strong);
+  background: radial-gradient(circle, var(--signal) 0 3.5px, var(--background) 4.5px);
+  box-shadow: 0 0 0 0 color-mix(in oklab, var(--signal) 16%, transparent), var(--shadow-md);
+  transition: box-shadow var(--dur-2) var(--ease-out), scale var(--dur-2) var(--ease-snap);
+}
+.mk-range::-moz-range-thumb {
+  width: 18px;
+  height: 18px;
+  border-radius: 999px;
+  border: 1px solid var(--border-strong);
+  background: radial-gradient(circle, var(--signal) 0 3.5px, var(--background) 4.5px);
+  box-shadow: 0 0 0 0 color-mix(in oklab, var(--signal) 16%, transparent), var(--shadow-md);
+  transition: box-shadow var(--dur-2) var(--ease-out), scale var(--dur-2) var(--ease-snap);
+}
+.mk-range:hover::-webkit-slider-thumb { box-shadow: 0 0 0 6px color-mix(in oklab, var(--signal) 16%, transparent), var(--shadow-md); }
+.mk-range:hover::-moz-range-thumb { box-shadow: 0 0 0 6px color-mix(in oklab, var(--signal) 16%, transparent), var(--shadow-md); }
+.mk-range:focus-visible::-webkit-slider-thumb { box-shadow: 0 0 0 2px var(--background), 0 0 0 4px var(--ring), var(--shadow-md); }
+.mk-range:focus-visible::-moz-range-thumb { box-shadow: 0 0 0 2px var(--background), 0 0 0 4px var(--ring), var(--shadow-md); }
+.mk-range:active::-webkit-slider-thumb { scale: 1.12; }
+.mk-range:active::-moz-range-thumb { scale: 1.12; }
+/* Vendor pseudo-elements stay in separate rules: one unknown selector would drop the whole list. */
+@media (prefers-reduced-motion: reduce) {
+  .mk-range::-webkit-slider-thumb { transition: none; }
+  .mk-range::-moz-range-thumb { transition: none; }
+  .mk-range:active::-webkit-slider-thumb { scale: 1; }
+  .mk-range:active::-moz-range-thumb { scale: 1; }
+}
+[data-motion="reduced"] .mk-range::-webkit-slider-thumb { transition: none; }
+[data-motion="reduced"] .mk-range::-moz-range-thumb { transition: none; }
+[data-motion="reduced"] .mk-range:active::-webkit-slider-thumb { scale: 1; }
+[data-motion="reduced"] .mk-range:active::-moz-range-thumb { scale: 1; }
+
+/* Big numerals in the display face (prices, counts, chapter numbers): proportional lining figures.
+   Mona Sans draws its tabular zero with a slash ("$2Ø"), so display numbers opt out of tnum; the
+   Odometer sizes each column from the real digit, so rolling stays aligned without tabular widths. */
+.mk-num, .mk-num * { font-feature-settings: "pnum" 1, "lnum" 1; font-variant-numeric: proportional-nums lining-nums; }
+
+/* Plan card prices. One number size per row of cards: 3.5rem when it fits, otherwise the size that
+   leaves 4rem for "/ month" beside the widest price in the row (`--price-em`, its estimated width in
+   em, set on the list), never under 2.25rem. Four-digit INR prices stay on one line with their unit,
+   so the price block keeps one height and every card's button and meters line up. "Custom" (no unit)
+   uses the same size, capped so the word itself fits. Browsers without container units keep 3.5rem
+   (the unit then wraps as one piece). */
+.mk-price { container-type: inline-size; }
+.mk-price__num {
+  font-size: 3.5rem;
+  font-size: clamp(2.25rem, calc((100cqi - 4rem) / var(--price-em, 2)), 3.5rem);
+}
+.mk-price__num[data-custom] {
+  font-size: clamp(2.25rem, min(calc((100cqi - 4rem) / var(--price-em, 2)), calc(100cqi / 3.9)), 3.5rem);
+}
+
+/* Phones: code inside product windows and plates (CodeLines' root, .font-mono.overflow-hidden) is set a
+   step smaller and fades out at the right edge, so long lines read as cropped on purpose rather than cut
+   mid-token. */
+@media (max-width: 39.99rem) {
+  .mk-vw .font-mono.overflow-hidden {
+    font-size: 11px;
+    -webkit-mask-image: linear-gradient(to right, black calc(100% - 2.5rem), transparent);
+    mask-image: linear-gradient(to right, black calc(100% - 2.5rem), transparent);
+  }
+}
+
+/* /features chapter numerals: a hairline outline (no fill) set above the chapter title, which
+   overlaps only the numeral's foot (about a quarter). 72px on phones, 112px from md; decorative. */
+.mk-chapter-num {
+  display: block;
+  margin-bottom: -0.16em;
+  font-family: var(--font-display);
+  font-size: 72px;
+  font-weight: 800;
+  font-stretch: 112%;
+  line-height: 0.82;
+  letter-spacing: -0.04em;
+  color: transparent;
+  -webkit-text-stroke: 1px var(--border-strong);
+  user-select: none;
+  pointer-events: none;
+}
+@media (min-width: 48rem) {
+  .mk-chapter-num { font-size: 112px; }
+}
+
+/* --------------------------------------------------------------------------
+   Legal pages: reading-progress hairline (scroll timeline, JS --p fallback)
+   and print styles (no chrome, full-width text, link targets printed).
+   -------------------------------------------------------------------------- */
+.mk-progress {
+  position: fixed;
+  inset: 0 0 auto 0;
+  z-index: 60;
+  height: 2px;
+  transform-origin: 0 50%;
+  transform: scaleX(var(--p, 0));
+  background: var(--ember);
+  pointer-events: none;
+}
+@supports (animation-timeline: scroll()) {
+  .mk-progress {
+    transform: none;
+    animation: mk-progress linear both;
+    animation-timeline: scroll(root);
+    animation-duration: auto;
+  }
+}
+@keyframes mk-progress {
+  from { transform: scaleX(0); }
+  to { transform: scaleX(1); }
+}
+/* Calm: the reduced-motion backstop rewrites animation durations, so the JS fallback drives it. */
+@media (prefers-reduced-motion: reduce) {
+  .mk-progress { animation: none !important; transform: scaleX(var(--p, 0)); }
+}
+[data-motion="reduced"] .mk-progress { animation: none !important; transform: scaleX(var(--p, 0)); }
+
+@media print {
+  .mk-header, .mk-progress, .mk-sheet, footer, .site-backdrop, [data-print-hide], nav[aria-label="On this page"], nav[aria-label="Breadcrumb"] script { display: none !important; }
+  html, body { background: white !important; color: black !important; }
+  main { padding: 0 !important; }
+  [data-print-article] { max-width: none !important; font-size: 11pt; line-height: 1.5; }
+  [data-print-article] a[href^="/"]::after { content: " (" attr(href) ")"; font-size: 9pt; color: dimgray; }
+  [data-print-article] section { break-inside: avoid-page; }
+  .horizon-line, .bg-noise, .backdrop { display: none !important; }
+}
+
+/* --------------------------------------------------------------------------
+   /security request path, phone rail: one packet travels down the rail
+   (container units give the travel distance; transform only). It appears once
+   the diagram has been in view, freezes when paused or off-screen, and is
+   removed in calm.
+   -------------------------------------------------------------------------- */
+.mk-rail {
+  position: absolute;
+  left: 17px;
+  top: 2rem;
+  bottom: 2rem;
+  z-index: 2;
+  width: 9px;
+  container-type: size;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity var(--dur-3) var(--ease-out);
+}
+.mk-rail[data-started] { opacity: 1; }
+.mk-rail__packet {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 9px;
+  height: 9px;
+  border-radius: 999px;
+  background: var(--signal);
+  box-shadow: 0 0 0 4px color-mix(in oklab, var(--signal) 20%, transparent), 0 0 18px color-mix(in oklab, var(--signal) 70%, transparent);
+  animation: mk-rail 4.2s var(--ease-in-out) infinite;
+  animation-play-state: paused;
+}
+.mk-rail[data-running] .mk-rail__packet { animation-play-state: running; }
+@keyframes mk-rail {
+  0% { transform: translateY(0); opacity: 0; }
+  8% { opacity: 1; }
+  92% { opacity: 1; }
+  100% { transform: translateY(calc(100cqh - 9px)); opacity: 0; }
+}

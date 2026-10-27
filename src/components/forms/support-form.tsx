@@ -91,13 +91,13 @@ export function SupportForm({
   if (done) {
     return (
       <div role="status" className={className}>
-        <div className="pop-in flex gap-3 rounded-xl border border-success/30 bg-success/5 p-5">
-          <CheckCircle2 className="mt-0.5 size-5 shrink-0 text-success" aria-hidden="true" />
+        <div className="pop-in flex gap-3 rounded-[14px] border border-success/30 bg-success/5 p-5">
+          <CheckCircle2 className="check-draw mt-0.5 size-5 shrink-0 text-success" aria-hidden="true" />
           <div>
             <p className="font-medium">{successTitle}</p>
             <p className="mt-1 text-sm text-muted-foreground">{successMessage}</p>
             <p className="mt-3 text-sm">
-              <Link href="/" className="font-medium text-primary underline underline-offset-4">
+              <Link href="/" className="link-draw font-medium text-foreground">
                 Back to the homepage
               </Link>
             </p>
@@ -179,7 +179,7 @@ export function SupportForm({
         }
       })}
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <Button type="submit" loading={loading}>
+        <Button type="submit" variant="secondary" state={loading ? "loading" : "idle"} loadingLabel="Sending…" disabled={loading}>
           {submitLabel}
         </Button>
         <p className="text-xs text-muted-foreground">

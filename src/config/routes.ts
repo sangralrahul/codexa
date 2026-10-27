@@ -20,12 +20,14 @@ export type RouteEntry = {
     | "support";
   priority?: number;
   noindex?: boolean;
+  /** Short, capitalised name for navigation, footers and breadcrumbs ("Startups", not "Codexa for startups"). */
+  navLabel?: string;
 };
 
-export const PUBLIC_ROUTES: RouteEntry[] = [
+const RAW_ROUTES: Omit<RouteEntry, "navLabel">[] = [
   // Product
-  { path: "/", title: "Codexa — Build software at the speed of thought", description: "Describe your idea. Codexa helps you create, refine, test, and deploy real applications.", group: "product", priority: 1 },
-  { path: "/product", title: "Product", description: "An AI-native development platform: prompt-to-app generation, a real editor, isolated runtimes, and deployment.", group: "product", priority: 0.9 },
+  { path: "/", title: "Codexa — Turn ideas into working software", description: "Describe your idea. Codexa plans the files, writes real code, checks it in a sandbox and runs a preview you can deploy.", group: "product", priority: 1 },
+  { path: "/product", title: "Product", description: "One workspace from prompt to production: app generation, a real editor, isolated runtimes, and deployment.", group: "product", priority: 0.9 },
   { path: "/features", title: "Features", description: "Everything in Codexa: AI generation, editor, preview, databases, integrations, version history, and deployment.", group: "product", priority: 0.9 },
   { path: "/how-it-works", title: "How it works", description: "From prompt to deployed application: how Codexa plans, generates, validates, runs, and ships your code.", group: "product", priority: 0.8 },
   { path: "/ai-app-builder", title: "AI App Builder", description: "Generate full-stack applications from natural language and iterate with an AI agent that edits real files.", group: "product", priority: 0.8 },
@@ -185,48 +187,101 @@ export const PUBLIC_ROUTES: RouteEntry[] = [
   { path: "/maintenance", title: "Maintenance", description: "Codexa is undergoing maintenance.", group: "support", noindex: true },
 ];
 
+/** Short labels where the title is too long or reads badly out of context. Everything else is derived from the title. */
+const NAV_LABELS: Record<string, string> = {
+  "/": "Home",
+  "/ai-app-builder": "AI app builder",
+  "/ai-website-builder": "AI website builder",
+  "/ai-code-generator": "Code generator",
+  "/ai-agent": "AI agent",
+  "/full-stack-development": "Full-stack",
+  "/app-deployment": "Deployment",
+  "/solutions/saas": "SaaS",
+  "/docs": "Docs",
+  "/api": "API",
+  "/api/reference": "API reference",
+  "/help": "Help center",
+  "/pricing/compare-plans": "Compare plans",
+  "/privacy": "Privacy",
+  "/terms": "Terms",
+  "/cookie-policy": "Cookies",
+  "/refund-policy": "Refunds",
+  "/ai-policy": "AI policy",
+  "/request-demo": "Request a demo",
+};
+
+/** "Codexa for indie hackers" → "Indie hackers". */
+function deriveLabel(title: string): string {
+  const t = title.replace(/^Codexa for /, "").replace(/^Codexa — .*/, "Home");
+  return t.charAt(0).toUpperCase() + t.slice(1);
+}
+
+export const PUBLIC_ROUTES: RouteEntry[] = RAW_ROUTES.map((r) => ({ ...r, navLabel: NAV_LABELS[r.path] ?? deriveLabel(r.title) }));
+
 export const routeByPath = new Map(PUBLIC_ROUTES.map((r) => [r.path, r]));
 
 export function getRoute(path: string): RouteEntry | undefined {
   return routeByPath.get(path);
 }
 
+/** The capitalised short name of a manifest route (falls back to the path). */
+export function navLabel(path: string): string {
+  return routeByPath.get(path)?.navLabel ?? path;
+}
+
+/**
+ * Header mega menus. Every href is a manifest route (tests/unit/website/routes.test.ts).
+ * `well` picks the featured preview shown beside the list while the item is hovered or focused.
+ */
+export type NavWell = "builder" | "agent" | "editor" | "deploy" | "integrations" | "templates" | "changelog" | "docs" | "solution" | "company" | "security" | "status";
+export type NavItem = { label: string; href: string; description: string; well: NavWell; template?: string };
+
 export const NAV = {
   product: [
-    { label: "AI App Builder", href: "/ai-app-builder", description: "Prompt-to-app generation" },
-    { label: "AI Agent", href: "/ai-agent", description: "Plans, edits, builds, repairs" },
-    { label: "Editor", href: "/code-editor", description: "A real code editor" },
-    { label: "Deployment", href: "/app-deployment", description: "Ship with one click" },
-    { label: "Integrations", href: "/integrations", description: "Databases, payments, email" },
+    { label: "AI app builder", href: "/ai-app-builder", description: "A sentence in, a real project out", well: "builder" },
+    { label: "AI agent", href: "/ai-agent", description: "Plans, edits, validates, repairs", well: "agent" },
+    { label: "Code editor", href: "/code-editor", description: "Monaco, diffs, snapshots, search", well: "editor" },
+    { label: "Deployment", href: "/app-deployment", description: "Ship, keep history, roll back", well: "deploy" },
+    { label: "Integrations", href: "/integrations", description: "Databases, payments, email, GitHub", well: "integrations" },
   ],
   solutions: [
-    { label: "Startups", href: "/solutions/startups" },
-    { label: "Developers", href: "/solutions/developers" },
-    { label: "Students", href: "/solutions/students" },
-    { label: "Agencies", href: "/solutions/agencies" },
-    { label: "Enterprise", href: "/solutions/enterprise" },
+    { label: "Startups", href: "/solutions/startups", description: "An MVP you can keep building on", well: "solution", template: "vite-react-saas" },
+    { label: "Founders", href: "/solutions/founders", description: "Working software instead of slides", well: "solution", template: "vite-react-landing" },
+    { label: "Developers", href: "/solutions/developers", description: "An agent that respects your code", well: "solution", template: "vite-react-admin" },
+    { label: "Students", href: "/solutions/students", description: "Learn by shipping real projects", well: "solution", template: "vite-react-portfolio" },
+    { label: "Agencies", href: "/solutions/agencies", description: "Client work, shared workspaces", well: "solution", template: "vite-react-storefront" },
+    { label: "Enterprise", href: "/solutions/enterprise", description: "Isolation, roles, custom limits", well: "solution", template: "vite-react-ops-dashboard" },
   ],
   resources: [
-    { label: "Documentation", href: "/docs" },
-    { label: "Templates", href: "/templates" },
-    { label: "Guides", href: "/guides" },
-    { label: "Blog", href: "/blog" },
-    { label: "Community", href: "/community" },
-    { label: "Changelog", href: "/changelog" },
+    { label: "Docs", href: "/docs", description: "Guides and reference for every feature", well: "docs" },
+    { label: "Templates", href: "/templates", description: "Starters with real files and screenshots", well: "templates" },
+    { label: "Guides", href: "/guides", description: "Complete walkthroughs, start to deploy", well: "docs" },
+    { label: "Changelog", href: "/changelog", description: "What shipped, release by release", well: "changelog" },
+    { label: "Blog", href: "/blog", description: "Product notes and engineering", well: "changelog" },
+    { label: "Community", href: "/community", description: "Discussions and issues on GitHub", well: "changelog" },
   ],
   company: [
-    { label: "About", href: "/about" },
-    { label: "Careers", href: "/careers" },
-    { label: "Contact", href: "/contact" },
-    { label: "Security", href: "/security" },
-    { label: "Status", href: "/status" },
+    { label: "About", href: "/about", description: "Who builds Codexa, and how", well: "company" },
+    { label: "Security", href: "/security", description: "Controls in place, stated plainly", well: "security" },
+    { label: "Status", href: "/status", description: "Live checks of every component", well: "status" },
+    { label: "Careers", href: "/careers", description: "How we work; roles when they open", well: "company" },
+    { label: "Contact", href: "/contact", description: "Support, sales, security, privacy", well: "company" },
   ],
+} as const satisfies Record<string, readonly NavItem[]>;
+
+/** Footer columns: at most seven links each, plus an "All …" link (FOOTER_MORE). */
+export const FOOTER = {
+  Product: ["/features", "/how-it-works", "/ai-app-builder", "/ai-agent", "/code-editor", "/app-deployment", "/pricing"],
+  Solutions: ["/solutions/startups", "/solutions/founders", "/solutions/developers", "/solutions/students", "/solutions/agencies", "/solutions/saas", "/solutions/enterprise"],
+  Resources: ["/docs", "/templates", "/guides", "/blog", "/changelog", "/roadmap", "/status"],
+  Company: ["/about", "/mission", "/careers", "/press", "/brand", "/partners", "/contact"],
+  Legal: ["/privacy", "/terms", "/acceptable-use", "/cookie-policy", "/security", "/ai-policy", "/refund-policy"],
 } as const;
 
-export const FOOTER = {
-  Product: ["/product", "/features", "/how-it-works", "/ai-app-builder", "/ai-agent", "/code-editor", "/app-deployment", "/integrations", "/templates", "/pricing"],
-  Solutions: ["/solutions/startups", "/solutions/developers", "/solutions/students", "/solutions/founders", "/solutions/agencies", "/solutions/enterprise", "/solutions/education", "/solutions/saas"],
-  Resources: ["/docs", "/guides", "/tutorials", "/blog", "/glossary", "/api", "/help", "/faq", "/community", "/changelog", "/roadmap", "/status"],
-  Company: ["/about", "/mission", "/careers", "/press", "/brand", "/partners", "/contact", "/support"],
-  Legal: ["/privacy", "/terms", "/acceptable-use", "/cookie-policy", "/security", "/trust", "/accessibility", "/ai-policy", "/refund-policy"],
-} as const;
+export const FOOTER_MORE: Record<keyof typeof FOOTER, { label: string; href: string }> = {
+  Product: { label: "Product overview", href: "/product" },
+  Solutions: { label: "All solutions", href: "/solutions" },
+  Resources: { label: "All resources", href: "/learn" },
+  Company: { label: "Support", href: "/support" },
+  Legal: { label: "Trust center", href: "/trust-center" },
+};

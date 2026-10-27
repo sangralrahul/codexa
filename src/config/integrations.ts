@@ -207,17 +207,6 @@ export const INTEGRATIONS: IntegrationDefinition[] = [
     tags: ["files", "uploads", "aws"],
   },
   {
-    id: "cloudflare-r2",
-    name: "Cloudflare R2",
-    category: "storage",
-    description: "S3-compatible storage without egress fees.",
-    status: "planned",
-    configFields: [],
-    docsPath: "/docs/integrations#storage",
-    capabilities: [],
-    tags: ["files", "uploads", "cloudflare"],
-  },
-  {
     id: "posthog",
     name: "PostHog",
     category: "analytics",

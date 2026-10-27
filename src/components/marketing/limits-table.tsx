@@ -1,13 +1,28 @@
-import { PLANS, PLAN_ORDER, isUnlimited } from "@/config/plans";
-import { ComparisonTable, type Cell, type ComparisonGroup } from "./comparison-table";
+import { PLANS, PLAN_ORDER, formatPrice, isUnlimited } from "@/config/plans";
+import { planCta } from "@/content/marketing/pricing";
+import { ComparisonTable, type Cell, type ColumnHead, type ComparisonGroup } from "./comparison-table";
 
 const n = (v: number) => (isUnlimited(v) ? "Custom" : new Intl.NumberFormat("en-US").format(v));
 const hours = (min: number) => (isUnlimited(min) ? "Custom" : `${n(min / 60)} hours`);
 const gb = (mb: number) => (isUnlimited(mb) ? "Custom" : mb >= 1000 ? `${mb / 1000} GB` : `${mb} MB`);
 
-/** Usage limits and features for every plan, derived from PLANS so the page cannot drift from enforcement. */
+/**
+ * Usage limits and features for every plan, derived from PLANS so the page cannot drift from
+ * enforcement. The header row (plan, monthly USD price, CTA) sticks from md up; the plan marked
+ * `highlight` gets the signal rails.
+ */
 export function LimitsTable({ full = false, className }: { full?: boolean; className?: string }) {
   const plans = PLAN_ORDER.map((id) => PLANS[id]);
+  const head: ColumnHead[] = plans.map((p) => {
+    const cta = planCta(p.id);
+    return {
+      // "$0 / month" rather than repeating the plan name ("Free / Free").
+      sub: p.prices ? `${formatPrice(p.prices.USD.month, "USD")} / month` : "Custom pricing",
+      href: cta.href,
+      cta: cta.label,
+    };
+  });
+  const highlight = plans.findIndex((p) => p.highlight);
   const row = (label: string, f: (p: (typeof plans)[number]) => Cell, hint?: string) => ({ label, values: plans.map(f), hint });
   const groups: ComparisonGroup[] = [
     {
@@ -63,5 +78,5 @@ export function LimitsTable({ full = false, className }: { full?: boolean; class
       },
     );
   }
-  return <ComparisonTable caption="Plan limits and features" columns={plans.map((p) => p.name)} groups={groups} highlightColumn={1} className={className} />;
+  return <ComparisonTable caption="Plan limits and features" columns={plans.map((p) => p.name)} groups={groups} highlightColumn={highlight >= 0 ? highlight : undefined} head={head} collapsible={full} columnNoun="plan" className={className} />;
 }

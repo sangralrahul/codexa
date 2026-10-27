@@ -12,13 +12,33 @@ import {
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Dialog as RD } from "radix-ui";
-import { ArrowRight, Clock, FileText, Loader2, Search, X } from "lucide-react";
+import {
+  ArrowRight,
+  BookA,
+  BookOpen,
+  Clock,
+  CornerDownLeft,
+  FileText,
+  GraduationCap,
+  LayoutTemplate,
+  LifeBuoy,
+  Loader2,
+  Map,
+  Newspaper,
+  Plug,
+  Search,
+  Sparkles,
+  X,
+  type LucideIcon,
+} from "lucide-react";
 import { cn } from "@/lib/utils";
+import { isCalm } from "@/lib/client/motion";
 
 /**
  * Site-wide search. Public API (kept stable for other modules):
- *   <SearchTrigger className? />  — button that opens the dialog
- *   <SearchDialog />              — mount once per page; opens on Cmd/Ctrl+K
+ *   <SearchTrigger className? compact? variant? />  — button that opens the dialog
+ *   <SearchDialog />                                 — mount once per page; opens on Cmd/Ctrl+K
+ *   openSearch(query?)                               — open it from anywhere, optionally pre-filled
  */
 
 const OPEN_EVENT = "codexa:search-open";
@@ -56,9 +76,31 @@ const FILTERS: { id: ResultType | "all"; label: string }[] = [
   { id: "templates", label: "Templates" },
 ];
 
-export function openSearch() {
+const TYPE_ICON: Record<ResultType, LucideIcon> = {
+  docs: BookOpen,
+  guides: Map,
+  tutorials: GraduationCap,
+  blog: Newspaper,
+  help: LifeBuoy,
+  changelog: Sparkles,
+  glossary: BookA,
+  templates: LayoutTemplate,
+  integrations: Plug,
+};
+
+/** Real pages to jump to when the box is empty (no invented popularity). */
+const QUICK_LINKS: { title: string; href: string; type: ResultType }[] = [
+  { title: "Quickstart", href: "/docs/quickstart", type: "docs" },
+  { title: "AI agent", href: "/docs/ai-agent", type: "docs" },
+  { title: "Deployment", href: "/docs/deployment", type: "docs" },
+  { title: "Troubleshooting", href: "/docs/troubleshooting", type: "docs" },
+  { title: "Starter templates", href: "/templates", type: "templates" },
+];
+
+/** Open the search dialog from anywhere; `query` pre-fills the box. */
+export function openSearch(query?: unknown) {
   if (typeof window !== "undefined")
-    window.dispatchEvent(new CustomEvent(OPEN_EVENT));
+    window.dispatchEvent(new CustomEvent(OPEN_EVENT, { detail: typeof query === "string" ? query : "" }));
 }
 
 /**
@@ -104,26 +146,94 @@ function useIsMac() {
   );
 }
 
-/** `compact`: icon only below 2xl screens, for crowded headers. */
-export function SearchTrigger({ className, compact }: { className?: string; compact?: boolean }) {
+/**
+ * Rotates through example queries a couple of times, then rests on the first one, so the motion
+ * stops well before 5 seconds (no pause control needed). Static when calm.
+ */
+function useRotatingExample(examples: string[]) {
+  const [index, setIndex] = useState(0);
+  useEffect(() => {
+    if (examples.length < 2 || isCalm()) return;
+    let n = 0;
+    const id = window.setInterval(() => {
+      n += 1;
+      setIndex(n >= 3 ? 0 : n % examples.length);
+      if (n >= 3) window.clearInterval(id);
+    }, 1400);
+    return () => window.clearInterval(id);
+  }, [examples]);
+  return examples[index] ?? "";
+}
+
+/** `compact`: icon only below 2xl screens (crowded headers). `variant="hero"`: the 56px glass field of hub pages. */
+export function SearchTrigger({
+  className,
+  compact,
+  variant = "default",
+  examples,
+  label = "Search docs…",
+}: {
+  className?: string;
+  compact?: boolean;
+  variant?: "default" | "hero";
+  /** Hero only: example queries that rotate in the field. */
+  examples?: string[];
+  label?: string;
+}) {
   const isMac = useIsMac();
   const host = useDialogHost();
+  const example = useRotatingExample(variant === "hero" ? (examples ?? []) : []);
+  if (variant === "hero") {
+    return (
+      <>
+        <button
+          type="button"
+          onClick={() => openSearch()}
+          aria-label="Search documentation"
+          aria-keyshortcuts={isMac ? "Meta+K" : "Control+K"}
+          className={cn(
+            "group glass relative flex h-14 w-full items-center gap-3 rounded-2xl border border-border-strong px-4 text-left shadow-lg transition-[border-color,box-shadow] duration-(--dur-3)",
+            "hover:border-foreground/25 focus-visible:outline-none focus-visible:shadow-[0_0_0_1px_color-mix(in_oklab,var(--ring)_60%,transparent),0_0_0_5px_color-mix(in_oklab,var(--signal)_16%,transparent),var(--shadow-lg)]",
+            className,
+          )}
+        >
+          <Search className="size-5 shrink-0 text-muted-foreground transition-colors group-hover:text-foreground" strokeWidth={1.75} aria-hidden="true" />
+          <span className="min-w-0 flex-1 truncate text-[15px] text-muted-foreground">
+            {examples?.length ? (
+              <>
+                <span className="hidden sm:inline">Search for </span>
+                <span key={example} className="stage-swap inline-block text-foreground/80">
+                  “{example}”
+                </span>
+              </>
+            ) : (
+              label
+            )}
+          </span>
+          <kbd className="hidden shrink-0 items-center gap-1 rounded-md border border-border-strong bg-muted px-2 py-1 font-mono text-[11px] text-muted-foreground sm:inline-flex" aria-hidden="true">
+            {isMac ? "⌘" : "Ctrl"} K
+          </kbd>
+        </button>
+        {host ? <SearchDialogInner /> : null}
+      </>
+    );
+  }
   return (
     <>
       <button
         type="button"
-        onClick={openSearch}
+        onClick={() => openSearch()}
         aria-label="Search documentation"
         aria-keyshortcuts={isMac ? "Meta+K" : "Control+K"}
         className={cn(
-          "inline-flex h-9 shrink-0 items-center justify-center gap-2 whitespace-nowrap rounded-md border border-border bg-background text-sm text-muted-foreground transition hover:border-border-strong hover:text-foreground",
+          "inline-flex h-9 shrink-0 items-center justify-center gap-2 whitespace-nowrap rounded-[10px] border border-border bg-card/60 text-sm text-muted-foreground shadow-[inset_0_1px_0_var(--hairline)] transition-colors duration-(--dur-2) hover:border-border-strong hover:text-foreground",
           compact ? "w-9 2xl:w-auto 2xl:min-w-[11rem] 2xl:justify-between 2xl:px-3" : "w-9 sm:w-auto sm:min-w-[11rem] sm:justify-between sm:px-3",
           className,
         )}
       >
         <span className="inline-flex items-center gap-2">
           <Search className="size-4" aria-hidden="true" />
-          <span className={compact ? "hidden 2xl:inline" : "hidden sm:inline"}>Search docs…</span>
+          <span className={compact ? "hidden 2xl:inline" : "hidden sm:inline"}>{label}</span>
         </span>
         <kbd className={compact ? "hidden 2xl:inline-block" : "hidden sm:inline-block"} aria-hidden="true">
           {isMac ? "⌘" : "Ctrl"} K
@@ -161,6 +271,26 @@ export function SearchDialog() {
   return host ? <SearchDialogInner /> : null;
 }
 
+/** Wraps the matched words of `text` in <mark>. */
+function Highlighted({ text, query }: { text: string; query: string }) {
+  const words = query.trim().split(/\s+/).filter((w) => w.length > 1).map((w) => w.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"));
+  if (!words.length) return <>{text}</>;
+  const re = new RegExp(`(${words.join("|")})`, "ig");
+  return (
+    <>
+      {text.split(re).map((part, i) =>
+        i % 2 === 1 ? (
+          <mark key={i} className="rounded-[2px] bg-selection text-foreground">
+            {part}
+          </mark>
+        ) : (
+          <span key={i}>{part}</span>
+        ),
+      )}
+    </>
+  );
+}
+
 function SearchDialogInner() {
   const router = useRouter();
   const [open, setOpen] = useState(false);
@@ -179,10 +309,11 @@ function SearchDialogInner() {
   const listId = useId();
 
   /** Single place that opens/closes the dialog and resets its transient state. */
-  const handleOpenChange = useCallback((next: boolean) => {
+  const handleOpenChange = useCallback((next: boolean, initialQuery = "") => {
     setOpen(next);
     if (next) {
       setRecent(readRecent());
+      setQuery(initialQuery);
     } else {
       setQuery("");
       setResults([]);
@@ -204,7 +335,7 @@ function SearchDialogInner() {
         handleOpenChange(!openRef.current);
       }
     };
-    const onOpen = () => handleOpenChange(true);
+    const onOpen = (e: Event) => handleOpenChange(true, typeof (e as CustomEvent).detail === "string" ? (e as CustomEvent<string>).detail : "");
     window.addEventListener("keydown", onKey);
     window.addEventListener(OPEN_EVENT, onOpen);
     return () => {
@@ -308,11 +439,11 @@ function SearchDialogInner() {
     : undefined;
 
   return (
-    <RD.Root open={open} onOpenChange={handleOpenChange}>
+    <RD.Root open={open} onOpenChange={(o) => handleOpenChange(o)}>
       <RD.Portal>
-        <RD.Overlay className="fixed inset-0 z-50 bg-black/50 backdrop-blur-[2px] data-[state=open]:animate-fade-in" />
+        <RD.Overlay className="cx-overlay fixed inset-0 z-50 bg-background/55 backdrop-blur-[4px]" />
         <RD.Content
-          className="fixed left-1/2 top-[8vh] z-50 flex max-h-[84vh] w-[calc(100%-2rem)] max-w-xl -translate-x-1/2 flex-col overflow-hidden rounded-xl border border-border bg-card shadow-lg focus:outline-none data-[state=open]:animate-fade-in"
+          className="cx-dialog e2 fixed left-1/2 top-[9vh] z-50 flex max-h-[80vh] w-[calc(100%-1.5rem)] max-w-[640px] -translate-x-1/2 flex-col overflow-hidden rounded-[18px] focus:outline-none"
           onOpenAutoFocus={(e) => {
             e.preventDefault();
             inputRef.current?.focus();
@@ -323,15 +454,16 @@ function SearchDialogInner() {
             Search documentation, guides, tutorials, blog posts, help articles
             and templates.
           </RD.Description>
-          <div className="flex items-center gap-2 border-b border-border px-3">
+          <div className="flex shrink-0 items-center gap-3 border-b border-border px-4">
             {status === "loading" ? (
               <Loader2
-                className="size-4 shrink-0 animate-spin text-muted-foreground"
+                className="size-5 shrink-0 animate-spin text-muted-foreground"
                 aria-hidden="true"
               />
             ) : (
               <Search
-                className="size-4 shrink-0 text-muted-foreground"
+                className="size-5 shrink-0 text-muted-foreground"
+                strokeWidth={1.75}
                 aria-hidden="true"
               />
             )}
@@ -356,17 +488,18 @@ function SearchDialogInner() {
               }}
               onKeyDown={onKeyDown}
               autoComplete="off"
-              className="h-12 w-full bg-transparent text-base outline-none placeholder:text-muted-foreground"
+              className="h-14 w-full bg-transparent text-[16px] outline-none placeholder:text-muted-foreground [&::-webkit-search-cancel-button]:hidden"
             />
             <RD.Close
-              className="rounded-md p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground"
+              className="rounded-md px-1.5 py-1 font-mono text-[11px] text-muted-foreground ring-1 ring-border transition-colors hover:bg-muted hover:text-foreground"
               aria-label="Close search"
             >
-              <X className="size-4" />
+              <span aria-hidden="true" className="hidden sm:inline">Esc</span>
+              <X className="size-4 sm:hidden" aria-hidden="true" />
             </RD.Close>
           </div>
           <div
-            className="flex gap-1.5 overflow-x-auto border-b border-border px-3 py-2"
+            className="flex shrink-0 gap-1 overflow-x-auto border-b border-border px-3 py-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
             role="group"
             aria-label="Filter by type"
           >
@@ -380,10 +513,10 @@ function SearchDialogInner() {
                   inputRef.current?.focus();
                 }}
                 className={cn(
-                  "shrink-0 rounded-full border px-2.5 py-0.5 text-xs transition",
+                  "shrink-0 rounded-full px-2.5 py-1 text-xs font-medium transition-colors duration-(--dur-2)",
                   filter === f.id
-                    ? "border-primary bg-primary/10 text-primary"
-                    : "border-border text-muted-foreground hover:border-border-strong hover:text-foreground",
+                    ? "bg-foreground text-background"
+                    : "text-muted-foreground hover:bg-muted hover:text-foreground",
                 )}
               >
                 {f.label}
@@ -391,66 +524,91 @@ function SearchDialogInner() {
             ))}
           </div>
           <div
-            className="min-h-0 flex-1 overflow-y-auto p-2"
+            className="scrollbar-thin min-h-0 flex-1 overflow-y-auto p-2"
             aria-live="polite"
           >
             {status === "error" ? (
               <p
                 role="alert"
-                className="px-3 py-6 text-center text-sm text-danger"
+                className="px-3 py-8 text-center text-sm text-danger"
               >
                 Search is unavailable right now. Please try again in a moment.
               </p>
-            ) : showRecent ? (
-              <div>
-                <p className="px-3 pb-1 pt-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                  Recent searches
-                </p>
-                <ul>
-                  {recent.map((r) => (
-                    <li key={r}>
-                      <button
-                        type="button"
-                        onClick={() => setQuery(r)}
-                        className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-sm hover:bg-muted"
-                      >
-                        <Clock
-                          className="size-3.5 text-muted-foreground"
-                          aria-hidden="true"
-                        />
-                        {r}
-                      </button>
-                    </li>
-                  ))}
-                </ul>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setRecent([]);
-                    writeRecent([]);
-                  }}
-                  className="mt-1 px-3 py-1 text-xs text-muted-foreground hover:text-foreground"
-                >
-                  Clear recent searches
-                </button>
+            ) : showRecent || query.trim().length === 0 ? (
+              <div className="space-y-3 py-1">
+                {showRecent ? (
+                  <div>
+                    <p className="text-label px-3 pb-1.5 pt-2 text-muted-foreground">
+                      Recent searches
+                    </p>
+                    <ul>
+                      {recent.map((r) => (
+                        <li key={r}>
+                          <button
+                            type="button"
+                            onClick={() => setQuery(r)}
+                            className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-left text-sm hover:bg-muted"
+                          >
+                            <Clock
+                              className="size-3.5 text-muted-foreground"
+                              aria-hidden="true"
+                            />
+                            {r}
+                          </button>
+                        </li>
+                      ))}
+                    </ul>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setRecent([]);
+                        writeRecent([]);
+                      }}
+                      className="mt-1 px-3 py-1 text-xs text-muted-foreground hover:text-foreground"
+                    >
+                      Clear recent searches
+                    </button>
+                  </div>
+                ) : null}
+                <div>
+                  <p className="text-label px-3 pb-1.5 pt-2 text-muted-foreground">Jump to</p>
+                  <ul>
+                    {QUICK_LINKS.map((l) => {
+                      const Icon = TYPE_ICON[l.type];
+                      return (
+                        <li key={l.href}>
+                          <Link
+                            href={l.href}
+                            onClick={() => handleOpenChange(false)}
+                            className="group flex items-center gap-3 rounded-lg px-3 py-2 text-sm hover:bg-muted"
+                          >
+                            <span className="grid size-7 place-items-center rounded-md border border-border bg-surface text-muted-foreground">
+                              <Icon className="size-3.5" aria-hidden="true" />
+                            </span>
+                            {l.title}
+                            <ArrowRight className="ml-auto size-3.5 text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100" aria-hidden="true" />
+                          </Link>
+                        </li>
+                      );
+                    })}
+                  </ul>
+                </div>
               </div>
-            ) : query.trim().length === 0 ? (
-              <p className="px-3 py-6 text-center text-sm text-muted-foreground">
-                Type to search. Use ↑ ↓ to move and Enter to open.
-              </p>
             ) : status === "done" && items.length === 0 ? (
-              <p className="px-3 py-6 text-center text-sm text-muted-foreground">
-                No results for “{query.trim()}”. Try a different word, or browse
-                the{" "}
-                <Link
-                  href="/docs"
-                  className="text-primary underline"
-                  onClick={() => handleOpenChange(false)}
-                >
-                  documentation
-                </Link>
-                .
-              </p>
+              <div className="px-3 py-10 text-center">
+                <p className="text-sm font-medium">No results for “{query.trim()}”</p>
+                <p className="mt-1 text-sm text-muted-foreground">
+                  Try a different word, or browse the{" "}
+                  <Link
+                    href="/docs"
+                    className="link-draw text-foreground"
+                    onClick={() => handleOpenChange(false)}
+                  >
+                    documentation
+                  </Link>
+                  .
+                </p>
+              </div>
             ) : (
               <ul
                 id={listId}
@@ -461,60 +619,71 @@ function SearchDialogInner() {
                 {items.length > 0 && items[0].kind === "suggestion" ? (
                   <li
                     role="presentation"
-                    className="px-3 pb-1 pt-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground"
+                    className="text-label px-3 pb-1.5 pt-2 text-muted-foreground"
                   >
                     Suggestions
                   </li>
                 ) : null}
-                {items.map((item, i) => (
-                  <li
-                    key={`${item.type}:${item.href}`}
-                    id={`${listId}-opt-${i}`}
-                    role="option"
-                    aria-selected={i === activeIndex}
-                    data-index={i}
-                    onMouseEnter={() => setActiveIndex(i)}
-                    onClick={() => go(item.href)}
-                    className={cn(
-                      "flex cursor-pointer items-start gap-3 rounded-md px-3 py-2",
-                      i === activeIndex ? "bg-muted" : "",
-                    )}
-                  >
-                    <FileText
-                      className="mt-0.5 size-4 shrink-0 text-muted-foreground"
-                      aria-hidden="true"
-                    />
-                    <div className="min-w-0 flex-1">
-                      <div className="flex items-center gap-2">
-                        <span className="truncate text-sm font-medium">
-                          {item.title}
-                        </span>
-                        <span className="shrink-0 rounded-full border border-border px-1.5 text-[10px] uppercase tracking-wider text-muted-foreground">
-                          {item.type}
-                        </span>
-                      </div>
-                      {item.snippet ? (
-                        <p className="mt-0.5 line-clamp-2 text-xs text-muted-foreground">
-                          {item.snippet}
-                        </p>
-                      ) : null}
-                    </div>
-                    <ArrowRight
+                {items.map((item, i) => {
+                  const Icon = TYPE_ICON[item.type] ?? FileText;
+                  const active = i === activeIndex;
+                  return (
+                    <li
+                      key={`${item.type}:${item.href}`}
+                      id={`${listId}-opt-${i}`}
+                      role="option"
+                      aria-selected={active}
+                      data-index={i}
+                      onMouseEnter={() => setActiveIndex(i)}
+                      onClick={() => go(item.href)}
                       className={cn(
-                        "mt-1 size-3.5 shrink-0 text-muted-foreground",
-                        i === activeIndex ? "opacity-100" : "opacity-0",
+                        "relative flex cursor-pointer items-start gap-3 rounded-lg px-3 py-2.5 transition-colors duration-(--dur-1)",
+                        "before:absolute before:left-0 before:top-2.5 before:bottom-2.5 before:w-[3px] before:rounded-full before:bg-signal before:opacity-0",
+                        active ? "bg-muted before:opacity-100" : "",
                       )}
-                      aria-hidden="true"
-                    />
-                  </li>
-                ))}
+                    >
+                      <span className={cn("mt-0.5 grid size-7 shrink-0 place-items-center rounded-md border border-border bg-surface", active ? "text-foreground" : "text-muted-foreground")}>
+                        <Icon className="size-3.5" aria-hidden="true" />
+                      </span>
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center gap-2">
+                          <span className="truncate text-sm font-medium">
+                            <Highlighted text={item.title} query={query} />
+                          </span>
+                          <span className="shrink-0 font-mono text-[10px] uppercase tracking-[0.08em] text-foreground-dim">
+                            {item.type}
+                          </span>
+                        </div>
+                        {item.snippet ? (
+                          <p className="mt-0.5 line-clamp-2 text-xs leading-relaxed text-muted-foreground">
+                            <Highlighted text={item.snippet} query={query} />
+                          </p>
+                        ) : null}
+                      </div>
+                      <CornerDownLeft
+                        className={cn(
+                          "mt-1.5 size-3.5 shrink-0 text-muted-foreground transition-opacity",
+                          active ? "opacity-100" : "opacity-0",
+                        )}
+                        aria-hidden="true"
+                      />
+                    </li>
+                  );
+                })}
               </ul>
             )}
           </div>
-          <div className="hidden items-center justify-between border-t border-border px-3 py-1.5 text-[11px] text-muted-foreground sm:flex">
-            <span>
-              <kbd>↑</kbd> <kbd>↓</kbd> to navigate · <kbd>Enter</kbd> to open ·{" "}
-              <kbd>Esc</kbd> to close
+          <div className="hidden shrink-0 items-center justify-between border-t border-border bg-surface/50 px-4 py-2 text-[11px] text-muted-foreground sm:flex">
+            <span className="flex items-center gap-3">
+              <span>
+                <kbd>↑</kbd> <kbd>↓</kbd> navigate
+              </span>
+              <span>
+                <kbd>Enter</kbd> open
+              </span>
+              <span>
+                <kbd>Esc</kbd> close
+              </span>
             </span>
             <span>Content search only; your projects are not included.</span>
           </div>

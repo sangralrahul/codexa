@@ -6,6 +6,7 @@ order: 31
 tags: [security, sandbox, encryption, isolation]
 author: Codexa Team
 date: 2026-10-24
+updated: 2026-10-27
 related: [authentication, environment-variables, ai-agent]
 ---
 
@@ -13,15 +14,22 @@ This page describes the security model as implemented. For the public commitment
 
 ## Runtime isolation
 
-Generated and user code never runs inside the web application. The **runner service** executes it in a sandbox:
+Generated and user code never runs inside the web application. The **runner service** executes it in a sandbox.
 
-- an unprivileged user inside Linux user, PID, mount and network namespaces,
-- cgroup limits on memory and process count,
-- wall-clock timeouts for every command,
+On Codexa's hosted service, each project runs in **its own Cloudflare Container**, a separate lightweight virtual machine owned by a Durable Object for that project:
+
+- one project per container, so the container is the isolation boundary between projects,
+- commands run as an unprivileged user inside it, with wall-clock timeouts,
+- the container's instance type caps CPU, memory and disk,
+- it starts on demand and stops after 30 minutes without requests,
+- it has outbound internet access so dependency installs work.
+
+In every setup:
+
 - allow-listed commands only (`install`, `build`, `test`, `typecheck`, the template's dev command); the agent cannot run arbitrary shell,
-- optional Docker and E2B drivers for operators who prefer container or remote isolation.
+- previews are reached through a host-based proxy that maps one preview address to one project's sandbox; sandboxes cannot see each other.
 
-Previews are reached through a host-based proxy that maps a hostname to one sandbox; sandboxes cannot see each other.
+Operators who run the runner themselves get a different default driver: an unprivileged user inside Linux user, PID, mount and network namespaces, with cgroup limits on memory and process count. Optional Docker and E2B drivers are available for container or remote isolation.
 
 ## Secrets
 

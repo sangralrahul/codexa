@@ -12,7 +12,7 @@ export function CodeView({ content, className }: { content: string; className?: 
         <tbody>
           {lines.map((line, i) => (
             <tr key={i}>
-              <td className="select-none border-r border-white/10 px-3 text-right align-top text-white/30">{i + 1}</td>
+              <td className="select-none border-r border-code-border px-3 text-right align-top text-code-muted">{i + 1}</td>
               <td className="whitespace-pre px-4">{line || " "}</td>
             </tr>
           ))}

@@ -1,66 +1,127 @@
+import Link from "next/link";
+import { ArrowRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Silk } from "./silk";
 
 /**
- * Decorative backdrop: the live silk gradient, a soft veil that keeps text
- * readable, and film grain. Place inside a `relative` parent; it never
- * receives pointer events.
+ * Decorative page light. Place inside a `relative` (and ideally `isolate`) parent;
+ * it never receives pointer events.
+ * - variant="wash" (default): the silk gradient across the top of the page, a veil that
+ *   keeps text readable, and grain. `still` = CSS poster only (no WebGL); use `still`
+ *   everywhere except the one page that owns the live canvas.
+ * - variant="horizon": a <Horizon> band rising from the bottom edge (hero stage light).
+ * The marketing layout uses `<Backdrop variant="wash" still className="site-backdrop" />`.
  */
-export function Backdrop({ className, veil = true, still = false }: { className?: string; veil?: boolean; still?: boolean }) {
+export function Backdrop({
+  className,
+  veil = true,
+  still = false,
+  variant = "wash",
+}: {
+  className?: string;
+  veil?: boolean;
+  still?: boolean;
+  variant?: "wash" | "horizon";
+}) {
   return (
-    <div aria-hidden="true" className={cn("backdrop", className)}>
-      {/* `still`: the CSS gradient only (no WebGL), for long-lived app screens. */}
-      {still ? <div className="backdrop__canvas" /> : <Silk />}
-      {veil ? <div className="backdrop__veil" /> : null}
+    <div aria-hidden="true" className={cn("backdrop", variant === "horizon" && "backdrop--horizon", className)}>
+      {variant === "horizon" ? (
+        <Horizon still={still} className="bottom-0" />
+      ) : still ? (
+        <div className="backdrop__canvas" />
+      ) : (
+        <Silk />
+      )}
+      {veil && variant === "wash" ? <div className="backdrop__veil" /> : null}
       <div className="bg-noise absolute inset-0" />
     </div>
   );
 }
 
-/** Small rounded label above headlines. */
-export function Eyebrow({ children, className }: { children: React.ReactNode; className?: string }) {
+/**
+ * Horizon: one warm light rising behind the top edge of the product (PLAN §2.4).
+ * A 1600×520 band masked from its bottom centre; position it with `top-*` / `bottom-*`
+ * (it is centred horizontally). The live canvas is the page's one WebGL canvas: use
+ * `still` for every other instance. `reactive` reads --horizon-boost (0–0.4) from any
+ * ancestor, e.g. set it on the hero while the prompt is focused / typed into.
+ */
+export function Horizon({ className, still = false, reactive = false }: { className?: string; still?: boolean; reactive?: boolean }) {
   return (
-    <p className={cn("eyebrow-pill inline-flex items-center gap-2 rounded-full border border-border px-3.5 py-1.5 text-xs font-medium text-foreground/85", className)}>
-      <span aria-hidden="true" className="size-1.5 rounded-full bg-signal" />
-      {children}
-    </p>
+    <div aria-hidden="true" className={cn("horizon", className)}>
+      <div className="horizon__poster" />
+      {still ? null : <Silk surface="horizon" reactive={reactive} />}
+    </div>
   );
 }
 
-/** Sets the part of a headline that matches `highlight` in the italic serif accent. */
+/** Announcement pill above a hero headline. With `href` it is a link with an arrow. */
+export function Eyebrow({ children, className, href }: { children: React.ReactNode; className?: string; href?: string }) {
+  const inner = (
+    <>
+      <span aria-hidden="true" className="relative flex size-1.5">
+        <span className="size-1.5 rounded-full bg-signal" />
+      </span>
+      <span className="min-w-0 truncate">{children}</span>
+      {href ? <ArrowRight aria-hidden="true" className="size-3.5 shrink-0 text-muted-foreground transition-transform duration-300 group-hover:translate-x-0.5 group-hover:text-foreground" /> : null}
+    </>
+  );
+  const base =
+    "glass inline-flex max-w-full items-center gap-2 rounded-full border border-border px-3.5 py-1.5 text-xs font-medium text-foreground/85 shadow-[inset_0_1px_0_var(--hairline)]";
+  if (href) {
+    return (
+      <Link href={href} className={cn(base, "group transition-[border-color,color,scale] duration-200 hover:border-border-strong hover:text-foreground", className)}>
+        {inner}
+      </Link>
+    );
+  }
+  return <p className={cn(base, className)}>{inner}</p>;
+}
+
+/** Sets the part of a headline that matches `highlight` in the two-tone .text-dim (the qualifier). */
 export function Highlight({ text, highlight }: { text: string; highlight?: string }) {
   if (!highlight || !text.includes(highlight)) return <>{text}</>;
   const i = text.indexOf(highlight);
   return (
     <>
       {text.slice(0, i)}
-      <span className="serif-accent">{highlight}</span>
+      <span className="text-dim">{highlight}</span>
       {text.slice(i + highlight.length)}
     </>
   );
 }
 
-/**
- * Default serif accent for a title: the closing clause after the last comma
- * (if short), else the last two words; one- to three-word titles accent their
- * last word.
- */
-export function autoHighlight(title: string): string | undefined {
-  const comma = title.lastIndexOf(", ");
-  const clause = comma > 0 ? title.slice(comma + 2) : "";
-  if (clause && clause.split(" ").length <= 4) return clause;
-  const words = title.trim().split(/\s+/);
-  // A one-word title set entirely in the accent face reads as decoration, not emphasis.
-  if (words.length < 2) return undefined;
-  if (words.length >= 4) return words.slice(-2).join(" ");
-  return words[words.length - 1] || undefined;
+/** Wraps `mark` in the selection mark (.mark-select). H1 only, once per page. */
+function Marked({ text, mark, highlight }: { text: string; mark?: string; highlight?: string }) {
+  if (!mark || !text.includes(mark)) return <Highlight text={text} highlight={highlight} />;
+  const i = text.indexOf(mark);
+  return (
+    <>
+      <Highlight text={text.slice(0, i)} highlight={highlight} />
+      <span className="mark-select">{mark}</span>
+      <Highlight text={text.slice(i + mark.length)} highlight={highlight} />
+    </>
+  );
 }
 
-/** Page-level h1 in the site's headline style, with the serif accent and reveal. */
-export function PageTitle({ children, className, highlight }: { children: React.ReactNode; className?: string; highlight?: string | false }) {
+/**
+ * Page-level h1 in the display face. It paints immediately (it is usually the LCP
+ * element; the route's page-enter already eases it in). No automatic accent: pass
+ * `highlight` (two-tone .text-dim) and/or `mark` (selection mark) explicitly.
+ */
+export function PageTitle({
+  children,
+  className,
+  highlight,
+  mark,
+}: {
+  children: React.ReactNode;
+  className?: string;
+  highlight?: string | false;
+  mark?: string;
+}) {
   return (
-    <h1 data-reveal className={cn("text-balance text-4xl font-semibold leading-[1.05] tracking-[-0.03em] sm:text-5xl", className)}>
-      {typeof children === "string" && highlight !== false ? <Highlight text={children} highlight={highlight || autoHighlight(children)} /> : children}
+    <h1 className={cn("font-display text-balance text-4xl font-bold leading-[1.02] tracking-[-0.035em] [font-stretch:104%] sm:text-5xl", className)}>
+      {typeof children === "string" ? <Marked text={children} mark={mark} highlight={highlight || undefined} /> : children}
     </h1>
   );
 }

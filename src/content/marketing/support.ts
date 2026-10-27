@@ -60,7 +60,7 @@ export const SUPPORT_PAGES: Record<string, ContentPage> = {
     sections: [
       { id: "supported", heading: "Supported", blocks: [{ type: "table", caption: "Supported browsers", columns: ["Browser", "Versions", "Notes"], rows: [["Chrome and Chromium-based (Edge, Brave)", "Last 2 major versions", "Primary test target, including the Monaco editor"], ["Firefox", "Last 2 major versions", "Tested"], ["Safari (macOS and iOS)", "Last 2 major versions", "Tested; some editor shortcuts differ"], ["Samsung Internet", "Current", "Marketing and dashboard pages only"]] }] },
       { id: "unsupported", heading: "Not supported", blocks: [{ type: "paragraph", text: "Internet Explorer, browsers without ES2020 support, or browsers with JavaScript disabled. The marketing site renders without JavaScript; the application does not." }] },
-      { id: "features", heading: "Required features", blocks: [{ type: "list", items: ["WebSockets for presence and log streaming.", "Server-sent events (`EventSource`) for AI progress.", "`localStorage` for editor preferences.", "Cookies for sessions."] }] },
+      { id: "features", heading: "Required features", blocks: [{ type: "list", items: ["WebSockets for presence and log streaming.", "Server-sent events, through `EventSource`, for AI progress.", "`localStorage` for editor preferences.", "Cookies for sessions."] }] },
       { id: "problems", heading: "If something looks wrong", blocks: [{ type: "paragraph", text: "Update the browser, disable extensions that modify pages, and [report a bug](/report-bug) with the browser name and version." }] },
     ],
   },

@@ -7,7 +7,8 @@ const files: Record<string, string> = {
     title: "Tasks",
     readme: `# Tasks: todo list, kanban board and notes
 
-One dataset, three views. Tasks and notes are persisted in localStorage so the app is usable without a backend.
+One dataset, three views: a todo list, a drag-and-drop kanban board and a notes editor.
+Tasks and notes are persisted in localStorage so the app is usable without a backend; the sample tasks are seeded on first load.
 
 \`\`\`bash
 npm install
@@ -34,29 +35,61 @@ import { newId, type Note, type Task } from "./types";
 const VIEWS = ["list", "board", "notes"] as const;
 type View = (typeof VIEWS)[number];
 
+const now = Date.now();
+const seedTasks: Task[] = [
+  { id: newId(), title: "Try the board view", column: "todo", createdAt: now },
+  { id: newId(), title: "Ask Codexa to add due dates", column: "doing", createdAt: now },
+  { id: newId(), title: "Write the onboarding email", column: "todo", createdAt: now },
+  { id: newId(), title: "Review the pricing page copy", column: "doing", createdAt: now },
+  { id: newId(), title: "Book the team retro", column: "done", createdAt: now },
+  { id: newId(), title: "Set up the project", column: "done", createdAt: now },
+];
+const seedNotes: Note[] = [{ id: newId(), title: "Welcome", body: "Notes are saved in your browser as you type. Ask Codexa to add tags, search or a real database.", updatedAt: now }];
+
 export default function App() {
   const [view, setView] = useState<View>("list");
-  const [tasks, setTasks] = useLocalStorage<Task[]>("tasks", [
-    { id: newId(), title: "Try the board view", column: "todo", createdAt: Date.now() },
-    { id: newId(), title: "Ask Codexa to add due dates", column: "doing", createdAt: Date.now() },
-  ]);
-  const [notes, setNotes] = useLocalStorage<Note[]>("notes", []);
+  const [tasks, setTasks] = useLocalStorage<Task[]>("tasks", seedTasks);
+  const [notes, setNotes] = useLocalStorage<Note[]>("notes", seedNotes);
+  const done = tasks.filter((t) => t.column === "done").length;
 
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-900">
-      <header className="border-b border-slate-200 bg-white">
+    <div className="min-h-screen bg-[linear-gradient(180deg,#eef2ff_0%,#f8fafc_320px)] text-slate-900">
+      <header className="border-b border-slate-200/70 bg-white/70 backdrop-blur">
         <div className="mx-auto flex max-w-5xl flex-wrap items-center justify-between gap-3 px-4 py-3 sm:px-6">
-          <h1 className="font-semibold tracking-tight">Tasks</h1>
-          <div className="flex rounded-md border border-slate-300 p-0.5 text-sm" role="tablist" aria-label="View">
+          <h1 className="flex items-center gap-2.5 font-semibold tracking-tight">
+            <span className="grid h-8 w-8 place-items-center rounded-lg bg-indigo-600 text-white shadow-sm shadow-indigo-600/30">
+              <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                <path d="M5 12l5 5L20 7" />
+              </svg>
+            </span>
+            Tasks
+          </h1>
+          <div className="flex rounded-xl bg-slate-100 p-1 text-sm" role="tablist" aria-label="View">
             {VIEWS.map((v) => (
-              <button key={v} type="button" role="tab" aria-selected={view === v} onClick={() => setView(v)} className={"rounded px-3 py-1 capitalize " + (view === v ? "bg-slate-900 text-white" : "hover:bg-slate-100")}>
+              <button key={v} type="button" role="tab" aria-selected={view === v} onClick={() => setView(v)} className={"rounded-lg px-3.5 py-1.5 capitalize transition " + (view === v ? "bg-white font-medium shadow-sm" : "text-slate-500 hover:text-slate-900")}>
                 {v}
               </button>
             ))}
           </div>
         </div>
       </header>
-      <main className="mx-auto max-w-5xl px-4 py-6 sm:px-6" role="tabpanel">
+      <main className="mx-auto max-w-5xl px-4 py-8 sm:px-6" role="tabpanel">
+        {view !== "notes" ? (
+          <div className="mx-auto mb-6 flex max-w-xl items-end justify-between gap-4 data-[wide=true]:max-w-none" data-wide={view === "board"}>
+            <div>
+              <p className="text-sm text-slate-500">{new Date().toLocaleDateString(undefined, { weekday: "long", day: "numeric", month: "long" })}</p>
+              <h2 className="mt-1 text-3xl font-semibold tracking-tight">Today</h2>
+            </div>
+            <div className="w-40 text-right">
+              <p className="text-xs text-slate-500">
+                {done} of {tasks.length} done
+              </p>
+              <div className="mt-1.5 h-1.5 rounded-full bg-slate-200">
+                <div className="h-1.5 rounded-full bg-indigo-600 transition-all" style={{ width: (tasks.length ? (done / tasks.length) * 100 : 0) + "%" }} />
+              </div>
+            </div>
+          </div>
+        ) : null}
         {view === "list" ? <TodoList tasks={tasks} setTasks={setTasks} /> : view === "board" ? <Board tasks={tasks} setTasks={setTasks} /> : <Notes notes={notes} setNotes={setNotes} />}
       </main>
     </div>
@@ -64,7 +97,7 @@ export default function App() {
 }
 `,
   "src/views/TodoList.tsx": `import { useState, type FormEvent } from "react";
-import { newId, type Task } from "../types";
+import { COLUMN_LABEL, newId, type Task } from "../types";
 
 type Props = { tasks: Task[]; setTasks: (next: Task[] | ((prev: Task[]) => Task[])) => void };
 
@@ -86,34 +119,44 @@ export function TodoList({ tasks, setTasks }: Props) {
 
   return (
     <div className="mx-auto max-w-xl">
-      <form onSubmit={add} className="flex gap-2">
+      <form onSubmit={add} className="flex gap-2 rounded-2xl border border-slate-200 bg-white p-2 shadow-sm focus-within:border-indigo-300">
         <label className="sr-only" htmlFor="new-task">
           New task
         </label>
-        <input id="new-task" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Add a task and press Enter" className="flex-1 rounded-md border border-slate-300 px-3 py-2 text-sm" />
-        <button type="submit" className="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white">
+        <input id="new-task" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Add a task and press Enter" className="flex-1 bg-transparent px-2 text-sm outline-none" />
+        <button type="submit" className="rounded-xl bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700">
           Add
         </button>
       </form>
-      <div className="mt-4 flex items-center justify-between text-sm text-slate-500">
-        <span>
-          {remaining} remaining
-        </span>
+      <div className="mt-5 flex items-center justify-between px-1 text-sm text-slate-500">
+        <span>{remaining} remaining</span>
         <label className="flex items-center gap-2">
-          <input type="checkbox" checked={showDone} onChange={(e) => setShowDone(e.target.checked)} /> Show completed
+          <input type="checkbox" checked={showDone} onChange={(e) => setShowDone(e.target.checked)} className="accent-indigo-600" /> Show completed
         </label>
       </div>
-      <ul className="mt-3 divide-y divide-slate-200 rounded-xl border border-slate-200 bg-white">
+      <ul className="mt-3 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
         {visible.map((t) => (
-          <li key={t.id} className="flex items-center gap-3 p-3">
-            <input type="checkbox" checked={t.column === "done"} onChange={() => toggle(t.id)} aria-label={"Mark " + t.title + (t.column === "done" ? " as not done" : " as done")} />
+          <li key={t.id} className="group flex items-center gap-3 border-b border-slate-100 px-4 py-3 last:border-0">
+            <input
+              type="checkbox"
+              checked={t.column === "done"}
+              onChange={() => toggle(t.id)}
+              aria-label={"Mark " + t.title + (t.column === "done" ? " as not done" : " as done")}
+              className="h-5 w-5 rounded-full accent-indigo-600"
+            />
             <span className={"flex-1 text-sm " + (t.column === "done" ? "text-slate-400 line-through" : "")}>{t.title}</span>
-            <button type="button" onClick={() => remove(t.id)} className="text-xs text-slate-400 hover:text-red-600" aria-label={"Delete " + t.title}>
+            <span className={"rounded-full px-2 py-0.5 text-[11px] " + (t.column === "doing" ? "bg-amber-50 text-amber-700" : t.column === "done" ? "bg-emerald-50 text-emerald-700" : "bg-slate-100 text-slate-500")}>{COLUMN_LABEL[t.column]}</span>
+            <button type="button" onClick={() => remove(t.id)} className="text-xs text-slate-300 opacity-0 transition hover:text-red-600 focus:opacity-100 group-hover:opacity-100" aria-label={"Delete " + t.title}>
               Delete
             </button>
           </li>
         ))}
-        {visible.length === 0 ? <li className="p-6 text-center text-sm text-slate-500">Nothing here yet.</li> : null}
+        {visible.length === 0 ? (
+          <li className="p-10 text-center">
+            <p className="text-sm font-medium">All clear</p>
+            <p className="mt-1 text-sm text-slate-500">Add a task above to get started.</p>
+          </li>
+        ) : null}
       </ul>
     </div>
   );
@@ -143,13 +186,13 @@ export function Board({ tasks, setTasks }: Props) {
             if (dragging) move(dragging, col);
             setDragging(null);
           }}
-          className="flex min-h-48 flex-col rounded-xl border border-slate-200 bg-white p-3"
+          className="flex min-h-48 flex-col rounded-2xl border border-slate-200 bg-white/80 p-3 shadow-sm"
         >
           <div className="flex items-center justify-between">
             <h2 id={"col-" + col} className="text-sm font-medium">
               {COLUMN_LABEL[col]} <span className="text-slate-400">{tasks.filter((t) => t.column === col).length}</span>
             </h2>
-            <button type="button" onClick={() => addTo(col)} className="text-xs text-blue-600 hover:underline">
+            <button type="button" onClick={() => addTo(col)} className="rounded-md px-2 py-1 text-xs text-indigo-600 hover:bg-indigo-50">
               + Add
             </button>
           </div>
@@ -159,7 +202,7 @@ export function Board({ tasks, setTasks }: Props) {
               .map((t) => {
                 const i = COLUMNS.indexOf(col);
                 return (
-                  <li key={t.id} draggable onDragStart={() => setDragging(t.id)} onDragEnd={() => setDragging(null)} className="cursor-grab rounded-lg border border-slate-200 bg-slate-50 p-3 text-sm active:cursor-grabbing">
+                  <li key={t.id} draggable onDragStart={() => setDragging(t.id)} onDragEnd={() => setDragging(null)} className="cursor-grab rounded-xl border border-slate-200 bg-white p-3 text-sm shadow-sm active:cursor-grabbing">
                     <p>{t.title}</p>
                     <div className="mt-2 flex justify-between">
                       <button type="button" disabled={i === 0} onClick={() => move(t.id, COLUMNS[i - 1] ?? col)} className="text-xs text-slate-500 disabled:opacity-30" aria-label={"Move " + t.title + " to " + (COLUMN_LABEL[COLUMNS[i - 1] ?? col])}>
@@ -205,8 +248,8 @@ export function Notes({ notes, setNotes }: Props) {
 
   return (
     <div className="grid gap-4 md:grid-cols-[240px_1fr]">
-      <aside className="rounded-xl border border-slate-200 bg-white p-2">
-        <button type="button" onClick={create} className="w-full rounded-md bg-slate-900 px-3 py-1.5 text-sm text-white">
+      <aside className="rounded-2xl border border-slate-200 bg-white p-2 shadow-sm">
+        <button type="button" onClick={create} className="w-full rounded-lg bg-indigo-600 px-3 py-2 text-sm font-medium text-white hover:bg-indigo-700">
           New note
         </button>
         <ul className="mt-2 space-y-1">
@@ -220,7 +263,7 @@ export function Notes({ notes, setNotes }: Props) {
           {notes.length === 0 ? <li className="p-3 text-center text-xs text-slate-500">No notes yet</li> : null}
         </ul>
       </aside>
-      <section className="rounded-xl border border-slate-200 bg-white p-4">
+      <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
         {current ? (
           <>
             <label className="sr-only" htmlFor="note-title">

@@ -105,7 +105,7 @@ export function ShowcaseSubmitForm({ workspaceId, workspaceName }: Props) {
         <Alert variant="success" title="Submitted for review">
           <span className="inline-flex items-center gap-1">
             <CheckCircle2 className="size-4" aria-hidden="true" />
-            “{status.title}” is pending review. It will appear at <code className="rounded bg-muted px-1 text-xs">/showcase/{status.slug}</code> once approved.
+            “{status.title}” is pending review. It will appear at <code className="rounded-md bg-muted px-1.5 py-0.5 font-mono text-xs">/showcase/{status.slug}</code> once approved.
           </span>
         </Alert>
       ) : null}
@@ -137,7 +137,7 @@ export function ShowcaseSubmitForm({ workspaceId, workspaceName }: Props) {
       {workspaceId && projects !== null && projects.length === 0 && !listFailed ? (
         <p className="text-xs text-muted-foreground">
           No projects in this workspace yet.{" "}
-          <Link href="/new-project" className="text-primary hover:underline">
+          <Link href="/new-project" className="link-draw text-foreground">
             Create one
           </Link>{" "}
           first, or paste an id from another workspace.

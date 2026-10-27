@@ -1,0 +1,70 @@
+/* ==========================================================================
+   Onboarding "Mission control" (imported by src/app/(app)/onboarding/page.tsx).
+   Plain CSS on the design tokens (no hex, no Tailwind at-rules). App surface:
+   warm and quick, no canvas. Calm (OS reduced motion OR <html data-motion="reduced">)
+   is handled at the end of the file.
+   ========================================================================== */
+
+/* Directional step change: the new step enters from ±24px with a 4px blur (320ms). */
+@keyframes ob-step-in {
+  from { opacity: 0; transform: translateX(calc(var(--ob-dir, 1) * 24px)); filter: blur(4px); }
+}
+.ob-step { animation: ob-step-in 320ms var(--ease-out) both; }
+.ob-step[data-dir="back"] { --ob-dir: -1; }
+.ob-step[data-dir="none"] { animation: none; }
+
+/* First paint: label, heading and blocks rise in turn. */
+@keyframes ob-rise { from { opacity: 0; transform: translateY(8px); } }
+.ob-rise > * { animation: ob-rise 280ms var(--ease-out) calc(var(--ob-i, 0) * 40ms) backwards; }
+.ob-rise > :nth-child(2) { --ob-i: 1; }
+.ob-rise > :nth-child(3) { --ob-i: 2; }
+.ob-rise > :nth-child(4) { --ob-i: 3; }
+.ob-rise > :nth-child(5) { --ob-i: 4; }
+.ob-rise > :nth-child(6) { --ob-i: 5; }
+.ob-rise > :nth-child(n + 7) { --ob-i: 6; }
+
+/* Progress: "Idea · Start · Launch" segments fill with a transform. */
+.ob-seg__fill { transform-origin: 0 50%; transform: scaleX(0); transition: transform 600ms var(--ease-out), background-color var(--dur-3); }
+.ob-seg[data-state="done"] .ob-seg__fill,
+.ob-seg[data-state="current"] .ob-seg__fill { transform: scaleX(1); }
+.ob-seg__check { animation: check-pop 320ms var(--ease-snap); }
+
+/* Goal image cards: spring press and a signal ring when picked. */
+@keyframes ob-goal-pick { 0% { transform: scale(0.97); } 55% { transform: scale(1.02); } 100% { transform: scale(1); } }
+.ob-goal { transition: border-color var(--dur-3), box-shadow var(--dur-3) var(--ease-out), translate var(--dur-3) var(--ease-out); }
+.ob-goal:active { scale: 0.97; transition-duration: var(--dur-1); }
+.ob-goal[aria-pressed="true"] { animation: ob-goal-pick 420ms var(--ease-spring); box-shadow: 0 0 0 2px var(--signal), 0 10px 30px -14px color-mix(in oklab, var(--signal) 55%, transparent); }
+.ob-goal__check { animation: check-pop 260ms var(--ease-snap); }
+
+/* Template choice cards. */
+.ob-tpl[aria-checked="true"] { box-shadow: 0 0 0 2px var(--signal), var(--shadow-md); }
+
+/* Live preview: a new screenshot develops in (300ms blur-in). */
+@keyframes ob-shot-in { from { opacity: 0; filter: blur(6px); transform: scale(1.02); } }
+.ob-shot-in { animation: ob-shot-in 300ms var(--ease-out) both; }
+/* The workspace name and the chat bubble update with a soft swap. */
+@keyframes ob-swap { from { opacity: 0; transform: translateY(4px); } }
+.ob-swap { animation: ob-swap var(--dur-3) var(--ease-out) both; }
+
+/* The step card's height follows its content (JS animates it); clip only while it moves. */
+.ob-height[data-animating] { overflow: clip; }
+
+/* Sticky step actions: a solid card surface where backdrop blur is unavailable, and
+   controls that receive keyboard focus scroll clear of the sticky bar (and the header). */
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .ob-footer { background-color: var(--card); }
+}
+.ob-height :is(a, button, input, textarea, select, [tabindex]) { scroll-margin-block: 6rem 7rem; }
+
+/* "From the homepage" chip. */
+.ob-chip { animation: pop-in 420ms var(--ease-out) both; }
+
+/* Calm: final frames. */
+@media (prefers-reduced-motion: reduce) {
+  .ob-step, .ob-rise > *, .ob-seg__check, .ob-goal[aria-pressed="true"], .ob-goal__check, .ob-shot-in, .ob-swap, .ob-chip { animation: none; }
+  .ob-seg__fill, .ob-goal { transition: none; }
+  .ob-goal:active { scale: 1; }
+}
+[data-motion="reduced"] :is(.ob-step, .ob-rise > *, .ob-seg__check, .ob-goal[aria-pressed="true"], .ob-goal__check, .ob-shot-in, .ob-swap, .ob-chip) { animation: none; }
+[data-motion="reduced"] :is(.ob-seg__fill, .ob-goal) { transition: none; }
+[data-motion="reduced"] .ob-goal:active { scale: 1; }

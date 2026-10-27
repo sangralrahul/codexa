@@ -24,6 +24,7 @@ Listed under **Later** on the [roadmap](/roadmap), after API tokens. No dates ar
 
 export default function SdkPage() {
   return (
+    <div data-tone="docs">
     <DevArticle path="/sdk" markdown={md}>
       <div className="mt-10 max-w-xl space-y-6">
         <Callout kind="warning" title="Not yet available">
@@ -37,5 +38,6 @@ export default function SdkPage() {
         </section>
       </div>
     </DevArticle>
+    </div>
   );
 }

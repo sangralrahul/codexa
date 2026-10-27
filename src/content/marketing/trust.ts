@@ -4,22 +4,40 @@ import { site } from "@/config/site";
 const UPDATED = "2026-10-24";
 const sec = site.company.securityEmail;
 const priv = site.company.privacyEmail;
+
+/**
+ * Who runs the service. Until the configured legal name is a registered entity (not just the
+ * product name), say so plainly instead of the circular "Codexa is operated by Codexa".
+ */
+const OPERATOR =
+  site.company.legalName.trim().toLowerCase() === site.name.trim().toLowerCase()
+    ? "Codexa is run by its founding team in India. The legal entity that acts as data controller, and its registered address, will be named here once legal review is complete."
+    : `Codexa is operated by ${site.company.legalName}.`;
 const sup = site.company.supportEmail;
 
 export const TRUST_PAGES: Record<string, ContentPage> = {
   "/security": {
     path: "/security",
-    eyebrow: "Trust",
+    eyebrow: "Security",
+    variant: "landing",
+    tone: "trust",
+    headline: "Security you can read.",
+    mark: "you can read.",
     title: "Security at Codexa",
     intro: "How the platform isolates generated code, protects secrets, and handles accounts. This page describes what is implemented in the codebase today; it is not a certification and we do not hold any third-party attestations yet.",
     review: "security",
     updated: UPDATED,
     sections: [
       {
+        id: "request-path",
+        heading: "The request path",
+        navLabel: "Request path",
+        blocks: [{ type: "diagram", name: "request-path" }],
+      },
+      {
         id: "summary",
         heading: "Summary",
         blocks: [
-          { type: "note", variant: "warning", title: "No third-party certifications yet", text: "Codexa has not completed SOC 2, ISO 27001, HIPAA, PCI DSS, or any other third-party audit. We describe our controls here so you can assess them yourself. Enterprise customers can request a security questionnaire through [contact sales](/contact-sales)." },
           { type: "list", items: ["Generated and user code never runs inside the web application process.", "Secrets (environment variables, integration credentials) are encrypted at rest and never returned to the browser.", "Sessions use httpOnly cookies; session tokens are hashed at rest.", "Public and sensitive endpoints are rate limited.", "Security-relevant actions are written to an audit log."] },
         ],
       },
@@ -27,15 +45,15 @@ export const TRUST_PAGES: Record<string, ContentPage> = {
         id: "sandboxing",
         heading: "Sandboxing and runtime isolation",
         blocks: [
-          { type: "paragraph", text: "Projects run in a separate runner service. The default driver executes each project as an unprivileged Linux user inside its own user, PID, mount, and network namespaces, with cgroup memory and process limits and a wall-clock timeout. Only allowlisted commands (install, build, test, type-check, start) can be executed; there is no arbitrary shell endpoint." },
-          { type: "paragraph", text: "Operators can choose Docker or E2B drivers instead of the namespace driver. Previews are served through a host-based proxy so that a running project is never on the same origin as the Codexa application." },
+          { type: "paragraph", text: "Projects run in a separate runner service, never inside the web application. On Cloudflare, each project gets its own ProjectSandbox Durable Object, which starts that project's own Container on demand and stops it after 30 minutes without requests; inside it, the runner executes commands as an unprivileged user. Self-hosted runners use the namespace driver instead: an unprivileged Linux user in its own user, PID and mount namespaces, with cgroup memory and process limits and a wall-clock timeout." },
+          { type: "paragraph", text: "Only allowlisted commands (install, build, test, type-check, start) can be executed; there is no arbitrary shell endpoint. Operators can choose Docker or E2B drivers. Previews are served through a host-based proxy on a separate origin, so a running project is never on the same origin as the Codexa application." },
         ],
       },
       {
         id: "secrets",
         heading: "Secrets and encryption",
         blocks: [
-          { type: "paragraph", text: "Project environment variables and workspace integration credentials are encrypted with an operator-held key before storage (`encryptSecret`) and decrypted only on the server when injected into a sandbox or used to call a provider. The UI shows masked values and the API never returns plaintext secrets." },
+          { type: "paragraph", text: "Project environment variables and workspace integration credentials are encrypted with an operator-held key before storage, by `encryptSecret`, and decrypted only on the server when injected into a sandbox or used to call a provider. The UI shows masked values and the API never returns plaintext secrets." },
           { type: "paragraph", text: "Transport encryption (TLS) is the responsibility of the operator's deployment; the application sets secure cookie attributes when served over HTTPS." },
         ],
       },
@@ -43,14 +61,14 @@ export const TRUST_PAGES: Record<string, ContentPage> = {
         id: "accounts",
         heading: "Accounts and sessions",
         blocks: [
-          { type: "list", items: ["Passwords are hashed with a modern password hashing function; plaintext passwords are never stored or logged.", "Email verification and password reset use single-use, expiring tokens.", "Sessions are httpOnly, SameSite cookies (`codexa_session`); the stored session token is a hash, so a database read alone cannot be used to hijack a session.", "GitHub sign-in is available only when the operator configures OAuth; the OAuth state is checked on callback.", "Workspace roles (owner, admin, editor, viewer) are enforced on the server for every API route."] },
+          { type: "list", items: ["Passwords are hashed with a modern password hashing function; plaintext passwords are never stored or logged.", "Email verification and password reset use single-use, expiring tokens.", "Sessions are httpOnly, SameSite cookies named `codexa_session`; the stored session token is a hash, so a database read alone cannot be used to hijack a session.", "GitHub sign-in is available only when the operator configures OAuth; the OAuth state is checked on callback.", "Workspace roles (owner, admin, editor, viewer) are enforced on the server for every API route."] },
         ],
       },
       {
         id: "rate-limiting",
         heading: "Rate limiting and abuse controls",
         blocks: [
-          { type: "paragraph", text: "Login, signup, password reset, AI generation, and public forms are rate limited per IP or per workspace using a fixed-window limiter in PostgreSQL. Usage limits (AI requests and tokens, runtime minutes, deployments, storage) are enforced server-side per workspace. Abuse reports can be filed through [support](/support) and are handled in the staff admin area." },
+          { type: "paragraph", text: "Login, signup, password reset, AI generation, and public forms are rate limited per IP or per workspace using a fixed-window limiter stored in the database (Cloudflare D1), shared by every Worker instance. Usage limits (AI requests and tokens, runtime minutes, deployments, storage) are enforced server-side per workspace. Abuse reports can be filed through [support](/support) and are handled in the staff admin area." },
         ],
       },
       {
@@ -92,12 +110,17 @@ export const TRUST_PAGES: Record<string, ContentPage> = {
       { id: "honesty", heading: "Honesty", blocks: [{ type: "paragraph", text: "Every feature described on this site is implemented. Where a capability depends on operator configuration (AI keys, GitHub OAuth, payment providers, Vercel, email) the product shows an explicit \"not configured\" state rather than pretending to work. Roadmap items are labelled as such." }] },
       { id: "contact", heading: "Contact", blocks: [{ type: "definitions", items: [{ term: "Security", detail: `[${sec}](mailto:${sec})` }, { term: "Privacy", detail: `[${priv}](mailto:${priv})` }, { term: "Support", detail: `[${sup}](mailto:${sup})` }] }] },
     ],
-    cta: { title: "Browse the trust center", primary: { label: "Trust center", href: "/trust-center" }, secondary: { label: "Security", href: "/security" } },
+    cta: { title: "Browse the trust center.", primary: { label: "Trust center", href: "/trust-center" }, secondary: { label: "Security", href: "/security" } },
   },
 
   "/trust-center": {
     path: "/trust-center",
-    eyebrow: "Trust",
+    eyebrow: "Trust center",
+    variant: "landing",
+    tone: "trust",
+    headline: "Every policy, in one place.",
+    mark: "in one place.",
+    visual: "env-vars",
     title: "Trust center",
     intro: "Every policy and practice document in one place, with the people to contact when you have a question.",
     updated: UPDATED,
@@ -153,7 +176,7 @@ export const TRUST_PAGES: Record<string, ContentPage> = {
     review: "legal",
     updated: UPDATED,
     sections: [
-      { id: "who", heading: "Who we are", blocks: [{ type: "paragraph", text: `Codexa is operated by ${site.company.legalName}. For privacy questions contact [${priv}](mailto:${priv}).` }] },
+      { id: "who", heading: "Who we are", blocks: [{ type: "paragraph", text: `${OPERATOR} For privacy questions contact [${priv}](mailto:${priv}).` }] },
       {
         id: "data",
         heading: "Data we collect",

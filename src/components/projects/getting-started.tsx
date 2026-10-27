@@ -1,96 +1,164 @@
+"use client";
+
+import { useState } from "react";
 import Link from "next/link";
-import { ArrowRight, Check, FolderGit2, LayoutTemplate, MessageSquareText, Rocket, Wand2 } from "lucide-react";
-import { buttonClasses } from "@/components/ui/button";
+import { useRouter } from "next/navigation";
+import { ArrowRight, Check, Lock, MessageSquareText, Play, Rocket, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 
+export const CHECKLIST_COOKIE = "codexa_checklist";
+
+export type ChecklistMilestones = { project: boolean; preview: boolean; deploy: boolean };
+
 /**
- * First-run panel on the dashboard: how a project goes from a sentence to a running app,
- * drawn as three small animated steps (an illustration of the flow, not live data).
+ * First-run checklist. Every tick comes from a database row (a project exists, a preview
+ * sandbox was started, a deployment was made), never from local progress. Once all three are
+ * done it can be dismissed (a cookie, so the server stops rendering it: no flash on reload).
+ * `layout="row"`: three steps side by side (first run); `"stack"`: compact, for a side column.
+ * Deploys are blocked server-side until the email is verified, so the deploy step renders as
+ * locked (with the reason) instead of as an available next step while the email is unverified.
  */
-export function GettingStarted({ canCreate }: { canCreate: boolean }) {
-  const steps = [
+export function GettingStarted({
+  milestones,
+  canCreate,
+  resumeHref,
+  emailVerified = true,
+  emailConfigured = true,
+  layout = "row",
+  className,
+}: {
+  milestones: ChecklistMilestones;
+  canCreate: boolean;
+  resumeHref?: string | null;
+  /** Whether the signed-in user's email is verified (deploys require it). */
+  emailVerified?: boolean;
+  /** Whether this server can deliver account emails (capabilities.email). */
+  emailConfigured?: boolean;
+  layout?: "row" | "stack";
+  className?: string;
+}) {
+  const router = useRouter();
+  const [hidden, setHidden] = useState(false);
+  const deployLocked = !milestones.deploy && !emailVerified;
+  const steps: {
+    id: string;
+    done: boolean;
+    icon: typeof Rocket;
+    title: string;
+    body: string;
+    locked?: boolean;
+    cta: { label: string; onClick: () => void } | { label: string; href: string } | null;
+  }[] = [
     {
+      id: "project",
+      done: milestones.project,
       icon: MessageSquareText,
-      title: "Describe it",
-      body: "Say what you want in plain words, or start from a template.",
-      art: (
-        <div className="rounded-lg border border-border bg-background/70 p-3 font-mono text-[11px]">
-          <span className="text-muted-foreground">› </span>
-          <span className="typing-line inline-block align-bottom">a habit tracker with streaks</span>
-          <span className="caret" />
-        </div>
-      ),
+      title: "Create your first project",
+      body: "Describe it in the box above, or start from a template.",
+      cta: canCreate ? { label: "Describe it", onClick: () => document.getElementById("idea-prompt")?.focus() } : null,
     },
     {
-      icon: Wand2,
-      title: "Codexa builds it",
-      body: "The agent plans, writes real files, type-checks and fixes errors.",
-      art: (
-        <ul className="space-y-1 rounded-lg border border-border bg-background/70 p-3 font-mono text-[11px]">
-          {["Plan 3 changes", "write src/App.tsx", "type-check passed"].map((t, i) => (
-            <li key={t} className="tick-in flex items-center gap-1.5" style={{ animationDelay: `${i * 0.5}s` }}>
-              <Check className="size-3 text-success" aria-hidden="true" /> {t}
-            </li>
-          ))}
-        </ul>
-      ),
+      id: "preview",
+      done: milestones.preview,
+      icon: Play,
+      title: "Run a live preview",
+      body: "Open a project and press Run to start it in a sandbox.",
+      cta: resumeHref ? { label: "Open a project", href: resumeHref } : null,
     },
     {
+      id: "deploy",
+      done: milestones.deploy,
       icon: Rocket,
-      title: "Run and ship",
-      body: "Preview it live in a sandbox, then deploy with one click.",
-      art: (
-        <div className="flex items-center justify-between rounded-lg border border-border bg-background/70 p-3 text-[11px]">
-          <span className="flex items-center gap-1.5">
-            <span className="relative flex size-2">
-              <span className="absolute inset-0 animate-ping rounded-full bg-success/60" />
-              <span className="relative size-2 rounded-full bg-success" />
-            </span>
-            Preview running
-          </span>
-          <span className="rounded-md bg-foreground px-2 py-0.5 font-medium text-background">Deploy</span>
-        </div>
-      ),
+      title: "Deploy it",
+      body: deployLocked
+        ? emailConfigured
+          ? "Needs a verified email. Use the link we emailed you, then publish from the editor."
+          : "Needs a verified email. Email delivery isn't configured on this server; ask the operator."
+        : "Publish from the editor to get a shareable URL.",
+      locked: deployLocked,
+      cta: deployLocked ? null : resumeHref ? { label: "Open a project", href: resumeHref } : null,
     },
   ];
+  const done = steps.filter((s) => s.done).length;
+  const allDone = done === steps.length;
+  const next = steps.find((s) => !s.done && !s.locked)?.id;
+  if (hidden) return null;
+
+  const dismiss = () => {
+    try {
+      document.cookie = `${CHECKLIST_COOKIE}=done; path=/; max-age=31536000; samesite=lax`;
+    } catch {
+      /* cookies blocked: hidden for this page view */
+    }
+    setHidden(true);
+    router.refresh();
+  };
+
+  const row = layout === "row";
   return (
-    <div className="glass relative overflow-hidden rounded-2xl border border-border p-6 sm:p-8">
-      <div aria-hidden="true" className="pointer-events-none absolute -right-20 -top-24 size-72 rounded-full bg-signal/15 blur-3xl" />
-      <div className="relative flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
-        <div>
-          <p className="text-[11px] font-medium uppercase tracking-[0.12em] text-signal">Get started</p>
-          <h3 className="mt-2 text-xl font-semibold tracking-tight sm:text-2xl">Your first app is one sentence away</h3>
-          <p className="mt-1.5 max-w-xl text-sm text-muted-foreground">Type an idea in the box above, or pick a starting point. Everything Codexa makes is real code you can read, edit and export.</p>
+    <section aria-labelledby="checklist-title" className={cn("e1 relative overflow-hidden rounded-[18px]", row ? "p-5 sm:p-6" : "p-5", className)}>
+      <div className="flex items-start justify-between gap-4">
+        <div className="min-w-0">
+          <h2 id="checklist-title" className="text-[15px] font-semibold tracking-[-0.01em]">
+            {allDone ? "You're all set" : "Get started"}
+          </h2>
+          <p className="mt-0.5 text-[13px] text-muted-foreground">{allDone ? "You built, ran and shipped a project. Nice work." : "From a sentence to a live URL in three steps."}</p>
         </div>
-        {canCreate ? (
-          <div className="flex shrink-0 flex-wrap gap-2">
-            <Link href="/new-project" className={buttonClasses("secondary", "md", "btn-solid rounded-lg")}>
-              <LayoutTemplate className="size-4" aria-hidden="true" /> Start from a template
-            </Link>
-            <Link href="/import-project" className={buttonClasses("outline", "md", "rounded-lg")}>
-              <FolderGit2 className="size-4" aria-hidden="true" /> Import from GitHub
-            </Link>
-          </div>
-        ) : null}
+        <div className="flex shrink-0 items-center gap-3">
+          <span className="text-meta text-muted-foreground" aria-label={`${done} of ${steps.length} steps done`}>
+            {done}/{steps.length}
+          </span>
+          {allDone ? (
+            <button type="button" onClick={dismiss} className="flex size-7 items-center justify-center rounded-[8px] text-muted-foreground transition-colors hover:bg-muted hover:text-foreground" aria-label="Dismiss checklist">
+              <X className="size-4" aria-hidden="true" />
+            </button>
+          ) : null}
+        </div>
       </div>
-      <ol className="relative mt-8 grid gap-4 md:grid-cols-3">
-        {steps.map((s, i) => (
-          <li key={s.title} data-reveal style={{ "--reveal-delay": `${i * 120}ms` } as React.CSSProperties} className="relative rounded-xl border border-border bg-card/80 p-4">
-            {i < steps.length - 1 ? <ArrowRight aria-hidden="true" className="absolute -right-3.5 top-1/2 z-10 hidden size-5 -translate-y-1/2 rounded-full border border-border bg-background p-0.5 text-muted-foreground md:block" /> : null}
-            <div className="flex items-center gap-2.5">
-              <span className={cn("flex size-8 items-center justify-center rounded-lg border border-border bg-surface")}>
-                <s.icon className="size-4" aria-hidden="true" />
+      <div className="mt-3 h-1 overflow-hidden rounded-full bg-muted" aria-hidden="true">
+        <span className="block h-full origin-left rounded-full bg-[image:var(--ember)] transition-transform duration-(--dur-5) ease-out calm:transition-none" style={{ transform: `scaleX(${done / steps.length})` }} />
+      </div>
+      <ol className={cn("mt-4 grid gap-3", row ? "md:grid-cols-3" : "")}>
+        {steps.map((s, i) => {
+          const isNext = s.id === next;
+          return (
+            <li
+              key={s.id}
+              className={cn(
+                "relative flex gap-3 rounded-[14px] border p-3.5 transition-colors",
+                s.done ? "border-border bg-surface/50" : s.locked ? "border-border bg-muted/40" : isNext ? "border-border-strong bg-card shadow-[inset_0_1px_0_var(--hairline),var(--shadow-sm)]" : "border-dashed border-border bg-transparent",
+              )}
+            >
+              <span
+                className={cn(
+                  "flex size-7 shrink-0 items-center justify-center rounded-full text-xs font-semibold",
+                  s.done ? "step-done bg-success text-background" : s.locked ? "bg-muted text-muted-foreground" : isNext ? "bg-foreground text-background" : "bg-muted text-muted-foreground shadow-[inset_0_0_0_1px_var(--border)]",
+                )}
+              >
+                {s.done ? <Check className="size-3.5" strokeWidth={3} aria-hidden="true" /> : s.locked ? <Lock className="size-3.5" aria-hidden="true" /> : i + 1}
               </span>
-              <span className="font-mono text-[11px] text-muted-foreground">0{i + 1}</span>
-            </div>
-            <p className="mt-3 text-sm font-semibold">{s.title}</p>
-            <p className="mt-1 text-xs leading-relaxed text-muted-foreground">{s.body}</p>
-            <div className="mt-4" aria-hidden="true">
-              {s.art}
-            </div>
-          </li>
-        ))}
+              <div className="min-w-0 flex-1">
+                <p className={cn("text-[13.5px] font-medium", s.done && "text-muted-foreground line-through decoration-border-strong", s.locked && "text-muted-foreground")}>
+                  {s.title}
+                  {s.done ? null : s.locked ? <span className="sr-only"> (locked)</span> : <span className="sr-only"> (to do)</span>}
+                </p>
+                {s.done ? <p className="mt-0.5 text-xs font-medium text-success">Done</p> : <p className="mt-0.5 text-xs leading-relaxed text-muted-foreground">{s.body}</p>}
+                {!s.done && isNext && s.cta ? (
+                  "href" in s.cta && s.cta.href ? (
+                    <Link href={s.cta.href} className="link-draw mt-2 inline-flex items-center gap-1 text-xs font-medium text-foreground">
+                      {s.cta.label} <ArrowRight className="size-3" aria-hidden="true" />
+                    </Link>
+                  ) : "onClick" in s.cta ? (
+                    <button type="button" onClick={s.cta.onClick} className="link-draw mt-2 inline-flex items-center gap-1 text-xs font-medium text-foreground">
+                      {s.cta.label} <ArrowRight className="size-3" aria-hidden="true" />
+                    </button>
+                  ) : null
+                ) : null}
+              </div>
+            </li>
+          );
+        })}
       </ol>
-    </div>
+    </section>
   );
 }

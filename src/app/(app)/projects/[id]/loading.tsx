@@ -1,28 +1,80 @@
+import "@/components/workspace/workspace.css";
 import { Skeleton } from "@/components/ui/misc";
+import { LogoMark } from "@/components/logo";
 
-/** Editor-shaped placeholder while the project workspace loads. */
+/** Mirrors the workspace shell (agent card, Code card, browser card) while the project opens. */
 export default function Loading() {
   return (
-    <div role="status" aria-label="Opening project" className="flex h-dvh flex-col bg-background">
-      <div className="flex h-12 items-center gap-3 border-b border-border px-3">
+    <div role="status" className="ws-root relative flex h-dvh flex-col bg-background">
+      <div className="flex h-[52px] shrink-0 items-center gap-2.5 px-3" aria-hidden="true">
         <Skeleton className="size-7 rounded-lg" />
-        <Skeleton className="h-4 w-56" />
+        <Skeleton className="h-5 w-8 rounded-[5px]" />
+        <Skeleton className="h-4 w-40" />
         <div className="ml-auto flex gap-2">
-          <Skeleton className="h-8 w-20 rounded-full" />
-          <Skeleton className="h-8 w-24 rounded-full" />
+          <Skeleton className="h-8 w-20 rounded-[10px]" />
+          <Skeleton className="h-8 w-24 rounded-[10px]" />
+          <Skeleton className="size-8 rounded-full" />
         </div>
       </div>
-      <div className="grid min-h-0 flex-1 grid-cols-[300px_1fr_420px]">
-        <div className="space-y-2 border-r border-border p-3">
-          {[60, 80, 70, 50, 75, 65].map((w, i) => (
-            <Skeleton key={i} className="h-4" style={{ width: `${w}%` }} />
-          ))}
+      <div className="ws-body relative grid min-h-0 flex-1 grid-cols-1 gap-1.5 px-1.5 pb-1.5 lg:grid-cols-[360px_1fr] min-[1440px]:grid-cols-[380px_1fr]" aria-hidden="true">
+        {/* Agent card */}
+        <div className="ws-card flex flex-col">
+          <div className="flex h-12 items-center gap-2 border-b border-border px-3">
+            <Skeleton className="size-4 rounded" />
+            <Skeleton className="h-3.5 w-28" />
+          </div>
+          <div className="flex-1 space-y-4 p-4">
+            <Skeleton className="h-3 w-24" />
+            <Skeleton className="h-6 w-4/5" />
+            <div className="space-y-2 pt-2">
+              {[0, 1, 2, 3].map((i) => (
+                <Skeleton key={i} className="h-14 w-full rounded-xl" />
+              ))}
+            </div>
+          </div>
+          <div className="p-3">
+            <Skeleton className="h-[120px] w-full rounded-2xl" />
+          </div>
         </div>
-        <div className="flex items-center justify-center">
-          <span className="spin size-6 rounded-full border-2 border-border border-t-foreground" />
+        {/* Canvas */}
+        <div className="hidden min-h-0 grid-cols-[minmax(0,1fr)_36%] gap-1.5 lg:grid">
+          {/* Code card: explorer and editor joined by a hairline */}
+          <div className="ws-card grid grid-cols-[192px_minmax(0,1fr)]">
+            <div className="space-y-2 border-r border-border p-3">
+              <Skeleton className="mb-3 h-7 w-full rounded-[10px]" />
+              {[70, 55, 80, 60, 75, 50, 65].map((w, i) => (
+                <Skeleton key={i} className="h-3.5" style={{ width: `${w}%`, marginLeft: i > 0 && i < 5 ? 14 : 0 }} />
+              ))}
+            </div>
+            <div className="flex flex-col">
+              <div className="flex h-10 items-end gap-1 border-b border-border px-2">
+                <Skeleton className="h-7 w-24 rounded-b-none rounded-t-lg" />
+                <Skeleton className="h-7 w-20 rounded-b-none rounded-t-lg opacity-60" />
+              </div>
+              <div className="flex-1 space-y-2.5 p-4">
+                {[40, 65, 52, 78, 30, 60, 45].map((w, i) => (
+                  <Skeleton key={i} className="h-3" style={{ width: `${w}%` }} />
+                ))}
+              </div>
+            </div>
+          </div>
+          {/* Preview card: the card is the browser window */}
+          <div className="ws-card flex flex-col">
+            <div className="flex h-10 items-center gap-2 border-b border-border bg-surface/80 px-2">
+              <Skeleton className="size-6 rounded-md" />
+              <Skeleton className="h-7 flex-1 rounded-full" />
+            </div>
+            <div className="flex-1" />
+          </div>
         </div>
-        <div className="border-l border-border p-3">
-          <Skeleton className="h-full w-full rounded-lg" />
+      </div>
+      {/* The one thing announced: the skeleton above is decorative. */}
+      <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
+        <div className="ws-pill-in glass flex items-center gap-3 rounded-2xl border border-border-strong px-4 py-3 shadow-xl">
+          <span className="ws-orb rounded-lg" data-running="" aria-hidden="true">
+            <LogoMark size={26} state="running" />
+          </span>
+          <span className="text-[14px] font-medium">Opening project…</span>
         </div>
       </div>
     </div>

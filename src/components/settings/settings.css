@@ -1,0 +1,250 @@
+/* ==========================================================================
+   Settings control centre. Imported by src/app/(app)/settings/layout.tsx.
+   Plain CSS on the design tokens from globals.css (no hex). App motion is calm
+   and exact (240ms or less for feedback); entrances stagger 50ms. Every
+   animation here is switched off for calm (OS reduced motion OR
+   <html data-motion="reduced">) at the end of the file.
+   ========================================================================== */
+
+/* ---------- Layout ---------- */
+.settings-shell { --settings-nav-w: 236px; }
+/* Deep links (#timezone, #invite, #ws-currency …) land below the sticky app bar, not under it. */
+.settings-shell [id] { scroll-margin-top: 96px; }
+
+/* ---------- Cards: glassy e1 with an inset highlight, staggered entrance ---------- */
+.settings-card {
+  position: relative;
+  background: color-mix(in oklab, var(--card) 86%, transparent);
+  -webkit-backdrop-filter: blur(10px) saturate(130%);
+  backdrop-filter: blur(10px) saturate(130%);
+  border: 1px solid var(--border);
+  box-shadow: inset 0 1px 0 var(--hairline), var(--shadow-sm);
+  transition: border-color var(--dur-3) var(--ease-out), box-shadow var(--dur-4) var(--ease-out);
+  animation: settings-in var(--dur-4) var(--ease-out) backwards;
+  animation-delay: calc(var(--card-i, 0) * 50ms);
+  scroll-margin-top: 84px;
+}
+.settings-card:hover { border-color: var(--border-strong); }
+.settings-card[data-tone="danger"] { border-color: color-mix(in oklab, var(--danger) 28%, var(--border)); }
+.settings-card[data-tone="danger"]:hover { border-color: color-mix(in oklab, var(--danger) 45%, var(--border)); }
+@keyframes settings-in { from { opacity: 0; transform: translateY(8px); } }
+
+/* Any direct child of a settings page column picks up the next stagger step (forms pass it on to the card inside). */
+.settings-stack > :nth-child(2) { --card-i: 1; }
+.settings-stack > :nth-child(3) { --card-i: 2; }
+.settings-stack > :nth-child(4) { --card-i: 3; }
+.settings-stack > :nth-child(5) { --card-i: 4; }
+.settings-stack > :nth-child(6) { --card-i: 5; }
+.settings-stack > :nth-child(7) { --card-i: 6; }
+.settings-stack > :nth-child(n + 8) { --card-i: 7; }
+.settings-stack > :not(.settings-card):not(:has(.settings-card)) { animation: settings-in var(--dur-4) var(--ease-out) backwards; animation-delay: calc(var(--card-i, 0) * 50ms); }
+.settings-stack > form, .settings-stack > .settings-plain { animation: none; }
+/* Panels that hold several cards (members, integrations, profile, workspace) continue the stagger inside. */
+.settings-sub > :nth-child(2) { --card-i: 2; }
+.settings-sub > :nth-child(3) { --card-i: 3; }
+.settings-sub > :nth-child(4) { --card-i: 4; }
+.settings-sub > :nth-child(5) { --card-i: 5; }
+.settings-sub > :nth-child(n + 6) { --card-i: 6; }
+.settings-sub > :not(.settings-card):not(form):not(:has(.settings-card)) { animation: settings-in var(--dur-4) var(--ease-out) backwards; animation-delay: calc(var(--card-i, 0) * 50ms); }
+
+/* A deep-linked section (search, command menu, checklist) flashes a signal ring once. The ring is its own
+   layer (::after), so the card's entrance animation is never replaced and never replays when the flash ends. */
+.settings-card::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  border-radius: inherit;
+  pointer-events: none;
+  opacity: 0;
+  box-shadow: inset 0 0 0 1.5px color-mix(in oklab, var(--signal) 70%, transparent), inset 0 0 28px color-mix(in oklab, var(--signal) 12%, transparent);
+}
+.settings-card[data-flash]::after { animation: settings-flash 1400ms var(--ease-out); }
+@keyframes settings-flash { 0% { opacity: 0; } 14% { opacity: 1; } 100% { opacity: 0; } }
+
+/* Rows: a 2px signal accent slides in on hover / keyboard focus (box-shadow so it works on <tr> too). */
+.settings-row { box-shadow: inset 0 0 0 0 var(--signal); transition: background-color var(--dur-2) var(--ease-out), box-shadow var(--dur-3) var(--ease-snap); }
+.settings-row:is(:hover, :focus-within) { box-shadow: inset 2px 0 0 0 var(--signal); }
+
+/* ---------- Navigation ---------- */
+.settings-nav-pill { left: 0; right: 0; width: auto !important; border-radius: 10px; background: var(--card); box-shadow: inset 0 0 0 1px var(--border), var(--shadow-sm); }
+.settings-tabs {
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+  --fade-l: 0px;
+  --fade-r: 0px;
+  mask-image: linear-gradient(to right, transparent 0, black var(--fade-l), black calc(100% - var(--fade-r)), transparent 100%);
+}
+.settings-tabs::-webkit-scrollbar { display: none; }
+.settings-tabs[data-fade-start] { --fade-l: 28px; }
+.settings-tabs[data-fade-end] { --fade-r: 28px; }
+@media (min-width: 64rem) { .settings-tabs { mask-image: none; } }
+/* Below lg the tabs use the gliding underline instead of the side rail. */
+@media (width < 64rem) { .settings-tabs .nav-item[aria-current="page"]::before { display: none; } }
+.settings-meta { transition: color var(--dur-2), background-color var(--dur-2); }
+@keyframes meta-in { from { opacity: 0; transform: scale(0.85); } }
+.settings-meta { animation: meta-in var(--dur-3) var(--ease-snap) backwards; }
+
+/* Search results drop in under the field. */
+@keyframes search-in { from { opacity: 0; transform: translateY(-4px); } }
+.settings-search-results > * { animation: search-in var(--dur-2) var(--ease-out) backwards; }
+.settings-search-results > :nth-child(2) { animation-delay: 20ms; }
+.settings-search-results > :nth-child(3) { animation-delay: 40ms; }
+.settings-search-results > :nth-child(4) { animation-delay: 60ms; }
+.settings-search-results > :nth-child(n + 5) { animation-delay: 80ms; }
+
+/* ---------- Overview bento ---------- */
+.bento-tile { transition: transform var(--dur-4) var(--ease-out), border-color var(--dur-3), box-shadow var(--dur-4) var(--ease-out); }
+.bento-tile .bento-arrow { transition: transform var(--dur-3) var(--ease-out), color var(--dur-2); }
+.bento-tile:is(:hover, :focus-visible) .bento-arrow { transform: translate(2px, -2px); color: var(--foreground); }
+
+/* Checklist ticks draw in, then the row settles. */
+.setup-item[data-done] .setup-tick { animation: tick-pop 420ms var(--ease-spring) backwards; animation-delay: calc(var(--i, 0) * 70ms + 200ms); }
+.setup-item[data-done] .setup-tick path { stroke-dasharray: 1; stroke-dashoffset: 1; animation: check-draw 320ms var(--ease-out) forwards; animation-delay: calc(var(--i, 0) * 70ms + 320ms); }
+@keyframes tick-pop { from { transform: scale(0.4); opacity: 0; } }
+.setup-progress { transform-origin: 0 50%; animation: grow-x 900ms var(--ease-out) 200ms backwards; }
+/* Check-ring: done arcs fade in one after another. */
+.setup-ring-seg[data-done] { animation: ring-seg-in 420ms var(--ease-out) backwards; animation-delay: calc(var(--i, 0) * 90ms + 200ms); }
+@keyframes ring-seg-in { from { opacity: 0; } }
+@keyframes grow-x { from { transform: scaleX(0); } }
+
+/* ---------- Usage ---------- */
+.gauge-arc { animation: gauge-fill 1000ms var(--ease-out) 120ms backwards; transition: stroke-dashoffset 600ms var(--ease-out), stroke var(--dur-3); }
+@keyframes gauge-fill { from { stroke-dashoffset: var(--gauge-len); } }
+.period-fill { transform-origin: 0 50%; animation: grow-x 900ms var(--ease-out) 150ms backwards; }
+
+.usage-chart .usage-bar { transform-origin: 50% 100%; }
+.js .usage-chart:not(.is-visible) .usage-bar { transform: scaleY(0); }
+.usage-chart.is-visible .usage-bar { animation: bar-grow 640ms var(--ease-out) backwards; animation-delay: calc(var(--i, 0) * 16ms); }
+@keyframes bar-grow { from { transform: scaleY(0); } }
+.usage-bar-col:is(:hover, :focus-visible) .usage-bar { filter: brightness(1.15); }
+.usage-bar-col .usage-tip { opacity: 0; transform: translate(-50%, 4px); transition: opacity var(--dur-2) var(--ease-out), transform var(--dur-2) var(--ease-out); }
+.usage-bar-col:is(:hover, :focus-visible) .usage-tip { opacity: 1; transform: translate(-50%, 0); }
+.usage-swap { animation: settings-in var(--dur-3) var(--ease-out) backwards; }
+
+/* ---------- Billing: the unlock diff types itself in, line by line ---------- */
+.js .unlock-diff:not(.is-visible) .unlock-line { opacity: 0; }
+.unlock-diff.is-visible .unlock-line { animation: unlock-line-in 300ms var(--ease-out) backwards; animation-delay: calc(240ms + var(--i, 0) * 70ms); }
+@keyframes unlock-line-in { from { opacity: 0; transform: translateX(-6px); } }
+.unlock-line { position: relative; }
+.unlock-diff.is-visible .unlock-line[data-sign="+"]::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: color-mix(in oklab, var(--success) 18%, transparent);
+  animation: unlock-flash 1200ms var(--ease-out) forwards;
+  animation-delay: calc(240ms + var(--i, 0) * 70ms);
+  pointer-events: none;
+}
+@keyframes unlock-flash { from { opacity: 1; } to { opacity: 0; } }
+.plan-card { transition: transform var(--dur-4) var(--ease-out), border-color var(--dur-3), box-shadow var(--dur-4) var(--ease-out); }
+.plan-card:hover { transform: translateY(-2px); border-color: var(--border-strong); box-shadow: inset 0 1px 0 var(--hairline), var(--shadow-lg); }
+.price-swap { display: inline-block; animation: price-swap var(--dur-3) var(--ease-out) backwards; }
+@keyframes price-swap { from { opacity: 0; transform: translateY(35%); } }
+
+/* ---------- Members: seat strip ---------- */
+.seat { transition: transform var(--dur-3) var(--ease-snap), border-color var(--dur-2), background-color var(--dur-2); }
+.seat-in { animation: seat-in var(--dur-4) var(--ease-spring) backwards; animation-delay: calc(var(--i, 0) * 40ms); }
+@keyframes seat-in { from { opacity: 0; transform: scale(0.6); } }
+.seat--pending { animation: seat-in var(--dur-4) var(--ease-spring) backwards, seat-pulse 2.4s var(--ease-in-out) infinite; animation-delay: calc(var(--i, 0) * 40ms), calc(var(--i, 0) * 40ms + 420ms); }
+@keyframes seat-pulse { 50% { border-color: color-mix(in oklab, var(--signal) 55%, var(--border-strong)); background-color: color-mix(in oklab, var(--signal) 7%, transparent); } }
+button.seat:is(:hover, :focus-visible) { transform: translateY(-2px); border-color: var(--foreground-dim); }
+
+/* Invite chips */
+.chip-in { animation: chip-pop var(--dur-3) var(--ease-snap) backwards; }
+@keyframes chip-pop { from { opacity: 0; transform: scale(0.85); } }
+.chip-field:focus-within { border-color: color-mix(in oklab, var(--ring) 70%, transparent); box-shadow: 0 0 0 4px color-mix(in oklab, var(--signal) 16%, transparent); }
+
+/* Rows: new rows sweep a signal highlight once; removed rows collapse (diff-row from globals). */
+.row-sweep { position: relative; overflow: hidden; }
+.row-sweep::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(90deg, transparent, color-mix(in oklab, var(--signal) 14%, transparent), transparent);
+  transform: translateX(-100%);
+  animation: row-sweep 900ms var(--ease-in-out) 120ms forwards;
+}
+@keyframes row-sweep { to { transform: translateX(100%); } }
+.role-swap { animation: price-swap var(--dur-3) var(--ease-out) backwards; }
+
+/* ---------- Forms: unsaved-changes dock and saved-field flash ---------- */
+.unsaved-dock {
+  background: color-mix(in oklab, var(--card) 94%, transparent);
+  -webkit-backdrop-filter: blur(16px) saturate(140%);
+  backdrop-filter: blur(16px) saturate(140%);
+  box-shadow: inset 0 1px 0 var(--hairline), var(--shadow-xl);
+  animation: dock-in 280ms var(--ease-snap) backwards;
+}
+.unsaved-dock[data-leaving] { animation: dock-out 180ms var(--ease-in) forwards; }
+@keyframes dock-in { from { opacity: 0; transform: translateY(16px) scale(0.98); } }
+@keyframes dock-out { to { opacity: 0; transform: translateY(12px) scale(0.98); } }
+.unsaved-dock[data-warn] { border-color: color-mix(in oklab, var(--warning) 55%, var(--border-strong)); }
+.field-flash :is(input, textarea, button[role="combobox"], [role="radiogroup"]) { animation: field-flash 1200ms var(--ease-out); }
+@keyframes field-flash {
+  0%, 25% { box-shadow: 0 0 0 4px color-mix(in oklab, var(--signal) 26%, transparent); border-color: color-mix(in oklab, var(--signal) 70%, transparent); }
+  100% { box-shadow: 0 0 0 0 color-mix(in oklab, var(--signal) 0%, transparent); }
+}
+
+/* Radio cards */
+.radio-card { transition: border-color var(--dur-2), background-color var(--dur-2), box-shadow var(--dur-3) var(--ease-out), scale var(--dur-2) var(--ease-snap); }
+.radio-card[aria-checked="true"] { border-color: color-mix(in oklab, var(--foreground) 55%, var(--border-strong)); box-shadow: inset 0 1px 0 var(--hairline), 0 0 0 3px color-mix(in oklab, var(--foreground) 8%, transparent); }
+.radio-card .radio-dot::after { content: ""; position: absolute; inset: 3px; border-radius: inherit; background: var(--foreground); transform: scale(0); transition: transform var(--dur-3) var(--ease-spring); }
+.radio-card[aria-checked="true"] .radio-dot { border-color: var(--foreground); }
+.radio-card[aria-checked="true"] .radio-dot::after { transform: scale(1); }
+
+/* ---------- Profile ---------- */
+@media (min-width: 80rem) { .settings-card.settings-mirror { position: sticky; top: 76px; } }
+.avatar-drop[data-drag] { outline: 2px dashed color-mix(in oklab, var(--signal) 80%, transparent); outline-offset: 4px; }
+.avatar-drop[data-drag] .avatar-drop__veil { opacity: 1; }
+.avatar-fade img { animation: avatar-in 520ms var(--ease-out) backwards; }
+@keyframes avatar-in { from { opacity: 0; transform: scale(1.06); filter: blur(4px); } }
+.upload-ring { transition: stroke-dashoffset 240ms var(--ease-out); }
+.mirror-swap { animation: price-swap var(--dur-3) var(--ease-out) backwards; }
+.presence-cursor { animation: cursor-in 520ms var(--ease-spring) 300ms backwards; }
+@keyframes cursor-in { from { opacity: 0; transform: translate(-10px, -8px); } }
+
+/* ---------- Security ---------- */
+.pw-rule[data-ok] svg { animation: tick-pop 320ms var(--ease-spring); }
+
+/* ---------- Integrations: staggered re-flow when the filter changes ---------- */
+.tile-flow > * { animation: settings-in var(--dur-3) var(--ease-out) backwards; }
+.tile-flow > :nth-child(2) { animation-delay: 30ms; }
+.tile-flow > :nth-child(3) { animation-delay: 60ms; }
+.tile-flow > :nth-child(4) { animation-delay: 90ms; }
+.tile-flow > :nth-child(5) { animation-delay: 120ms; }
+.tile-flow > :nth-child(6) { animation-delay: 150ms; }
+.tile-flow > :nth-child(7) { animation-delay: 180ms; }
+.tile-flow > :nth-child(n + 8) { animation-delay: 210ms; }
+.brand-tile { transition: color var(--dur-3), background-color var(--dur-3), transform var(--dur-3) var(--ease-snap); }
+:is(.int-tile:hover, .int-tile:focus-within) .brand-tile { transform: scale(1.06); }
+
+/* New-workspace steps */
+.ws-step[data-state="done"] .ws-step__dot { background: var(--foreground); color: var(--background); border-color: var(--foreground); }
+.ws-step[data-state="active"] .ws-step__dot { border-color: var(--signal); color: var(--signal-ink); box-shadow: 0 0 0 4px color-mix(in oklab, var(--signal) 14%, transparent); }
+.ws-step__line { transform-origin: 0 50%; transition: transform 420ms var(--ease-out); }
+.ws-step[data-state="done"] .ws-step__line { transform: scaleX(1); }
+
+/* ---------- Calm: final frames ---------- */
+@media (prefers-reduced-motion: reduce) {
+  .settings-card, .settings-stack > *, .settings-sub > *, .settings-meta, .settings-search-results > *, .setup-item .setup-tick, .setup-progress, .setup-ring-seg, .gauge-arc, .period-fill,
+  .usage-chart .usage-bar, .usage-swap, .unlock-diff .unlock-line, .price-swap, .seat-in, .seat--pending, .chip-in, .role-swap, .unsaved-dock,
+  .field-flash :is(input, textarea, button[role="combobox"], [role="radiogroup"]), .avatar-fade img, .mirror-swap, .presence-cursor, .pw-rule svg, .tile-flow > * { animation: none !important; }
+  .setup-item .setup-tick path { animation: none !important; stroke-dashoffset: 0; }
+  .js .usage-chart:not(.is-visible) .usage-bar, .js .unlock-diff:not(.is-visible) .unlock-line { transform: none; opacity: 1; }
+  .row-sweep::after, .unlock-line::after { display: none; }
+  .settings-card[data-flash]::after { animation: none; opacity: 1; }
+  .bento-tile, .bento-tile .bento-arrow, .plan-card, .seat, .radio-card, .radio-card .radio-dot::after, .upload-ring, .brand-tile, .ws-step__line, .settings-row, .settings-card, .gauge-arc { transition: none; }
+  .plan-card:hover, button.seat:is(:hover, :focus-visible) { transform: none; }
+}
+[data-motion="reduced"] :is(.settings-card, .settings-stack > *, .settings-sub > *, .settings-meta, .settings-search-results > *, .setup-item .setup-tick, .setup-progress, .setup-ring-seg, .gauge-arc, .period-fill, .usage-chart .usage-bar, .usage-swap, .unlock-diff .unlock-line, .price-swap, .seat-in, .seat--pending, .chip-in, .role-swap, .unsaved-dock, .avatar-fade img, .mirror-swap, .presence-cursor, .pw-rule svg, .tile-flow > *) { animation: none !important; }
+[data-motion="reduced"] .field-flash :is(input, textarea, button[role="combobox"], [role="radiogroup"]) { animation: none !important; }
+[data-motion="reduced"] .setup-item .setup-tick path { animation: none !important; stroke-dashoffset: 0; }
+[data-motion="reduced"] :is(.usage-chart:not(.is-visible) .usage-bar, .unlock-diff:not(.is-visible) .unlock-line) { transform: none; opacity: 1; }
+[data-motion="reduced"] .row-sweep::after,
+[data-motion="reduced"] .unlock-line::after { display: none; }
+[data-motion="reduced"] .settings-card[data-flash]::after { animation: none; opacity: 1; }
+[data-motion="reduced"] :is(.bento-tile, .bento-tile .bento-arrow, .plan-card, .seat, .radio-card, .radio-card .radio-dot::after, .upload-ring, .brand-tile, .ws-step__line, .settings-row, .settings-card, .gauge-arc) { transition: none; }
+[data-motion="reduced"] :is(.plan-card:hover, button.seat:hover, button.seat:focus-visible) { transform: none; }

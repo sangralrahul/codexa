@@ -1,96 +1,162 @@
 "use client";
 
+import { useRef, useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Check, ChevronsUpDown, LifeBuoy, LogOut, Monitor, Moon, Settings, Sun, User as UserIcon } from "lucide-react";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown";
+import { ChevronsUpDown, CreditCard, Keyboard, LifeBuoy, LogOut, Monitor, Moon, Settings, Sun, User as UserIcon } from "lucide-react";
+import { Avatar } from "@/components/ui/avatar";
+import { Kbd } from "@/components/ui/misc";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Segmented } from "@/components/ui/segmented";
+import { MotionToggle } from "@/components/motion/motion-toggle";
 import { useTheme, type Theme } from "@/components/theme/theme-provider";
 import { api } from "@/lib/client/api";
 import { cn } from "@/lib/utils";
+import { openShortcuts } from "./events";
 
 type MenuUser = { name: string; email: string; avatarUrl: string | null };
 
-function Avatar({ user, className }: { user: MenuUser; className?: string }) {
-  const initials = (user.name || user.email)
-    .split(/\s+/)
-    .map((s) => s[0])
-    .join("")
-    .slice(0, 2)
-    .toUpperCase();
-  return user.avatarUrl ? (
-    // eslint-disable-next-line @next/next/no-img-element
-    <img src={user.avatarUrl} alt="" className={cn("size-8 shrink-0 rounded-full object-cover", className)} />
-  ) : (
-    <span aria-hidden="true" className={cn("flex size-8 shrink-0 items-center justify-center rounded-full bg-foreground text-[11px] font-semibold text-background", className)}>
-      {initials}
-    </span>
-  );
-}
-
-const THEMES: { value: Theme; label: string; icon: typeof Sun }[] = [
-  { value: "light", label: "Light", icon: Sun },
-  { value: "dark", label: "Dark", icon: Moon },
-  { value: "system", label: "System", icon: Monitor },
+const THEMES: { value: Theme; label: string; Icon: typeof Sun }[] = [
+  { value: "light", label: "Light", Icon: Sun },
+  { value: "dark", label: "Dark", Icon: Moon },
+  { value: "system", label: "System", Icon: Monitor },
 ];
 
+const LINKS = [
+  { href: "/settings/profile", label: "Profile", icon: UserIcon },
+  { href: "/settings", label: "Settings", icon: Settings },
+  { href: "/settings/billing", label: "Usage & billing", icon: CreditCard },
+  { href: "/support", label: "Help & support", icon: LifeBuoy },
+];
+
+const rowClass =
+  "flex w-full items-center gap-2.5 rounded-[10px] px-2 py-1.5 text-left text-[13px] text-foreground/90 outline-none transition-colors hover:bg-muted hover:text-foreground focus-visible:bg-muted [&>svg]:size-4 [&>svg]:shrink-0 [&>svg]:text-muted-foreground";
+
 /**
- * Account menu. `variant="avatar"` (default) is the round button used in top bars;
+ * Account menu (a popover so it can hold real controls): who you are, links, keyboard shortcuts,
+ * the theme as a segmented control, the site motion setting, and sign out.
+ * `variant="avatar"` (default) is the round trigger used in top bars and the collapsed rail;
  * `variant="row"` is the full-width name + email row at the bottom of the sidebar.
  */
-export function UserMenu({ user, variant = "avatar" }: { user: MenuUser; variant?: "avatar" | "row" }) {
+export function UserMenu({ user, variant = "avatar", side, align }: { user: MenuUser; variant?: "avatar" | "row"; side?: "top" | "bottom" | "right"; align?: "start" | "end" | "center" }) {
   const router = useRouter();
   const { theme, setTheme } = useTheme();
+  const [open, setOpen] = useState(false);
+  const [signingOut, setSigningOut] = useState(false);
+  const listRef = useRef<HTMLDivElement>(null);
+  const displayName = user.name || user.email.split("@")[0];
+  // One seed for this person everywhere (settings, members, onboarding, activity): the name, else the email.
+  const avatarSeed = user.name?.trim() || user.email;
+
+  const onKey = (e: React.KeyboardEvent) => {
+    if (e.key !== "ArrowDown" && e.key !== "ArrowUp") return;
+    const rows = Array.from(listRef.current?.querySelectorAll<HTMLElement>("[data-menu-row]") ?? []);
+    const i = rows.indexOf(document.activeElement as HTMLElement);
+    if (i < 0) return;
+    e.preventDefault();
+    rows[(i + (e.key === "ArrowDown" ? 1 : -1) + rows.length) % rows.length]?.focus();
+  };
+
   return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild>
         {variant === "row" ? (
-          <button type="button" className="group flex w-full min-w-0 items-center gap-2.5 rounded-lg px-2 py-1.5 text-left transition-colors hover:bg-muted data-[state=open]:bg-muted" aria-label="Account menu">
-            <Avatar user={user} className="size-7" />
+          <button
+            type="button"
+            className="group flex w-full min-w-0 items-center gap-2.5 rounded-[10px] px-1.5 py-1.5 text-left transition-colors hover:bg-foreground/[0.06] data-[state=open]:bg-foreground/[0.06]"
+          >
+            {/* Named by its content ("Account menu: {name} {email}"), so the accessible name always
+                contains the visible text (WCAG 2.5.3); the avatar's initials are decorative. */}
+            <span className="sr-only">Account menu: </span>
+            <Avatar name={displayName} src={user.avatarUrl} seed={avatarSeed} size="sm" />
             <span className="min-w-0 flex-1 leading-tight">
-              <span className="block truncate text-[13px] font-medium">{user.name || user.email.split("@")[0]}</span>
+              <span className="block truncate text-[13px] font-medium">{displayName}</span>
               <span className="block truncate text-[11px] text-muted-foreground">{user.email}</span>
             </span>
             <ChevronsUpDown className="size-3.5 shrink-0 text-muted-foreground transition-colors group-hover:text-foreground" aria-hidden="true" />
           </button>
         ) : (
-          <button type="button" className="rounded-full ring-offset-2 ring-offset-background transition hover:ring-2 hover:ring-border-strong" aria-label="Account menu">
-            <Avatar user={user} />
+          <button
+            type="button"
+            className="rounded-full outline-offset-2 transition-[box-shadow] hover:shadow-[0_0_0_2px_var(--border-strong)] data-[state=open]:shadow-[0_0_0_2px_var(--border-strong)]"
+          >
+            {/* Named by content, not aria-label: an aria-label without the avatar's visible initials
+                fails axe label-content-name-mismatch (WCAG 2.5.3). The initials are decorative. */}
+            <span className="sr-only">Account menu for {displayName}</span>
+            <Avatar name={displayName} src={user.avatarUrl} seed={avatarSeed} size="md" />
           </button>
         )}
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align={variant === "row" ? "start" : "end"} side={variant === "row" ? "top" : "bottom"} className="w-60">
-        <DropdownMenuLabel>
-          <div className="truncate text-sm font-medium text-foreground">{user.name}</div>
-          <div className="truncate text-xs font-normal">{user.email}</div>
-        </DropdownMenuLabel>
-        <DropdownMenuSeparator />
-        <DropdownMenuItem onSelect={() => router.push("/settings/profile")}>
-          <UserIcon className="size-4" /> Profile
-        </DropdownMenuItem>
-        <DropdownMenuItem onSelect={() => router.push("/settings")}>
-          <Settings className="size-4" /> Settings
-        </DropdownMenuItem>
-        <DropdownMenuItem onSelect={() => router.push("/support")}>
-          <LifeBuoy className="size-4" /> Support
-        </DropdownMenuItem>
-        <DropdownMenuSeparator />
-        <DropdownMenuLabel className="text-[11px] font-medium uppercase tracking-wide">Theme</DropdownMenuLabel>
-        {THEMES.map((t) => (
-          <DropdownMenuItem key={t.value} onSelect={(e) => (e.preventDefault(), setTheme(t.value))}>
-            <t.icon className="size-4" /> <span className="flex-1">{t.label}</span>
-            {theme === t.value ? <Check className="size-4" aria-label="Selected" /> : null}
-          </DropdownMenuItem>
-        ))}
-        <DropdownMenuSeparator />
-        <DropdownMenuItem
-          onSelect={async () => {
-            await api("/api/auth/logout", { method: "POST" });
-            router.push("/");
-            router.refresh();
-          }}
-        >
-          <LogOut className="size-4" /> Sign out
-        </DropdownMenuItem>
-      </DropdownMenuContent>
-    </DropdownMenu>
+      </PopoverTrigger>
+      <PopoverContent
+        side={side ?? (variant === "row" ? "top" : "bottom")}
+        align={align ?? (variant === "row" ? "start" : "end")}
+        sideOffset={8}
+        className="w-[280px] p-1.5"
+      >
+        <div className="flex items-center gap-3 px-2 pb-3 pt-2">
+          <Avatar name={displayName} src={user.avatarUrl} seed={avatarSeed} size="lg" />
+          <div className="min-w-0">
+            <p className="truncate text-sm font-semibold tracking-[-0.01em]">{displayName}</p>
+            <p className="truncate text-xs text-muted-foreground">{user.email}</p>
+          </div>
+        </div>
+        <div ref={listRef} onKeyDown={onKey} className="space-y-px border-t border-border pt-1.5">
+          {LINKS.map((l) => (
+            <Link key={l.href} href={l.href} data-menu-row onClick={() => setOpen(false)} className={rowClass}>
+              <l.icon aria-hidden="true" />
+              {l.label}
+            </Link>
+          ))}
+          <button
+            type="button"
+            data-menu-row
+            onClick={() => {
+              setOpen(false);
+              openShortcuts();
+            }}
+            className={rowClass}
+          >
+            <Keyboard aria-hidden="true" />
+            <span className="flex-1">Keyboard shortcuts</span>
+            <Kbd className="border border-border bg-muted">?</Kbd>
+          </button>
+        </div>
+        <div className="mt-1.5 space-y-2.5 border-t border-border px-2 pb-1 pt-3">
+          <div className="flex items-center justify-between gap-3">
+            <span id="um-theme" className="text-xs text-muted-foreground">
+              Theme
+            </span>
+            <Segmented<Theme>
+              aria-labelledby="um-theme"
+              size="sm"
+              value={theme}
+              onValueChange={setTheme}
+              options={THEMES.map(({ value, label, Icon }) => ({ value, title: label, icon: <Icon />, label: <span className="sr-only">{label}</span> }))}
+            />
+          </div>
+          <MotionToggle className="w-full justify-between" />
+        </div>
+        <div className="mt-2 border-t border-border pt-1.5">
+          <button
+            type="button"
+            disabled={signingOut}
+            onClick={async () => {
+              setSigningOut(true);
+              try {
+                await api("/api/auth/logout", { method: "POST" });
+                router.push("/");
+                router.refresh();
+              } catch {
+                setSigningOut(false);
+              }
+            }}
+            className={cn(rowClass, "disabled:opacity-60")}
+          >
+            <LogOut aria-hidden="true" />
+            {signingOut ? "Signing out…" : "Sign out"}
+          </button>
+        </div>
+      </PopoverContent>
+    </Popover>
   );
 }

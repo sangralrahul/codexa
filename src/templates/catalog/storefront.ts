@@ -4,11 +4,14 @@ import { USE_LOCAL_STORAGE, VITE_DEPS, VITE_SETTINGS, viteBase } from "../shared
 const files: Record<string, string> = {
   ...viteBase({
     name: "codexa-storefront",
-    title: "Storefront",
+    title: "Northwind Goods",
     readme: `# Storefront starter
 
 Catalog with category filter and search, product detail, and a cart persisted in localStorage.
 Checkout is a placeholder form — connect Stripe or Razorpay on a server before taking payments.
+
+Product images are simple SVG illustrations in \`src/ProductArt.tsx\`, so the store looks finished before you have photos.
+Replace them with your own images (or ask Codexa to) when you are ready.
 
 \`\`\`bash
 npm install
@@ -62,10 +65,95 @@ export function useCart() {
   return { items, total, count, add, setQty, clear };
 }
 `,
+  "src/ProductArt.tsx": `import type { ReactNode } from "react";
+
+/** Simple SVG product illustrations, so the catalog looks finished before you have photos. */
+const art: Record<string, { bg: string; draw: ReactNode }> = {
+  p1: {
+    bg: "from-indigo-100 to-indigo-200",
+    draw: (
+      <g>
+        <path d="M58 92 C58 40 142 40 142 92" fill="none" stroke="#312e81" strokeWidth="9" strokeLinecap="round" />
+        <rect x="44" y="82" width="28" height="44" rx="12" fill="#4338ca" />
+        <rect x="128" y="82" width="28" height="44" rx="12" fill="#4338ca" />
+        <rect x="50" y="90" width="10" height="28" rx="5" fill="#a5b4fc" />
+        <rect x="140" y="90" width="10" height="28" rx="5" fill="#a5b4fc" />
+      </g>
+    ),
+  },
+  p2: {
+    bg: "from-amber-100 to-orange-200",
+    draw: (
+      <g>
+        <rect x="68" y="30" width="64" height="100" rx="14" fill="#292524" />
+        <circle cx="100" cy="98" r="20" fill="#44403c" />
+        <circle cx="100" cy="98" r="9" fill="#f59e0b" />
+        <circle cx="100" cy="56" r="9" fill="#44403c" />
+        <circle cx="100" cy="56" r="4" fill="#fbbf24" />
+      </g>
+    ),
+  },
+  p3: {
+    bg: "from-rose-100 to-rose-200",
+    draw: (
+      <g>
+        <path d="M88 34 q6 -10 0 -20 M104 34 q6 -10 0 -20" fill="none" stroke="#fda4af" strokeWidth="4" strokeLinecap="round" />
+        <path d="M128 70 h10 a16 16 0 0 1 0 32 h-10" fill="none" stroke="#be123c" strokeWidth="8" />
+        <path d="M66 46 h66 v62 a20 20 0 0 1 -20 20 h-26 a20 20 0 0 1 -20 -20 z" fill="#e11d48" />
+        <path d="M66 46 h66 v10 h-66 z" fill="#fb7185" />
+      </g>
+    ),
+  },
+  p4: {
+    bg: "from-emerald-100 to-lime-100",
+    draw: (
+      <g>
+        <rect x="44" y="96" width="112" height="26" rx="8" fill="#15803d" />
+        <rect x="52" y="72" width="96" height="26" rx="8" fill="#22c55e" />
+        <rect x="60" y="48" width="80" height="26" rx="8" fill="#86efac" />
+        <path d="M70 48 v26 M86 48 v26 M114 72 v26 M130 72 v26 M60 96 v26 M80 96 v26" stroke="#ffffff" strokeOpacity="0.5" strokeWidth="3" />
+      </g>
+    ),
+  },
+  p5: {
+    bg: "from-cyan-100 to-sky-200",
+    draw: (
+      <g>
+        <rect x="88" y="18" width="24" height="16" rx="5" fill="#0f172a" />
+        <path d="M80 44 q0 -10 10 -10 h20 q10 0 10 10 v78 q0 10 -10 10 h-20 q-10 0 -10 -10 z" fill="#0284c7" />
+        <rect x="80" y="70" width="40" height="22" fill="#7dd3fc" />
+      </g>
+    ),
+  },
+  p6: {
+    bg: "from-violet-100 to-fuchsia-100",
+    draw: (
+      <g>
+        <path d="M76 34 l24 12 l24 -12 l30 18 l-10 30 l-12 -6 v58 h-64 v-58 l-12 6 l-10 -30 z" fill="#7c3aed" />
+        <path d="M100 46 v88" stroke="#c4b5fd" strokeWidth="3" />
+        <path d="M88 34 q12 14 24 0" fill="none" stroke="#5b21b6" strokeWidth="5" strokeLinecap="round" />
+      </g>
+    ),
+  },
+};
+
+export function ProductArt({ id, className }: { id: string; className?: string }) {
+  const a = art[id];
+  return (
+    <div aria-hidden="true" className={"relative overflow-hidden bg-gradient-to-br " + (a ? a.bg : "from-slate-100 to-slate-200") + " " + (className ?? "")}>
+      <svg viewBox="0 0 200 150" className="absolute inset-0 h-full w-full">
+        <ellipse cx="100" cy="134" rx="54" ry="7" fill="#0f172a" opacity="0.08" />
+        {a ? a.draw : null}
+      </svg>
+    </div>
+  );
+}
+`,
   "src/App.tsx": `import { useMemo, useState } from "react";
 import { categories, formatPrice, products, type Product } from "./products";
 import { useCart } from "./cart";
 import { Cart } from "./Cart";
+import { ProductArt } from "./ProductArt";
 
 type View = { kind: "catalog" } | { kind: "product"; id: string } | { kind: "cart" };
 
@@ -81,14 +169,27 @@ export default function App() {
   );
 
   return (
-    <div className="min-h-screen bg-white text-slate-900">
-      <header className="sticky top-0 z-10 border-b border-slate-200 bg-white/90 backdrop-blur">
-        <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-3 sm:px-6">
-          <button type="button" onClick={() => setView({ kind: "catalog" })} className="font-semibold tracking-tight">
+    <div className="min-h-screen bg-stone-50 text-stone-900">
+      <div className="bg-stone-900 px-4 py-2 text-center text-xs text-stone-300">Sample catalog · prices in USD · checkout is a placeholder</div>
+      <header className="sticky top-0 z-10 border-b border-stone-200 bg-white/90 backdrop-blur">
+        <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-3.5 sm:px-6">
+          <button type="button" onClick={() => setView({ kind: "catalog" })} className="flex items-center gap-2 text-lg font-semibold tracking-tight">
+            <span className="grid h-8 w-8 place-items-center rounded-full bg-stone-900 text-sm text-white">N</span>
             Northwind Goods
           </button>
-          <button type="button" onClick={() => setView({ kind: "cart" })} className="rounded-md border border-slate-300 px-3 py-1.5 text-sm hover:bg-slate-50" aria-label={"Open cart, " + cart.count + " items"}>
-            Cart ({cart.count})
+          <nav className="hidden items-center gap-6 text-sm text-stone-600 md:flex" aria-label="Shop">
+            {categories.slice(1).map((c) => (
+              <button key={c} type="button" onClick={() => { setCategory(c); setView({ kind: "catalog" }); }} className="hover:text-stone-900">
+                {c}
+              </button>
+            ))}
+          </nav>
+          <button type="button" onClick={() => setView({ kind: "cart" })} className="flex items-center gap-2 rounded-full border border-stone-200 bg-white px-4 py-2 text-sm font-medium shadow-sm hover:bg-stone-50" aria-label={"Open cart, " + cart.count + " items"}>
+            <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth={1.8} aria-hidden="true">
+              <path d="M6 6h15l-1.5 9h-12zM6 6L5 3H2M9 20a1 1 0 100-2 1 1 0 000 2zM18 20a1 1 0 100-2 1 1 0 000 2z" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+            Cart
+            <span className="grid h-5 min-w-5 place-items-center rounded-full bg-stone-900 px-1.5 text-[11px] text-white">{cart.count}</span>
           </button>
         </div>
       </header>
@@ -100,7 +201,20 @@ export default function App() {
           <ProductDetail product={products.find((p) => p.id === view.id)} onAdd={cart.add} onBack={() => setView({ kind: "catalog" })} />
         ) : (
           <>
-            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <section className="grid items-center gap-8 overflow-hidden rounded-3xl bg-gradient-to-br from-amber-100 via-orange-50 to-rose-100 px-8 py-10 md:grid-cols-[1.1fr_1fr]">
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-orange-700">Spring collection</p>
+                <h1 className="mt-3 text-4xl font-semibold tracking-tight sm:text-5xl">Considered goods for desk, home and trail.</h1>
+                <p className="mt-4 max-w-md text-stone-600">A small catalog to start from. Swap in your products, photos and prices.</p>
+              </div>
+              <div className="grid grid-cols-3 gap-3">
+                {["p1", "p3", "p5"].map((id, i) => (
+                  <ProductArt key={id} id={id} className={"aspect-[3/4] rounded-2xl shadow-lg shadow-orange-900/10 " + (i === 1 ? "-translate-y-4" : "translate-y-2")} />
+                ))}
+              </div>
+            </section>
+
+            <div className="mt-10 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <div className="flex flex-wrap gap-2" role="group" aria-label="Filter by category">
                 {categories.map((c) => (
                   <button
@@ -108,33 +222,42 @@ export default function App() {
                     type="button"
                     onClick={() => setCategory(c)}
                     aria-pressed={category === c}
-                    className={"rounded-full border px-3 py-1 text-sm " + (category === c ? "border-slate-900 bg-slate-900 text-white" : "border-slate-300 hover:bg-slate-50")}
+                    className={"rounded-full border px-4 py-1.5 text-sm transition " + (category === c ? "border-stone-900 bg-stone-900 text-white" : "border-stone-200 bg-white hover:border-stone-300")}
                   >
                     {c}
                   </button>
                 ))}
               </div>
-              <input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Search products" aria-label="Search products" className="rounded-md border border-slate-300 px-3 py-1.5 text-sm sm:w-64" />
+              <input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Search products" aria-label="Search products" className="rounded-full border border-stone-200 bg-white px-4 py-2 text-sm outline-none focus:border-stone-400 sm:w-64" />
             </div>
             {visible.length === 0 ? (
-              <p className="mt-10 text-center text-slate-500">No products match your search.</p>
+              <div className="mt-10 rounded-2xl border border-dashed border-stone-300 p-10 text-center">
+                <p className="font-medium">No products match your search.</p>
+                <button type="button" onClick={() => { setQuery(""); setCategory("All"); }} className="mt-3 text-sm text-orange-700 underline">
+                  Clear filters
+                </button>
+              </div>
             ) : (
               <ul className="mt-6 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
                 {visible.map((p) => (
-                  <li key={p.id} className="flex flex-col rounded-xl border border-slate-200 p-4">
-                    <div aria-hidden="true" className="aspect-[4/3] rounded-lg bg-slate-100" />
-                    <h2 className="mt-3 font-medium">{p.name}</h2>
-                    <p className="text-sm text-slate-500">{p.category}</p>
-                    <div className="mt-auto flex items-center justify-between pt-4">
-                      <span className="font-semibold">{formatPrice(p.price)}</span>
-                      <div className="flex gap-2">
-                        <button type="button" onClick={() => setView({ kind: "product", id: p.id })} className="rounded-md border border-slate-300 px-3 py-1.5 text-sm hover:bg-slate-50">
-                          Details
-                        </button>
-                        <button type="button" onClick={() => cart.add(p.id)} className="rounded-md bg-slate-900 px-3 py-1.5 text-sm text-white hover:bg-slate-700">
-                          Add
-                        </button>
+                  <li key={p.id} className="group flex flex-col rounded-2xl border border-stone-200 bg-white p-3 transition hover:shadow-lg hover:shadow-stone-900/5">
+                    <button type="button" onClick={() => setView({ kind: "product", id: p.id })} className="block overflow-hidden rounded-xl" aria-label={"View " + p.name}>
+                      <ProductArt id={p.id} className="aspect-[4/3] transition duration-500 group-hover:scale-[1.03]" />
+                    </button>
+                    <div className="flex items-start justify-between gap-3 px-1 pt-4">
+                      <div>
+                        <h2 className="font-medium">{p.name}</h2>
+                        <p className="text-sm text-stone-500">{p.category}</p>
                       </div>
+                      <span className="font-semibold">{formatPrice(p.price)}</span>
+                    </div>
+                    <div className="mt-auto flex gap-2 px-1 pb-1 pt-4">
+                      <button type="button" onClick={() => setView({ kind: "product", id: p.id })} className="flex-1 rounded-xl border border-stone-200 px-3 py-2 text-sm hover:bg-stone-50">
+                        Details
+                      </button>
+                      <button type="button" onClick={() => cart.add(p.id)} className="flex-1 rounded-xl bg-stone-900 px-3 py-2 text-sm font-medium text-white hover:bg-stone-700">
+                        Add to cart
+                      </button>
                     </div>
                   </li>
                 ))}
@@ -152,24 +275,24 @@ function ProductDetail({ product, onAdd, onBack }: { product: Product | undefine
     return (
       <div>
         <p>Product not found.</p>
-        <button type="button" onClick={onBack} className="mt-4 text-sm text-blue-600">
+        <button type="button" onClick={onBack} className="mt-4 text-sm text-orange-700">
           Back to catalog
         </button>
       </div>
     );
   }
   return (
-    <article className="grid gap-8 md:grid-cols-2">
-      <div aria-hidden="true" className="aspect-square rounded-xl bg-slate-100" />
-      <div>
-        <button type="button" onClick={onBack} className="text-sm text-blue-600">
+    <article className="grid gap-10 md:grid-cols-2">
+      <ProductArt id={product.id} className="aspect-square rounded-3xl" />
+      <div className="py-4">
+        <button type="button" onClick={onBack} className="text-sm text-orange-700">
           ← Back to catalog
         </button>
-        <h1 className="mt-3 text-3xl font-semibold tracking-tight">{product.name}</h1>
-        <p className="mt-1 text-slate-500">{product.category}</p>
-        <p className="mt-4 text-slate-700">{product.description}</p>
-        <p className="mt-6 text-2xl font-semibold">{formatPrice(product.price)}</p>
-        <button type="button" onClick={() => onAdd(product.id)} className="mt-4 rounded-md bg-slate-900 px-5 py-2.5 text-sm font-medium text-white hover:bg-slate-700">
+        <p className="mt-6 text-xs font-semibold uppercase tracking-[0.18em] text-stone-500">{product.category}</p>
+        <h1 className="mt-2 text-4xl font-semibold tracking-tight">{product.name}</h1>
+        <p className="mt-4 text-lg leading-relaxed text-stone-600">{product.description}</p>
+        <p className="mt-8 text-3xl font-semibold">{formatPrice(product.price)}</p>
+        <button type="button" onClick={() => onAdd(product.id)} className="mt-6 rounded-xl bg-stone-900 px-6 py-3 text-sm font-medium text-white hover:bg-stone-700">
           Add to cart
         </button>
       </div>
@@ -180,6 +303,7 @@ function ProductDetail({ product, onAdd, onBack }: { product: Product | undefine
   "src/Cart.tsx": `import { useState, type FormEvent } from "react";
 import { formatPrice } from "./products";
 import type { useCart } from "./cart";
+import { ProductArt } from "./ProductArt";
 
 export function Cart({ cart, onBack }: { cart: ReturnType<typeof useCart>; onBack: () => void }) {
   const [placed, setPlaced] = useState(false);
@@ -218,9 +342,12 @@ export function Cart({ cart, onBack }: { cart: ReturnType<typeof useCart>; onBac
           <ul className="mt-6 divide-y divide-slate-200">
             {cart.items.map((l) => (
               <li key={l.productId} className="flex items-center justify-between gap-4 py-4">
-                <div>
+                <div className="flex items-center gap-4">
+                  <ProductArt id={l.productId} className="h-16 w-16 rounded-xl" />
+                  <div>
                   <p className="font-medium">{l.product.name}</p>
                   <p className="text-sm text-slate-500">{formatPrice(l.product.price)} each</p>
+                  </div>
                 </div>
                 <div className="flex items-center gap-2">
                   <button type="button" onClick={() => cart.setQty(l.productId, l.qty - 1)} className="size-8 rounded-md border border-slate-300" aria-label={"Decrease quantity of " + l.product.name}>
@@ -238,7 +365,7 @@ export function Cart({ cart, onBack }: { cart: ReturnType<typeof useCart>; onBac
           </ul>
         )}
       </section>
-      <form onSubmit={checkout} className="h-fit space-y-3 rounded-xl border border-slate-200 p-5">
+      <form onSubmit={checkout} className="h-fit space-y-3 rounded-2xl border border-stone-200 bg-white p-6 shadow-sm">
         <h2 className="font-medium">Checkout (placeholder)</h2>
         <label className="block text-sm">
           <span>Email</span>

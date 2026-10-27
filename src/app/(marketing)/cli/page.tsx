@@ -27,6 +27,7 @@ Listed under **Later** on the [roadmap](/roadmap), together with the SDK, after 
 
 export default function CliPage() {
   return (
+    <div data-tone="docs">
     <DevArticle path="/cli" markdown={md}>
       <div className="mt-10 max-w-xl space-y-6">
         <Callout kind="warning" title="Not yet available">
@@ -40,5 +41,6 @@ export default function CliPage() {
         </section>
       </div>
     </DevArticle>
+    </div>
   );
 }

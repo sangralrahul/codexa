@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { RefreshCw } from "lucide-react";
+import { Activity, RefreshCw } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { activityApi } from "@/lib/client/workspace/api";
 import type { ActivityDto } from "@/lib/client/workspace/types";
@@ -12,7 +12,7 @@ import { relativeTime } from "@/components/projects/format";
 
 export function ActivityDrawer({ projectId, open, onOpenChange }: { projectId: string; open: boolean; onOpenChange: (o: boolean) => void }) {
   return (
-    <Drawer open={open} onOpenChange={onOpenChange} title="Activity" description="Who changed what in this project.">
+    <Drawer open={open} onOpenChange={onOpenChange} title="Activity" icon={<Activity aria-hidden="true" />} description="Who changed what in this project.">
       {/* Body unmounts with the drawer, so it reloads on every open. */}
       <Body projectId={projectId} />
     </Drawer>
@@ -51,7 +51,7 @@ function Body({ projectId }: { projectId: string }) {
 
   return (
     <>
-      <div className="p-4">
+      <div className="px-5 py-4">
         {error ? <Alert variant="danger">{error}</Alert> : null}
         {!rows ? (
           <div className="space-y-2">
@@ -65,7 +65,7 @@ function Body({ projectId }: { projectId: string }) {
           <ol className="relative space-y-4 border-l border-border pl-4" aria-label="Activity log">
             {rows.map((a) => (
               <li key={a.id} className="relative">
-                <span className="absolute -left-[21px] top-1.5 size-2 rounded-full bg-border-strong" aria-hidden="true" />
+                <span className="absolute -left-[21px] top-1.5 size-2 rounded-full bg-border-strong ring-4 ring-card" aria-hidden="true" />
                 <p className="text-sm">{a.message}</p>
                 <p className="mt-0.5 text-xs text-muted-foreground">
                   {a.actorName} · {relativeTime(a.createdAt)} · <code className="font-mono text-[10px]">{a.kind}</code>
@@ -75,10 +75,11 @@ function Body({ projectId }: { projectId: string }) {
           </ol>
         )}
       </div>
-      <div className="border-t border-border px-4 py-3">
+      <div className="glass sticky bottom-0 border-t border-border px-5 py-3">
         <Button
           size="sm"
           variant="outline"
+          appearance="app"
           onClick={() => {
             setLoading(true);
             void load().finally(() => setLoading(false));

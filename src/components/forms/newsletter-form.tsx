@@ -46,7 +46,7 @@ export function NewsletterForm({ className }: { className?: string }) {
       </div>
       <div className="mt-2 flex flex-col gap-2 sm:flex-row">
         <Input id={`${id}-email`} name="email" type="email" autoComplete="email" required placeholder="you@example.com" aria-describedby={`${id}-msg`} aria-invalid={message?.tone === "error"} />
-        <Button type="submit" variant="outline" loading={loading} className="shrink-0">
+        <Button type="submit" variant="outline" state={loading ? "loading" : "idle"} loadingLabel="Subscribing…" disabled={loading} className="shrink-0">
           Subscribe
         </Button>
       </div>

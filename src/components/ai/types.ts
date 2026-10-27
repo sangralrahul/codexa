@@ -28,7 +28,13 @@ export type RunView = {
   tokensIn: number;
   tokensOut: number;
   repairAttempts: number;
+  /** ISO times from the server (absent on the optimistic placeholder). */
+  createdAt?: string;
+  finishedAt?: string | null;
 };
+
+/** The typecheck/build result the agent ran after editing (done.validation). */
+export type RunValidation = { ok: boolean; command?: string; output?: string; skipped?: string };
 
 export type MessageView = {
   id: string;
@@ -42,6 +48,10 @@ export type MessageView = {
   streaming?: boolean;
   /** Summary / next steps delivered by the final `done` event (not persisted separately). */
   nextSteps?: string[];
+  /** Validation result from the final `done` event of a run streamed in this session. */
+  validation?: RunValidation;
+  /** Client clock when this run started streaming (for the live elapsed timer). */
+  startedAt?: number;
 };
 
 export type FileChangeStat = { path: string; action: "create" | "update" | "delete"; added: number; removed: number };
@@ -63,7 +73,7 @@ export type SseEventData = {
     changedFiles: { path: string; action: "create" | "update" | "delete"; summary?: string }[];
     summary?: string;
     nextSteps?: string[];
-    validation?: { ok: boolean; command?: string; output?: string; skipped?: string };
+    validation?: RunValidation;
     error?: string;
   };
 };

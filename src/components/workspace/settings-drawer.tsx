@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Eye, EyeOff, KeyRound, Plus, Trash2 } from "lucide-react";
+import { Eye, EyeOff, KeyRound, Plus, Settings2, Trash2 } from "lucide-react";
 import { envApi, projectsApi } from "@/lib/client/workspace/api";
 import type { EnvVarDto, ProjectSettings } from "@/lib/client/workspace/types";
 import { Button } from "@/components/ui/button";
@@ -26,8 +26,8 @@ export function SettingsDrawer({
   canEdit: boolean;
 }) {
   return (
-    <Drawer open={open} onOpenChange={onOpenChange} title="Project settings" description="Commands used by the preview runner and build, plus environment variables.">
-      <div className="space-y-8 p-4">
+    <Drawer open={open} onOpenChange={onOpenChange} title="Project settings" icon={<Settings2 aria-hidden="true" />} description="Commands used by the preview runner and build, plus environment variables.">
+      <div className="space-y-8 px-5 py-4">
         <CommandsForm projectId={projectId} settings={settings} onSaved={onSettingsSaved} canEdit={canEdit} />
         <EnvVarsEditor projectId={projectId} canEdit={canEdit} />
       </div>
@@ -77,7 +77,7 @@ function CommandsForm({ projectId, settings, onSaved, canEdit }: { projectId: st
 
   return (
     <form onSubmit={submit} className="space-y-3" aria-labelledby="settings-commands">
-      <h3 id="settings-commands" className="text-sm font-semibold">
+      <h3 id="settings-commands" className="text-[13px] font-semibold">
         Commands
       </h3>
       <Field label="Install command" htmlFor="st-install" hint="Leave empty for npm install.">
@@ -103,7 +103,7 @@ function CommandsForm({ projectId, settings, onSaved, canEdit }: { projectId: st
         </p>
       ) : null}
       {canEdit ? (
-        <Button type="submit" size="sm" loading={busy}>
+        <Button type="submit" size="sm" appearance="app" loading={busy}>
           Save settings
         </Button>
       ) : (
@@ -169,7 +169,7 @@ function EnvVarsEditor({ projectId, canEdit }: { projectId: string; canEdit: boo
   return (
     <section aria-labelledby="settings-env" className="space-y-3">
       <div className="flex items-center justify-between">
-        <h3 id="settings-env" className="flex items-center gap-1.5 text-sm font-semibold">
+        <h3 id="settings-env" className="flex items-center gap-1.5 text-[13px] font-semibold">
           <KeyRound className="size-4" aria-hidden="true" /> Environment variables
         </h3>
         {canEdit && vars && vars.length > 0 ? (
@@ -183,9 +183,9 @@ function EnvVarsEditor({ projectId, canEdit }: { projectId: string; canEdit: boo
       {!vars ? (
         <Skeleton className="h-10" />
       ) : vars.length === 0 ? (
-        <p className="rounded-lg border border-dashed border-border-strong p-4 text-center text-xs text-muted-foreground">No environment variables yet.</p>
+        <p className="rounded-xl border border-dashed border-border-strong p-4 text-center text-xs text-muted-foreground">No environment variables yet.</p>
       ) : (
-        <ul className="divide-y divide-border rounded-lg border border-border" aria-label="Environment variables">
+        <ul className="divide-y divide-border rounded-xl border border-border" aria-label="Environment variables">
           {vars.map((v) => (
             <li key={v.id} className="flex items-center gap-2 px-3 py-2 text-xs">
               <code className="min-w-0 shrink-0 font-mono font-medium">{v.key}</code>

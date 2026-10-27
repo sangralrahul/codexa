@@ -1,0 +1,278 @@
+/* ==========================================================================
+   Marketing home only (imported by src/app/(marketing)/page.tsx).
+   Plain CSS on the design tokens from globals.css (no Tailwind at-rules, no hex).
+   Calm = OS reduced motion OR <html data-motion="reduced">; both are handled below,
+   and the global reduced-motion backstop in globals.css still applies.
+   ========================================================================== */
+
+/* ---------- Stage ---------- */
+
+/* Finished frames (poster, calm, paused, scrolled back): entrance animations jump to their end. */
+[data-stage-still] *,
+[data-stage-still] *::before,
+[data-stage-still] *::after {
+  animation-duration: 0.01ms !important;
+  animation-delay: 0ms !important;
+  animation-iteration-count: 1 !important;
+}
+
+/* The reactive Horizon behind the stage: --horizon-boost (written by the home store on prompt focus,
+   typing and the Repair Beat) eases instead of jumping, and the light rises a little with it. This also
+   drives the CSS poster, which is what phones, calm and low-power devices see instead of the canvas. */
+@property --horizon-boost { syntax: "<number>"; inherits: true; initial-value: 0; }
+.home-horizon { transition: --horizon-boost 600ms var(--ease-out); }
+.home-horizon .horizon { transform-origin: 50% 100%; scale: 1 calc(1 + var(--horizon-boost) * 0.3); }
+
+/* Leaving the SSR poster: the window body crossfades to the first frame of the replay. */
+.stage-fade { animation: stage-fade-in 300ms var(--ease-out) both; }
+@keyframes stage-fade-in { from { opacity: 0; } }
+@media (prefers-reduced-motion: reduce) { .stage-fade { animation: none; } }
+[data-motion="reduced"] .stage-fade { animation: none; }
+
+/* Focus pull (M4) for the stage, without the opacity dip: the window holds real text and controls
+   (the honesty badge), which must keep full contrast while tilted. Phones get no tilt (PLAN §5.2).
+   The stage wrapper's negative top margin is sized against the 48px drop, so the tilted window's
+   top edge lands just under the hero's links row. */
+@supports (animation-timeline: scroll()) {
+  .js #watch-it-build .scroll-tilt { animation-name: home-stage-tilt; }
+}
+.js #watch-it-build .scroll-tilt { opacity: 1; }
+@keyframes home-stage-tilt {
+  from { transform: perspective(2200px) rotateX(16deg) scale(0.92) translateY(48px); }
+  to { transform: perspective(2200px) rotateX(0deg) scale(1) translateY(0); }
+}
+@media (width < 48rem) {
+  .js #watch-it-build .scroll-tilt { animation: none; transform: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  #watch-it-build .scroll-tilt { animation: none !important; transform: none !important; }
+}
+[data-motion="reduced"] #watch-it-build .scroll-tilt { animation: none !important; transform: none !important; }
+
+/* Pause stops every loop inside the stage (live dots, spinners, shimmer, carets). */
+[data-stage][data-paused] *,
+[data-stage][data-paused] *::before,
+[data-stage][data-paused] *::after {
+  animation-play-state: paused !important;
+}
+
+@keyframes publish-ring {
+  from { stroke-dashoffset: 1; }
+  to { stroke-dashoffset: 0; }
+}
+
+/* Chapter rail fill: the active segment fills over its chapter's duration. */
+.story-rail-fill[data-fill="run"] {
+  animation-name: story-rail-fill;
+  animation-timing-function: linear;
+  animation-fill-mode: both;
+}
+@keyframes story-rail-fill {
+  from { transform: scaleX(0); }
+  to { transform: scaleX(1); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .story-rail-fill[data-fill="run"] { animation: none; }
+}
+[data-motion="reduced"] .story-rail-fill[data-fill="run"] { animation: none; }
+
+/* ---------- Template wall (H3) ---------- */
+@property --wall-t { syntax: "<number>"; inherits: true; initial-value: 0; }
+@property --wall-h { syntax: "<number>"; inherits: true; initial-value: 0; }
+
+.wall-stage {
+  perspective: 1800px;
+  perspective-origin: 50% 35%;
+  mask-image: linear-gradient(to bottom, transparent, black 10%, black 90%, transparent);
+}
+/* The plane tilts (rotateX 18°, rotateZ −6°) and flattens as it scrolls in and on hover/focus.
+   --wall-t: scroll progress (view timeline, or --p from MotionEffects where timelines are missing). */
+.wall-plane {
+  --wall-t: var(--p, 0);
+  transform-origin: 50% 45%;
+  transform:
+    rotateX(calc((18deg - 10deg * var(--wall-t)) * (1 - var(--wall-h))))
+    rotateZ(calc((-6deg + 3deg * var(--wall-t)) * (1 - var(--wall-h))))
+    scale(calc(1.06 - 0.06 * var(--wall-h)));
+  transition: --wall-h 900ms var(--ease-out);
+}
+.wall-stage:is(:hover, :focus-within) .wall-plane { --wall-h: 1; }
+@supports (animation-timeline: view()) {
+  .wall-plane {
+    animation: wall-t linear both;
+    animation-timeline: view();
+    animation-range: entry 0% cover 50%;
+  }
+}
+@keyframes wall-t { from { --wall-t: 0; } to { --wall-t: 1; } }
+.wall-row { --marquee-duration: 80s; }
+
+.wall-cell { flex-shrink: 0; padding: 12px 10px; }
+.wall-tile {
+  position: relative;
+  display: block;
+  width: 260px;
+  overflow: hidden;
+  border-radius: var(--radius-xl, 16px);
+  border: 1px solid var(--border-strong);
+  background: var(--card);
+  box-shadow: var(--shadow-lg);
+  outline-offset: 4px;
+  transition: transform var(--dur-4) var(--ease-out), box-shadow var(--dur-4) var(--ease-out), border-color var(--dur-3);
+}
+@media (width >= 40rem) { .wall-tile { width: 300px; } }
+@media (width >= 64rem) { .wall-tile { width: 360px; } }
+/* The name card is opaque (never glass): it sits on white screenshots in both themes. */
+.wall-tile__caption {
+  position: absolute;
+  inset: auto 8px 8px 8px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  border-radius: 10px;
+  border: 1px solid var(--border-strong);
+  background: var(--card);
+  color: var(--foreground);
+  box-shadow: var(--shadow-md);
+  text-align: left;
+}
+.wall-tile__name { min-width: 0; flex: 1; }
+.wall-tile__name > * { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.wall-tile__name > b { font-size: 13px; font-weight: 500; color: var(--foreground); }
+.wall-tile__name > span { font-size: 11px; color: var(--muted-foreground); }
+.wall-tile__open { display: inline-flex; flex-shrink: 0; align-items: center; gap: 2px; font-size: 11.5px; font-weight: 500; color: var(--foreground); }
+.wall-tile:focus-visible {
+  transform: translateY(-6px) scale(1.04);
+  border-color: color-mix(in oklab, var(--signal) 45%, var(--border-strong));
+  box-shadow: var(--shadow-xl);
+  z-index: 2;
+}
+/* Hover lift and name card only where hover is real (a tap must not leave a sticky hover state). */
+@media (hover: hover) {
+  .wall-tile:hover {
+    transform: translateY(-6px) scale(1.04);
+    border-color: color-mix(in oklab, var(--signal) 45%, var(--border-strong));
+    box-shadow: var(--shadow-xl);
+    z-index: 2;
+  }
+  .wall-tile:hover .wall-tile__caption { opacity: 1; transform: none; }
+}
+.wall-tile__caption {
+  opacity: 0;
+  transform: translateY(8px);
+  transition: opacity var(--dur-3) var(--ease-out), transform var(--dur-4) var(--ease-out);
+}
+.wall-tile:focus-visible .wall-tile__caption { opacity: 1; transform: none; }
+
+/* Phones and small tablets: one flat drifting row (no 3D plane: it crops and blurs the shots at this size).
+   The row fades out over its last 20px at each side (a mask to transparent, no overlay), and each tile
+   carries its name in a strip under the screenshot instead of the hover card. */
+@media (width < 48rem) {
+  .wall-stage { perspective: none; mask-image: none; }
+  .wall-row.marquee { mask-image: linear-gradient(to right, transparent, #000 20px, #000 calc(100% - 20px), transparent); }
+  .wall-plane { transform: none !important; animation: none !important; }
+  .wall-cell { padding: 8px 6px; }
+  .wall-tile { width: 260px; border-radius: 14px; }
+  .wall-tile__caption {
+    position: static;
+    opacity: 1;
+    transform: none;
+    padding: 7px 12px;
+    border: 0;
+    border-top: 1px solid var(--border);
+    border-radius: 0;
+    box-shadow: none;
+  }
+  .wall-tile__name > b { font-size: 12.5px; line-height: 16px; }
+  .wall-tile__open, .wall-tile__name > span { display: none; }
+}
+@media (width < 48rem) and (prefers-reduced-motion: reduce) {
+  .wall-row.marquee { mask-image: none; }
+}
+@media (width < 48rem) {
+  [data-motion="reduced"] .wall-row.marquee { mask-image: none; }
+}
+
+/* Calm: a flat, static grid of the first row. */
+@media (prefers-reduced-motion: reduce) {
+  .wall-stage { height: auto !important; mask-image: none; }
+  .wall-plane { transform: none !important; animation: none !important; }
+  .wall-row + .wall-row { display: none !important; }
+  .wall-tile:is(:hover, :focus-visible) { transform: none !important; }
+}
+[data-motion="reduced"] .wall-stage { height: auto !important; mask-image: none; }
+[data-motion="reduced"] .wall-plane { transform: none !important; animation: none !important; }
+[data-motion="reduced"] .wall-row + .wall-row { display: none !important; }
+[data-motion="reduced"] .wall-tile:is(:hover, :focus-visible) { transform: none !important; }
+
+/* ---------- Integrations constellation (H6) ---------- */
+@keyframes orbit-spin { to { rotate: 360deg; } }
+@keyframes cst-dot { from { stroke-dashoffset: 0; } to { stroke-dashoffset: -100; } }
+
+.constellation__orbit,
+.constellation__upright {
+  animation: orbit-spin 120s linear infinite;
+  animation-play-state: paused;
+}
+.constellation__orbit--reverse { animation-direction: reverse; }
+.constellation__upright { animation-direction: reverse; }
+.constellation__orbit--reverse .constellation__upright { animation-direction: normal; }
+.constellation[data-onscreen]:not([data-paused]):not(:hover):not(:focus-within) :is(.constellation__orbit, .constellation__upright) {
+  animation-play-state: running;
+}
+.constellation__dot {
+  stroke-dasharray: 2.5 97.5;
+  opacity: 0;
+  animation: cst-dot 4s linear infinite;
+  animation-play-state: paused;
+  transition: opacity var(--dur-5) var(--ease-out);
+}
+.constellation[data-onscreen]:not([data-paused]) .constellation__dot {
+  opacity: 0.9;
+  animation-play-state: running;
+}
+.constellation__slot:has(:hover, :focus-visible) { z-index: 10; }
+.constellation__card {
+  opacity: 0;
+  translate: -50% 4px;
+  transition: opacity var(--dur-3) var(--ease-out), translate var(--dur-3) var(--ease-out);
+}
+.constellation__upright:has(.constellation__node:is(:hover, :focus-visible)) .constellation__card { opacity: 1; translate: -50% 0; }
+
+@media (prefers-reduced-motion: reduce) {
+  .constellation__dot { display: none; }
+  .constellation__orbit, .constellation__upright { animation: none; }
+}
+[data-motion="reduced"] .constellation__dot { display: none; }
+[data-motion="reduced"] :is(.constellation__orbit, .constellation__upright) { animation: none; }
+
+/* Calm unpins the scene (globals.css sets position: relative) but keeps `top: var(--scene-top)`,
+   which would push the relatively positioned content down. Reset it for the storyboard. */
+@media (prefers-reduced-motion: reduce) {
+  #watch-it-build .scroll-scene__sticky { top: 0 !important; }
+}
+[data-motion="reduced"] #watch-it-build .scroll-scene__sticky { top: 0 !important; }
+
+/* Calm, wider screens: two rows of three starters. */
+@media (prefers-reduced-motion: reduce) and (width >= 40rem) {
+  .wall-cell:nth-child(n + 7) { display: none; }
+}
+@media (width >= 40rem) {
+  [data-motion="reduced"] .wall-cell:nth-child(n + 7) { display: none; }
+}
+
+/* Calm on phones: the static wall is a compact two-column grid of four starters. */
+@media (prefers-reduced-motion: reduce) and (width < 40rem) {
+  .wall-cell { padding: 5px; }
+  .wall-tile { width: 164px; }
+  .wall-cell:nth-child(n + 5) { display: none; }
+  .wall-tile__open, .wall-tile__name > span { display: none; }
+}
+@media (width < 40rem) {
+  [data-motion="reduced"] .wall-cell { padding: 5px; }
+  [data-motion="reduced"] .wall-tile { width: 164px; }
+  [data-motion="reduced"] .wall-cell:nth-child(n + 5) { display: none; }
+  [data-motion="reduced"] :is(.wall-tile__open, .wall-tile__name > span) { display: none; }
+}

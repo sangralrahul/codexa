@@ -2,7 +2,9 @@
 
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Field, Input, Select } from "@/components/ui/input";
+import { Field, Input } from "@/components/ui/input";
+import { SelectMenu } from "@/components/ui/select-menu";
+import { BrandMark } from "@/components/brand/brand-mark";
 import { Alert } from "@/components/ui/misc";
 import { api, ClientApiError } from "@/lib/client/api";
 
@@ -111,21 +113,16 @@ export function ConnectionForm({
         </Alert>
       ) : null}
       <Field label="Provider" htmlFor="conn-provider">
-        <Select
+        <SelectMenu
           id="conn-provider"
           value={providerId}
-          onChange={(e) => {
-            setProviderId(e.target.value);
+          onValueChange={(v) => {
+            setProviderId(v);
             setValues({});
             setFieldErrors({});
           }}
-        >
-          {connectable.map((p) => (
-            <option key={p.id} value={p.id}>
-              {p.name}
-            </option>
-          ))}
-        </Select>
+          options={connectable.map((p) => ({ value: p.id, label: p.name, icon: <BrandMark id={p.id} />, description: p.category }))}
+        />
       </Field>
       {provider ? <p className="text-xs text-muted-foreground">{provider.description}</p> : null}
       <Field label="Connection name" htmlFor="conn-name" error={fieldErrors.name}>

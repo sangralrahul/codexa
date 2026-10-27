@@ -321,7 +321,7 @@ export function GithubPanel({ projectId }: { projectId: string; conversationId?:
       )}
 
       <Dialog open={pullOpen} onOpenChange={setPullOpen}>
-        <DialogContent title="Pull latest from GitHub?" description={`All project files will be replaced with the content of ${data.project.repo}@${data.project.branch}. A checkpoint named "Before pull" is saved first so you can restore.`}>
+        <DialogContent title="Pull latest from GitHub?" description={`All project files will be replaced with the content of ${data.project.repo}@${data.project.branch}. A checkpoint named "Before pull" is saved first so you can restore.`} className="[--btn-radius:10px]">
           <DialogFooter>
             <Button variant="outline" onClick={() => setPullOpen(false)} disabled={busy === "pull"}>
               Cancel

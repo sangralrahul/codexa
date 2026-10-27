@@ -92,3 +92,37 @@ export function validateName(name: string): string | null {
   if (n.length > 200) return "Name is too long";
   return null;
 }
+
+/**
+ * Fuzzy match that also reports which characters matched (for highlighting).
+ * Prefers a contiguous hit in the basename, then anywhere in the path, then a subsequence.
+ * Returns null when the query does not match.
+ */
+export function fuzzyMatch(query: string, candidate: string): { score: number; indices: number[] } | null {
+  const q = query.trim().toLowerCase();
+  if (!q) return { score: 0, indices: [] };
+  const score = fuzzyScore(q, candidate);
+  if (score < 0) return null;
+  const c = candidate.toLowerCase();
+  const baseStart = c.lastIndexOf("/") + 1;
+  const inBase = c.indexOf(q, baseStart);
+  const at = inBase !== -1 ? inBase : c.indexOf(q);
+  if (at !== -1) return { score, indices: Array.from({ length: q.length }, (_, i) => at + i) };
+  const indices: number[] = [];
+  let qi = 0;
+  for (let i = 0; i < c.length && qi < q.length; i++) {
+    if (c[i] === q[qi]) {
+      indices.push(i);
+      qi++;
+    }
+  }
+  return { score, indices };
+}
+
+/** The entry file to open first when a project has no remembered tabs. */
+export const ENTRY_FILES = ["src/App.tsx", "src/App.jsx", "src/main.tsx", "src/main.jsx", "index.html", "src/index.js", "server.js", "README.md"] as const;
+
+export function entryFileOf(paths: Iterable<string>): string | null {
+  const set = new Set(paths);
+  return ENTRY_FILES.find((p) => set.has(p)) ?? null;
+}

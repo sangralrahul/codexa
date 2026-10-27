@@ -6,6 +6,7 @@ order: 10
 tags: [projects, snapshots, templates, files]
 author: Codexa Team
 date: 2026-10-24
+updated: 2026-10-27
 related: [editor, environment-variables, github]
 ---
 
@@ -22,17 +23,17 @@ The number of active projects per workspace is limited by plan (3 on Free, 25 on
 
 ## Files
 
-Files are stored in PostgreSQL, not on a disk you can see. The file explorer, search (`Ctrl/Cmd+Shift+F`) and the agent's tools all operate on this stored copy; a running sandbox receives a synced copy of it.
+Files are stored in Codexa's database (Cloudflare D1), not on a disk you can see. The file explorer, search (`Ctrl/Cmd+Shift+F`) and the agent's tools all operate on this stored copy; a running sandbox receives a synced copy of it.
 
 - Paths are relative to the project root and may not contain `..` segments.
-- Binary files are supported for small assets; large media belongs in object storage or a CDN.
+- A file can be up to 1 MB and a project can hold up to 2,000 files. Binary files are supported for small assets; large media belongs in object storage or a CDN.
 - Deleting a folder deletes every file under it. Deletions are recorded in activity and recoverable from a snapshot taken before the deletion.
 
 Storage per workspace is metered against the plan's limit (250 MB on Free).
 
 ## Snapshots
 
-A snapshot is a named checkpoint of every file in the project.
+A snapshot is a named checkpoint of every file in the project. Its contents are stored in Cloudflare R2; the database keeps the snapshot's name, file count and size.
 
 - Create one from the History panel with a name and optional message.
 - The agent creates one automatically before each run, named `Before AI run <id>`.

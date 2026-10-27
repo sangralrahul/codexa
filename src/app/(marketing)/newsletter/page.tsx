@@ -9,6 +9,7 @@ export const metadata = routeMetadata("/newsletter");
 
 export default function NewsletterPage() {
   return (
+    <div data-tone="docs">
     <ArticleShell sidebar={LEARN_SIDEBAR}>
       <Breadcrumbs items={[{ name: "Learn", path: "/learn" }, { name: "Newsletter", path: "/newsletter" }]} className="mb-4" />
       <header className="max-w-3xl">
@@ -30,5 +31,6 @@ export default function NewsletterPage() {
         <p className="mt-4 text-sm text-muted-foreground">Every email has a one-click unsubscribe link. Your address is used only for this list; see the privacy policy for details.</p>
       </section>
     </ArticleShell>
+    </div>
   );
 }
