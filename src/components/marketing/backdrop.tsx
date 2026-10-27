@@ -1,7 +1,6 @@
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { Silk } from "./silk";
 
 /**
  * Decorative page light. Place inside a `relative` (and ideally `isolate`) parent;
@@ -27,10 +26,9 @@ export function Backdrop({
     <div aria-hidden="true" className={cn("backdrop", variant === "horizon" && "backdrop--horizon", className)}>
       {variant === "horizon" ? (
         <Horizon still={still} className="bottom-0" />
-      ) : still ? (
-        <div className="backdrop__canvas" />
       ) : (
-        <Silk />
+        // One crisp CSS design everywhere (grid + aurora); the old WebGL silk read as blurry blobs.
+        <div className="backdrop__canvas" data-still={still || undefined} />
       )}
       {veil && variant === "wash" ? <div className="backdrop__veil" /> : null}
       <div className="bg-noise absolute inset-0" />
@@ -45,11 +43,12 @@ export function Backdrop({
  * `still` for every other instance. `reactive` reads --horizon-boost (0–0.4) from any
  * ancestor, e.g. set it on the hero while the prompt is focused / typed into.
  */
+// eslint-disable-next-line @typescript-eslint/no-unused-vars -- props kept for API compatibility
 export function Horizon({ className, still = false, reactive = false }: { className?: string; still?: boolean; reactive?: boolean }) {
   return (
     <div aria-hidden="true" className={cn("horizon", className)}>
       <div className="horizon__poster" />
-      {still ? null : <Silk surface="horizon" reactive={reactive} />}
+      <div className="horizon__rim" />
     </div>
   );
 }

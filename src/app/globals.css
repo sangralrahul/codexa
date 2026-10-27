@@ -773,21 +773,46 @@ body:has(main [data-tone="company"]) { --silk-1: #ff8a66; --silk-2: #ffc070; --s
 .backdrop__canvas {
   position: absolute;
   inset: 0;
-  width: 100%;
-  height: 100%;
-  opacity: var(--silk-opacity);
-  /* Static poster until (or if) WebGL draws. */
+  overflow: hidden;
   background:
-    radial-gradient(60% 80% at 20% 10%, var(--silk-1), transparent 70%),
-    radial-gradient(50% 70% at 80% 0%, var(--silk-2), transparent 70%),
-    radial-gradient(40% 60% at 60% 40%, var(--silk-3), transparent 70%),
-    var(--silk-0);
-  mask-image: linear-gradient(to bottom, #000 0%, rgba(0, 0, 0, 0.85) 40%, transparent 100%);
+    radial-gradient(ellipse 46% 42% at 50% -8%, color-mix(in oklab, var(--signal) 30%, transparent), transparent 72%),
+    radial-gradient(ellipse 34% 34% at 18% -4%, color-mix(in oklab, var(--silk-1) 34%, transparent), transparent 70%),
+    radial-gradient(ellipse 34% 34% at 82% -4%, color-mix(in oklab, var(--silk-3) 28%, transparent), transparent 70%);
+  mask-image: linear-gradient(to bottom, #000 0%, rgba(0, 0, 0, 0.9) 45%, transparent 100%);
 }
+/* Fine grid that fades out from the top centre. */
+.backdrop__canvas::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image: linear-gradient(var(--grid-line) 1px, transparent 1px), linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
+  background-size: 64px 64px;
+  background-position: center top;
+  mask-image: radial-gradient(ellipse 70% 75% at 50% 0%, #000 0%, rgba(0, 0, 0, 0.5) 45%, transparent 80%);
+}
+/* A soft aurora band that drifts slowly across the top. */
+.backdrop__canvas::after {
+  content: "";
+  position: absolute;
+  left: 10%;
+  right: 10%;
+  top: -140px;
+  height: 320px;
+  border-radius: 9999px;
+  background: linear-gradient(90deg, transparent, color-mix(in oklab, var(--silk-1) 45%, transparent) 25%, color-mix(in oklab, var(--signal) 50%, transparent) 55%, color-mix(in oklab, var(--silk-3) 40%, transparent) 80%, transparent);
+  filter: blur(60px);
+  opacity: 0.55;
+  animation: aurora-drift 18s ease-in-out infinite alternate;
+}
+@keyframes aurora-drift {
+  from { transform: translateX(-8%) scaleX(0.92); }
+  to { transform: translateX(8%) scaleX(1.06); }
+}
+.backdrop__canvas { @variant calm { &::after { animation: none; } } }
 .backdrop__veil {
   position: absolute;
   inset: 0;
-  background: radial-gradient(65% 50% at 50% 45%, color-mix(in oklab, var(--background) 80%, transparent), color-mix(in oklab, var(--background) 25%, transparent) 70%, transparent 100%);
+  background: radial-gradient(60% 45% at 50% 40%, color-mix(in oklab, var(--background) 55%, transparent), transparent 75%);
 }
 .backdrop--horizon .backdrop__canvas { display: none; }
 
@@ -812,9 +837,16 @@ body:has(main [data-tone="company"]) { --silk-1: #ff8a66; --silk-2: #ffc070; --s
 }
 .horizon__poster {
   background:
-    radial-gradient(42% 70% at 50% 100%, var(--silk-2), transparent 72%),
-    radial-gradient(60% 90% at 26% 100%, var(--silk-1), transparent 70%),
-    radial-gradient(38% 60% at 74% 100%, var(--silk-3), transparent 70%);
+    radial-gradient(ellipse 38% 55% at 50% 100%, color-mix(in oklab, var(--signal) 38%, transparent), transparent 70%),
+    radial-gradient(ellipse 60% 70% at 30% 100%, color-mix(in oklab, var(--silk-1) 26%, transparent), transparent 70%),
+    radial-gradient(ellipse 50% 60% at 72% 100%, color-mix(in oklab, var(--silk-3) 22%, transparent), transparent 70%);
+}
+/* Thin bright arc, like light catching the edge of a planet. */
+.horizon__rim {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse 72% 120% at 50% 132%, transparent 69.6%, color-mix(in oklab, var(--signal) 75%, white 10%) 70%, transparent 70.5%);
+  opacity: 0.8;
 }
 .horizon__canvas { opacity: 0; transition: opacity 900ms var(--ease-out); }
 .horizon__canvas[data-ready="true"] { opacity: 1; }

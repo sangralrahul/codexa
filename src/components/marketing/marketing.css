@@ -221,32 +221,30 @@
 .mk-wordmark {
   display: flex;
   justify-content: center;
-  height: 0.55em;
   overflow: hidden;
-  margin-top: 0.5rem;
+  margin-top: 1.5rem;
+  padding-bottom: 0.04em;
   font-family: var(--font-display);
-  font-size: min(22vw, 21rem);
+  font-size: min(18.5vw, 19rem);
   font-weight: 800;
-  font-stretch: 125%;
-  line-height: 0.82;
-  letter-spacing: -0.055em;
+  line-height: 0.86;
+  letter-spacing: -0.05em;
   user-select: none;
-  pointer-events: none;
+  /* The word fades into the page at the bottom edge. */
+  mask-image: linear-gradient(to bottom, #000 35%, transparent 100%);
 }
+
 .mk-wordmark__l {
   display: inline-block;
   color: transparent;
-  background-image: linear-gradient(100deg, var(--silk-1), var(--signal) 55%, var(--signal-2));
-  background-size: calc(var(--n, 6) * 100%) 100%;
-  background-position: calc(var(--i, 0) / (var(--n, 6) - 1) * 100%) 0;
+  background-image: linear-gradient(180deg, color-mix(in oklab, var(--foreground) 30%, transparent), color-mix(in oklab, var(--signal) 22%, transparent) 70%, transparent);
   -webkit-background-clip: text;
   background-clip: text;
-  opacity: 0.14;
+  opacity: 1;
   transition:
-    transform 1100ms var(--ease-out) calc(var(--i, 0) * 30ms),
-    opacity 900ms var(--ease-out) calc(var(--i, 0) * 30ms);
+    transform 1100ms var(--ease-out) calc(var(--i, 0) * 40ms),
+    opacity 900ms var(--ease-out) calc(var(--i, 0) * 40ms);
 }
-.dark .mk-wordmark__l { opacity: 0.16; }
 /* The trigger is .mk-foot-end (bottom bar + wordmark, data-play="view"): tall enough to cross the reveal
    line even when the page ends exactly at the wordmark on a phone. */
 .js .mk-foot-end:not(.is-visible) .mk-wordmark__l { transform: translateY(62%); opacity: 0; }
@@ -259,11 +257,11 @@
   .mk-sheet,
   .mk-sheet__row { opacity: 1; animation: none !important; }
   .mk-well[data-on] .mk-pan { animation: none !important; }
-  .js .mk-foot-end:not(.is-visible) .mk-wordmark__l { transform: none; opacity: 0.14; }
+  .js .mk-foot-end:not(.is-visible) .mk-wordmark__l { transform: none; opacity: 1; }
 }
 [data-motion="reduced"] :is(.mk-well .mk-in, .mk-sheet, .mk-sheet__row) { opacity: 1; animation: none !important; }
 [data-motion="reduced"] .mk-well[data-on] .mk-pan { animation: none !important; }
-[data-motion="reduced"].js .mk-foot-end:not(.is-visible) .mk-wordmark__l { transform: none; opacity: 0.14; }
+[data-motion="reduced"].js .mk-foot-end:not(.is-visible) .mk-wordmark__l { transform: none; opacity: 1; }
 
 /* --------------------------------------------------------------------------
    Steps film strip: frames rise in order once in view, then one light sweeps
