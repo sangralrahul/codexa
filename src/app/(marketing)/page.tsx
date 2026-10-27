@@ -12,12 +12,7 @@ import "@/components/marketing/home/home.css";
 
 export const metadata = routeMetadata("/");
 
-// Preview switch while the owner picks a hero style (?hero=studio|wash); default is sunrise.
-const HERO_STYLES = ["sunrise", "studio", "wash"] as const;
-
-export default async function HomePage({ searchParams }: { searchParams: Promise<{ hero?: string }> }) {
-  const { hero } = await searchParams;
-  const heroStyle = HERO_STYLES.find((h) => h === hero) ?? "sunrise";
+export default async function HomePage() {
   const [user, changelogDocs] = await Promise.all([getCurrentUser(), listDocs("changelog").catch(() => [])]);
   const signedIn = Boolean(user);
   const data = getHomeData();
@@ -50,7 +45,6 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
         aiReady={capabilities.ai}
         announcement={latest ? { title: latest.title, href: latest.href } : null}
         changelog={changelog}
-        heroStyle={heroStyle}
         status={
           <Suspense fallback={<HomeStatusPill overall="checking" />}>
             <HomeStatus />

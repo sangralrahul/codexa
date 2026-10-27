@@ -51,12 +51,16 @@ function wordUnits(text: string, from: number, to: number, mark: [number, number
   return parts;
 }
 
-function renderSegs(segs: Seg[]) {
+function renderSegs(segs: Seg[], markNode?: React.ReactNode) {
   return segs.map((s, i) =>
     s.kind === "mark" ? (
-      <span key={i} className="mark-select">
-        {s.text}
-      </span>
+      markNode ? (
+        <React.Fragment key={i}>{markNode}</React.Fragment>
+      ) : (
+        <span key={i} className="mark-select">
+          {s.text}
+        </span>
+      )
     ) : s.kind === "dim" ? (
       <span key={i} className="text-dim">
         {s.text}
@@ -84,6 +88,7 @@ export function SplitHeading({
   children,
   lines,
   mark,
+  markNode,
   dim,
   size = "display-2",
   play,
@@ -96,6 +101,8 @@ export function SplitHeading({
   lines?: string[];
   /** Substring set in the selection mark (.mark-select). Use in the page H1 only. */
   mark?: string;
+  /** Rendered in place of the marked phrase (visual copy only; the sr-only sentence keeps `mark`). */
+  markNode?: React.ReactNode;
   /** Substring set in the two-tone .text-dim. */
   dim?: string;
   size?: Size;
@@ -131,7 +138,7 @@ export function SplitHeading({
             <React.Fragment key={p.start}>
               <span className="split-word">
                 <span className="split-in" style={{ "--i": i, "--w": p.w } as React.CSSProperties}>
-                  {renderSegs(segmentsOf(full, p.start, p.end, markR, dimR))}
+                  {renderSegs(segmentsOf(full, p.start, p.end, markR, dimR), markNode)}
                 </span>
               </span>
               {j < row.length - 1 ? " " : null}
@@ -149,7 +156,7 @@ export function SplitHeading({
       <React.Fragment key={i}>
         <span className="split-word">
           <span className="split-in" style={{ "--i": i } as React.CSSProperties}>
-            {renderSegs(segmentsOf(full, p.start, p.end, markR, dimR))}
+            {renderSegs(segmentsOf(full, p.start, p.end, markR, dimR), markNode)}
           </span>
         </span>
         {i < parts.length - 1 ? " " : null}

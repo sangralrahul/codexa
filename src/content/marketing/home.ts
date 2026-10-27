@@ -12,6 +12,8 @@ export const HOME_HERO = {
   /** The H1, as two visual lines. `mark` gets the selection mark (once per page). */
   lines: ["From one sentence", "to a running app."],
   mark: "running app.",
+  /** The marked word cycles through these (visual only; the H1 text stays "…running app."). Each is a kind of starter Codexa ships. */
+  cycle: ["app.", "dashboard.", "store.", "CRM.", "AI chat.", "portfolio."],
   lead: "Codexa plans the files, writes real code, checks it in a sandbox and runs a live preview you can deploy. Every change is yours to edit or undo.",
   templatesLink: { label: "Start from a template", href: "/templates" },
   storyLink: { label: "See it build", href: "#watch-it-build" },

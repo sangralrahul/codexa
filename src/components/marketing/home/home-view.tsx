@@ -6,7 +6,7 @@ import { HOME_INTEGRATIONS, HOME_PROOF, HOME_WALL } from "@/content/marketing/ho
 import type { HomeData } from "./data";
 import type { TickerEntry } from "./changelog-ticker";
 import { HomeStoreProvider } from "./home-store";
-import { HomeHero, type HeroStyle } from "./hero";
+import { HomeHero } from "./hero";
 import { Storyboard } from "./storyboard";
 import { ProofStrip } from "./proof-strip";
 import { TemplateWall } from "./template-wall";
@@ -26,7 +26,6 @@ export function HomeView({
   announcement,
   changelog,
   status,
-  heroStyle,
 }: {
   data: Pick<HomeData, "scenarios" | "starters" | "tools" | "maxRepairAttempts" | "proof" | "templateCount" | "frameworkSummary" | "wall" | "nodes" | "freePlan">;
   signedIn: boolean;
@@ -35,14 +34,13 @@ export function HomeView({
   changelog: TickerEntry[];
   /** The live status pill (streamed). */
   status: React.ReactNode;
-  heroStyle?: HeroStyle;
 }) {
   const scenario = data.scenarios[0];
   return (
     <div data-page="home" className="relative overflow-x-clip">
       <HomeStoreProvider starters={data.starters} scenarios={data.scenarios} tools={data.tools} aiReady={aiReady} maxRepairAttempts={data.maxRepairAttempts}>
         {/* H0 + H1 */}
-        <HomeHero signedIn={signedIn} announcement={announcement} heroStyle={heroStyle} />
+        <HomeHero signedIn={signedIn} announcement={announcement} />
         <Storyboard />
 
         {/* H2 */}

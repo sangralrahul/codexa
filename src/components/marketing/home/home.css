@@ -280,7 +280,7 @@
 /* The hero's sunrise lights the page; the stage's own horizon light would double it. */
 .home-horizon { display: none; }
 
-/* ---------- Hero style "studio": glowing composer + floating starter screenshots ---------- */
+/* ---------- Hero: glowing composer + floating starter screenshots ---------- */
 .hero-studio { position: absolute; inset: 0; pointer-events: none; }
 .hero-studio__grid {
   position: absolute; inset: 0;
@@ -319,7 +319,7 @@
   position: absolute; inset: -2px; margin-inline: auto; max-width: calc(48rem + 4px);
   border-radius: 22px; z-index: -1; pointer-events: none;
   background: conic-gradient(from var(--halo, 0deg), var(--signal), var(--signal-2), color-mix(in oklab, var(--silk-1) 70%, var(--signal)), var(--silk-1), var(--signal));
-  filter: blur(18px); opacity: 0.55;
+  filter: blur(18px); opacity: 0.7;
   animation: hero-halo 8s linear infinite;
 }
 .hero-halo { height: calc(100% - 4.5rem); }
@@ -327,18 +327,3 @@
 @keyframes hero-halo { to { --halo: 360deg; } }
 :is(.hero-float, .hero-halo) { @media (prefers-reduced-motion: reduce) { animation: none; } }
 [data-motion="reduced"] :is(.hero-float, .hero-halo) { animation: none; }
-
-/* ---------- Hero style "wash": full-bleed grainy drifting gradient ---------- */
-.hero-wash { position: absolute; inset: 0; overflow: hidden; pointer-events: none; background: var(--background); }
-.hero-wash__blob { position: absolute; border-radius: 9999px; filter: blur(90px); will-change: transform; animation: var(--a) ease-in-out infinite alternate; }
-.hero-wash__blob--1 { --a: wash-a 18s; width: 60vw; height: 60vw; left: -10vw; top: 10%; background: color-mix(in oklab, var(--silk-1) 80%, transparent); }
-.hero-wash__blob--2 { --a: wash-b 22s; width: 55vw; height: 55vw; right: -12vw; top: 0; background: color-mix(in oklab, var(--signal-2) 75%, transparent); }
-.hero-wash__blob--3 { --a: wash-c 20s; width: 60vw; height: 50vw; left: 20vw; bottom: -25vw; background: color-mix(in oklab, var(--signal) 85%, transparent); }
-.hero-wash__blob--4 { --a: wash-a 26s; width: 40vw; height: 40vw; left: 35vw; top: 35%; background: color-mix(in oklab, var(--aurora-magenta) 70%, transparent); }
-@keyframes wash-a { to { transform: translate(12vw, -6vw) scale(1.15); } }
-@keyframes wash-b { to { transform: translate(-14vw, 8vw) scale(0.9); } }
-@keyframes wash-c { to { transform: translate(-8vw, -10vw) scale(1.1); } }
-/* Calm the top so the headline reads, then let the colour come through behind the composer. */
-.hero-wash__veil { position: absolute; inset: 0; background: linear-gradient(to bottom, var(--background) 0%, color-mix(in oklab, var(--background) 70%, transparent) 30%, color-mix(in oklab, var(--background) 10%, transparent) 70%); }
-.hero-wash__blob { @media (prefers-reduced-motion: reduce) { animation: none; } }
-[data-motion="reduced"] .hero-wash__blob { animation: none; }
