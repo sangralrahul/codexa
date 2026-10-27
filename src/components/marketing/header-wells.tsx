@@ -4,6 +4,7 @@ import { NAV, type NavItem } from "@/config/routes";
 import { BrandMark } from "@/components/brand";
 import { CodeLines } from "@/components/vignettes/code-lines";
 import { LogoMark } from "@/components/logo";
+import { ModKey } from "@/components/ui/kbd";
 import { templateShotFor } from "@/components/templates/shots";
 import type { ChromeData } from "./chrome-data";
 
@@ -188,7 +189,9 @@ function DocsWell() {
       <div className="mk-in flex items-center gap-2 rounded-lg bg-background/80 px-2.5 py-1.5 text-[11px] text-muted-foreground shadow-[inset_0_0_0_1px_var(--border)]" style={d(0)}>
         <Search className="size-3" />
         Search docs
-        <span className="ml-auto rounded bg-muted px-1 font-mono text-[9.5px]">⌘K</span>
+        <span className="ml-auto rounded bg-muted px-1 font-mono text-[9.5px]">
+          <ModKey /> K
+        </span>
       </div>
       <ul className="mt-2 space-y-1">
         {docs.map((t, i) => (

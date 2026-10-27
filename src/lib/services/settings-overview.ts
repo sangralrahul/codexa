@@ -92,6 +92,8 @@ export type SettingsOverview = {
     locale: string;
     memberSince: string;
     emailVerified: boolean;
+    /** capabilities.email: whether this server can deliver account emails (verification links). */
+    emailConfigured: boolean;
     passwordSet: boolean;
     /** null when GitHub sign-in is not configured on this server and no account is linked. */
     github: { linked: boolean; username: string | null } | null;
@@ -127,6 +129,7 @@ export async function getSettingsOverview(user: User, workspaceId: string | null
     locale: user.locale,
     memberSince: user.createdAt.toISOString(),
     emailVerified: Boolean(user.emailVerifiedAt),
+    emailConfigured: capabilities.email,
     passwordSet: Boolean(user.passwordHash),
     github: github ? { linked: true, username: github.username } : capabilities.github ? { linked: false, username: null } : null,
     sessions: otherSessions + (currentSessionId ? 1 : 0),
@@ -178,7 +181,17 @@ export async function getSettingsOverview(user: User, workspaceId: string | null
 /** "Finish setting up": only items that reflect real state, and only the ones that apply to this account. */
 export function buildChecklist(account: SettingsOverview["account"], workspace: SettingsOverview["workspace"]): ChecklistItem[] {
   const items: ChecklistItem[] = [
-    { id: "verify-email", label: "Verify your email", description: account.emailVerified ? `${account.email} is verified.` : `Unlocks deployments. The link went to ${account.email}.`, done: account.emailVerified },
+    {
+      id: "verify-email",
+      label: "Verify your email",
+      // Only claim a link was sent when this server can actually deliver email.
+      description: account.emailVerified
+        ? `${account.email} is verified.`
+        : account.emailConfigured
+          ? `Unlocks deployments. The link went to ${account.email}.`
+          : "Email delivery isn't configured on this server; ask the operator to verify your account.",
+      done: account.emailVerified,
+    },
     { id: "photo", label: "Add a profile photo", description: "Teammates see it on comments, presence and the members list.", done: Boolean(account.avatarUrl), href: "/settings/profile" },
     {
       id: "timezone",

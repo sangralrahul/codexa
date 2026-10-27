@@ -26,7 +26,9 @@ function supportsRelative() {
 function syntax(deepen: boolean) {
   const tone = (token: string) => {
     if (!deepen) return `var(${token})`;
-    const l = token === "--syn-comment" ? 0.82 : 0.6;
+    // Comments: the factor keeps the paper comment at the same depth (OKLab L ≈ 0.47) as before the
+    // dark-pane comment was lightened for contrast.
+    const l = token === "--syn-comment" ? 0.76 : 0.6;
     return supportsRelative() ? `oklch(from var(${token}) calc(l * ${l}) calc(c * 1.6) h)` : `color-mix(in oklch, var(${token}) 56%, var(--foreground))`;
   };
   const c = (token: string) => strip(cssColor(tone(token)));

@@ -73,29 +73,36 @@ export function HomeView({
         {/* H5 */}
         <PlatformGrid scenario={scenario} />
 
-        {/* H6 */}
+        {/* H6: stacked and centred up to xl; from xl the copy sits beside the orbit, so the 600px constellation does not float in empty space. */}
         <section aria-labelledby="integrations-title" className="relative overflow-hidden py-16 sm:py-24 lg:py-28">
           <div className="container-x">
-            <div data-reveal className="mx-auto max-w-4xl md:text-center">
-              <p className="text-label mb-5 text-signal-ink">{HOME_INTEGRATIONS.index}</p>
-              <h2 id="integrations-title" className="text-display-2">
-                {HOME_INTEGRATIONS.title.replace(HOME_INTEGRATIONS.highlight, "")}
-                <span className="text-dim">{HOME_INTEGRATIONS.highlight}</span>
-              </h2>
-              <p className="text-lead mt-5 md:mx-auto">{HOME_INTEGRATIONS.lead}</p>
+            <div className="grid items-center xl:grid-cols-[minmax(0,1fr)_600px] xl:gap-x-16">
+              <div data-reveal className="mx-auto max-w-4xl md:text-center xl:mx-0 xl:text-left">
+                <p className="text-label mb-5 text-signal-ink">{HOME_INTEGRATIONS.index}</p>
+                <h2 id="integrations-title" className="text-display-2">
+                  {HOME_INTEGRATIONS.title.replace(HOME_INTEGRATIONS.highlight, "")}
+                  <span className="text-dim">{HOME_INTEGRATIONS.highlight}</span>
+                </h2>
+                <p className="text-lead mt-5 md:mx-auto xl:mx-0">{HOME_INTEGRATIONS.lead}</p>
+                <p className="mt-6 hidden text-xs text-muted-foreground xl:block">
+                  {HOME_PROOF.platformLine} {HOME_INTEGRATIONS.trademark}
+                </p>
+              </div>
+              <div className="mt-12 md:mt-6 xl:mt-0">
+                <Constellation
+                  nodes={data.nodes}
+                  footer={
+                    <Link href="/integrations" className="group/i inline-flex items-center gap-1 text-sm font-medium text-foreground">
+                      <span className="link-draw">Browse integrations</span>
+                      <ArrowRight className="size-3.5 transition-transform group-hover/i:translate-x-0.5" aria-hidden="true" />
+                    </Link>
+                  }
+                />
+              </div>
             </div>
-            <div className="mt-12 md:mt-6">
-              <Constellation nodes={data.nodes} />
-            </div>
-            <div className="mt-8 flex flex-col items-start gap-2 text-xs text-muted-foreground md:items-center">
-              <Link href="/integrations" className="group/i inline-flex items-center gap-1 text-sm font-medium text-foreground">
-                <span className="link-draw">Browse integrations</span>
-                <ArrowRight className="size-3.5 transition-transform group-hover/i:translate-x-0.5" aria-hidden="true" />
-              </Link>
-              <p>
-                {HOME_PROOF.platformLine} {HOME_INTEGRATIONS.trademark}
-              </p>
-            </div>
+            <p className="mt-4 text-xs text-muted-foreground md:text-center xl:hidden">
+              {HOME_PROOF.platformLine} {HOME_INTEGRATIONS.trademark}
+            </p>
           </div>
         </section>
 

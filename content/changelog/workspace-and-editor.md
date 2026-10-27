@@ -1,6 +1,6 @@
 ---
 title: Workspace and editor
-description: Projects from templates, files in PostgreSQL, the Monaco editor with tabs, search and diagnostics, snapshots with diffs and restore, activity and share links.
+description: Projects from templates with stored files and a storage quota, the Monaco editor with tabs, search and diagnostics, snapshots with diffs and restore, activity and share links.
 category: Release
 order: 2
 version: 0.1.0
@@ -13,7 +13,7 @@ related: [platform-foundation, ai-agent]
 ## Projects
 
 - Starter templates in three families: React + Vite + TypeScript + Tailwind, static HTML/CSS/JS, Node + Express.
-- Files stored in PostgreSQL with a per-workspace storage quota.
+- Files stored in the database with a per-workspace storage quota. (In 0.1.0 that database was PostgreSQL; since [0.2.0](/changelog/cloudflare-platform) files live in Cloudflare D1 and snapshot contents in R2.)
 - Project settings, soft delete, duplicate (copies variable names, not values).
 - Encrypted environment variables with masked reads and logged reveals.
 - Share links with view or edit access and optional expiry.

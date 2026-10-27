@@ -1,5 +1,5 @@
 import * as React from "react";
-import type { ProductPage, VignetteId } from "@/content/marketing/types";
+import type { IllustrationId, ProductPage } from "@/content/marketing/types";
 import { PRODUCT_FAQ } from "@/content/marketing/product";
 import { FACTS } from "@/content/marketing/facts";
 import { getRoute } from "@/config/routes";
@@ -43,7 +43,9 @@ function Facts() {
           </dd>
         </div>
       ))}
-      <p className="col-span-3 font-mono text-[10.5px] text-foreground-dim">Counted from the code: {facts.map((f) => f.source).join(" · ")}</p>
+      <p className="col-span-3 text-[12px] text-muted-foreground" title={`Source: ${facts.map((f) => f.source).join(", ")}`}>
+        These numbers come from the product&rsquo;s own configuration, so they change when the product does.
+      </p>
     </dl>
   );
 }
@@ -66,9 +68,12 @@ export function ProductPageTemplate({ page }: { page: ProductPage }) {
   const route = getRoute(page.path);
   const steps = page.steps ?? [];
   const stepVisuals = steps.map((s) => s.visual ?? page.visual);
-  const [tileA, tileB] = page.features;
-  const rest = page.features.slice(2);
-  const bento: [VignetteId, VignetteId] = page.bento ?? [stepVisuals[1] ?? page.visual, stepVisuals[2] ?? page.visual];
+  // The first two features become illustrated tiles only when the page names two illustrations it
+  // does not already show (hero and steps); otherwise every feature sits in the plain grid, so no
+  // picture is repeated as filler.
+  const bento: [IllustrationId, IllustrationId] | null = page.bento ?? null;
+  const [tileA, tileB] = bento ? page.features : [];
+  const rest = bento ? page.features.slice(2) : page.features;
   // The page's own questions first, topped up with general product questions so the FAQ is never thinner than the fine print.
   const own = page.faq ?? [];
   const faq = [...own, ...PRODUCT_FAQ.filter((q) => !own.some((o) => o.question === q.question))].slice(0, Math.max(5, own.length));
@@ -92,7 +97,7 @@ export function ProductPageTemplate({ page }: { page: ProductPage }) {
       />
 
       <Section size="sm">
-        <div className="grid gap-10 lg:grid-cols-12 lg:gap-14">
+        <div className="grid grid-cols-1 gap-10 lg:grid-cols-12 lg:gap-14">
           <div data-reveal className="lg:col-span-5">
             <Kicker>What it is</Kicker>
             <p className="text-display-4 mt-5 text-pretty">{page.subtitle}</p>
@@ -117,12 +122,13 @@ export function ProductPageTemplate({ page }: { page: ProductPage }) {
 
       <Section size="lg" className="border-t border-border/60">
         <SectionHeader index={steps.length ? "02" : "01"} eyebrow={page.featuresHeading ?? "What you get"} title="The parts that matter, in detail." />
-        {tileA && tileB ? (
-          <div data-spotlight="grid" className="mt-12 grid gap-4 lg:grid-cols-2">
+        {bento && tileA && tileB ? (
+          // From lg the two tiles share their rows (subgrid): illustrations are one height and the captions start on one line.
+          <div data-spotlight="grid" className="mt-12 grid grid-cols-1 gap-4 lg:grid-cols-2 lg:gap-y-0">
             {[tileA, tileB].map((f, i) => {
               const Icon = f.icon;
               return (
-                <article key={f.title} data-reveal data-spotlight-tile style={{ "--reveal-delay": `${i * 90}ms` } as React.CSSProperties} className="relative flex flex-col overflow-hidden rounded-[20px] border border-border bg-card p-3 shadow-[inset_0_1px_0_var(--hairline)]">
+                <article key={f.title} data-reveal data-spotlight-tile style={{ "--reveal-delay": `${i * 90}ms` } as React.CSSProperties} className="relative flex flex-col overflow-hidden rounded-[20px] border border-border bg-card p-3 shadow-[inset_0_1px_0_var(--hairline)] lg:row-span-2 lg:grid lg:grid-rows-subgrid lg:gap-0">
                   <VignettePlate id={bento[i]} className="border-0 bg-surface/70" />
                   <div className="px-3 pb-3 pt-5">
                     <h3 className="flex items-center gap-2.5 text-[18px] font-semibold tracking-[-0.015em]">
@@ -150,7 +156,7 @@ export function ProductPageTemplate({ page }: { page: ProductPage }) {
       ) : null}
 
       <Section size="sm" className="border-t border-border/60">
-        <div className="grid gap-10 lg:grid-cols-[5fr_7fr] lg:gap-14">
+        <div className="grid grid-cols-1 gap-10 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] lg:gap-14">
           <div className="lg:sticky lg:top-24 lg:self-start">
             <FinePrint items={page.limitations} />
           </div>

@@ -70,6 +70,8 @@ export type ActivityItem = {
   message: string;
   actorId: string | null;
   actorName: string;
+  /** Avatar colour seed: the same one every other avatar of this person uses (name, else email). */
+  actorSeed: string;
   actorAvatarUrl: string | null;
   createdAt: Date;
   /** Consecutive edits by the same person to the same project are folded into one row. */
@@ -238,6 +240,7 @@ export async function getRecentActivity(workspaceIds: string[], limit = 10): Pro
       message: r.message,
       actorId: r.actorId,
       actorName: r.actorName?.trim() || r.actorEmail?.split("@")[0] || "Someone",
+      actorSeed: r.actorName?.trim() || r.actorEmail || r.actorId || "Someone",
       actorAvatarUrl: r.actorAvatarUrl ?? null,
       createdAt: r.createdAt,
       count: 1,

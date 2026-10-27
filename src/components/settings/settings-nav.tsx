@@ -62,12 +62,13 @@ function MetaChip({ k, meta }: { k?: SettingsNavKey; meta: SettingsNavMetaView }
       </span>
     );
   }
-  if (k === "integrations" && meta.integrations && meta.integrations.total > 0) {
+  if (k === "integrations" && meta.integrations) {
     const { total, errors } = meta.integrations;
+    const label = `${total} connected${errors ? `, ${errors} with errors` : ""}`;
     return (
-      <span className={cn(chip, errors ? "bg-danger/12 text-danger" : "bg-foreground/[0.06] text-muted-foreground")}>
+      <span className={cn(chip, errors ? "bg-danger/12 text-danger" : total ? "bg-foreground/[0.06] text-muted-foreground" : "text-foreground-dim shadow-[inset_0_0_0_1px_var(--border)]")} title={label}>
         <span aria-hidden="true">{total}</span>
-        <span className="sr-only">{`, ${total} connected${errors ? `, ${errors} with errors` : ""}`}</span>
+        <span className="sr-only">{`, ${label}`}</span>
       </span>
     );
   }
@@ -95,7 +96,18 @@ function NavLink({ it, active, meta, onNavigate }: { it: SettingsNavItem; active
         active ? "font-medium text-foreground" : "text-muted-foreground hover:text-foreground",
       )}
     >
-      {Icon ? <Icon className={cn("size-4 shrink-0 transition-colors", active ? "text-foreground" : "text-foreground-dim")} aria-hidden="true" /> : null}
+      {Icon ? (
+        <span className="relative flex shrink-0">
+          <Icon className={cn("size-4 shrink-0 transition-colors", active ? "text-foreground" : "text-foreground-dim")} aria-hidden="true" />
+          {/* Below lg the meta chips are hidden, so the security attention dot sits on the tab's own icon. */}
+          {it.key === "security" && meta.otherSessions > 0 ? (
+            <span className="absolute -right-1 -top-1 flex size-2 items-center justify-center lg:hidden">
+              <span aria-hidden="true" className="size-1.5 rounded-full bg-signal shadow-[0_0_0_2px_var(--background)]" />
+              <span className="sr-only">{`, ${meta.otherSessions} other active session${meta.otherSessions === 1 ? "" : "s"}`}</span>
+            </span>
+          ) : null}
+        </span>
+      ) : null}
       <span>{it.label}</span>
       <span className="hidden lg:contents">
         <MetaChip k={it.key} meta={meta} />
@@ -109,7 +121,7 @@ function NavLink({ it, active, meta, onNavigate }: { it: SettingsNavItem; active
  * - lg+: a sticky column with "Search settings", two groups (Account, Workspace), icons, live meta chips
  *   (seats, plan, connections, other sessions) and a pill that glides between items (M12). The current
  *   page keeps the .nav-item signal rail and aria-current="page".
- * - below lg: one scroll-snapping tab bar (both groups, a dot between them) with edge fades and a gliding
+ * - below lg: one scroll-snapping tab bar (both groups, a hairline between them) with edge fades and a gliding
  *   underline; the active tab is centred on every navigation.
  */
 export function SettingsNav({ workspaceName, meta }: { workspaceName: string | null; meta?: SettingsNavMetaView }) {
@@ -273,7 +285,8 @@ export function SettingsNav({ workspaceName, meta }: { workspaceName: string | n
         <GlideIndicator ref={pill} className="settings-nav-pill hidden lg:block" />
         <GlideIndicator ref={bar} className="glide-indicator--bar lg:hidden" />
         <NavGroup label="Account" items={ACCOUNT_NAV} pathname={pathname} meta={m} />
-        <span aria-hidden="true" className="mx-1.5 size-1 shrink-0 rounded-full bg-border-strong lg:hidden" />
+        {/* Group divider on the mobile tab bar: a hairline, so it never reads as a status dot. */}
+        <span aria-hidden="true" className="mx-1.5 h-4 w-px shrink-0 bg-border-strong lg:hidden" />
         <NavGroup label="Workspace" sublabel={workspaceName} items={WORKSPACE_NAV} pathname={pathname} meta={m} className="lg:mt-5" />
       </div>
     </nav>

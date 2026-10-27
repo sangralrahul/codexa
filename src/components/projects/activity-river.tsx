@@ -34,6 +34,8 @@ export type RiverItem = {
   message: string;
   actorId: string | null;
   actorName: string;
+  /** Avatar colour seed shared with every other avatar of this person (name, else email). */
+  actorSeed?: string;
   actorAvatarUrl: string | null;
   createdAt: string;
   count: number;
@@ -80,7 +82,7 @@ const TONE = { success: "text-success", danger: "text-danger", signal: "text-sig
  */
 export function ActivityRiver({ items, className }: { items: RiverItem[]; className?: string }) {
   return (
-    <section aria-labelledby="activity-title" className={cn("e1 flex flex-col rounded-[18px]", className)}>
+    <section aria-labelledby="activity-title" className={cn("e1 flex min-w-0 flex-col rounded-[18px]", className)}>
       <div className="flex items-baseline justify-between gap-3 px-5 pt-5">
         <h2 id="activity-title" className="text-[15px] font-semibold tracking-[-0.01em]">
           Activity
@@ -100,7 +102,7 @@ export function ActivityRiver({ items, className }: { items: RiverItem[]; classN
               <li key={a.id} className="group/act relative flex gap-3 rounded-[12px] px-3 py-2.5 transition-colors hover:bg-foreground/[0.03]">
                 {i < items.length - 1 ? <span aria-hidden="true" className="absolute bottom-[-6px] left-[27px] top-[38px] w-px bg-border" /> : null}
                 <span className="relative mt-0.5 shrink-0">
-                  <Avatar name={a.actorName} src={a.actorAvatarUrl} seed={a.actorId ?? a.actorName} size="sm" />
+                  <Avatar name={a.actorName} src={a.actorAvatarUrl} seed={a.actorSeed ?? a.actorName} size="sm" />
                   <span className={cn("absolute -bottom-1 -right-1 flex size-4 items-center justify-center rounded-full bg-card shadow-[0_0_0_2px_var(--card),inset_0_0_0_1px_var(--border)]", v.tone ? TONE[v.tone] : "text-muted-foreground")}>
                     <Icon className="size-2.5" strokeWidth={2.4} aria-hidden="true" />
                   </span>

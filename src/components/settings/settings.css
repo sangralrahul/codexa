@@ -103,6 +103,9 @@
 .setup-item[data-done] .setup-tick path { stroke-dasharray: 1; stroke-dashoffset: 1; animation: check-draw 320ms var(--ease-out) forwards; animation-delay: calc(var(--i, 0) * 70ms + 320ms); }
 @keyframes tick-pop { from { transform: scale(0.4); opacity: 0; } }
 .setup-progress { transform-origin: 0 50%; animation: grow-x 900ms var(--ease-out) 200ms backwards; }
+/* Check-ring: done arcs fade in one after another. */
+.setup-ring-seg[data-done] { animation: ring-seg-in 420ms var(--ease-out) backwards; animation-delay: calc(var(--i, 0) * 90ms + 200ms); }
+@keyframes ring-seg-in { from { opacity: 0; } }
 @keyframes grow-x { from { transform: scaleX(0); } }
 
 /* ---------- Usage ---------- */
@@ -226,7 +229,7 @@ button.seat:is(:hover, :focus-visible) { transform: translateY(-2px); border-col
 
 /* ---------- Calm: final frames ---------- */
 @media (prefers-reduced-motion: reduce) {
-  .settings-card, .settings-stack > *, .settings-sub > *, .settings-meta, .settings-search-results > *, .setup-item .setup-tick, .setup-progress, .gauge-arc, .period-fill,
+  .settings-card, .settings-stack > *, .settings-sub > *, .settings-meta, .settings-search-results > *, .setup-item .setup-tick, .setup-progress, .setup-ring-seg, .gauge-arc, .period-fill,
   .usage-chart .usage-bar, .usage-swap, .unlock-diff .unlock-line, .price-swap, .seat-in, .seat--pending, .chip-in, .role-swap, .unsaved-dock,
   .field-flash :is(input, textarea, button[role="combobox"], [role="radiogroup"]), .avatar-fade img, .mirror-swap, .presence-cursor, .pw-rule svg, .tile-flow > * { animation: none !important; }
   .setup-item .setup-tick path { animation: none !important; stroke-dashoffset: 0; }
@@ -236,7 +239,7 @@ button.seat:is(:hover, :focus-visible) { transform: translateY(-2px); border-col
   .bento-tile, .bento-tile .bento-arrow, .plan-card, .seat, .radio-card, .radio-card .radio-dot::after, .upload-ring, .brand-tile, .ws-step__line, .settings-row, .settings-card, .gauge-arc { transition: none; }
   .plan-card:hover, button.seat:is(:hover, :focus-visible) { transform: none; }
 }
-[data-motion="reduced"] :is(.settings-card, .settings-stack > *, .settings-sub > *, .settings-meta, .settings-search-results > *, .setup-item .setup-tick, .setup-progress, .gauge-arc, .period-fill, .usage-chart .usage-bar, .usage-swap, .unlock-diff .unlock-line, .price-swap, .seat-in, .seat--pending, .chip-in, .role-swap, .unsaved-dock, .avatar-fade img, .mirror-swap, .presence-cursor, .pw-rule svg, .tile-flow > *) { animation: none !important; }
+[data-motion="reduced"] :is(.settings-card, .settings-stack > *, .settings-sub > *, .settings-meta, .settings-search-results > *, .setup-item .setup-tick, .setup-progress, .setup-ring-seg, .gauge-arc, .period-fill, .usage-chart .usage-bar, .usage-swap, .unlock-diff .unlock-line, .price-swap, .seat-in, .seat--pending, .chip-in, .role-swap, .unsaved-dock, .avatar-fade img, .mirror-swap, .presence-cursor, .pw-rule svg, .tile-flow > *) { animation: none !important; }
 [data-motion="reduced"] .field-flash :is(input, textarea, button[role="combobox"], [role="radiogroup"]) { animation: none !important; }
 [data-motion="reduced"] .setup-item .setup-tick path { animation: none !important; stroke-dashoffset: 0; }
 [data-motion="reduced"] :is(.usage-chart:not(.is-visible) .usage-bar, .unlock-diff:not(.is-visible) .unlock-line) { transform: none; opacity: 1; }

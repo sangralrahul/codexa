@@ -7,6 +7,10 @@
 
 @custom-variant dark (&:where(.dark, .dark *));
 
+/* A disabled control that is not busy: `:disabled` / aria-disabled, except a Button that is loading
+   or showing success (those keep their fill). Button uses it to grey out solid fills. */
+@custom-variant unavailable (&:is(:disabled, [aria-disabled="true"]):not([data-state="loading"], [data-state="success"], [aria-busy="true"]));
+
 /* Calm = OS reduced motion OR the site setting (<html data-motion="reduced">, MotionToggle).
    Use `calm:` in class lists and `@variant calm { … }` inside CSS rules. */
 @custom-variant calm {
@@ -37,6 +41,7 @@
   --border-strong: #d2cfc7;
   --input: #ffffff;
   --ring: #e2512c;
+  --focus: #5d6069; /* neutral control focus — never red, so it can't read as an error */
   --primary: #0c0d10;
   --primary-hover: #2a2b30;
   --primary-foreground: #ffffff;
@@ -45,17 +50,23 @@
   --signal-ink: #c2410c;
   --accent: #6d5cff;
   --accent-foreground: #ffffff;
-  --success: #15803d;
-  --warning: #b45309;
-  --danger: #dc2626;
+  --success: #146c34; /* ≥4.5:1 as text on a /10–/15 success chip over paper, card and muted */
+  --warning: #974309;
+  --danger: #b91c1c;
   --danger-foreground: #ffffff;
   --info: #1d4ed8;
   --code-bg: #0a0c0f;
   --code-fg: #e6e8ec;
   --code-border: #1c2027;
-  --code-muted: #6f7785;
+  --code-muted: #808898; /* 5.5:1 on --code-bg */
   --selection: rgba(240, 81, 42, 0.18);
-  --selection-strong: rgba(240, 81, 42, 0.22);
+  --selection-strong: color-mix(in oklab, var(--signal) 24%, transparent);
+  /* Selection mark (.mark-select): a two-stop signal → amber band with a 1px lit top edge. */
+  --mark-from: color-mix(in oklab, var(--signal) 26%, transparent);
+  --mark-to: color-mix(in oklab, var(--signal-2) 34%, transparent);
+  --mark-edge: color-mix(in oklab, var(--signal) 42%, transparent);
+  /* Comet border head: the leading spark stays in the signal hues (amber on paper). */
+  --comet-head: color-mix(in oklab, var(--signal-2) 70%, var(--signal));
   --hairline: rgba(12, 13, 16, 0.07);
   --grid-line: rgba(12, 13, 16, 0.05);
   --glass: rgba(255, 255, 255, 0.74);
@@ -78,7 +89,7 @@
   --syn-fn: #8fb8ff;
   --syn-tag: #ff9f7a;
   --syn-number: #ffcf7a;
-  --syn-comment: #6f7785;
+  --syn-comment: #7d8594; /* 5.3:1 on --code-bg */
   --syn-attr: #7fd8d0;
   --syn-type: #8fe3e0;
   /* Motion */
@@ -114,6 +125,7 @@
   --border-strong: #2c3139;
   --input: #0b0d10;
   --ring: #ff6a45;
+  --focus: #a3a6ae;
   --primary: #f3f3f0;
   --primary-hover: #dcdcd8;
   --primary-foreground: #08090b;
@@ -130,9 +142,15 @@
   --code-bg: #0a0c0f;
   --code-fg: #e6e8ec;
   --code-border: #1c2027;
-  --code-muted: #6f7785;
+  --code-muted: #808898; /* 5.5:1 on --code-bg */
   --selection: rgba(255, 95, 58, 0.26);
-  --selection-strong: rgba(255, 95, 58, 0.34);
+  --selection-strong: color-mix(in oklab, var(--signal) 42%, transparent);
+  /* Higher alpha than on paper so the band reads as lit orange, not brown, over near-black; the
+     amber end is pulled toward the signal so it never turns olive. */
+  --mark-from: color-mix(in oklab, var(--signal) 60%, transparent);
+  --mark-to: color-mix(in oklab, color-mix(in oklab, var(--signal-2) 55%, var(--signal)) 52%, transparent);
+  --mark-edge: rgba(255, 217, 184, 0.75);
+  --comet-head: rgba(255, 246, 236, 0.9);
   --hairline: rgba(255, 255, 255, 0.07);
   --grid-line: rgba(255, 255, 255, 0.045);
   --glass: rgba(13, 15, 18, 0.64);
@@ -184,6 +202,7 @@ body:has(main [data-tone="company"]) { --silk-1: #ff8a66; --silk-2: #ffc070; --s
   --color-border-strong: var(--border-strong);
   --color-input: var(--input);
   --color-ring: var(--ring);
+  --color-focus: var(--focus);
   --color-primary: var(--primary);
   --color-primary-hover: var(--primary-hover);
   --color-primary-foreground: var(--primary-foreground);
@@ -217,7 +236,7 @@ body:has(main [data-tone="company"]) { --silk-1: #ff8a66; --silk-2: #ffc070; --s
   --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
   --font-mono: var(--font-geist-mono), ui-monospace, SFMono-Regular, Menlo, monospace;
   --font-display: var(--font-mona-sans), var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
-  /* Instrument Serif is retired; font-serif falls back to the system serif until the Integration pass. */
+  /* No serif face ships (Instrument Serif is retired); font-serif is the system serif. */
   --font-serif: ui-serif, Georgia, serif;
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
@@ -354,9 +373,8 @@ body:has(main [data-tone="company"]) { --silk-1: #ff8a66; --silk-2: #ffc070; --s
 
 /* --------------------------------------------------------------------------
    Utilities (support variants: md:text-display-2, hover:text-dim, …)
-   NOTE: tailwind-merge (cn) treats unknown `text-*` classes as text colours.
-   Keep type utilities out of the same cn() call as a text-colour class, or
-   pass them in a plain className string (see docs/DESIGN.md).
+   NOTE: cn() merges the text-* type utilities below as font sizes via
+   TYPE_SCALE_UTILITIES in src/lib/utils.ts. Add any new text-* size there.
    -------------------------------------------------------------------------- */
 @utility container-x {
   margin-inline: auto;
@@ -437,6 +455,17 @@ body:has(main [data-tone="company"]) { --silk-1: #ff8a66; --silk-2: #ffc070; --s
   letter-spacing: 0.14em;
   font-weight: 500;
   text-transform: uppercase;
+}
+/* The one eyebrow (overline) above a page or card title, in the site and the app: mono, uppercase,
+   0.14em tracking, muted. A colour utility after it (text-signal-ink) still wins. */
+@utility text-eyebrow {
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  line-height: 1.3;
+  letter-spacing: 0.14em;
+  font-weight: 500;
+  text-transform: uppercase;
+  color: var(--muted-foreground);
 }
 @utility text-meta {
   font-size: 0.75rem;
@@ -536,43 +565,54 @@ body:has(main [data-tone="company"]) { --silk-1: #ff8a66; --silk-2: #ffc070; --s
    Emphasis
    ========================================================================== */
 
-/* Deprecated alias (Integration pass removes it): the italic serif accent is now the two-tone dim. */
-.serif-accent {
-  color: var(--foreground-dim);
-  font-style: normal;
-}
-
-/* Selection mark: once per page, H1 only. The words look as if just selected in the editor. */
+/* Selection mark: once per page, H1 only. The words look as if just selected in the editor:
+   a short signal → amber band with a 1px lit top edge, then the signal caret blinks three times.
+   The band is sized in em against the display face (Mona Sans: ascent 1.09em, descent 0.32em)
+   and runs from 0.68em above the baseline to 0.06em below it. It stays inside the tight display
+   line-height (0.94–0.98em), so it never reaches the descenders of the line above, and a mark
+   that wraps gets one clean band per line (box-decoration-break: clone) with a gap between them.
+   z-index -1 inside an isolated parent paints the band under neighbouring text as a backstop. */
 .mark-select {
+  --mark-h: 0.74em;
+  --mark-y: 0.41em; /* content-box top → band top (1.09em − 0.68em) */
   position: relative;
+  z-index: -1;
   padding-inline: 0.06em;
   margin-inline: -0.06em;
-  border-radius: 0.06em;
-  background: linear-gradient(var(--selection-strong), var(--selection-strong)) no-repeat 0 58% / 0% 84%;
+  background-image: linear-gradient(var(--mark-edge), var(--mark-edge)), linear-gradient(90deg, var(--mark-from), var(--mark-to));
+  background-repeat: no-repeat;
+  background-position: 0 var(--mark-y);
+  background-size: 0% 1px, 0% var(--mark-h);
   animation: mark-select 700ms var(--ease-out) var(--mark-delay, 450ms) forwards;
   -webkit-box-decoration-break: clone;
   box-decoration-break: clone;
 }
+:where(*):has(> .mark-select) { isolation: isolate; }
+/* The caret flows inline after the last glyph, so a mark that wraps gets it on its last line only.
+   Net width 0 (negative end margin) and a margin box inside the line box: it never moves the text. */
 .mark-select::after {
+  --caret-w: max(2px, 0.06em);
   content: "";
-  position: absolute;
-  right: -0.02em;
-  top: 0.14em;
-  bottom: 0.1em;
-  width: 0.06em;
-  min-width: 2px;
+  display: inline-block;
+  width: var(--caret-w);
+  height: 0.84em;
+  margin: 0 calc(-1 * var(--caret-w)) -0.1em 0;
+  vertical-align: baseline;
+  border-radius: 1px;
   background: var(--signal);
   opacity: 0;
-  animation: caret 1s steps(1) calc(var(--mark-delay, 450ms) + 700ms) 3;
+  animation: mark-caret 1s steps(1) calc(var(--mark-delay, 450ms) + 700ms) 3;
 }
 .mark-select {
   @variant calm {
-    background-size: 100% 84%;
+    background-size: 100% 1px, 100% var(--mark-h);
     animation: none;
     &::after { display: none; }
   }
 }
-@keyframes mark-select { to { background-size: 100% 84%; } }
+@keyframes mark-select { to { background-size: 100% 1px, 100% var(--mark-h); } }
+/* Visible for the first half of each second (the element itself rests at opacity 0). */
+@keyframes mark-caret { from { opacity: 1; } 50%, to { opacity: 0; } }
 
 /* Text links that draw their underline (M13). */
 .link-draw {
@@ -787,16 +827,10 @@ body:has(main [data-tone="company"]) { --silk-1: #ff8a66; --silk-2: #ffc070; --s
   mix-blend-mode: overlay;
 }
 
-/* Deprecated (Integration pass): announcement pill backdrop. */
-.eyebrow-pill {
-  background: color-mix(in oklab, var(--background) 60%, transparent);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-}
-
 /* ==========================================================================
    Comet border: gated. The comet fades in and travels only while
    [data-active] / :focus-within, and only while [data-onscreen] (MotionEffects).
+   Tail signal → amber, head --comet-head (a warm spark in dark, deep amber on paper).
    Markup: .comet-border > .comet-border__inner
    ========================================================================== */
 .comet-border {
@@ -805,7 +839,7 @@ body:has(main [data-tone="company"]) { --silk-1: #ff8a66; --silk-2: #ffc070; --s
   padding: 1px;
   --comet-o: 0;
   background:
-    conic-gradient(from var(--angle), transparent 0deg 270deg, color-mix(in oklab, var(--signal) calc(var(--comet-o) * 90%), transparent) 325deg, color-mix(in oklab, var(--signal-2) calc(var(--comet-o) * 90%), transparent) 345deg, color-mix(in oklab, var(--foreground) calc(var(--comet-o) * 70%), transparent) 355deg, transparent 360deg),
+    conic-gradient(from var(--angle), transparent 0deg 270deg, color-mix(in oklab, var(--signal) calc(var(--comet-o) * 90%), transparent) 325deg, color-mix(in oklab, var(--signal-2) calc(var(--comet-o) * 90%), transparent) 345deg, color-mix(in oklab, var(--comet-head) calc(var(--comet-o) * 100%), transparent) 355deg, transparent 360deg),
     linear-gradient(var(--border-strong), var(--border-strong));
   animation: spin-angle 6s linear infinite;
   animation-play-state: paused;
@@ -925,10 +959,13 @@ body:has(main [data-tone="company"]) { --silk-1: #ff8a66; --silk-2: #ffc070; --s
 .btn-ember:hover::after { transform: translateX(110%); }
 .btn-ember:disabled, .btn-ember[aria-disabled="true"] { filter: saturate(0.5); }
 
-.glass {
-  background: var(--glass);
-  backdrop-filter: blur(14px) saturate(140%);
-  -webkit-backdrop-filter: blur(14px) saturate(140%);
+/* In the components layer so utilities can override it (hover:bg-muted, a different blur). */
+@layer components {
+  .glass {
+    background: var(--glass);
+    backdrop-filter: blur(14px) saturate(140%);
+    -webkit-backdrop-filter: blur(14px) saturate(140%);
+  }
 }
 
 /* Click ripple (MotionEffects draws it in a fixed layer over buttons and menu rows). */
@@ -1006,6 +1043,15 @@ body:has(main [data-tone="company"]) { --silk-1: #ff8a66; --silk-2: #ffc070; --s
   animation-delay: calc(var(--split-delay, 0ms) + var(--i, 0) * var(--split-step, 70ms));
 }
 .split-word > .split-in { --split-step: 40ms; }
+/* `lines`: each visual line is a block of word units that rise together (--i = line index).
+   Below sm the forced lines flow as one balanced paragraph (the heading's text-wrap: balance)
+   and the words rise one by one (--w = word index). A mark inside `lines` never splits. */
+.split-line .split-word > .split-in { --split-step: 70ms; }
+.split-line .mark-select { white-space: nowrap; }
+@media (width < 40rem) {
+  .split-line { display: contents; }
+  .split-line .split-word > .split-in { animation-delay: calc(var(--split-delay, 0ms) + var(--w, 0) * 40ms); }
+}
 @keyframes split-rise { from { transform: translateY(108%); } }
 .js [data-play="view"]:not(.is-visible) :is(.split-in, .mark-select),
 .js [data-play="view"]:not(.is-visible) .mark-select::after { animation-play-state: paused; }
@@ -1044,7 +1090,9 @@ body:has(main [data-tone="company"]) { --silk-1: #ff8a66; --silk-2: #ffc070; --s
 /* M11 Develop. img[data-develop] develops once on load (MotionEffects); .develop develops on mount;
    .wipe-in assembles top-to-bottom with a rim scanline (preview assemble). */
 .js img[data-develop]:not([data-developed]) { opacity: 0; animation: develop-failsafe 0s 1.6s forwards; }
-img[data-developed], .develop { animation: develop 700ms var(--ease-out) both; }
+/* Fill mode is `backwards` (not `both`): a forwards fill would keep owning `transform` after the
+   develop ends, so later hover transforms (.shot-pan, card lifts) would jump instead of gliding. */
+img[data-developed], .develop { animation: develop 700ms var(--ease-out) backwards; }
 @keyframes develop { from { opacity: 0; filter: blur(8px) saturate(0.6); transform: scale(1.02); } }
 @keyframes develop-failsafe { to { opacity: 1; } }
 .wipe-in { position: relative; animation: wipe-in var(--dur-6) var(--ease-in-out) both; }
@@ -1086,15 +1134,18 @@ img[data-developed], .develop { animation: develop 700ms var(--ease-out) both; }
 .check-draw.lucide :is(path, polyline, line) { stroke-dasharray: 24; stroke-dashoffset: 24; }
 @keyframes check-draw { to { stroke-dashoffset: 0; } }
 
-/* Live dot: only for things that really are live. */
-.live-dot {
-  position: relative;
-  display: inline-block;
-  flex-shrink: 0;
-  width: 6px;
-  height: 6px;
-  border-radius: 9999px;
-  background: var(--live);
+/* Live dot: only for things that really are live. Base box in the components layer so utilities
+   (absolute, size-2, bg-signal) can override it. */
+@layer components {
+  .live-dot {
+    position: relative;
+    display: inline-block;
+    flex-shrink: 0;
+    width: 6px;
+    height: 6px;
+    border-radius: 9999px;
+    background: var(--live);
+  }
 }
 .live-dot::after {
   content: "";
@@ -1143,6 +1194,15 @@ img[data-developed], .develop { animation: develop 700ms var(--ease-out) both; }
 .odometer__strip > span { height: 10%; text-align: center; }
 .odometer[data-rolling] .odometer__strip { transition: transform 600ms var(--ease-out) calc(var(--o, 0) * 40ms); }
 .odometer { @variant calm { & .odometer__strip { transition: none !important; } } }
+
+/* Mona Sans (the display face) only has a slashed tabular zero ("$2Ø"); Geist's tabular zero is
+   plain. So numbers set in the display face use proportional lining figures, even when they carry
+   `tabular-nums` or are an Odometer (its columns are sized by the real digit, so rolling stays
+   aligned). Everything in the body face keeps tabular figures. */
+:is(.font-display, .text-display-1, .text-display-2, .text-display-3, .text-display-4, .text-app-display, .text-app-title):is(.tabular-nums, .odometer),
+:is(.font-display, .text-display-1, .text-display-2, .text-display-3, .text-display-4, .text-app-display, .text-app-title) :is(.tabular-nums, .odometer) {
+  font-variant-numeric: proportional-nums lining-nums;
+}
 
 /* Scroll scene (M5): CSS decides pinning (no layout shift); JS only picks the chapter. */
 .scroll-scene { position: relative; }
@@ -1289,28 +1349,14 @@ img[data-developed], .develop { animation: develop 700ms var(--ease-out) both; }
 @keyframes cx-item-in { from { opacity: 0; transform: translateY(-2px); } }
 
 /* ==========================================================================
-   Legacy marketing helpers (kept; some are deprecated — see docs/DESIGN.md)
+   Shared helpers (caret, spinner, pop-in, progress)
    ========================================================================== */
-/* Product preview rises into place. */
-.tilt-in { transform: perspective(1800px) rotateX(12deg) translateY(24px) scale(0.97); transform-origin: 50% 0; transition: transform 1400ms var(--ease-out); }
-.tilt-in.is-visible { transform: none; }
-
-/* Deprecated: rotating headline word. The words are condensed on phones so the longest stays on one line. */
-.word-swap { display: inline-grid; justify-items: center; vertical-align: bottom; overflow: hidden; height: 1.18em; padding-inline: 0.06em; max-width: 100%; }
-@media (width < 40rem) { .word-swap > span { font-family: var(--font-display); font-stretch: 78%; letter-spacing: -0.035em; } }
-.word-swap > span { grid-area: 1 / 1; transition: transform 700ms cubic-bezier(0.7, 0, 0.2, 1), opacity 500ms; }
-.word-swap > [data-state="in"] { transform: translateY(0); opacity: 1; }
-.word-swap > [data-state="out"] { transform: translateY(-100%); opacity: 0; }
-.word-swap > [data-state="next"] { transform: translateY(100%); opacity: 0; transition: none; }
-
 /* Blinking signal caret. */
 .caret::after { content: ""; display: inline-block; width: 2px; height: 1.05em; margin-left: 1px; vertical-align: -0.18em; background: var(--signal); animation: caret 1s steps(1) infinite; }
 @keyframes caret { 50% { opacity: 0; } }
 .caret { @variant calm { &::after { animation: none; } } }
 
-/* Deprecated: travelling light along the steps line (infinite loop). */
-.beam { position: relative; overflow: hidden; }
-.beam::after { content: ""; position: absolute; inset: 0; width: 30%; background: linear-gradient(90deg, transparent, var(--signal), transparent); animation: beam 4s var(--ease-in-out) infinite; }
+/* Travelling light keyframes (the roadmap's in-progress shimmer runs it a few times). */
 @keyframes beam { from { transform: translateX(-100%); } to { transform: translateX(340%); } }
 
 .spin { animation: spin 0.9s linear infinite; }
@@ -1377,48 +1423,6 @@ input:is([type="checkbox"], [type="radio"]):checked { animation: check-pop 260ms
 }
 @keyframes skeleton-sweep { to { transform: translateX(100%); } }
 
-/* Deprecated: ambient orbs behind app pages (replaced by .app-atmosphere). */
-.ambient { position: absolute; inset: 0; overflow: hidden; pointer-events: none; z-index: -1; }
-.ambient__orb {
-  position: absolute;
-  width: 46vw;
-  max-width: 720px;
-  aspect-ratio: 1;
-  border-radius: 9999px;
-  filter: blur(90px);
-  opacity: calc(var(--silk-opacity) * 0.32);
-  animation: orb-drift 26s ease-in-out infinite alternate;
-}
-.ambient__orb:nth-child(1) { background: var(--silk-1); left: -12%; top: 8%; }
-.ambient__orb:nth-child(2) { background: var(--silk-2); right: -14%; top: 38%; animation-duration: 32s; animation-delay: -8s; }
-.ambient__orb:nth-child(3) { background: var(--silk-3); left: 22%; bottom: -10%; animation-duration: 38s; animation-delay: -16s; }
-@keyframes orb-drift {
-  0% { transform: translate3d(0, 0, 0) scale(1); }
-  50% { transform: translate3d(6%, -5%, 0) scale(1.08); }
-  100% { transform: translate3d(-5%, 6%, 0) scale(0.95); }
-}
-
-/* Deprecated: cards that tilt toward the pointer and catch a sheen on hover. */
-.tilt-shine { position: relative; transform-style: preserve-3d; transition: transform 500ms var(--ease-out); }
-.tilt-shine::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  border-radius: inherit;
-  pointer-events: none;
-  background: linear-gradient(115deg, transparent 30%, color-mix(in oklab, var(--foreground) 9%, transparent) 48%, transparent 66%);
-  background-size: 250% 100%;
-  background-position: 120% 0;
-  transition: background-position 900ms var(--ease-out);
-}
-.tilt-shine:hover { transform: perspective(900px) rotateX(3deg) translateY(-4px); }
-.tilt-shine:hover::after { background-position: -20% 0; }
-
-/* Deprecated: step visuals on the getting-started panel. */
-.typing-line { overflow: hidden; white-space: nowrap; width: 0; animation: typing 3.2s steps(34) infinite; }
-@keyframes typing { 0%, 8% { width: 0; } 55%, 85% { width: 100%; } 100% { width: 100%; } }
-.tick-in { opacity: 0; animation: tick-in 4s ease-out infinite; }
-@keyframes tick-in { 0%, 10% { opacity: 0; transform: translateX(-4px); } 20%, 90% { opacity: 1; transform: none; } 100% { opacity: 0; } }
 .ring-fill { transition: stroke-dashoffset 1400ms var(--ease-out); }
 
 /* Toasts slide up from the corner and fade away. */
@@ -1430,32 +1434,10 @@ input:is([type="checkbox"], [type="radio"]):checked { animation: check-pop 260ms
 details::details-content { block-size: 0; overflow: hidden; transition: block-size 320ms var(--ease-out), content-visibility 320ms allow-discrete; }
 details[open]::details-content { block-size: auto; }
 
-/* Sliding selection pill for segmented controls (pricing toggles). */
-.segmented { position: relative; isolation: isolate; }
-.segmented__pill {
-  position: absolute;
-  z-index: -1;
-  inset-block: 2px;
-  left: 0;
-  border-radius: 0.375rem;
-  background: var(--background);
-  box-shadow: var(--shadow-sm), inset 0 0 0 1px var(--border);
-  transition: transform 380ms var(--ease-snap), width 380ms var(--ease-snap);
-}
-
-/* A value that just changed (prices, counters) flips in. */
-.value-flip { display: inline-block; animation: value-flip 420ms var(--ease-out) both; }
-@keyframes value-flip { from { opacity: 0; transform: translateY(40%); filter: blur(3px); } }
-
 /* Calm: legacy loops and entrances stop. */
-:is(.page-enter, .value-flip, .nav-progress[data-state], input:checked, .ambient__orb, .typing-line, .tick-in, .pop-in, .spin, .animate-pulse-dot, .comet-border) {
+:is(.page-enter, .nav-progress[data-state], input:checked, .pop-in, .spin, .animate-pulse-dot, .comet-border) {
   @variant calm { animation: none; }
 }
-.nav-item[aria-current="page"], .skeleton, .beam { @variant calm { &::before, &::after { animation: none; } } }
-.typing-line { @variant calm { width: 100%; } }
-.tick-in { @variant calm { opacity: 1; } }
-.tilt-in { @variant calm { transform: none; } }
-.tilt-shine:hover { @variant calm { transform: none; } }
-.segmented__pill { @variant calm { transition: none; } }
+.nav-item[aria-current="page"], .skeleton { @variant calm { &::before, &::after { animation: none; } } }
 details { @variant calm { &::details-content { transition: none; } } }
 }

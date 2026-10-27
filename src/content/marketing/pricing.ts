@@ -2,6 +2,7 @@ import { Building2, FileText, GitBranch, History, KeyRound, LifeBuoy, Lock, Mail
 import type { ContentPage, FAQItem } from "./types";
 import { site } from "@/config/site";
 import { PLANS, PLAN_ORDER, isUnlimited } from "@/config/plans";
+import type { Plan } from "@/db/schema";
 
 const sup = site.company.supportEmail;
 
@@ -11,6 +12,20 @@ const hours = (min: number) => (isUnlimited(min) ? "Custom" : `${n(min / 60)} ho
 const gb = (mb: number) => (isUnlimited(mb) ? "Custom" : mb >= 1000 ? `${mb / 1000} GB` : `${mb} MB`);
 const FREE = PLANS.free.limits;
 const TEAM = PLANS.team.limits;
+
+/**
+ * Plan buttons on the marketing site, in the site's sentence case and worded for a signed-out
+ * visitor ("Start with Pro", not "Upgrade to Pro"). Hrefs stay those of PLANS.
+ */
+const PLAN_CTA_LABELS: Record<Plan, string> = {
+  free: "Start building free",
+  pro: "Start with Pro",
+  team: "Start a team",
+  enterprise: "Contact sales",
+};
+export function planCta(id: Plan): { label: string; href: string } {
+  return { label: PLAN_CTA_LABELS[id] ?? PLANS[id].cta.label, href: PLANS[id].cta.href };
+}
 
 export const PRICING_FAQ: FAQItem[] = [
   { question: "Is the Free plan really free?", answer: `Yes. No card is required. It is limited to ${n(FREE.projects)} projects, ${n(FREE.aiRequestsPerMonth)} AI requests and ${n(FREE.aiTokensPerMonth)} tokens a month, ${hours(FREE.runtimeMinutesPerMonth)} of preview runtime, ${n(FREE.deploymentsPerMonth)} deployments, and ${gb(FREE.storageMb)} of storage.` },
@@ -40,11 +55,11 @@ export const PRICING_PAGES: Record<string, ContentPage> = {
           { type: "paragraph", text: "Limits apply per workspace, not per user. In a Team workspace all members share the pool." },
         ],
       },
-      { id: "enforcement", heading: "How limits are enforced", blocks: [{ type: "paragraph", text: "Before a run starts the server checks the workspace's usage for the current period against the plan (`assertQuota`). If starting the run would exceed either the request or the token limit, it is refused with a `quota_exceeded` error that names the limit and the amount used. Usage recorded so far is never adjusted downwards." }] },
+      { id: "enforcement", heading: "How limits are enforced", blocks: [{ type: "paragraph", text: "Before a run starts the server checks the workspace's usage for the current period against the plan, in `assertQuota`. If starting the run would exceed either the request or the token limit, it is refused with a `quota_exceeded` error that names the limit and the amount used. Usage recorded so far is never adjusted downwards." }] },
       { id: "period", heading: "Billing period", blocks: [{ type: "paragraph", text: "Usage periods are calendar months in UTC, starting on the first of the month. Unused requests and tokens do not roll over. Changing plans mid-month applies the new limits immediately to the current period's usage." }] },
       { id: "where", heading: "Where to see usage", blocks: [{ type: "paragraph", text: "Settings, Billing shows requests, tokens, runtime minutes, deployments, and storage for the current period. See [usage](/usage)." }] },
     ],
-    cta: { title: "See the plans", primary: { label: "Pricing", href: "/pricing" }, secondary: { label: "Compare plans", href: "/pricing/compare-plans" } },
+    cta: { title: "See the plans.", primary: { label: "Pricing", href: "/pricing" }, secondary: { label: "Compare plans", href: "/pricing/compare-plans" } },
   },
 
   "/usage": {
@@ -101,7 +116,7 @@ export const PRICING_PAGES: Record<string, ContentPage> = {
       { id: "discount", heading: "Student discount", blocks: [{ type: "note", variant: "info", title: "In review", text: "We have not launched a student discount or verification process yet. When we do, it will be announced in the [changelog](/changelog). Until then there is no student-specific pricing, and we would rather say so than invent a percentage." }] },
       { id: "learn", heading: "Learning with Codexa", blocks: [{ type: "paragraph", text: "Ask mode explains code without changing it, every AI run shows its plan and diff, and the [guides](/guides) walk through complete projects. See [Codexa for students](/solutions/students) and [education](/solutions/education)." }] },
     ],
-    cta: { title: "Start with the Free plan", primary: { label: "Start building", href: "/signup" }, secondary: { label: "Guides", href: "/guides" } },
+    cta: { title: "Start with the Free plan.", primary: { label: "Start building", href: "/signup" }, secondary: { label: "Guides", href: "/guides" } },
   },
 
   "/startup-program": {
@@ -161,7 +176,7 @@ export const PRICING_PAGES: Record<string, ContentPage> = {
       },
       { id: "more", heading: "More than ten people?", blocks: [{ type: "cta", title: `Need more than ${n(TEAM.members)} members?`, description: "Enterprise has custom limits, invoice billing, and security questionnaire support.", primary: { label: "Enterprise", href: "/enterprise" }, secondary: { label: "Compare plans", href: "/pricing/compare-plans" } }] },
     ],
-    cta: { title: "Start a Team workspace", primary: { label: "Start a Team", href: "/signup?plan=team" }, secondary: { label: "Compare plans", href: "/pricing/compare-plans" } },
+    cta: { title: "Start a Team workspace.", primary: planCta("team"), secondary: { label: "Compare plans", href: "/pricing/compare-plans" } },
   },
 
   "/enterprise": {
@@ -176,20 +191,22 @@ export const PRICING_PAGES: Record<string, ContentPage> = {
       {
         id: "included",
         heading: "What Enterprise adds",
+        navLabel: "Included",
         blocks: [
-          { type: "features", items: [
+          { type: "features", layout: "bento", items: [
+            { title: "Dedicated environments", description: "A separate Codexa instance with its own database and runner, so your projects never share a runtime with other customers.", icon: ShieldCheck, visual: "isolation" },
+            { title: "Audit log export", description: "Sign-ins, role changes, integrations and deployments, from the same audit log the product writes today, exported on request.", icon: FileText, visual: "audit-log" },
             { title: "Custom limits", description: "Projects, members, AI requests and tokens, runtime, deployments, and storage set per agreement.", icon: Building2 },
-            { title: "Dedicated environments", description: "A separate Codexa instance with its own database and runner.", icon: ShieldCheck },
-            { title: "Audit log export", description: "Sign-ins, role changes, integrations and deployments, exported on request.", icon: FileText },
             { title: "Security review support", description: "Questionnaire answers and a signed data processing agreement.", icon: Lock },
             { title: "Invoice billing", description: "Billed by invoice in INR or USD.", icon: Wallet },
             { title: "Your own AI keys", description: "Bring Anthropic or OpenAI keys; they are encrypted at rest.", icon: KeyRound },
           ] },
         ],
       },
-      { id: "not-yet", heading: "Not available yet", blocks: [{ type: "note", variant: "warning", title: "Said up front", text: "SSO/SAML is on the roadmap and not shipped. We hold no third-party certifications (SOC 2, ISO 27001). See the [security page](/security) for what is implemented." }] },
-      { id: "process", heading: "How it works", blocks: [{ type: "steps", items: [{ title: "Tell us", description: "Your team, requirements and timeline, in the form above." }, { title: "Talk", description: "We reply by email to arrange a call and a demo." }, { title: "Agree and provision", description: "We agree limits, environment and terms, then set up the workspace." }] }] },
+      { id: "not-yet", heading: "Not available yet", navLabel: "Said up front", blocks: [{ type: "note", variant: "warning", title: "Said up front", text: "SSO/SAML is on the roadmap and not shipped. We hold no third-party certifications (SOC 2, ISO 27001). See the [security page](/security) for what is implemented." }] },
+      { id: "process", heading: "How it works", navLabel: "Process", blocks: [{ type: "steps", items: [{ title: "Tell us", description: "Your team, requirements and timeline, in the form above." }, { title: "Talk", description: "We reply by email to arrange a call and a demo." }, { title: "Agree and provision", description: "We agree limits, environment and terms, then set up the workspace." }] }] },
     ],
+    cta: { title: "Tell us what you need.", description: "Team size, requirements and timeline are enough to start. We reply by email, usually within two business days.", primary: { label: "Back to the form", href: "#enterprise-form" }, secondary: { label: "Compare plans", href: "/pricing/compare-plans" } },
   },
 
   "/billing-faq": {

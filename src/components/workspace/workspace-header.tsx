@@ -60,9 +60,12 @@ export type RecentProject = { id: string; name: string; templateId: string | nul
 
 /**
  * The 52px workspace header. Left: logo, project switcher, the save pill. Centre: the canvas
- * view and device toggles. Right: the agent status (real elapsed time), Run (a state machine
+ * view, plus device toggles in the Preview view (in Split they live in the preview's own menu,
+ * next to the frame they size). Right: the agent status (real elapsed time), Run (a state machine
  * bound to the real runtime status), presence (only when connected), History, Share, Publish
  * and a labelled Tools menu.
+ * Phones keep the row to what fits: the name (no thumbnail), the save dot, a labelled Publish,
+ * Tools and the avatar. Run lives on the Preview tab there, which shows the runtime state.
  */
 export function WorkspaceHeader({
   name,
@@ -149,7 +152,7 @@ export function WorkspaceHeader({
       </Tooltip>
 
       {/* Project switcher + save pill */}
-      <div className="flex min-w-0 flex-1 items-center gap-1.5">
+      <div className="flex min-w-0 flex-1 items-center gap-1 sm:gap-1.5">
         {editing ? (
           <form
             className="flex min-w-0 items-center gap-1"
@@ -186,15 +189,15 @@ export function WorkspaceHeader({
             <DropdownMenuTrigger asChild>
               <button type="button" className="group flex min-w-0 items-center gap-2 rounded-lg py-1 pl-1 pr-1.5 text-left transition-colors hover:bg-muted focus-visible:outline-2 focus-visible:outline-ring data-[state=open]:bg-muted" aria-label={`${name}: project menu`}>
                 {template ? (
-                  <span className="relative h-5 w-8 shrink-0 overflow-hidden rounded-[5px] shadow-[0_0_0_1px_var(--border-strong)]" aria-hidden="true">
+                  <span className="relative h-5 w-8 shrink-0 overflow-hidden rounded-[5px] shadow-[0_0_0_1px_var(--border-strong)] max-sm:hidden" aria-hidden="true">
                     <TemplatePreview id={template.id} category={template.category} sizes="32px" className="size-full rounded-none border-0 shadow-none" imgClassName="size-full aspect-auto" />
                   </span>
                 ) : (
-                  <span className="flex h-5 w-8 shrink-0 items-center justify-center rounded-[5px] bg-muted text-muted-foreground shadow-[0_0_0_1px_var(--border)]" aria-hidden="true">
+                  <span className="flex h-5 w-8 shrink-0 items-center justify-center rounded-[5px] bg-muted text-muted-foreground shadow-[0_0_0_1px_var(--border)] max-sm:hidden" aria-hidden="true">
                     <LayoutGrid className="size-3" />
                   </span>
                 )}
-                <span className="truncate text-[14px] font-semibold tracking-tight">{name}</span>
+                <span className="min-w-0 truncate text-[14px] font-semibold tracking-tight">{name}</span>
                 <ChevronDown className="size-3.5 shrink-0 text-muted-foreground transition-transform group-data-[state=open]:rotate-180" aria-hidden="true" />
               </button>
             </DropdownMenuTrigger>
@@ -252,7 +255,7 @@ export function WorkspaceHeader({
       {isDesktop ? (
         <div className="hidden items-center justify-center gap-1.5 xl:flex">
           <ViewSwitch view={view} onViewChange={onViewChange} />
-          {view !== "code" ? (
+          {view === "preview" ? (
             <div className="hidden min-[1360px]:block">
               <DeviceSwitch device={device} onDeviceChange={onDeviceChange} />
             </div>
@@ -260,14 +263,16 @@ export function WorkspaceHeader({
         </div>
       ) : null}
 
-      <div className="flex shrink-0 items-center justify-end gap-1.5">
+      <div className="flex shrink-0 items-center justify-end gap-1 sm:gap-1.5">
         {isDesktop ? (
           <div className="flex items-center gap-1.5 xl:hidden">
             <ViewSwitch view={view} onViewChange={onViewChange} compact />
           </div>
         ) : null}
         <AgentPill onReveal={onRevealAgent} />
-        <RunButton canEdit={canEdit} onRun={onRun} />
+        <div className="hidden sm:flex">
+          <RunButton canEdit={canEdit} onRun={onRun} />
+        </div>
         <div className="hidden md:block">
           <PresenceAvatars />
         </div>
@@ -275,11 +280,12 @@ export function WorkspaceHeader({
           <button
             type="button"
             onClick={() => openTool("history")}
-            className="hidden h-8 items-center gap-1.5 rounded-[10px] px-2 text-[13px] text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:outline-2 focus-visible:outline-ring sm:inline-flex"
-            aria-label={`Version history${historyCount ? `, ${historyCount} checkpoint${historyCount === 1 ? "" : "s"}` : ""}`}
+            className="hidden h-8 items-center gap-1.5 rounded-[10px] px-2 text-[13px] font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:outline-2 focus-visible:outline-ring sm:inline-flex"
+            aria-label={`History${historyCount ? `, ${historyCount} version${historyCount === 1 ? "" : "s"}` : ""}`}
           >
             <History className="size-4" aria-hidden="true" />
-            {historyCount ? <span className="font-mono text-[11.5px] tabular-nums">{historyCount}</span> : null}
+            <span className="hidden xl:inline">History</span>{" "}
+            {historyCount ? <span className="rounded-full bg-muted px-1.5 font-mono text-[10.5px] leading-[18px] tabular-nums text-muted-foreground shadow-[inset_0_0_0_1px_var(--border)]">{historyCount}</span> : null}
           </button>
         </Tooltip>
         <button
@@ -289,12 +295,13 @@ export function WorkspaceHeader({
         >
           <Share2 className="size-3.5" aria-hidden="true" /> Share
         </button>
-        <PublishPopover onManage={onManageDeployments} compact={!isDesktop} open={publishOpen} onOpenChange={onPublishOpenChange} />
+        {/* Publish keeps its label at every width: it is the primary action. */}
+        <PublishPopover onManage={onManageDeployments} className="ws-publish max-sm:px-3" open={publishOpen} onOpenChange={onPublishOpenChange} />
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <button
               type="button"
-              className="inline-flex h-8 items-center gap-1.5 rounded-[10px] px-2 text-[13px] font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:outline-2 focus-visible:outline-ring data-[state=open]:bg-muted data-[state=open]:text-foreground"
+              className="inline-flex h-8 items-center gap-1.5 rounded-[10px] px-1.5 text-[13px] font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:outline-2 focus-visible:outline-ring data-[state=open]:bg-muted data-[state=open]:text-foreground sm:px-2"
               aria-label="Tools"
             >
               <Wrench className="size-4 lg:hidden" aria-hidden="true" />
@@ -370,7 +377,7 @@ function SavePill({ status, canEdit }: { status: SaveStatus; canEdit: boolean })
       aria-live="polite"
       data-testid="save-status"
       className={cn(
-        "ws-save inline-flex h-6 shrink-0 items-center gap-1.5 rounded-full px-1.5 text-[11.5px] font-medium sm:px-2",
+        "ws-save inline-flex h-6 shrink-0 items-center gap-1.5 rounded-full px-1 text-[11.5px] font-medium sm:px-2",
         !canEdit ? "bg-muted text-muted-foreground" : status === "error" ? "bg-danger/10 text-danger" : status === "unsaved" ? "ws-warn-ink bg-warning/10" : "text-muted-foreground",
       )}
     >

@@ -10,7 +10,22 @@ type Check = { id: string; ok: boolean | null; title: string; detail: string; hr
  * Security status: real checks only (password, verified email, other sessions, GitHub link).
  * No score and no claims about features that do not exist (there is no 2FA yet).
  */
-export function SecurityStatus({ passwordSet, emailVerified, email, otherSessions, github }: { passwordSet: boolean; emailVerified: boolean; email: string; otherSessions: number; github: { linked: boolean; username: string | null } | null }) {
+export function SecurityStatus({
+  passwordSet,
+  emailVerified,
+  emailConfigured,
+  email,
+  otherSessions,
+  github,
+}: {
+  passwordSet: boolean;
+  emailVerified: boolean;
+  /** capabilities.email: "Resend" is offered only when this server can deliver the link. */
+  emailConfigured: boolean;
+  email: string;
+  otherSessions: number;
+  github: { linked: boolean; username: string | null } | null;
+}) {
   const checks: Check[] = [
     {
       id: "password",
@@ -24,9 +39,13 @@ export function SecurityStatus({ passwordSet, emailVerified, email, otherSession
       id: "email",
       ok: emailVerified,
       title: emailVerified ? "Email verified" : "Email not verified",
-      detail: emailVerified ? email : `Deployments unlock once ${email} is verified.`,
+      detail: emailVerified
+        ? email
+        : emailConfigured
+          ? `Deployments unlock once ${email} is verified.`
+          : "Email delivery isn't configured on this server; ask the operator to verify your account.",
       icon: emailVerified ? <BadgeCheck /> : <MailWarning />,
-      action: emailVerified ? undefined : <ResendVerificationButton className="mt-2.5 h-7 px-2.5 text-xs" />,
+      action: emailVerified || !emailConfigured ? undefined : <ResendVerificationButton emailConfigured className="mt-2.5 h-7 px-2.5 text-xs" />,
     },
     {
       id: "sessions",

@@ -2,9 +2,10 @@ import * as React from "react";
 import { cn } from "@/lib/utils";
 import { AutoGrowTextarea } from "./autogrow-textarea";
 
-// Controls: 10px radius, hairline border, an ember focus glow (PLAN §2.4, §5.5).
+// Controls: 10px radius, hairline border, a neutral `--focus` ring. Danger border/glow is reserved for
+// aria-invalid so an autofocused empty field never reads as an error (DESIGN.md §6).
 export const controlClasses =
-  "w-full rounded-md border border-border bg-input text-sm text-foreground shadow-[inset_0_1px_0_var(--hairline)] transition-[border-color,box-shadow,background-color] duration-200 placeholder:text-muted-foreground/80 hover:border-border-strong focus-visible:border-ring/70 focus-visible:shadow-[0_0_0_4px_color-mix(in_oklab,var(--signal)_16%,transparent)] focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50 aria-invalid:border-danger aria-invalid:focus-visible:shadow-[0_0_0_4px_color-mix(in_oklab,var(--danger)_16%,transparent)]";
+  "w-full rounded-md border border-border bg-input text-sm text-foreground shadow-[inset_0_1px_0_var(--hairline)] transition-[border-color,box-shadow,background-color] duration-200 placeholder:text-muted-foreground/80 hover:border-border-strong focus-visible:border-focus focus-visible:shadow-[0_0_0_4px_color-mix(in_oklab,var(--focus)_18%,transparent)] focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50 aria-invalid:border-danger aria-invalid:focus-visible:border-danger aria-invalid:focus-visible:shadow-[0_0_0_4px_color-mix(in_oklab,var(--danger)_16%,transparent)]";
 
 export const Input = React.forwardRef<HTMLInputElement, React.InputHTMLAttributes<HTMLInputElement>>(({ className, type = "text", ...props }, ref) => (
   <input ref={ref} type={type} className={cn("flex h-10 px-3 py-2", controlClasses, className)} {...props} />

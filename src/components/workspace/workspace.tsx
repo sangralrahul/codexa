@@ -143,7 +143,17 @@ function Slot({ host }: { host: HTMLDivElement | undefined }) {
 
 const VIEWS: CanvasView[] = ["preview", "split", "code"];
 const DEVICES: Device[] = ["desktop", "tablet", "mobile"];
-const EXPLORER_PX = 200;
+/** Default widths: the agent column (380 at ≥1440, else 360), the explorer, and the preview's share of the canvas. */
+/** Below 1440 the agent column opens at its minimum so the canvas keeps room for real code. */
+const AGENT_PX = 340;
+const AGENT_WIDE_PX = 380;
+const EXPLORER_PX = 180;
+/** In split, the preview takes this share of the canvas left after the explorer. */
+const PREVIEW_SHARE = 0.4;
+const splitFor = (files: number): SplitLayout => {
+  const preview = Math.round((100 - files) * PREVIEW_SHARE * 10) / 10;
+  return { files, editor: 100 - files - preview, preview };
+};
 const DOCK_COLLAPSED_PX = 34;
 
 export type WorkspaceTemplate = { id: string; name: string; category: string } | null;
@@ -215,6 +225,8 @@ function Shell({
   const [changesVersion, setChangesVersion] = useState(0);
   const [cursor, setCursor] = useState<{ line: number; column: number } | null>(null);
   const [agentCollapsed, setAgentCollapsed] = useState(false);
+  // The explorer and editor read as one "Code" card (joined by a hairline) while the explorer is open.
+  const [filesShown, setFilesShown] = useState(true);
   const editorHandle = useRef<CodeEditorHandle | null>(null);
   const shellGroup = useRef<GroupImperativeHandle | null>(null);
   const canvasGroup = useRef<GroupImperativeHandle | null>(null);
@@ -249,7 +261,7 @@ function Shell({
     if (shell && typeof shell.agent === "number" && typeof shell.canvas === "number") setShellLayout(shell);
     // First canvas layout for the remembered view, estimated from the window (later switches measure the canvas).
     const startView = v && VIEWS.includes(v as CanvasView) ? (v as CanvasView) : "split";
-    const agentPx = shell && typeof shell.agent === "number" ? (shell.agent / 100) * window.innerWidth : window.innerWidth >= 1440 ? 400 : 360;
+    const agentPx = shell && typeof shell.agent === "number" ? (shell.agent / 100) * window.innerWidth : window.innerWidth >= 1440 ? AGENT_WIDE_PX : AGENT_PX;
     const canvasPx = Math.max(400, window.innerWidth - agentPx - 18);
     const files = Math.min(40, Math.max(8, (EXPLORER_PX / canvasPx) * 100));
     setInitialCanvas(
@@ -257,7 +269,7 @@ function Shell({
         ? { files: 0, editor: 0, preview: 100 }
         : startView === "code"
           ? { files, editor: 100 - files, preview: 0 }
-          : (savedSplit.current ?? { files, editor: 100 - files - 40, preview: 40 }),
+          : (savedSplit.current ?? splitFor(files)),
     );
     setMounted(true);
     /* eslint-enable react-hooks/set-state-in-effect */
@@ -274,13 +286,13 @@ function Shell({
   // ---- canvas layout per view -------------------------------------------------------------
   const layoutFor = useCallback(
     (v: CanvasView): SplitLayout => {
-      const width = canvasEl.current?.offsetWidth || (typeof window !== "undefined" ? window.innerWidth - (isWide ? 412 : 372) : 1000);
+      const width = canvasEl.current?.offsetWidth || (typeof window !== "undefined" ? window.innerWidth - (isWide ? AGENT_WIDE_PX : AGENT_PX) - 12 : 1000);
       const files = Math.min(40, Math.max(8, (EXPLORER_PX / Math.max(400, width)) * 100));
       if (v === "preview") return { files: 0, editor: 0, preview: 100 };
       if (v === "code") return { files, editor: 100 - files, preview: 0 };
       const saved = savedSplit.current;
       if (saved && saved.preview > 0 && saved.editor > 0) return saved;
-      return { files, editor: 100 - files - 40, preview: 40 };
+      return splitFor(files);
     },
     [isWide],
   );
@@ -343,7 +355,7 @@ function Shell({
   );
 
   // ---- agent column -------------------------------------------------------------------------
-  const agentDefault = isWide ? 400 : 360;
+  const agentDefault = isWide ? AGENT_WIDE_PX : AGENT_PX;
   const revealAgent = useCallback(
     (focus = false) => {
       if (!isDesktop) {
@@ -567,14 +579,16 @@ function Shell({
         if (v === "search") setSearchFocus((n) => n + 1);
       }}
       options={[
-        { value: "files", label: "Files", icon: <Files /> },
-        { value: "search", label: "Search", icon: <Search /> },
+        // Icon-only when the explorer is narrow (labels stay for screen readers, titles for pointer users),
+        // so the switch never spills over the explorer's action buttons.
+        { value: "files", label: <span className="@max-[15.5rem]/explorer:sr-only">Files</span>, icon: <Files />, title: "Files" },
+        { value: "search", label: <span className="@max-[15.5rem]/explorer:sr-only">Search</span>, icon: <Search />, title: "Search in files" },
       ]}
     />
   );
 
   const explorer = (
-    <div className="flex h-full min-h-0 flex-col">
+    <div className="@container/explorer flex h-full min-h-0 flex-col">
       <div className="min-h-0 flex-1" hidden={side !== "files"}>
         <FileExplorer state={{ ...state, openFile }} canEdit={canEdit} changes={changes.changes} touched={agent.touched} header={sideSwitch} />
       </div>
@@ -610,7 +624,7 @@ function Shell({
     <ChatPanel projectId={projectId} projectName={project.name} templateCategory={template?.category ?? null} framework={project.framework} canEdit={canEdit} showOperatorDetails={isAdmin} />
   );
 
-  const preview = <PreviewPanel device={isDesktop ? device : "desktop"} onDeviceChange={isDesktop ? setDevice : undefined} template={template} canEdit={canEdit} showOperatorDetails={isAdmin} />;
+  const preview = <PreviewPanel device={isDesktop ? device : "desktop"} onDeviceChange={isDesktop ? setDevice : undefined} canEdit={canEdit} showOperatorDetails={isAdmin} />;
 
   const dockEl = <Dock open={isDesktop ? dock.open : true} collapsible={isDesktop} onOpenChange={(o) => setDockOpen(o)} tab={dock.tab} onTabChange={(t) => setDock((d) => ({ ...d, tab: t }))} problems={problems} />;
 
@@ -713,14 +727,14 @@ function Shell({
                           defaultLayout={initialCanvas ?? undefined}
                           onLayoutChanged={onCanvasLayout}
                         >
-                          <Panel id="files" minSize="150px" maxSize="40%" collapsible collapsedSize={0}>
-                            <div className="ws-card h-full" inert={view === "preview"}>
+                          <Panel id="files" minSize="150px" maxSize="40%" collapsible collapsedSize={0} onResize={(size) => setFilesShown(size.inPixels > 1)}>
+                            <div className="ws-card ws-code-l h-full" inert={view === "preview"}>
                               <Slot host={hosts?.explorer} />
                             </div>
                           </Panel>
-                          <Separator className="ws-sep ws-sep--x" data-off={view === "preview" ? "" : undefined} disabled={view === "preview"} aria-label="Resize the explorer" />
+                          <Separator className={cn("ws-sep ws-sep--x", filesShown && "ws-sep--seam")} data-off={view === "preview" ? "" : undefined} disabled={view === "preview"} aria-label="Resize the explorer" />
                           <Panel id="editor" minSize="18%" collapsible collapsedSize={0}>
-                            <div className="ws-card h-full" inert={view === "preview"}>
+                            <div className={cn("ws-card h-full", filesShown && "ws-code-r")} inert={view === "preview"}>
                               <Slot host={hosts?.editor} />
                             </div>
                           </Panel>
@@ -850,12 +864,13 @@ function Shell({
 /** Mirrors the shell while localStorage (view, sizes) is read after mount, so nothing jumps. */
 function ShellSkeleton() {
   return (
-    <div className="grid min-h-0 flex-1 grid-cols-[360px_1fr] gap-1.5 pb-1.5 max-lg:grid-cols-1 min-[1440px]:grid-cols-[400px_1fr]" aria-hidden="true">
+    <div className="grid min-h-0 flex-1 grid-cols-[360px_1fr] gap-1.5 pb-1.5 max-lg:grid-cols-1 min-[1440px]:grid-cols-[380px_1fr]" aria-hidden="true">
       <div className="ws-card max-lg:hidden" />
-      <div className="grid grid-cols-[200px_1fr_40%] gap-1.5 max-lg:grid-cols-1">
-        <div className="ws-card max-lg:hidden" />
-        <div className="ws-card max-lg:hidden" />
-        <div className="ws-card ws-stage" />
+      <div className="grid grid-cols-[minmax(0,1fr)_36%] gap-1.5 max-lg:grid-cols-1">
+        <div className="ws-card grid grid-cols-[192px_1fr] max-lg:hidden">
+          <div className="border-r border-border" />
+        </div>
+        <div className="ws-card" />
       </div>
     </div>
   );
@@ -927,7 +942,7 @@ function MiniComposer({ disabled, running }: { disabled: boolean; running: boole
         value={text}
         onChange={(e) => setText(e.target.value)}
         disabled={disabled}
-        placeholder={disabled ? "AI is not configured on this server" : running ? "Queue the next change…" : "Describe a change…"}
+        placeholder={disabled ? "Chat turns on once AI is configured" : running ? "Queue the next change…" : "Describe a change…"}
         className="h-9 min-w-0 flex-1 bg-transparent text-[15px] outline-none placeholder:text-muted-foreground disabled:cursor-not-allowed"
         maxLength={8000}
       />

@@ -99,8 +99,19 @@ export default async function StatusPage() {
                 </div>
                 <p className="mt-2 flex-1 text-[13.5px] leading-relaxed text-muted-foreground">{c.detail}</p>
                 <dl className="mt-4 flex items-center justify-between border-t border-border pt-3 font-mono text-[12px]">
-                  <dt className="text-foreground-dim">Latency</dt>
-                  <dd className="tabular-nums text-foreground">{typeof c.latencyMs === "number" ? `${c.latencyMs} ms` : c.state === "not_configured" ? "n/a" : "not probed"}</dd>
+                  {/* A down component has no response time: show how long the failed check took instead. */}
+                  <dt className="text-foreground-dim">{c.state === "down" ? "Check" : "Latency"}</dt>
+                  <dd className={cn("tabular-nums", c.state === "down" ? "text-muted-foreground" : "text-foreground")}>
+                    {c.state === "down"
+                      ? typeof c.latencyMs === "number"
+                        ? `no response · failed after ${c.latencyMs} ms`
+                        : "no response"
+                      : typeof c.latencyMs === "number"
+                        ? `${c.latencyMs} ms`
+                        : c.state === "not_configured"
+                          ? "n/a"
+                          : "not probed"}
+                  </dd>
                 </dl>
               </li>
             );
@@ -114,7 +125,7 @@ export default async function StatusPage() {
             How to read this page
           </h2>
           <p className="mt-3 text-[14.5px] leading-relaxed text-muted-foreground">
-            &quot;Not configured&quot; means the operator of this instance has not enabled that provider; it is not an outage. &quot;Configured, not probed&quot; means the key exists but we do not call the external provider from this page, to avoid consuming quota. Latency is the time this server took to get an answer during this check.
+            &quot;Not configured&quot; means the operator of this instance has not enabled that provider; it is not an outage. &quot;Configured, not probed&quot; means the key exists but we do not call the external provider from this page, to avoid consuming quota. Latency is the time this server took to get an answer during this check; for a component that is down, it is how long the failed check took.
           </p>
         </div>
         <div>

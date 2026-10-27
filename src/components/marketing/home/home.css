@@ -123,6 +123,7 @@
 }
 @media (width >= 40rem) { .wall-tile { width: 300px; } }
 @media (width >= 64rem) { .wall-tile { width: 360px; } }
+/* The name card is opaque (never glass): it sits on white screenshots in both themes. */
 .wall-tile__caption {
   position: absolute;
   inset: auto 8px 8px 8px;
@@ -131,7 +132,9 @@
   gap: 8px;
   padding: 8px 12px;
   border-radius: 10px;
-  border: 1px solid var(--border);
+  border: 1px solid var(--border-strong);
+  background: var(--card);
+  color: var(--foreground);
   box-shadow: var(--shadow-md);
   text-align: left;
 }
@@ -140,35 +143,56 @@
 .wall-tile__name > b { font-size: 13px; font-weight: 500; color: var(--foreground); }
 .wall-tile__name > span { font-size: 11px; color: var(--muted-foreground); }
 .wall-tile__open { display: inline-flex; flex-shrink: 0; align-items: center; gap: 2px; font-size: 11.5px; font-weight: 500; color: var(--foreground); }
-.wall-tile:is(:hover, :focus-visible) {
+.wall-tile:focus-visible {
   transform: translateY(-6px) scale(1.04);
   border-color: color-mix(in oklab, var(--signal) 45%, var(--border-strong));
   box-shadow: var(--shadow-xl);
   z-index: 2;
+}
+/* Hover lift and name card only where hover is real (a tap must not leave a sticky hover state). */
+@media (hover: hover) {
+  .wall-tile:hover {
+    transform: translateY(-6px) scale(1.04);
+    border-color: color-mix(in oklab, var(--signal) 45%, var(--border-strong));
+    box-shadow: var(--shadow-xl);
+    z-index: 2;
+  }
+  .wall-tile:hover .wall-tile__caption { opacity: 1; transform: none; }
 }
 .wall-tile__caption {
   opacity: 0;
   transform: translateY(8px);
   transition: opacity var(--dur-3) var(--ease-out), transform var(--dur-4) var(--ease-out);
 }
-.wall-tile:is(:hover, :focus-visible) .wall-tile__caption { opacity: 1; transform: none; }
-@media (hover: none) {
-  .wall-tile__caption { opacity: 1; transform: none; }
-}
+.wall-tile:focus-visible .wall-tile__caption { opacity: 1; transform: none; }
 
-/* Phones and small tablets: one flat drifting row (no 3D plane: it crops and blurs the shots at this size),
-   edge-faded sideways, with a compact name tag instead of the hover caption. */
+/* Phones and small tablets: one flat drifting row (no 3D plane: it crops and blurs the shots at this size).
+   The row fades out over its last 20px at each side (a mask to transparent, no overlay), and each tile
+   carries its name in a strip under the screenshot instead of the hover card. */
 @media (width < 48rem) {
-  .wall-stage {
-    perspective: none;
-    mask-image: linear-gradient(to right, transparent, black 7%, black 93%, transparent);
-  }
+  .wall-stage { perspective: none; mask-image: none; }
+  .wall-row.marquee { mask-image: linear-gradient(to right, transparent, #000 20px, #000 calc(100% - 20px), transparent); }
   .wall-plane { transform: none !important; animation: none !important; }
   .wall-cell { padding: 8px 6px; }
   .wall-tile { width: 260px; border-radius: 14px; }
-  .wall-tile__caption { inset: auto 6px 6px auto; max-width: calc(100% - 12px); padding: 4px 10px; border-radius: 999px; }
-  .wall-tile__name > b { font-size: 12px; }
+  .wall-tile__caption {
+    position: static;
+    opacity: 1;
+    transform: none;
+    padding: 7px 12px;
+    border: 0;
+    border-top: 1px solid var(--border);
+    border-radius: 0;
+    box-shadow: none;
+  }
+  .wall-tile__name > b { font-size: 12.5px; line-height: 16px; }
   .wall-tile__open, .wall-tile__name > span { display: none; }
+}
+@media (width < 48rem) and (prefers-reduced-motion: reduce) {
+  .wall-row.marquee { mask-image: none; }
+}
+@media (width < 48rem) {
+  [data-motion="reduced"] .wall-row.marquee { mask-image: none; }
 }
 
 /* Calm: a flat, static grid of the first row. */
@@ -176,12 +200,12 @@
   .wall-stage { height: auto !important; mask-image: none; }
   .wall-plane { transform: none !important; animation: none !important; }
   .wall-row + .wall-row { display: none !important; }
-  .wall-tile:is(:hover, :focus-visible) { transform: none; }
+  .wall-tile:is(:hover, :focus-visible) { transform: none !important; }
 }
 [data-motion="reduced"] .wall-stage { height: auto !important; mask-image: none; }
 [data-motion="reduced"] .wall-plane { transform: none !important; animation: none !important; }
 [data-motion="reduced"] .wall-row + .wall-row { display: none !important; }
-[data-motion="reduced"] .wall-tile:is(:hover, :focus-visible) { transform: none; }
+[data-motion="reduced"] .wall-tile:is(:hover, :focus-visible) { transform: none !important; }
 
 /* ---------- Integrations constellation (H6) ---------- */
 @keyframes orbit-spin { to { rotate: 360deg; } }

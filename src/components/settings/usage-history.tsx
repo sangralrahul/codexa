@@ -95,14 +95,16 @@ export function UsageHistogram({ days, periodDays, totals }: { days: UsageDay[];
           onPointerLeave={() => setActive(null)}
           className="usage-chart relative h-[176px] rounded-[12px] outline-none focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ring"
         >
-          {/* Grid: max, half, zero. */}
-          <div aria-hidden="true" className="pointer-events-none absolute inset-0 flex flex-col justify-between pb-6">
-            {[max, max / 2, 0].map((v, i) => (
-              <div key={i} className="relative border-t border-dashed border-border/80 first:border-solid first:border-transparent">
-                {total ? <span className="absolute -top-2 right-0 bg-card px-1 font-mono text-[10px] tabular-nums text-foreground-dim">{Number.isInteger(v) ? v.toLocaleString("en-US") : v.toFixed(1)}</span> : null}
-              </div>
-            ))}
-          </div>
+          {/* Grid: max, half, zero. Only drawn when there is data, so no line runs behind the empty state. */}
+          {total ? (
+            <div aria-hidden="true" className="pointer-events-none absolute inset-0 flex flex-col justify-between pb-6">
+              {[max, max / 2, 0].map((v, i) => (
+                <div key={i} className="relative border-t border-dashed border-border/80 first:border-solid first:border-transparent">
+                  <span className="absolute -top-2 right-0 bg-card px-1 font-mono text-[10px] tabular-nums text-foreground-dim">{Number.isInteger(v) ? v.toLocaleString("en-US") : v.toFixed(1)}</span>
+                </div>
+              ))}
+            </div>
+          ) : null}
           <div aria-hidden="true" className="absolute inset-x-0 bottom-6 top-0 flex items-end gap-[3px] pr-9 sm:gap-1">
             {Array.from({ length: slots }).map((_, i) => {
               const d = days[i];

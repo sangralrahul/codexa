@@ -1,6 +1,5 @@
 "use client";
 
-import * as React from "react";
 import { Check, GitBranch, GitCommitHorizontal } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useScript } from "./use-script";
@@ -36,31 +35,40 @@ export function CommitList({ playing, className, commits = DEFAULT_COMMITS, bran
           </span>
         ) : null}
       </div>
-      <ol className="relative space-y-1">
+      <div className="relative">
         <span className="absolute bottom-3 left-[13px] top-3 w-px bg-border" />
-        {list.map((c, i) => {
-          const fresh = started && !calm && i === 0 && showNewest && c === commits[0];
-          const row = (
-            <li className={cn("relative flex items-center gap-2.5 rounded-[10px] px-1.5 py-1.5", i === 0 && showNewest && "bg-foreground/[0.04] shadow-[inset_0_0_0_1px_var(--border)]")}>
-              <span className={cn("relative z-[1] flex size-[22px] shrink-0 items-center justify-center rounded-full border bg-card", i === 0 ? "border-signal/50 text-signal" : "border-border text-muted-foreground", fresh && "materialize__icon")}>
-                <GitCommitHorizontal className="size-3.5" />
-              </span>
-              <span className="w-[60px] shrink-0 font-mono text-[11.5px] text-muted-foreground">{c.hash}</span>
-              <span className="min-w-0 flex-1 truncate">{c.message}</span>
-              <span className="shrink-0 font-mono text-[11px] tabular-nums">
-                <span className="text-success">+{c.added}</span> <span className="text-danger">−{c.removed}</span>
-              </span>
-            </li>
-          );
-          return fresh ? (
-            <div key={c.hash} className="materialize">
-              <div>{row}</div>
-            </div>
-          ) : (
-            <React.Fragment key={c.hash}>{row}</React.Fragment>
-          );
-        })}
-      </ol>
+        <ol className="relative space-y-1">
+          {list.map((c, i) => {
+            const fresh = started && !calm && i === 0 && showNewest && c === commits[0];
+            const rowClass = cn("relative flex items-center gap-2.5 rounded-[10px] px-1.5 py-1.5", i === 0 && showNewest && "bg-foreground/[0.04] shadow-[inset_0_0_0_1px_var(--border)]");
+            const cells = (
+              <>
+                <span className={cn("relative z-[1] flex size-[22px] shrink-0 items-center justify-center rounded-full border bg-card", i === 0 ? "border-signal/50 text-signal" : "border-border text-muted-foreground", fresh && "materialize__icon")}>
+                  <GitCommitHorizontal className="size-3.5" />
+                </span>
+                <span className="w-[60px] shrink-0 font-mono text-[11.5px] text-muted-foreground">{c.hash}</span>
+                <span className="min-w-0 flex-1 truncate">{c.message}</span>
+                <span className="shrink-0 font-mono text-[11px] tabular-nums">
+                  <span className="text-success">+{c.added}</span> <span className="text-danger">−{c.removed}</span>
+                </span>
+              </>
+            );
+            // The materialising row keeps valid list markup: <li class="materialize"> → <div> (the
+            // collapsing grid row) → the row itself.
+            return fresh ? (
+              <li key={c.hash} className="materialize">
+                <div>
+                  <div className={rowClass}>{cells}</div>
+                </div>
+              </li>
+            ) : (
+              <li key={c.hash} className={rowClass}>
+                {cells}
+              </li>
+            );
+          })}
+        </ol>
+      </div>
       <p className="text-[11px] text-muted-foreground">Sample commits</p>
     </div>
   );

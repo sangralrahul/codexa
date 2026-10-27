@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 import { Markdown, TableOfContents } from "@/components/content";
 import { BlogHero } from "@/components/content/blog-cover";
 import { ReadingProgress } from "@/components/marketing/reading-progress";
+import { formatDate } from "@/lib/content";
 import type { ContentDoc, ContentSummary, Heading } from "@/lib/content/types";
 import { Breadcrumbs, type Crumb } from "./breadcrumbs";
 import { ArticleMeta, EditOnGitHub, PrevNext, RelatedLinks } from "./article-bits";
@@ -136,7 +137,7 @@ export function ContentArticle({
           <>
             <div className="flex flex-wrap items-center justify-between gap-3 text-sm text-muted-foreground">
               <span>
-                Last updated <time dateTime={doc.updated ?? doc.date}>{doc.updated ?? doc.date}</time>
+                Last updated <time dateTime={doc.updated ?? doc.date}>{formatDate(doc.updated ?? doc.date)}</time>
               </span>
               <EditOnGitHub sourceId={doc.sourceId} />
             </div>
@@ -145,7 +146,10 @@ export function ContentArticle({
           </>
         }
       >
-        <Markdown className="max-w-[46rem]">{doc.body}</Markdown>
+        {/* Two or more numbered H2s ("## 1. …") read as a sequence: render them as a step rail. */}
+        <Markdown className="max-w-[46rem]" steps={doc.headings.filter((h) => h.depth === 2 && /^\d+\.\s/.test(h.text)).length >= 2}>
+          {doc.body}
+        </Markdown>
       </ArticleBody>
     </ArticleShell>
   );

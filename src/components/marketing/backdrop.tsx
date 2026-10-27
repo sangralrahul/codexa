@@ -104,14 +104,6 @@ function Marked({ text, mark, highlight }: { text: string; mark?: string; highli
 }
 
 /**
- * @deprecated The mechanical accent on every title is retired: pass an explicit
- * `highlight` written by a person instead. Always returns undefined.
- */
-export function autoHighlight(_title: string): string | undefined {
-  return undefined;
-}
-
-/**
  * Page-level h1 in the display face. It paints immediately (it is usually the LCP
  * element; the route's page-enter already eases it in). No automatic accent: pass
  * `highlight` (two-tone .text-dim) and/or `mark` (selection mark) explicitly.

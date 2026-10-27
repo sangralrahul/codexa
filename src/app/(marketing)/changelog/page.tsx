@@ -15,6 +15,18 @@ export const metadata = routeMetadata("/changelog");
 /** Dot colours for the areas of a release (decorative; the area name is always written out). */
 const TONES = ["var(--signal)", "var(--accent)", "var(--info)", "var(--success)", "var(--warning)", "var(--syn-attr)", "var(--syn-keyword)", "var(--syn-tag)"];
 
+/** One noun for a release's entries, everywhere on the page. */
+function areas(n: number) {
+  return `${n} ${n === 1 ? "area" : "areas"}`;
+}
+
+/** A one-sentence summary for a release with several areas: the area names, joined. */
+function latestSummary(items: ContentDoc[]) {
+  const names = items.map((e) => e.title.toLowerCase());
+  const list = names.length > 1 ? `${names.slice(0, -1).join(", ")} and ${names[names.length - 1]}` : names[0];
+  return `This release covers ${list}.`;
+}
+
 /** Inline notes: headings become bold lead-ins so the page keeps one outline and unique ids. */
 function inlineNotes(body: string) {
   return body.replace(/^#{2,6}\s+(.+)$/gm, "**$1**");
@@ -22,6 +34,51 @@ function inlineNotes(body: string) {
 
 function anchor(version: string) {
   return `v-${version.replace(/\./g, "-")}`;
+}
+
+/** Plain text of one line of inline markdown (links keep their text; emphasis and code ticks go). */
+function plainInline(md: string) {
+  return md
+    .replace(/!?\[([^\]]*)\]\([^)]*\)/g, "$1")
+    .replace(/[*_`]+/g, "")
+    .trim();
+}
+
+type Highlight = { title: string; text: string; href: string };
+
+/** Longest highlight blurb, so the hero cards read as complete sentences without clamping. */
+const BLURB_MAX = 90;
+
+/**
+ * A short, complete blurb taken verbatim from the notes: the first sentence (across the given
+ * candidates) that fits, else the first sentence cut at a word boundary with an ellipsis.
+ */
+function blurb(candidates: string[]) {
+  const sentences = candidates.flatMap((c) => plainInline(c).split(/(?<=[.!?])\s+(?=[A-Z0-9"“])/));
+  const fit = sentences.find((t) => t.length > 0 && t.length <= BLURB_MAX);
+  if (fit) return fit;
+  const first = sentences[0] ?? "";
+  const cut = first.slice(0, BLURB_MAX - 1);
+  return `${cut.slice(0, Math.max(cut.lastIndexOf(" "), 0)).replace(/[,;:\s]+$/, "")}…`;
+}
+
+/**
+ * Up to three headline highlights for the release hero, from the notes themselves: the first three
+ * areas when the release has several, otherwise the lead entry's own sections (heading + a short point).
+ */
+function releaseHighlights(items: ContentDoc[]): Highlight[] {
+  if (items.length >= 3) return items.slice(0, 3).map((e) => ({ title: e.title, text: blurb([e.description]), href: `#${e.slug}` }));
+  const lead = items[0];
+  if (!lead) return [];
+  const out: Highlight[] = [];
+  for (const section of lead.body.split(/^## /m).slice(1)) {
+    const [heading, ...rest] = section.split("\n");
+    const points = rest.filter((l) => /^[-*]\s+/.test(l)).map((l) => l.replace(/^[-*]\s+/, ""));
+    if (!points.length) continue;
+    out.push({ title: plainInline(heading), text: blurb(points), href: `#${lead.slug}` });
+    if (out.length === 3) break;
+  }
+  return out;
 }
 
 export default async function ChangelogPage() {
@@ -33,6 +90,7 @@ export default async function ChangelogPage() {
   }
   const tone = new Map(entries.map((e, i) => [e.slug, TONES[i % TONES.length]]));
   const [latestVersion, latestItems] = [...versions.entries()][0] ?? [null, []];
+  const highlights = releaseHighlights(latestItems);
 
   return (
     <div data-tone="docs" className="container-x pb-20 pt-6 sm:pt-8 lg:pt-10">
@@ -59,8 +117,8 @@ export default async function ChangelogPage() {
           {latestVersion ? (
             <section aria-labelledby="latest-release" className="e2 relative mt-12 overflow-hidden rounded-[24px] p-6 sm:p-8">
               <div aria-hidden="true" className="bg-blueprint absolute inset-0 opacity-50 [mask-image:linear-gradient(to_right,black,transparent_70%)]" />
-              <div className="relative grid gap-8 lg:grid-cols-[minmax(0,0.8fr)_minmax(0,1.2fr)] lg:items-center">
-                <div>
+              <div className="relative grid gap-8 lg:grid-cols-[minmax(0,0.75fr)_minmax(0,1.25fr)] lg:gap-12">
+                <div className="flex flex-col">
                   <p className="text-label flex items-center gap-2 text-muted-foreground">
                     <span aria-hidden="true" className="size-1.5 rounded-full bg-signal shadow-[0_0_0_3px_color-mix(in_oklab,var(--signal)_18%,transparent)]" />
                     Latest release
@@ -69,27 +127,38 @@ export default async function ChangelogPage() {
                     {latestVersion === "unversioned" ? "Updates" : `v${latestVersion}`}
                   </h2>
                   <p className="text-meta mt-4 text-muted-foreground">
-                    <time dateTime={latestItems[0].date}>{formatDate(latestItems[0].date)}</time> · {latestItems.length} {latestItems.length === 1 ? "area" : "areas"}
+                    <time dateTime={latestItems[0].date}>{formatDate(latestItems[0].date)}</time>
+                    {latestItems.length > 1 ? ` · ${areas(latestItems.length)}` : highlights.length ? ` · ${highlights.length} ${highlights.length === 1 ? "highlight" : "highlights"}` : null}
                   </p>
-                  <a href={`#${anchor(latestVersion)}`} className={`${buttonClasses("secondary", "md")} mt-6`}>
+                  <a href={`#${anchor(latestVersion)}`} className={`${buttonClasses("secondary", "md")} mt-6 self-start lg:mt-auto`}>
                     Read the ship log
                     <ArrowRight className="size-4" aria-hidden="true" />
                   </a>
                 </div>
-                <ul className="grid gap-2 sm:grid-cols-2" aria-label={`Areas in ${latestVersion}`}>
-                  {latestItems.map((e) => (
-                    <li key={e.slug}>
-                      <a
-                        href={`#${e.slug}`}
-                        className="group flex items-center gap-3 rounded-[12px] border border-border bg-card/80 px-3.5 py-2.5 text-sm font-medium transition-colors duration-(--dur-2) hover:border-border-strong focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
-                      >
-                        <span aria-hidden="true" className="size-2 shrink-0 rounded-full" style={{ background: tone.get(e.slug) }} />
-                        <span className="min-w-0 flex-1 truncate">{e.title}</span>
-                        <ArrowRight className="size-3.5 text-muted-foreground transition-transform duration-(--dur-2) group-hover:translate-x-0.5" aria-hidden="true" />
-                      </a>
-                    </li>
-                  ))}
-                </ul>
+                <div>
+                  {/* The full summary lives once, in the timeline below; the hero names the release and its highlights. */}
+                  <p className="text-balance text-[20px] font-semibold leading-snug tracking-[-0.015em] text-foreground sm:text-[24px]">
+                    {latestItems.length === 1 ? latestItems[0].title : latestSummary(latestItems)}
+                  </p>
+                  {highlights.length ? (
+                    <ul className="mt-6 grid gap-3 sm:grid-cols-3" aria-label={`Highlights of ${latestVersion === "unversioned" ? "the latest updates" : `v${latestVersion}`}`}>
+                      {highlights.map((h, i) => (
+                        <li key={h.title}>
+                          <a
+                            href={h.href}
+                            className="group flex h-full flex-col rounded-[14px] border border-border bg-card/80 p-4 transition-[border-color,translate] duration-(--dur-3) ease-out hover:-translate-y-0.5 hover:border-border-strong focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring calm:hover:translate-y-0"
+                          >
+                            <span className="flex items-center gap-2 text-[14px] font-semibold tracking-[-0.01em]">
+                              <span aria-hidden="true" className="size-2 shrink-0 rounded-full" style={{ background: TONES[i % TONES.length] }} />
+                              {h.title}
+                            </span>
+                            <span className="mt-1.5 text-[13px] leading-relaxed text-muted-foreground">{h.text}</span>
+                          </a>
+                        </li>
+                      ))}
+                    </ul>
+                  ) : null}
+                </div>
               </div>
             </section>
           ) : null}
@@ -104,9 +173,7 @@ export default async function ChangelogPage() {
                   <p className="text-meta mt-1.5 text-muted-foreground">
                     <time dateTime={items[0].date}>{formatDate(items[0].date)}</time>
                   </p>
-                  <p className="text-meta mt-0.5 text-foreground-dim">
-                    {items.length} {items.length === 1 ? "entry" : "entries"}
-                  </p>
+                  <p className="text-meta mt-0.5 text-foreground-dim">{areas(items.length)}</p>
                 </div>
                 <ScrollFill>
                   <ol className="space-y-3">

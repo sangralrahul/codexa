@@ -47,6 +47,12 @@
 }
 .dark .ws-card { border-color: color-mix(in oklab, var(--border) 70%, var(--border-strong)); }
 
+/* The explorer and the editor read as one "Code" card: their inner edges square off and the 1px
+   separator between them is the hairline (the panel library keeps a full-size drag target).
+   Each half clips its own shadow at the seam so neither shades the other. */
+.ws-card.ws-code-l { border-top-right-radius: 0; border-bottom-right-radius: 0; border-right-width: 0; clip-path: inset(-32px 0 -32px -32px); }
+.ws-card.ws-code-r { border-top-left-radius: 0; border-bottom-left-radius: 0; border-left-width: 0; clip-path: inset(-32px -32px -32px 0); }
+
 /* Agent card: a comet-border (globals) whose comet runs while a real run is active. */
 .ws-agent.comet-border { border-radius: 16px; box-shadow: var(--shadow-md); height: 100%; }
 .ws-agent > .comet-border__inner { border-radius: 15px; height: 100%; overflow: hidden; }
@@ -73,6 +79,9 @@
   box-shadow: 0 0 0 3px color-mix(in oklab, var(--signal) 22%, transparent);
 }
 .ws-sep:focus-visible::after { opacity: 1; background: var(--ring); }
+.ws-sep--seam { width: 1px; background: var(--border); transition: background-color var(--dur-2); }
+.dark .ws-sep--seam { background: color-mix(in oklab, var(--border) 70%, var(--border-strong)); }
+.ws-sep--seam[data-separator="active"] { background: var(--signal); }
 .ws-sep[data-off] { width: 0; height: 0; pointer-events: none; overflow: hidden; }
 .ws-sep[data-off]::after { display: none; }
 
@@ -90,6 +99,14 @@
 /* Agent status pill (real elapsed time). */
 .ws-pill-in { animation: ws-pill-in var(--dur-3) var(--ease-out) both; }
 @keyframes ws-pill-in { from { opacity: 0; transform: translateY(-4px) scale(0.96); } }
+
+/* Publish (btn-ember) in the header: the resting signal glow is clipped to a tight halo so it never
+   hazes the cards under the header; hover and keyboard focus release the full glow. */
+.btn-ember.ws-publish {
+  clip-path: inset(-3px round 13px);
+  transition: box-shadow var(--dur-4) var(--ease-out), translate var(--dur-3) var(--ease-out), scale var(--dur-3) var(--ease-snap), filter var(--dur-3), clip-path var(--dur-4) var(--ease-out);
+}
+.btn-ember.ws-publish:is(:hover, :focus-visible) { clip-path: inset(-48px round 13px); }
 
 /* Run button: a running state that offers Stop on hover/focus. */
 .ws-run [data-when="hover"] { display: none; }
@@ -232,6 +249,21 @@
 @keyframes ws-tab-in { from { max-width: 0; opacity: 0; } }
 .ws-tab-out { animation: ws-tab-out 180ms var(--ease-in) both; pointer-events: none; }
 @keyframes ws-tab-out { to { max-width: 0; opacity: 0; padding-inline: 0; } }
+/* Long lines in a wide editor (narrow ones word-wrap): a soft fade at the right edge while code is
+   scrolled out of view to the right. The colour is the editor's own background in each theme. */
+.ws-monaco { position: relative; --ws-editor-bg: var(--card); }
+.dark .ws-monaco { --ws-editor-bg: var(--code-bg); }
+.ws-monaco[data-overflow-x]::after {
+  content: "";
+  position: absolute;
+  z-index: 4;
+  top: 0;
+  right: 10px;
+  bottom: 10px;
+  width: 40px;
+  pointer-events: none;
+  background: linear-gradient(to right, transparent, var(--ws-editor-bg) 85%);
+}
 .ws-ai-dot { width: 6px; height: 6px; border-radius: 9999px; background: var(--ember); box-shadow: 0 0 0 2px color-mix(in oklab, var(--signal) 18%, transparent); flex-shrink: 0; }
 
 /* Monaco: AI gutter marks (added = green, modified = amber) and the after-restore sweep. */
@@ -296,7 +328,7 @@
 @media (prefers-reduced-motion: reduce) {
   .ws-orb::before, .ws-beam, .ws-particle, .ws-flight, .ws-wipe, .ws-node-pulse::after, .ws-assemble::after { display: none; }
   .ws-assemble > iframe { animation: none; clip-path: none; }
-  .ws-rail-seg::after, .ws-frame, .ws-tree-group, .ws-animating > [data-panel], .ws-sep::after, .ws-ring, .ws-send { transition: none; }
+  .ws-rail-seg::after, .ws-frame, .ws-tree-group, .ws-animating > [data-panel], .ws-sep::after, .ws-ring, .ws-send, .btn-ember.ws-publish { transition: none; }
   .ws-pill-in, .ws-msg-user, .ws-msg-agent, .ws-suggest > *, .ws-drop, .ws-frame-develop, .ws-tab-in, .ws-tab-out, .ws-ai-flash, .ws-ticker-line, .ws-check-pop, .ws-save__icon, .ws-rail-seg::after, .ws-write-caret::after, .ws-reload[data-spin] svg { animation: none; }
 }
 [data-motion="reduced"] .ws-orb::before,
@@ -313,7 +345,8 @@
 [data-motion="reduced"] .ws-animating > [data-panel],
 [data-motion="reduced"] .ws-sep::after,
 [data-motion="reduced"] .ws-ring,
-[data-motion="reduced"] .ws-send { transition: none; }
+[data-motion="reduced"] .ws-send,
+[data-motion="reduced"] .btn-ember.ws-publish { transition: none; }
 [data-motion="reduced"] .ws-pill-in,
 [data-motion="reduced"] .ws-msg-user,
 [data-motion="reduced"] .ws-msg-agent,

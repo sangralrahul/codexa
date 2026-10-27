@@ -15,7 +15,7 @@ export function Steps({ steps, className, orientation = "horizontal" }: { steps:
   const cols = steps.length >= 5 ? "lg:grid-cols-5" : steps.length === 4 ? "lg:grid-cols-4" : "lg:grid-cols-3";
   return (
     <div {...ONCE} className={cn("mk-strip relative", className)}>
-      <ol className={cn("relative grid gap-3", horizontal ? cn("sm:grid-cols-2", cols) : "max-w-2xl grid-cols-1")}>
+      <ol className={cn("relative grid grid-cols-1 gap-3", horizontal ? cn("sm:grid-cols-2", cols) : "max-w-2xl")}>
         {steps.map((s, i) => (
           <li
             key={s.title}

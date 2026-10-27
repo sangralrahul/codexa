@@ -51,9 +51,7 @@ export function TemplatePreview({
           data-develop=""
           // MotionEffects may mark a cached image as developed before React hydrates it.
           suppressHydrationWarning
-          // Once developed, drop the develop animation's forwards fill: a filled `transform` would
-          // override the .shot-pan transition, so the hover pan would jump instead of gliding.
-          className={cn("aspect-[16/10] w-full object-cover object-top [&[data-developed]]:[animation-fill-mode:backwards]!", imgClassName)}
+          className={cn("aspect-[16/10] w-full object-cover object-top", imgClassName)}
         />
       </div>
     );
@@ -71,26 +69,36 @@ const METHOD_TONE: Record<ApiRoute["method"], string> = {
   DELETE: "text-syn-tag",
 };
 
+/** Most route rows a 16:10 thumb shows; longer lists show this many minus one plus "+ N more". */
+const THUMB_ROWS = 6;
+
 /**
  * The template's real routes as a terminal listing. `thumb` (default) is a 16:10 tile that scales
  * with its own width (container units); `hero` is a full-size listing for the detail page, sized
  * like a real terminal and showing every route, with the real dev command when given.
+ * In a thumb the listing is a flex column: the route list takes the free height and clips with a
+ * fade (it can never run under the footer, however narrow the tile), and the footer stays pinned.
  */
 export function RouteList({ routes, className, label = true, variant = "thumb", command }: { routes: ApiRoute[]; className?: string; label?: boolean; variant?: "thumb" | "hero"; command?: string }) {
   const hero = variant === "hero";
-  const shown = hero ? routes : routes.slice(0, 7);
+  const shown = hero || routes.length <= THUMB_ROWS ? routes : routes.slice(0, THUMB_ROWS - 1);
   const methods = new Set(routes.map((r) => r.method)).size;
   return (
     <div aria-hidden={hero ? undefined : true} className={cn("overflow-hidden rounded-lg border border-border bg-code-bg text-code-fg shadow-sm [container-type:inline-size]", className)}>
-      <div className={cn("relative flex flex-col font-mono", hero ? "text-[13px] leading-[1.9] sm:text-[14px]" : "aspect-[16/10] text-[length:max(8px,2.55cqw)] leading-[1.75]")}>
+      <div className={cn("relative flex flex-col font-mono", hero ? "text-[13px] leading-[1.9] sm:text-[14px]" : "aspect-[16/10] text-[length:max(8px,2.55cqw)] leading-[1.65]")}>
         <div aria-hidden="true" className="pointer-events-none absolute inset-0 bg-[radial-gradient(70%_60%_at_80%_0%,color-mix(in_oklab,var(--syn-fn)_10%,transparent),transparent_70%)]" />
-        <div className={cn("relative flex items-center border-b border-code-border", hero ? "h-11 gap-2 px-4" : "gap-[1.4cqw] px-[4cqw] py-[2.2cqw]")}>
+        <div className={cn("relative flex shrink-0 items-center border-b border-code-border", hero ? "h-11 gap-2 px-4" : "gap-[1.4cqw] px-[4cqw] py-[2.2cqw]")}>
           <span aria-hidden="true" className={cn("rounded-full bg-code-muted/50", hero ? "size-2.5" : "size-[1.6cqw] min-h-1 min-w-1")} />
           <span aria-hidden="true" className={cn("rounded-full bg-code-muted/50", hero ? "size-2.5" : "size-[1.6cqw] min-h-1 min-w-1")} />
           <span aria-hidden="true" className={cn("rounded-full bg-code-muted/50", hero ? "size-2.5" : "size-[1.6cqw] min-h-1 min-w-1")} />
           <span className={cn("truncate text-code-muted", hero ? "ml-2 text-[12px]" : "ml-[1.6cqw]")}>routes · read from the template&apos;s source</span>
         </div>
-        <div className={cn("relative min-h-0 flex-1", hero ? "px-5 py-5 sm:px-7 sm:py-6" : "px-[4cqw] py-[3cqw]")}>
+        <div
+          className={cn(
+            "relative min-h-0 flex-1",
+            hero ? "px-5 py-5 sm:px-7 sm:py-6" : "overflow-hidden px-[4cqw] py-[2.6cqw] [mask-image:linear-gradient(to_bottom,black_calc(100%-1em),transparent)]",
+          )}
+        >
           <p className="text-code-muted">
             <span className="text-syn-keyword">$</span> express routes
           </p>
@@ -110,7 +118,7 @@ export function RouteList({ routes, className, label = true, variant = "thumb", 
           ) : null}
         </div>
         {label ? (
-          <p className={cn("relative border-t border-code-border text-code-muted", hero ? "flex flex-wrap justify-between gap-x-4 px-5 py-3 text-[12px] sm:px-7" : "px-[4cqw] py-[1.8cqw]")}>
+          <p className={cn("relative mt-auto shrink-0 border-t border-code-border text-code-muted", hero ? "flex flex-wrap justify-between gap-x-4 px-5 py-3 text-[12px] sm:px-7" : "truncate px-[4cqw] py-[1.8cqw]")}>
             <span>
               {routes.length} route{routes.length === 1 ? "" : "s"} · API only, no screen to capture
             </span>

@@ -15,7 +15,7 @@ export const ACCOUNT_NAV: SettingsNavItem[] = [
 ];
 
 export const WORKSPACE_NAV: SettingsNavItem[] = [
-  { href: "/settings/workspace", label: "General", key: "general", icon: Settings2, keywords: "workspace name slug currency leave" },
+  { href: "/settings/workspace", label: "Workspace", key: "general", icon: Settings2, keywords: "general workspace name slug currency leave" },
   { href: "/settings/members", label: "Members", key: "members", icon: Users, keywords: "team invite roles seats people" },
   { href: "/settings/billing", label: "Billing", key: "billing", icon: CreditCard, keywords: "plan upgrade invoices subscription payment" },
   { href: "/settings/usage", label: "Usage", key: "usage", icon: Gauge, keywords: "limits quota ai requests runtime deployments storage" },
@@ -33,9 +33,9 @@ export const SETTINGS_SECTIONS: SettingsSection[] = [
   { href: "/settings/security#sessions", label: "Active sessions", page: "Security", keywords: "devices sign out logout browsers" },
   { href: "/settings/security#export", label: "Export your data", page: "Security", keywords: "download json backup gdpr" },
   { href: "/settings/security#delete-account", label: "Delete account", page: "Security", keywords: "close remove erase" },
-  { href: "/settings/workspace#workspace-general", label: "Workspace name and URL slug", page: "General", keywords: "rename url link", workspace: true },
-  { href: "/settings/workspace#ws-currency", label: "Billing currency", page: "General", keywords: "usd inr stripe razorpay", workspace: true },
-  { href: "/settings/workspace#leave", label: "Leave workspace", page: "General", keywords: "quit exit", workspace: true },
+  { href: "/settings/workspace#workspace-general", label: "Workspace name and URL slug", page: "Workspace", keywords: "rename url link", workspace: true },
+  { href: "/settings/workspace#ws-currency", label: "Billing currency", page: "Workspace", keywords: "usd inr stripe razorpay", workspace: true },
+  { href: "/settings/workspace#leave", label: "Leave workspace", page: "Workspace", keywords: "quit exit", workspace: true },
   { href: "/settings/members#members", label: "Members and roles", page: "Members", keywords: "team people owner admin", workspace: true },
   { href: "/settings/members#invite", label: "Invite a teammate", page: "Members", keywords: "add people email seat", workspace: true },
   { href: "/settings/members#pending", label: "Pending invitations", page: "Members", keywords: "resend revoke invite", workspace: true },

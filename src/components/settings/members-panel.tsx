@@ -13,6 +13,7 @@ import type { TeamInvite, TeamMember } from "@/lib/billing/team-service";
 import { Button, buttonClasses } from "@/components/ui/button";
 import { Alert } from "@/components/ui/misc";
 import { Avatar } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
 import { SelectMenu } from "@/components/ui/select-menu";
 import { Tooltip } from "@/components/ui/tooltip";
 import { toast } from "@/components/ui/toast";
@@ -194,9 +195,10 @@ export function MembersPanel({ workspaceId, currentUserId, role, members: initia
         bodyClassName="pt-4"
       >
         <SeatStrip members={members} invites={activeInvites} hiddenPending={hiddenPending} limit={seats.limit} plan={plan} canManage={canManage} onAdd={focusInvite} />
-        <div className="mt-5 hidden grid-cols-[minmax(0,1fr)_10rem_2.5rem] items-center border-t border-border/80 sm:grid">
-          <span className={cn(tableHead, "pl-5 sm:pl-6")}>Member</span>
-          <span className={tableHead}>Role</span>
+        {/* Same columns, gap and side padding as the rows below, so "Role" sits exactly over the role cells. */}
+        <div className="mt-5 hidden grid-cols-[minmax(0,1fr)_10rem_2.5rem] items-center gap-3 border-t border-border/80 px-5 sm:grid sm:px-6">
+          <span className={cn(tableHead, "px-0")}>Member</span>
+          <span className={cn(tableHead, "px-0")}>Role</span>
           <span className="sr-only">Actions</span>
         </div>
         <ul className="max-sm:mt-4">
@@ -242,11 +244,12 @@ export function MembersPanel({ workspaceId, currentUserId, role, members: initia
                       </>
                     ) : (
                       <Tooltip content={self && soleOwner ? "You're the only owner. Make someone else an owner before changing your role." : ROLE_HELP[m.role]}>
-                        <span tabIndex={0} className={cn("role-swap inline-flex h-7 items-center gap-1.5 rounded-full px-2.5 text-xs font-medium outline-none focus-visible:outline-2 focus-visible:outline-ring", m.role === "owner" ? "bg-foreground text-background" : "bg-muted text-foreground shadow-[inset_0_0_0_1px_var(--border)]")}>
-                          {m.role === "owner" ? <Lock className="size-3" aria-hidden="true" /> : null}
+                        {/* A static role is a neutral outline badge (not a filled pill), so it never reads as a button. */}
+                        <Badge variant="outline" tabIndex={0} className="role-swap h-7 gap-1.5 border-border-strong px-2.5 text-xs text-foreground outline-none focus-visible:outline-2 focus-visible:outline-ring">
+                          {m.role === "owner" ? <Lock className="text-muted-foreground" aria-hidden="true" /> : null}
                           {ROLE_LABEL[m.role]}
                           <span className="sr-only">{self && soleOwner ? ", you're the only owner" : ""}</span>
-                        </span>
+                        </Badge>
                       </Tooltip>
                     )}
                   </div>
@@ -788,7 +791,18 @@ function InviteForm({
   );
 }
 
-export function LeaveWorkspaceButton({ workspaceId, userId, workspaceName }: { workspaceId: string; userId: string; workspaceName: string }) {
+export function LeaveWorkspaceButton({
+  workspaceId,
+  userId,
+  workspaceName,
+  blockedReason,
+}: {
+  workspaceId: string;
+  userId: string;
+  workspaceName: string;
+  /** Set when leaving is not allowed yet (the last owner). The server enforces the same rule. */
+  blockedReason?: string | null;
+}) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -806,10 +820,23 @@ export function LeaveWorkspaceButton({ workspaceId, userId, workspaceName }: { w
       setBusy(false);
     }
   }
+  if (blockedReason) {
+    // aria-disabled (not disabled) keeps the button focusable, so keyboard and pointer users both get the reason.
+    return (
+      <Tooltip content={blockedReason}>
+        <Button variant="danger" size="sm" aria-disabled="true" aria-describedby="leave-blocked-reason" className="cursor-not-allowed" onClick={(e) => e.preventDefault()}>
+          Leave workspace
+          <span id="leave-blocked-reason" className="sr-only">
+            {blockedReason}
+          </span>
+        </Button>
+      </Tooltip>
+    );
+  }
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <Button variant="danger" size="sm" onClick={() => setOpen(true)}>
-        Leave {workspaceName}
+        Leave workspace
       </Button>
       <DialogContent title={`Leave ${workspaceName}?`} description="You will lose access to every project in this workspace. An owner can invite you again later.">
         {error ? <Alert variant="danger">{error}</Alert> : null}

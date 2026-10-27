@@ -53,7 +53,7 @@ async function connectPresence(request: Request, env: Env): Promise<Response> {
   return stub.fetch(new Request(request.url, { headers }) as never) as unknown as Response;
 }
 
-export default {
+const worker = {
   async fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
     const url = new URL(request.url);
     const host = url.hostname.toLowerCase();
@@ -80,3 +80,5 @@ export default {
     ctx.waitUntil(openNext.fetch(request, env, ctx).then((r) => r.text()));
   },
 };
+
+export default worker;

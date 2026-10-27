@@ -21,6 +21,8 @@ export type GalleryProps = {
   sheet?: { initial: string | null; renderSheetAction: (template: TemplateCardData) => React.ReactNode };
   /** Sticky offset classes for the filter bar (under the page's own header). */
   stickyClassName?: string;
+  /** Show the "Screenshots captured from each starter's own build" line by the Featured row (default true; off where the page already says it). */
+  featuredCaption?: boolean;
 };
 
 /**
@@ -28,7 +30,7 @@ export type GalleryProps = {
  * gallery, which filters, orders and morphs them instantly while keeping the URL in sync.
  * A Featured row of three large tiles leads the unfiltered view.
  */
-export function TemplateGallery({ search, categoryMode, basePath, renderAction, sheet, stickyClassName }: GalleryProps) {
+export function TemplateGallery({ search, categoryMode, basePath, renderAction, sheet, stickyClassName, featuredCaption = true }: GalleryProps) {
   const items: TemplateCardData[] = TEMPLATES.map(summarizeTemplate);
   const frameworks = TEMPLATE_FRAMEWORKS.map((id) => ({ id, name: FRAMEWORKS[id].name }));
   const sheetLink = (id: string) => {
@@ -65,7 +67,7 @@ export function TemplateGallery({ search, categoryMode, basePath, renderAction, 
   return (
     <GalleryProvider initial={search} items={items} categoryMode={categoryMode} basePath={basePath} initialPreview={initialPreview}>
       <GalleryFilters categories={TEMPLATE_CATEGORIES.map((c) => ({ id: c.id, name: c.name }))} frameworks={frameworks} stickyClassName={stickyClassName} />
-      <GalleryResults tiles={tiles} featured={featured} />
+      <GalleryResults tiles={tiles} featured={featured} caption={featuredCaption} />
       {details && sheetActions ? <TemplatePreviewSheet details={details} actions={sheetActions} /> : null}
     </GalleryProvider>
   );

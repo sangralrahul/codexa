@@ -2,11 +2,12 @@ export { TemplateCard, TemplateTile, UseTemplateLink, templatePreviewHref, type 
 export { TemplateGallery } from "./template-gallery";
 export { GalleryFilters } from "./gallery-filters";
 export { FileTree, FileGlyph, buildTree } from "./file-tree";
-export { CodeViewer, languageForPath } from "./code-viewer";
+export { CodeViewer, CodeWrapToggle, canWrapCode, languageForPath } from "./code-viewer";
 export { UseTemplateButton } from "./use-template-button";
 export { DifficultyBadge, FrameworkBadge } from "./badges";
 export type { TemplateCardData } from "./types";
 export { TemplateThumb } from "./template-thumb";
 export { TemplatePreview, RouteList } from "./template-preview";
+export { StarterFan } from "./starter-fan";
 export { TEMPLATE_SHOTS, templateShotSrc, templateShotSrcSet, templateShotFor, type TemplateShot } from "./shots";
 export { templateMeta, FRAMEWORK_SHORT } from "./gallery-search";

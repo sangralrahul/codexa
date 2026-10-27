@@ -10,6 +10,7 @@ import { AppSidebar, type SidebarProject, type SidebarUpsell, type SidebarUsage,
 import { LogoMark } from "@/components/logo";
 import { Alert, Kbd } from "@/components/ui/misc";
 import { buttonClasses } from "@/components/ui/button";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { ResendVerificationButton } from "@/components/auth/forms";
 import { CommandMenu, type CommandTemplate } from "./command-menu";
 import { openCommandMenu, SHORTCUTS_EVENT } from "./events";
@@ -36,9 +37,17 @@ const isFocusRoute = (path: string) => /^\/projects\/[^/]+/.test(path) || path =
 
 const VERIFY_DISMISS_KEY = "codexa:verify-banner-dismissed";
 const dismissListeners = new Set<() => void>();
-function readDismissed() {
+/**
+ * Session storage normally (verifying is something the user can do, so the reminder comes back
+ * next visit). When this server can't send email the user can't act on it, so the dismissal is
+ * kept in local storage across visits instead.
+ */
+function dismissStore(persistent: boolean): Storage {
+  return persistent ? window.localStorage : window.sessionStorage;
+}
+function readDismissed(persistent: boolean) {
   try {
-    return window.sessionStorage.getItem(VERIFY_DISMISS_KEY) === "1";
+    return dismissStore(persistent).getItem(VERIFY_DISMISS_KEY) === "1";
   } catch {
     return false;
   }
@@ -61,6 +70,8 @@ export function AppShell({
   currentWorkspaceId,
   isStaff,
   emailVerified,
+  emailConfigured,
+  devMailbox = false,
   usage,
   recent,
   upsell,
@@ -74,6 +85,10 @@ export function AppShell({
   currentWorkspaceId: string | null;
   isStaff: boolean;
   emailVerified: boolean;
+  /** Whether this server can deliver account emails (capabilities.email). When false the banner says so and offers no resend. */
+  emailConfigured: boolean;
+  /** Development only: unsent emails are readable at /dev/mailbox. */
+  devMailbox?: boolean;
   usage: SidebarUsage | null;
   recent: SidebarProject[];
   upsell: SidebarUpsell;
@@ -110,18 +125,24 @@ export function AppShell({
     return () => window.removeEventListener(SHORTCUTS_EVENT, on);
   }, []);
 
-  // Verify banner: hidden for the rest of this browser session once dismissed.
+  // Verify banner: once dismissed, hidden for this browser session (or for good on this device when
+  // email isn't configured, since the user can't resolve it).
+  const persistDismiss = !emailConfigured;
+  const subscribeDismiss = useCallback((cb: () => void) => {
+    dismissListeners.add(cb);
+    return () => {
+      dismissListeners.delete(cb);
+    };
+  }, []);
   const dismissed = useSyncExternalStore(
-    (cb) => {
-      dismissListeners.add(cb);
-      return () => dismissListeners.delete(cb);
-    },
-    readDismissed,
+    subscribeDismiss,
+    () => readDismissed(persistDismiss),
     () => false,
   );
+  const dismissLabel = persistDismiss ? "Hide this notice" : "Hide for this session";
   const dismissBanner = () => {
     try {
-      window.sessionStorage.setItem(VERIFY_DISMISS_KEY, "1");
+      dismissStore(persistDismiss).setItem(VERIFY_DISMISS_KEY, "1");
     } catch {
       /* storage blocked: hide for this page view only */
     }
@@ -186,7 +207,8 @@ export function AppShell({
         </RD.Root>
 
         <div className="relative isolate flex min-w-0 flex-1 flex-col">
-          <header className="glass sticky top-0 z-40 grid h-[52px] grid-cols-[1fr_auto_1fr] items-center gap-3 border-b border-border/70 px-3 sm:px-5">
+          {/* Two columns below md (the centred ⌘K trigger is hidden there), so the actions stay at the right edge. */}
+          <header className="glass sticky top-0 z-40 grid h-[52px] grid-cols-[minmax(0,1fr)_auto] items-center gap-3 border-b border-border/70 px-3 sm:px-5 md:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)]">
             <div className="flex min-w-0 items-center gap-1.5">
               <button type="button" onClick={() => setDrawer(true)} className="-ml-1 flex size-9 items-center justify-center rounded-[10px] hover:bg-muted lg:hidden" aria-label="Open navigation">
                 <Menu className="size-5" aria-hidden="true" />
@@ -216,13 +238,12 @@ export function AppShell({
             <button
               type="button"
               onClick={openCommandMenu}
-              aria-label="Search or jump to"
               aria-keyshortcuts="Control+K Meta+K"
               className="group/k hidden h-8 w-[min(360px,36vw)] items-center gap-2 rounded-[10px] border border-border bg-background/60 px-2.5 text-[13px] text-muted-foreground shadow-[inset_0_1px_0_var(--hairline)] transition-[border-color,color,background-color] hover:border-border-strong hover:bg-background hover:text-foreground md:flex"
             >
               <Search className="size-3.5" aria-hidden="true" />
               <span className="flex-1 truncate text-left">Search or build anything…</span>
-              <Kbd mod className="gap-1 border border-border bg-muted px-1.5">
+              <Kbd mod aria-hidden="true" className="border border-border bg-muted px-1.5">
                 K
               </Kbd>
             </button>
@@ -233,34 +254,97 @@ export function AppShell({
               </button>
               <div ref={setSlot} className="flex items-center gap-1.5 empty:hidden" />
               {canCreate && pathname !== "/new-project" ? (
-                // Only when the sidebar's own button is out of view (collapsed rail or phones), and never twice:
-                // /projects shows New project in its toolbar from 1024px up.
-                <Link href="/new-project" className={cn(buttonClasses("primary", "sm"), "w-8 px-0 sm:w-auto sm:px-3", collapsed && pathname !== "/projects" ? "inline-flex" : "inline-flex lg:hidden")}>
-                  <Plus className="size-4" aria-hidden="true" />
-                  <span className="hidden sm:inline">New project</span>
-                  <span className="sr-only sm:hidden">New project</span>
-                </Link>
+                <>
+                  {/* Phones: a quiet outline icon button, so it never outweighs the logo. */}
+                  <Link
+                    href="/new-project"
+                    aria-label="New project"
+                    className="flex size-9 items-center justify-center rounded-[10px] border border-border-strong bg-card/60 text-foreground shadow-[inset_0_1px_0_var(--hairline)] transition-colors hover:bg-muted focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring sm:hidden"
+                  >
+                    <Plus className="size-4" aria-hidden="true" />
+                  </Link>
+                  {/* From 640px: only when the sidebar's own button is out of view (collapsed rail or below 1024px), and never
+                      twice: /projects shows New project in its toolbar from 1024px up. */}
+                  <Link href="/new-project" className={cn(buttonClasses("primary", "sm"), "hidden px-3 sm:inline-flex", !(collapsed && pathname !== "/projects") && "lg:hidden")}>
+                    <Plus className="size-4" aria-hidden="true" />
+                    New project
+                  </Link>
+                </>
               ) : null}
             </div>
           </header>
 
           {!emailVerified && !dismissed && !bannerHidden ? (
-            <div className="relative z-30 flex min-h-9 flex-wrap items-center gap-x-2.5 border-b border-warning/25 bg-warning/[0.07] px-3 py-1 text-[13px] sm:flex-nowrap sm:px-5 sm:py-0">
+            <div className="relative z-30 flex h-9 items-center gap-x-2.5 border-b border-warning/25 bg-warning/[0.07] px-3 text-[13px] sm:px-5">
               <span className="size-1.5 shrink-0 rounded-full bg-warning shadow-[0_0_0_3px_color-mix(in_oklab,var(--warning)_20%,transparent)]" aria-hidden="true" />
-              <p className="min-w-0 flex-1 py-1 sm:truncate sm:py-1.5">
-                <span className="font-medium">Verify your email</span>
-                <span className="text-muted-foreground"> to unlock deployments.</span>
-                <span className="hidden text-foreground-dim md:inline"> We sent a link to {user.email}.</span>
-              </p>
-              <ResendVerificationButton size="sm" className="order-last h-7 shrink-0 basis-full justify-start border-0 bg-transparent px-1.5 pl-4 text-[13px] sm:order-none sm:basis-auto sm:justify-center sm:pl-1.5 font-medium text-foreground underline decoration-border-strong underline-offset-4 shadow-none hover:bg-transparent hover:decoration-foreground" />
+              {/* Phone: one short line; the full explanation and the action live in the "Why?" popover. */}
+              <p className="min-w-0 flex-1 truncate font-medium sm:hidden">Email not verified</p>
+              <Popover>
+                <PopoverTrigger className="shrink-0 rounded-sm text-[13px] font-medium text-foreground underline decoration-border-strong underline-offset-4 transition-colors hover:decoration-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring sm:hidden">
+                  Why?
+                </PopoverTrigger>
+                <PopoverContent align="end" className="w-[min(18rem,calc(100vw-24px))] text-[13px] leading-relaxed">
+                  <p className="font-medium text-foreground">Verify your email to unlock deployments.</p>
+                  {emailConfigured ? (
+                    <>
+                      <p className="mt-1.5 text-muted-foreground">We sent a link to {user.email}. Didn&apos;t get it?</p>
+                      <ResendVerificationButton size="sm" emailConfigured className="mt-3 w-full" />
+                    </>
+                  ) : (
+                    <>
+                      <p className="mt-1.5 text-muted-foreground">
+                        Email delivery isn&apos;t configured on this server, so verification links aren&apos;t sent. Ask the operator. Your status is shown in{" "}
+                        <Link href="/settings/security" className="font-medium text-foreground underline decoration-border-strong underline-offset-4 hover:decoration-foreground">
+                          Settings › Security
+                        </Link>
+                        .
+                      </p>
+                      {devMailbox ? (
+                        <Link href="/dev/mailbox" className="mt-2 inline-block font-medium text-foreground underline decoration-border-strong underline-offset-4 hover:decoration-foreground">
+                          Open dev mailbox
+                        </Link>
+                      ) : null}
+                    </>
+                  )}
+                </PopoverContent>
+              </Popover>
+              {/* From 640px: the full line (truncated, never wrapped, so the bar stays 36px). */}
+              {emailConfigured ? (
+                <>
+                  <p className="hidden min-w-0 flex-1 truncate sm:block">
+                    <span className="font-medium">Verify your email</span>
+                    <span className="text-muted-foreground"> to unlock deployments.</span>
+                    <span className="hidden text-foreground-dim md:inline"> We sent a link to {user.email}.</span>
+                  </p>
+                  <ResendVerificationButton
+                    size="sm"
+                    className="hidden h-7 shrink-0 border-0 bg-transparent px-1.5 text-[13px] font-medium text-foreground underline decoration-border-strong underline-offset-4 shadow-none hover:bg-transparent hover:decoration-foreground sm:inline-flex"
+                  />
+                </>
+              ) : (
+                // No email provider on this server: nothing is delivered, so no "we sent a link" and no resend button.
+                <>
+                  <p className="hidden min-w-0 flex-1 truncate sm:block" title="Email delivery isn't configured on this server, so verification links aren't sent. Ask the operator.">
+                    <span className="font-medium">Verify your email</span>
+                    <span className="text-muted-foreground"> to unlock deployments. </span>
+                    <span className="text-muted-foreground">Email delivery isn&apos;t configured on this server, so verification links aren&apos;t sent. Ask the operator.</span>
+                  </p>
+                  <Link
+                    href={devMailbox ? "/dev/mailbox" : "/settings/security"}
+                    className="hidden shrink-0 text-[13px] font-medium text-foreground underline decoration-border-strong underline-offset-4 transition-colors hover:decoration-foreground sm:inline"
+                  >
+                    {devMailbox ? "Open dev mailbox" : "Settings › Security"}
+                  </Link>
+                </>
+              )}
               <button
                 type="button"
                 onClick={() => {
                   setBannerHidden(true);
                   dismissBanner();
                 }}
-                aria-label="Hide for this session"
-                title="Hide for this session"
+                aria-label={dismissLabel}
+                title={dismissLabel}
                 className="-mr-1 flex size-7 shrink-0 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-warning/10 hover:text-foreground"
               >
                 <X className="size-3.5" aria-hidden="true" />

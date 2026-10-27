@@ -59,6 +59,36 @@
   border-color: var(--border);
   box-shadow: inset 0 1px 0 var(--hairline), var(--shadow-lg);
 }
+/* Scrims behind the bar (decorative, never hit-tested). At the top of the page a soft wash of the page
+   colour keeps the nav legible over the saturated backdrop blobs; once the bar condenses, a firmer
+   fade takes over so text scrolling under the capsule dissolves instead of being cut mid-glyph in
+   the gap above it. Opacity crossfade only. */
+.mk-header::before,
+.mk-header::after {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto 0;
+  z-index: -1;
+  pointer-events: none;
+  transition: opacity var(--dur-4) var(--ease-out);
+}
+.mk-header::before {
+  height: 96px;
+  background: linear-gradient(to bottom, color-mix(in oklab, var(--background) 60%, transparent), transparent);
+}
+.mk-header::after {
+  height: 76px;
+  opacity: 0;
+  background: linear-gradient(
+    to bottom,
+    var(--background) 0,
+    color-mix(in oklab, var(--background) 88%, transparent) 22%,
+    color-mix(in oklab, var(--background) 45%, transparent) 62%,
+    transparent
+  );
+}
+.mk-header[data-scrolled]::before { opacity: 0; }
+.mk-header[data-scrolled]::after { opacity: 1; }
 @media (min-width: 40rem) {
   .mk-bar { padding-inline: 1.5rem; }
 }
@@ -90,9 +120,10 @@
   translate: -50% 0;
   border-radius: 18px;
   border: 1px solid var(--border-strong);
-  background: color-mix(in oklab, var(--card) 86%, transparent);
-  -webkit-backdrop-filter: blur(20px) saturate(160%);
-  backdrop-filter: blur(20px) saturate(160%);
+  /* Near-opaque: page content (stat cards, headings) must not ghost through behind the items. */
+  background: color-mix(in oklab, var(--card) 95%, transparent);
+  -webkit-backdrop-filter: blur(24px) saturate(160%);
+  backdrop-filter: blur(24px) saturate(160%);
   box-shadow: inset 0 1px 0 var(--hairline), var(--shadow-xl);
   transform-origin: 50% 0;
   opacity: 0;
@@ -216,7 +247,9 @@
     opacity 900ms var(--ease-out) calc(var(--i, 0) * 30ms);
 }
 .dark .mk-wordmark__l { opacity: 0.16; }
-.js .mk-wordmark:not(.is-visible) .mk-wordmark__l { transform: translateY(62%); opacity: 0; }
+/* The trigger is .mk-foot-end (bottom bar + wordmark, data-play="view"): tall enough to cross the reveal
+   line even when the page ends exactly at the wordmark on a phone. */
+.js .mk-foot-end:not(.is-visible) .mk-wordmark__l { transform: translateY(62%); opacity: 0; }
 
 /* --------------------------------------------------------------------------
    Calm: final frames.
@@ -226,11 +259,11 @@
   .mk-sheet,
   .mk-sheet__row { opacity: 1; animation: none !important; }
   .mk-well[data-on] .mk-pan { animation: none !important; }
-  .js .mk-wordmark:not(.is-visible) .mk-wordmark__l { transform: none; opacity: 0.14; }
+  .js .mk-foot-end:not(.is-visible) .mk-wordmark__l { transform: none; opacity: 0.14; }
 }
 [data-motion="reduced"] :is(.mk-well .mk-in, .mk-sheet, .mk-sheet__row) { opacity: 1; animation: none !important; }
 [data-motion="reduced"] .mk-well[data-on] .mk-pan { animation: none !important; }
-[data-motion="reduced"].js .mk-wordmark:not(.is-visible) .mk-wordmark__l { transform: none; opacity: 0.14; }
+[data-motion="reduced"].js .mk-foot-end:not(.is-visible) .mk-wordmark__l { transform: none; opacity: 0.14; }
 
 /* --------------------------------------------------------------------------
    Steps film strip: frames rise in order once in view, then one light sweeps
@@ -369,6 +402,52 @@
    Mona Sans draws its tabular zero with a slash ("$2Ø"), so display numbers opt out of tnum; the
    Odometer sizes each column from the real digit, so rolling stays aligned without tabular widths. */
 .mk-num, .mk-num * { font-feature-settings: "pnum" 1, "lnum" 1; font-variant-numeric: proportional-nums lining-nums; }
+
+/* Plan card prices. One number size per row of cards: 3.5rem when it fits, otherwise the size that
+   leaves 4rem for "/ month" beside the widest price in the row (`--price-em`, its estimated width in
+   em, set on the list), never under 2.25rem. Four-digit INR prices stay on one line with their unit,
+   so the price block keeps one height and every card's button and meters line up. "Custom" (no unit)
+   uses the same size, capped so the word itself fits. Browsers without container units keep 3.5rem
+   (the unit then wraps as one piece). */
+.mk-price { container-type: inline-size; }
+.mk-price__num {
+  font-size: 3.5rem;
+  font-size: clamp(2.25rem, calc((100cqi - 4rem) / var(--price-em, 2)), 3.5rem);
+}
+.mk-price__num[data-custom] {
+  font-size: clamp(2.25rem, min(calc((100cqi - 4rem) / var(--price-em, 2)), calc(100cqi / 3.9)), 3.5rem);
+}
+
+/* Phones: code inside product windows and plates (CodeLines' root, .font-mono.overflow-hidden) is set a
+   step smaller and fades out at the right edge, so long lines read as cropped on purpose rather than cut
+   mid-token. */
+@media (max-width: 39.99rem) {
+  .mk-vw .font-mono.overflow-hidden {
+    font-size: 11px;
+    -webkit-mask-image: linear-gradient(to right, black calc(100% - 2.5rem), transparent);
+    mask-image: linear-gradient(to right, black calc(100% - 2.5rem), transparent);
+  }
+}
+
+/* /features chapter numerals: a hairline outline (no fill) set above the chapter title, which
+   overlaps only the numeral's foot (about a quarter). 72px on phones, 112px from md; decorative. */
+.mk-chapter-num {
+  display: block;
+  margin-bottom: -0.16em;
+  font-family: var(--font-display);
+  font-size: 72px;
+  font-weight: 800;
+  font-stretch: 112%;
+  line-height: 0.82;
+  letter-spacing: -0.04em;
+  color: transparent;
+  -webkit-text-stroke: 1px var(--border-strong);
+  user-select: none;
+  pointer-events: none;
+}
+@media (min-width: 48rem) {
+  .mk-chapter-num { font-size: 112px; }
+}
 
 /* --------------------------------------------------------------------------
    Legal pages: reading-progress hairline (scroll timeline, JS --p fallback)

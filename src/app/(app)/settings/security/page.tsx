@@ -27,6 +27,7 @@ export default async function SecuritySettingsPage() {
       <SecurityStatus
         passwordSet={hasPassword}
         emailVerified={Boolean(user.emailVerifiedAt)}
+        emailConfigured={capabilities.email}
         email={user.email}
         otherSessions={otherSessions}
         github={github ? { linked: true, username: github.username } : capabilities.github ? { linked: false, username: null } : null}

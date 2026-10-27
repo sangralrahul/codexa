@@ -262,7 +262,7 @@ export const NAV = {
   ],
   company: [
     { label: "About", href: "/about", description: "Who builds Codexa, and how", well: "company" },
-    { label: "Security", href: "/security", description: "What is implemented, plainly", well: "security" },
+    { label: "Security", href: "/security", description: "Controls in place, stated plainly", well: "security" },
     { label: "Status", href: "/status", description: "Live checks of every component", well: "status" },
     { label: "Careers", href: "/careers", description: "How we work; roles when they open", well: "company" },
     { label: "Contact", href: "/contact", description: "Support, sales, security, privacy", well: "company" },

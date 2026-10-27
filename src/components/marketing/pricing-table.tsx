@@ -1,5 +1,6 @@
 import { PLANS, PLAN_ORDER } from "@/config/plans";
 import { logShare } from "@/content/marketing/plan-finder";
+import { planCta } from "@/content/marketing/pricing";
 import { PricingTableClient, type PricingPlanView } from "./pricing-table-client";
 
 /** Server wrapper: reads PLANS once and hands a serializable view (prices, limits, meter shares) to the client toggles. */
@@ -14,7 +15,7 @@ export function PricingTable({ compact = false, planIds = PLAN_ORDER, finder = f
       audience: p.audience,
       prices: p.prices,
       features: p.features,
-      cta: p.cta,
+      cta: planCta(p.id),
       highlight: Boolean(p.highlight),
       limits: { aiRequests: l.aiRequestsPerMonth, previewMinutes: l.runtimeMinutesPerMonth, members: l.members },
       meters: [

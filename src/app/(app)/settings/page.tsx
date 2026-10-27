@@ -20,7 +20,7 @@ export default async function SettingsIndexPage() {
     <div className="settings-stack space-y-5">
       <PageHeader eyebrow="Control centre" title="Settings" description="Your account, security and workspace at a glance. Every number here is live." />
       <IdentityRow account={data.account} workspace={data.workspace} />
-      <SetupChecklist items={data.checklist} />
+      <SetupChecklist items={data.checklist} emailConfigured={data.account.emailConfigured} />
       <section aria-label="Settings overview" className="settings-plain">
         <OverviewBento data={data} />
         {!data.workspace ? (

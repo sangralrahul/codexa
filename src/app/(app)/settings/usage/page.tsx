@@ -94,13 +94,17 @@ export default async function UsageSettingsPage() {
         <UsageHistogram days={history.days} periodDays={period.days} totals={history.totals} />
       </SettingsCard>
 
-      <section id="breakdown" aria-label="Breakdown" className="settings-plain grid scroll-mt-24 gap-5">
+      {/* Side by side once the column has room for two readable tables (a container query: the settings nav and app
+          sidebar make the column much narrower than the viewport). */}
+      <section id="breakdown" aria-label="Breakdown" className="settings-plain @container scroll-mt-24">
+        <div className="grid gap-5 @min-[44rem]:grid-cols-2">
         <SettingsCard id="breakdown-projects" icon={<FolderKanban />} title="Top projects" description="This period, by AI requests." flush>
           <UsageBreakdown kind="projects" rows={history.projects} />
         </SettingsCard>
         <SettingsCard id="breakdown-members" icon={<Users />} title="By member" description="Who used metered features this period." flush>
           <UsageBreakdown kind="members" rows={history.members} />
         </SettingsCard>
+        </div>
       </section>
     </div>
   );

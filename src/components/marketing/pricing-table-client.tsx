@@ -128,6 +128,18 @@ function PriceRoll({ minor, currency, className }: { minor: number; currency: Cu
   return <Odometer value={minor / 100} trigger="change" locale={currency === "INR" ? "en-IN" : "en-US"} format={{ style: "currency", currency, maximumFractionDigits: 0 }} className={cn("mk-num", className)} />;
 }
 
+/**
+ * Rough width of a formatted price in the display face, in em (Mona Sans bold, -0.04em tracking):
+ * currency sign and digits about 0.62em, separators about 0.26em. It errs wide on purpose; the CSS
+ * uses the widest price in the row to pick one number size that leaves room for "/ month".
+ */
+function priceEm(minor: number, currency: Currency) {
+  const text = formatPrice(minor, currency);
+  let em = 0;
+  for (const c of text) em += /[0-9$₹€£]/.test(c) ? 0.62 : /[,.]/.test(c) ? 0.26 : c.trim() ? 0.62 : 0.25;
+  return Math.round(em * 100) / 100;
+}
+
 const fmt = (n: number) => new Intl.NumberFormat("en-US").format(n);
 /** Feature lines that restate a metered limit ("1,000 AI requests / month") are shown as meters instead. */
 const isLimitLine = (f: string) => /^\d/.test(f);
@@ -136,14 +148,15 @@ function Meters({ meters }: { meters: PricingPlanView["meters"] }) {
   return (
     <dl className="space-y-2.5">
       {meters.map((m) => (
-        <div key={m.label}>
-          <div className="flex items-baseline justify-between gap-3 text-[12.5px]">
-            <dt className="text-muted-foreground">{m.label}</dt>
-            <dd className="font-medium tabular-nums text-foreground">{m.value < 0 ? "Custom" : fmt(m.value)}</dd>
-          </div>
-          <div aria-hidden="true" className="mt-1.5 h-1 overflow-hidden rounded-full bg-muted shadow-[inset_0_0_0_1px_var(--border)]">
-            <span className={cn("mk-meter block h-full origin-left rounded-full", m.value < 0 ? "bg-[repeating-linear-gradient(90deg,var(--foreground-dim)_0_6px,transparent_6px_10px)]" : "bg-gradient-to-r from-foreground/55 to-foreground")} style={{ "--share": m.share } as React.CSSProperties} />
-          </div>
+        // dt/dd stay direct children of the group div (valid dl); the meter bar sits inside the dd, pinned under the row.
+        <div key={m.label} className="relative flex items-baseline justify-between gap-3 pb-2.5 text-[12.5px]">
+          <dt className="text-muted-foreground">{m.label}</dt>
+          <dd className="font-medium tabular-nums text-foreground">
+            {m.value < 0 ? "Custom" : fmt(m.value)}
+            <span aria-hidden="true" className="absolute inset-x-0 bottom-0 block h-1 overflow-hidden rounded-full bg-muted shadow-[inset_0_0_0_1px_var(--border)]">
+              <span className={cn("mk-meter block h-full origin-left rounded-full", m.value < 0 ? "bg-[repeating-linear-gradient(90deg,var(--foreground-dim)_0_6px,transparent_6px_10px)]" : "bg-gradient-to-r from-foreground/55 to-foreground")} style={{ "--share": m.share } as React.CSSProperties} />
+            </span>
+          </dd>
         </div>
       ))}
     </dl>
@@ -168,15 +181,18 @@ function PlanCard({ p, prev, currency, interval, compact, fit }: { p: PricingPla
         ) : null}
       </div>
       <p className="relative mt-1.5 min-h-[2.75rem] text-[13.5px] leading-snug text-muted-foreground">{p.tagline}</p>
-      {/* Fixed height for the price and its note (one or two lines), so every card's button sits on one line. */}
-      <div className="relative mt-5 min-h-[6.5rem]">
+      {/* Fixed height for the price and its note, so every card's button (and the meters under it)
+          sits on one line for every currency and interval: the number is sized from the card width
+          and the longest price in the row (`--price-em`, set on the list), the unit never splits
+          ("/ month" moves as one piece), and the note always reserves two lines. */}
+      <div className="mk-price relative mt-5 min-h-[6.5rem]">
         {line ? (
           <>
-            <p className="flex items-baseline gap-1.5">
-              <PriceRoll minor={line.perMonth} currency={currency} className="mk-num font-display text-[3.5rem] font-bold leading-none tracking-[-0.04em] [font-stretch:104%]" />
-              <span className="text-sm text-muted-foreground">/ month</span>
+            <p className="flex flex-wrap items-baseline gap-x-1.5">
+              <PriceRoll minor={line.perMonth} currency={currency} className="mk-price__num font-display font-bold leading-none tracking-[-0.04em] [font-stretch:104%]" />
+              <span className="whitespace-nowrap text-sm text-muted-foreground">/ month</span>
             </p>
-            <p className="mt-2 text-[12.5px] leading-snug text-muted-foreground">
+            <p className="mt-2 min-h-[2.75em] text-[12.5px] leading-snug text-muted-foreground">
               {line.perMonth === 0
                 ? "Free forever on the Free plan limits."
                 : interval === "year"
@@ -186,8 +202,10 @@ function PlanCard({ p, prev, currency, interval, compact, fit }: { p: PricingPla
           </>
         ) : (
           <>
-            <p className="mk-num font-display text-[3.5rem] font-bold leading-none tracking-[-0.04em] [font-stretch:104%]">Custom</p>
-            <p className="mt-2 text-[12.5px] leading-snug text-muted-foreground">Priced per agreement; invoice billing available.</p>
+            <p data-custom="" className="mk-price__num mk-num font-display font-bold leading-none tracking-[-0.04em] [font-stretch:104%]">
+              Custom
+            </p>
+            <p className="mt-2 min-h-[2.75em] text-[12.5px] leading-snug text-muted-foreground">Priced per agreement; invoice billing available.</p>
           </>
         )}
       </div>
@@ -226,16 +244,18 @@ const USAGE_LABELS: Record<UsageKey, { label: string; unit: string }> = {
   members: { label: "Members", unit: "people" },
 };
 
-function PlanFinder({ usage, onUsage, currency, plans }: { usage: Usage; onUsage: (u: Usage) => void; currency: Currency; plans: PricingPlanView[] }) {
+function PlanFinder({ usage, onUsage, currency, interval, plans }: { usage: Usage; onUsage: (u: Usage) => void; currency: Currency; interval: Interval; plans: PricingPlanView[] }) {
   const id = React.useId();
   const { plan, ruledOut } = explainPlan(usage, currency);
+  const match = plans.find((p) => p.id === plan);
+  const matchLine = match?.prices ? priceLine(match.prices, currency, interval) : null;
   const name = (pid: string) => plans.find((p) => p.id === pid)?.name ?? pid;
   const list = (xs: string[]) => (xs.length > 1 ? `${xs.slice(0, -1).join(", ")} and ${xs[xs.length - 1]}` : xs[0]);
   const blockers = ruledOut.filter((r) => r.by.length).map((r) => `${name(r.plan)} allows fewer ${list(r.by.map((k) => USAGE_LABELS[k].unit))}`);
   const reason = blockers.length ? `${blockers.join("; ")}.` : "It is the cheapest plan, and your usage is within its limits.";
   return (
     <section aria-labelledby={`${id}-title`} className="mt-14 overflow-hidden rounded-[20px] border border-border bg-card/70 shadow-[inset_0_1px_0_var(--hairline)] backdrop-blur">
-      <div className="grid gap-8 p-6 sm:p-8 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] lg:gap-12">
+      <div className="grid grid-cols-1 gap-8 p-6 sm:p-8 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] lg:gap-12">
         <div>
           <p className="text-label flex items-center gap-2 text-muted-foreground">
             <span aria-hidden="true" className="size-1.5 rounded-full bg-signal" />
@@ -247,9 +267,27 @@ function PlanFinder({ usage, onUsage, currency, plans }: { usage: Usage; onUsage
           <p aria-live="polite" className="mt-4 text-[15px] leading-relaxed text-muted-foreground">
             <span className="font-semibold text-foreground">{name(plan)}</span> is the cheapest plan that covers it. {reason}
           </p>
+          {/* The answer itself, with its price and button: the plan cards above may be off-screen
+              while the sliders move (the card's "Fits your usage" ring is secondary feedback). */}
+          {match ? (
+            <div className="mt-5 flex flex-wrap items-center gap-x-4 gap-y-3 rounded-[14px] border border-border bg-background/60 py-3 pl-4 pr-3 shadow-[inset_0_1px_0_var(--hairline)]">
+              <span className="min-w-0 flex-1">
+                <span className="block text-[15px] font-semibold tracking-[-0.01em]">{match.name}</span>
+                <span className="mk-num block text-[13px] text-muted-foreground">
+                  {matchLine
+                    ? `${formatPrice(matchLine.perMonth, currency)} / month${interval === "year" && matchLine.perMonth > 0 ? ", billed annually" : ""}`
+                    : "Custom pricing"}
+                </span>
+              </span>
+              <Link href={match.cta.href} className={buttonClasses("secondary", "sm", "h-9 px-4")}>
+                {match.cta.label}
+                <ArrowRight className="size-3.5" aria-hidden="true" />
+              </Link>
+            </div>
+          ) : null}
           <p className="mt-3 text-xs text-muted-foreground">Uses the same limits the server enforces. Nothing is saved.</p>
         </div>
-        <div className="grid gap-6 sm:grid-cols-3">
+        <div className="grid grid-cols-1 gap-6 sm:grid-cols-3">
           {(Object.keys(USAGE_LABELS) as UsageKey[]).map((k) => {
             const r = FINDER_RANGES[k];
             const inputId = `${id}-${k}`;
@@ -291,11 +329,12 @@ export function PricingTableClient({ plans, compact, finder = false }: { plans: 
   const [usage, setUsage] = React.useState<Usage>(DEFAULT_USAGE);
   const [touched, setTouched] = React.useState(false);
   const fitId = finder && touched ? explainPlan(usage, currency).plan : null;
+  const widest = Math.max(1, ...plans.map((p) => (p.prices ? priceEm(p.prices[currency][interval], currency) : 0)));
 
   return (
     <div>
       <PricingToggles currency={currency} interval={interval} onCurrency={setCurrency} onInterval={setInterval} />
-      <ul className={cn("mt-12 grid gap-4 text-left", plans.length >= 4 ? "md:grid-cols-2 xl:grid-cols-4" : "md:grid-cols-3")}>
+      <ul className={cn("mt-12 grid grid-cols-1 gap-4 text-left", plans.length >= 4 ? "md:grid-cols-2 xl:grid-cols-4" : "md:grid-cols-3")} style={{ "--price-em": widest } as React.CSSProperties}>
         {plans.map((p, i) => {
           const fit = fitId === p.id;
           const card = <PlanCard p={p} prev={plans[i - 1]} currency={currency} interval={interval} compact={compact} fit={fit} />;
@@ -322,6 +361,7 @@ export function PricingTableClient({ plans, compact, finder = false }: { plans: 
         <PlanFinder
           usage={usage}
           currency={currency}
+          interval={interval}
           plans={plans}
           onUsage={(u) => {
             setTouched(true);

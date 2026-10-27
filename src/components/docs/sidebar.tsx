@@ -52,10 +52,15 @@ function NavList({ groups, onNavigate }: { groups: SidebarGroup[]; onNavigate?: 
   );
 }
 
+/** Pages that already lead with a large search field of their own (the rail's trigger would be a second one). */
+const HERO_SEARCH_PATHS = new Set(["/docs"]);
+
 /**
  * Docs navigation: a sticky rail on large screens and a Radix Dialog drawer
  * on small ones. Active state comes from the current pathname (aria-current="page"),
  * marked with a signal bar; category headers carry their icon.
+ * The search trigger is labelled for the hub it sits in ("Search docs…" / "Search Learn…"), spans
+ * the rail's full width (same as the nav rows), and is left out where the page has a hero search.
  */
 export function DocsSidebar({ groups }: { groups: SidebarGroup[] }) {
   const pathname = usePathname();
@@ -74,6 +79,8 @@ export function DocsSidebar({ groups }: { groups: SidebarGroup[] }) {
 
   const current = groups.flatMap((g) => g.items).find((i) => i.href === pathname);
   const currentGroup = groups.find((g) => g.items.some((i) => i.href === pathname));
+  const showSearch = !HERO_SEARCH_PATHS.has(pathname ?? "");
+  const searchLabel = groups.some((g) => g.category === "Learn") ? "Search Learn…" : "Search docs…";
 
   return (
     <>
@@ -112,16 +119,18 @@ export function DocsSidebar({ groups }: { groups: SidebarGroup[] }) {
               </RD.Content>
             </RD.Portal>
           </RD.Root>
-          <SearchTrigger />
+          {showSearch ? <SearchTrigger label={searchLabel} /> : null}
         </div>
       </div>
 
       {/* Desktop rail */}
       <aside className="hidden lg:block">
         <div className="scrollbar-thin sticky top-24 max-h-[calc(100vh-7rem)] overflow-y-auto pb-8 pr-3">
-          <div className="mb-6">
-            <SearchTrigger className="w-full" />
-          </div>
+          {showSearch ? (
+            <div className="mb-6">
+              <SearchTrigger label={searchLabel} className="w-full sm:w-full sm:min-w-0" />
+            </div>
+          ) : null}
           <NavList groups={groups} />
         </div>
       </aside>

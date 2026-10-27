@@ -11,7 +11,7 @@ export default async function Page() {
   const user = await getCurrentUser();
   return (
     <PageTemplate page={PRICING_PAGES[PATH]} layout="form">
-      <section aria-labelledby="form-heading" className="e3 rounded-[20px] p-6 sm:p-7">
+      <section id="enterprise-form" aria-labelledby="form-heading" className="e3 scroll-mt-28 rounded-[20px] p-6 sm:p-7">
         <h2 id="form-heading" className="text-display-4">Talk to us about Enterprise</h2>
         <SupportForm
           kind="sales"

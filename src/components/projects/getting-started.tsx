@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ArrowRight, Check, MessageSquareText, Play, Rocket, X } from "lucide-react";
+import { ArrowRight, Check, Lock, MessageSquareText, Play, Rocket, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export const CHECKLIST_COOKIE = "codexa_checklist";
@@ -15,11 +15,40 @@ export type ChecklistMilestones = { project: boolean; preview: boolean; deploy: 
  * sandbox was started, a deployment was made), never from local progress. Once all three are
  * done it can be dismissed (a cookie, so the server stops rendering it: no flash on reload).
  * `layout="row"`: three steps side by side (first run); `"stack"`: compact, for a side column.
+ * Deploys are blocked server-side until the email is verified, so the deploy step renders as
+ * locked (with the reason) instead of as an available next step while the email is unverified.
  */
-export function GettingStarted({ milestones, canCreate, resumeHref, layout = "row", className }: { milestones: ChecklistMilestones; canCreate: boolean; resumeHref?: string | null; layout?: "row" | "stack"; className?: string }) {
+export function GettingStarted({
+  milestones,
+  canCreate,
+  resumeHref,
+  emailVerified = true,
+  emailConfigured = true,
+  layout = "row",
+  className,
+}: {
+  milestones: ChecklistMilestones;
+  canCreate: boolean;
+  resumeHref?: string | null;
+  /** Whether the signed-in user's email is verified (deploys require it). */
+  emailVerified?: boolean;
+  /** Whether this server can deliver account emails (capabilities.email). */
+  emailConfigured?: boolean;
+  layout?: "row" | "stack";
+  className?: string;
+}) {
   const router = useRouter();
   const [hidden, setHidden] = useState(false);
-  const steps = [
+  const deployLocked = !milestones.deploy && !emailVerified;
+  const steps: {
+    id: string;
+    done: boolean;
+    icon: typeof Rocket;
+    title: string;
+    body: string;
+    locked?: boolean;
+    cta: { label: string; onClick: () => void } | { label: string; href: string } | null;
+  }[] = [
     {
       id: "project",
       done: milestones.project,
@@ -41,13 +70,18 @@ export function GettingStarted({ milestones, canCreate, resumeHref, layout = "ro
       done: milestones.deploy,
       icon: Rocket,
       title: "Deploy it",
-      body: "Publish from the editor to get a shareable URL.",
-      cta: resumeHref ? { label: "Open a project", href: resumeHref } : null,
+      body: deployLocked
+        ? emailConfigured
+          ? "Needs a verified email. Use the link we emailed you, then publish from the editor."
+          : "Needs a verified email. Email delivery isn't configured on this server; ask the operator."
+        : "Publish from the editor to get a shareable URL.",
+      locked: deployLocked,
+      cta: deployLocked ? null : resumeHref ? { label: "Open a project", href: resumeHref } : null,
     },
   ];
   const done = steps.filter((s) => s.done).length;
   const allDone = done === steps.length;
-  const next = steps.find((s) => !s.done)?.id;
+  const next = steps.find((s) => !s.done && !s.locked)?.id;
   if (hidden) return null;
 
   const dismiss = () => {
@@ -92,21 +126,21 @@ export function GettingStarted({ milestones, canCreate, resumeHref, layout = "ro
               key={s.id}
               className={cn(
                 "relative flex gap-3 rounded-[14px] border p-3.5 transition-colors",
-                s.done ? "border-border bg-surface/50" : isNext ? "border-border-strong bg-card shadow-[inset_0_1px_0_var(--hairline),var(--shadow-sm)]" : "border-dashed border-border bg-transparent",
+                s.done ? "border-border bg-surface/50" : s.locked ? "border-border bg-muted/40" : isNext ? "border-border-strong bg-card shadow-[inset_0_1px_0_var(--hairline),var(--shadow-sm)]" : "border-dashed border-border bg-transparent",
               )}
             >
               <span
                 className={cn(
                   "flex size-7 shrink-0 items-center justify-center rounded-full text-xs font-semibold",
-                  s.done ? "step-done bg-success text-background" : isNext ? "bg-foreground text-background" : "bg-muted text-muted-foreground shadow-[inset_0_0_0_1px_var(--border)]",
+                  s.done ? "step-done bg-success text-background" : s.locked ? "bg-muted text-muted-foreground" : isNext ? "bg-foreground text-background" : "bg-muted text-muted-foreground shadow-[inset_0_0_0_1px_var(--border)]",
                 )}
               >
-                {s.done ? <Check className="size-3.5" strokeWidth={3} aria-hidden="true" /> : i + 1}
+                {s.done ? <Check className="size-3.5" strokeWidth={3} aria-hidden="true" /> : s.locked ? <Lock className="size-3.5" aria-hidden="true" /> : i + 1}
               </span>
               <div className="min-w-0 flex-1">
-                <p className={cn("text-[13.5px] font-medium", s.done && "text-muted-foreground line-through decoration-border-strong")}>
+                <p className={cn("text-[13.5px] font-medium", s.done && "text-muted-foreground line-through decoration-border-strong", s.locked && "text-muted-foreground")}>
                   {s.title}
-                  {s.done ? null : <span className="sr-only"> (to do)</span>}
+                  {s.done ? null : s.locked ? <span className="sr-only"> (locked)</span> : <span className="sr-only"> (to do)</span>}
                 </p>
                 {s.done ? <p className="mt-0.5 text-xs font-medium text-success">Done</p> : <p className="mt-0.5 text-xs leading-relaxed text-muted-foreground">{s.body}</p>}
                 {!s.done && isNext && s.cta ? (

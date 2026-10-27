@@ -148,6 +148,7 @@ export function PromptBox({
   initialPrompt,
   initialTemplateId,
   atLimit = null,
+  align = "center",
 }: {
   /** The editable workspace projects are created in (null: the user cannot create). */
   workspaceId: string | null;
@@ -162,6 +163,8 @@ export function PromptBox({
   /** The idea passport from `?prompt=` (already clamped on the server). */
   initialPrompt?: string;
   initialTemplateId?: string;
+  /** "center" (dashboard hero, max 768px) or "start": left-aligned, filling its container (the New project hub's column). */
+  align?: "center" | "start";
 }) {
   const router = useRouter();
   const mod = usePlatformMod();
@@ -182,6 +185,7 @@ export function PromptBox({
   const template = templates.find((t) => t.id === templateId);
   const workspace = workspaces.find((w) => w.id === wsId);
   const length = prompt.length;
+  const start = align === "start";
 
   // Idea passport: focus the carried prompt, take the URL param out of the address bar, or fall back to the stashed idea.
   useEffect(() => {
@@ -279,7 +283,7 @@ export function PromptBox({
 
   return (
     <section aria-label="Describe your idea" className="w-full">
-      <div className="mx-auto max-w-3xl">
+      <div className={start ? "w-full" : "mx-auto max-w-3xl"}>
         <form
           ref={formRef}
           onSubmit={(e) => {
@@ -375,9 +379,11 @@ export function PromptBox({
                   {workspaces.length > 1 && workspace ? (
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild disabled={busy}>
-                        <button type="button" className={cn(chip, "max-w-[180px]")} aria-label={`Workspace: ${workspace.name}. Change workspace`}>
+                        {/* Named by content (sr-only), not aria-label, so the name contains the visible text (WCAG 2.5.3). */}
+                        <button type="button" className={cn(chip, "max-w-[180px]")}>
                           <Avatar name={workspace.name} seed={workspace.id} shape="square" size="xs" />
-                          <span className="hidden truncate sm:inline">{workspace.name}</span>
+                          <span aria-hidden="true" className="hidden truncate sm:inline">{workspace.name}</span>
+                          <span className="sr-only">Workspace: {workspace.name}. Change workspace</span>
                           <ChevronDown className="size-3.5 shrink-0" aria-hidden="true" />
                         </button>
                       </DropdownMenuTrigger>
@@ -439,12 +445,12 @@ export function PromptBox({
                     size="sm"
                     spark
                     disabled={!prompt.trim() || !enabled || busy}
-                    aria-label="Start building"
                     aria-keyshortcuts="Control+Enter Meta+Enter"
+                    aria-busy={busy || undefined}
                     className="composer-build h-9 gap-2 px-3.5 sm:px-4"
                   >
                     <span>Build</span>
-                    <span data-spark-icon className="hidden items-center gap-0.5 rounded-[6px] bg-current/12 px-1.5 py-0.5 text-[11px] font-semibold leading-none sm:inline-flex">
+                    <span data-spark-icon aria-hidden="true" className="hidden items-center gap-0.5 rounded-[6px] bg-current/12 px-1.5 py-0.5 text-[11px] font-semibold leading-none sm:inline-flex">
                       {mod}
                       <CornerDownLeft className="size-3" aria-hidden="true" />
                     </span>
@@ -470,7 +476,7 @@ export function PromptBox({
         ) : null}
 
         {atLimit && atLimit.workspaceId === wsId && !error ? (
-          <p className="mt-3 text-pretty text-center text-xs text-muted-foreground">
+          <p className={cn("mt-3 text-pretty text-xs text-muted-foreground", start ? "text-left" : "text-center")}>
             <span className="mr-1.5 inline-block size-1.5 rounded-full bg-warning align-middle" aria-hidden="true" />
             <span>
               All {atLimit.limit} projects on the {atLimit.plan} plan are in use in this workspace. Delete one or{" "}
@@ -482,7 +488,7 @@ export function PromptBox({
           </p>
         ) : null}
 
-        <p id="idea-hint" className="mt-3 flex flex-wrap items-center justify-center gap-x-2 gap-y-1 text-center text-xs text-muted-foreground">
+        <p id="idea-hint" className={cn("mt-3 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-muted-foreground", start ? "justify-start text-left" : "justify-center text-center")}>
           {!enabled ? (
             "You need a workspace with edit access before creating projects."
           ) : aiConfigured ? (
@@ -511,13 +517,17 @@ export function PromptBox({
       </div>
 
       {presets.length ? (
-        <div className="mx-auto mt-5 max-w-4xl">
+        <div className={start ? "mt-5" : "mx-auto mt-5 max-w-4xl"}>
           <p className="sr-only" id="presets-label">
             Quick starts
           </p>
           <ul
             aria-labelledby="presets-label"
-            className="edge-fade-x -mx-4 flex gap-2 overflow-x-auto px-4 pb-1 sm:mx-0 sm:flex-wrap sm:justify-center sm:overflow-visible sm:px-0 sm:[mask-image:none]"
+            className={cn(
+              // Phones: one swipeable row whose right edge fades out (wide enough to read as "more this way").
+              "edge-fade-x preset-row -mx-4 flex gap-2 overflow-x-auto px-4 pb-1 sm:mx-0 sm:flex-wrap sm:overflow-visible sm:px-0 sm:[mask-image:none]",
+              start ? "sm:justify-start" : "sm:justify-center",
+            )}
           >
             {presets.map((p) => {
               const on = p.templateId === templateId && prompt === p.prompt;
@@ -534,7 +544,7 @@ export function PromptBox({
                       on ? "border-foreground/40 text-foreground" : "border-border text-muted-foreground hover:border-border-strong hover:text-foreground",
                     )}
                   >
-                    <ProjectThumb templateId={p.templateId} size="sm" className="h-6 w-[38px] rounded-[6px]" />
+                    <ProjectThumb templateId={p.templateId} framework={templates.find((t) => t.id === p.templateId)?.framework} size="sm" className="h-6 w-[38px] rounded-[6px]" />
                     {p.label}
                   </button>
                 </li>

@@ -3,14 +3,17 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import * as React from "react";
+import { HoverCard } from "radix-ui";
 import { ArrowRight, Check, ChevronDown, Code2, Sparkles } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Kbd } from "@/components/ui/misc";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Tooltip, TooltipProvider } from "@/components/ui/tooltip";
 import { AutoGrowTextarea } from "@/components/ui/autogrow-textarea";
 import { useCalm, shakeElement, isCalm } from "@/lib/client/motion";
-import { IDEA_MAX, clampIdea, ideaHref, stashPendingIdea, type IdeaSource } from "@/lib/client/pending-idea";
+import { useMediaQuery } from "@/lib/client/workspace/use-media-query";
+import { IDEA_MAX, clampIdea, ideaHref, readPendingIdea, stashPendingIdea, type IdeaSource } from "@/lib/client/pending-idea";
 import { HOME_CHIPS } from "@/content/marketing/home";
 import { TEMPLATE_SHOTS, templateShotFor } from "@/components/templates/shots";
 import { useHomeStore } from "@/components/marketing/home/home-store";
@@ -65,14 +68,102 @@ function useTypedPlaceholder(active: boolean, ref: React.RefObject<HTMLElement |
 
 function Thumb({ id, shot, className }: { id: string | null; shot: boolean; className?: string }) {
   if (id && shot) {
+    // A token ring (border-strong) so the mostly white screenshots still read as thumbnails on the paper theme.
     // eslint-disable-next-line @next/next/no-img-element
-    return <img src={templateShotFor(id, 56)} alt="" width={28} height={18} loading="lazy" decoding="async" className={cn("shrink-0 rounded-[3px] bg-white object-cover object-top shadow-[0_0_0_1px_var(--border)]", className)} />;
+    return <img src={templateShotFor(id, 56)} alt="" width={28} height={18} loading="lazy" decoding="async" className={cn("shrink-0 rounded-[3px] bg-white object-cover object-top ring-1 ring-border-strong", className)} />;
   }
   const Icon = id ? Code2 : Sparkles;
   return (
-    <span aria-hidden="true" className={cn("inline-flex shrink-0 items-center justify-center rounded-[3px] bg-muted text-muted-foreground shadow-[0_0_0_1px_var(--border)]", className)}>
+    <span aria-hidden="true" className={cn("inline-flex shrink-0 items-center justify-center rounded-[3px] bg-muted text-muted-foreground ring-1 ring-border-strong", className)}>
       <Icon className="size-3" />
     </span>
+  );
+}
+
+/** Chip previews need a real hover: fine pointers from md (touch never hovers; phones scroll the chips sideways). */
+const PREVIEW_QUERY = "(hover: hover) and (pointer: fine) and (min-width: 768px)";
+/** Space kept clear at the top of the viewport for the sticky header (68px plus breathing room). */
+const PREVIEW_TOP_CLEARANCE = 84;
+
+/**
+ * Hover/focus preview of a chip's real starter screenshot (decorative). Portalled to the body, so
+ * nothing in the hero (the product stage right below it) can paint over it, and it opens upward over
+ * the composer, so it never covers the links row under the chips. When there is no room above
+ * (scrolled up under the sticky header) Popper would flip it down; it stays hidden instead.
+ * Clicking the chip closes it so the prompt typing into the box stays visible; it opens again on
+ * the next hover or focus.
+ */
+function ChipPreview({ templateId, name, children }: { templateId: string; name: string; children: React.ReactElement }) {
+  const [open, setOpen] = React.useState(false);
+  const used = React.useRef(false);
+  return (
+    <HoverCard.Root open={open} onOpenChange={(next) => setOpen(next && !used.current)} openDelay={180} closeDelay={60}>
+      <HoverCard.Trigger
+        asChild
+        onClick={() => {
+          used.current = true;
+          setOpen(false);
+        }}
+        onPointerLeave={() => {
+          used.current = false;
+        }}
+        onBlur={() => {
+          used.current = false;
+        }}
+      >
+        {children}
+      </HoverCard.Trigger>
+      <HoverCard.Portal>
+        <HoverCard.Content
+          side="top"
+          align="center"
+          sideOffset={10}
+          collisionPadding={{ top: PREVIEW_TOP_CLEARANCE, right: 12, bottom: 12, left: 12 }}
+          aria-hidden="true"
+          className="cx-pop pointer-events-none z-50 w-[260px] rounded-[14px] border border-border-strong bg-card p-1.5 shadow-xl data-[side=bottom]:hidden"
+        >
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src={templateShotFor(templateId, 360)} alt="" width={248} height={155} decoding="async" className="aspect-[16/10] w-full rounded-[9px] bg-white object-cover object-top" />
+          <span className="flex items-center justify-between gap-2 px-1 pb-0.5 pt-1.5 text-[11.5px]">
+            <span className="truncate font-medium text-foreground">{name}</span>
+            <span className="shrink-0 text-muted-foreground">Starter</span>
+          </span>
+        </HoverCard.Content>
+      </HoverCard.Portal>
+    </HoverCard.Root>
+  );
+}
+
+/**
+ * The AI capability state as a compact chip (PLAN §5.2: it replaces the fine-print disclaimer).
+ * Configured: a green dot and "Agent ready". Not configured: an outlined warning dot and
+ * "AI not configured", linking to the AI agent docs, with the rest of the explanation in a tooltip
+ * (and in the link's accessible name, since tooltips do not open on touch).
+ */
+function CapabilityChip({ aiReady, className }: { aiReady: boolean; className?: string }) {
+  const chip = "inline-flex h-7 shrink-0 items-center gap-1.5 rounded-full border border-border bg-background/60 px-2.5 text-xs whitespace-nowrap";
+  if (aiReady) {
+    return (
+      <span className={cn(chip, "text-foreground/80", className)}>
+        <span aria-hidden="true" className="size-1.5 rounded-full bg-success shadow-[0_0_0_3px_color-mix(in_oklab,var(--success)_18%,transparent)]" />
+        Agent ready
+      </span>
+    );
+  }
+  return (
+    <TooltipProvider delayDuration={200}>
+      <Tooltip content="This deployment has no AI provider key yet. The editor, runtime and deploy still work.">
+        <Link
+          href="/docs/ai-agent"
+          aria-label="AI not configured on this deployment. The editor, runtime and deploy still work. Read the AI agent docs"
+          className={cn(chip, "group/ai text-muted-foreground transition-colors hover:border-border-strong hover:text-foreground", className)}
+        >
+          <span aria-hidden="true" className="size-1.5 rounded-full border border-warning" />
+          AI not configured
+          <ArrowRight className="size-3 transition-transform group-hover/ai:translate-x-0.5" aria-hidden="true" />
+        </Link>
+      </Tooltip>
+    </TooltipProvider>
   );
 }
 
@@ -194,12 +285,19 @@ function StarterPicker({
  *   home stage), the starter picker and live "Closest starter" match.
  * - variant="compact": a smaller composer for CTA bands, no chips.
  * Inside the home page (HomeStoreProvider) it also brightens the Horizon light while focused or typed into.
+ *
+ * Idea passport: `defaultValue` seeds the text (e.g. Remix: "Start from the X template and "; an
+ * untouched seed is not submitted). With `prefill` (on by default for the hero) the box picks the
+ * idea back up after mount: `?prompt=` / `?template=` in the URL first, otherwise the stashed
+ * pending idea, so a link back to the homepage (or a return visit within 24h) keeps the idea.
  */
 export function PromptBox({
   signedIn,
   variant = "hero",
   source,
   defaultTemplateId,
+  defaultValue,
+  prefill,
   aiReady: aiReadyProp,
   footer,
   className,
@@ -210,6 +308,10 @@ export function PromptBox({
   source?: IdeaSource;
   /** Preselect a starter (e.g. "Remix this template"). */
   defaultTemplateId?: string;
+  /** Initial text (e.g. Remix: "Start from the X template and "). Submitting it unchanged asks for more. */
+  defaultValue?: string;
+  /** Pick up the carried idea (?prompt= or the stashed pending idea) after mount. Default: true for the hero. */
+  prefill?: boolean;
   /** Show the capability chip ("Agent ready" / "AI not configured…"). Read from the home store when omitted. */
   aiReady?: boolean;
   /** Extra items at the end of the meta line under the composer (e.g. the hero's links). */
@@ -224,7 +326,7 @@ export function PromptBox({
   const starters = React.useMemo(() => store?.starters ?? [], [store]);
   const aiReady = aiReadyProp ?? store?.aiReady;
 
-  const [value, setValue] = React.useState("");
+  const [value, setValue] = React.useState(() => (defaultValue ? defaultValue.slice(0, IDEA_MAX) : ""));
   const [error, setError] = React.useState<string | null>(null);
   const [submitting, setSubmitting] = React.useState(false);
   const [focused, setFocused] = React.useState(false);
@@ -243,6 +345,21 @@ export function PromptBox({
   const closest = closestId ? starters.find((s) => s.id === closestId) ?? null : null;
   // On the home page the chips are checked against the real starter list (an unknown id is dropped).
   const chips = React.useMemo(() => (starters.length ? HOME_CHIPS.filter((c) => starters.some((s) => s.id === c.templateId)) : HOME_CHIPS), [starters]);
+  // Server and first paint render plain chips; hover-capable screens wrap them in the preview card after hydration.
+  const canPreview = useMediaQuery(PREVIEW_QUERY, false) && hero;
+  // The preview card mounts on open: fetch its screenshots on the first sign of intent (pointer over or
+  // focus into the chip row), so the card never opens on an empty frame.
+  const prefetched = React.useRef(false);
+  const prefetchPreviews = () => {
+    if (prefetched.current || !canPreview) return;
+    prefetched.current = true;
+    for (const c of chips) {
+      if (!TEMPLATE_SHOTS.has(c.templateId)) continue;
+      const img = new Image();
+      img.decoding = "async";
+      img.src = templateShotFor(c.templateId, 360);
+    }
+  };
 
   // Register the hero prompt so the stage's "Build your own" can focus it.
   React.useEffect(() => {
@@ -258,6 +375,53 @@ export function PromptBox({
     },
     [],
   );
+
+  // Idea passport, return leg: after hydration (so the server HTML stays empty and stable), pick up
+  // ?prompt=/&template= or the stashed idea. Runs once; never overwrites something already typed.
+  const shouldPrefill = prefill ?? hero;
+  const prefilled = React.useRef(false);
+  React.useEffect(() => {
+    if (!shouldPrefill || prefilled.current) return;
+    // Deferred a tick (React's lint forbids synchronous setState in an effect body); all reads and
+    // the URL clean-up happen inside it, so a StrictMode double-run cannot lose the idea.
+    const t = window.setTimeout(() => {
+      if (prefilled.current) return;
+      prefilled.current = true;
+      let text = "";
+      let templateId: string | undefined;
+      try {
+        const params = new URLSearchParams(window.location.search);
+        text = clampIdea(params.get("prompt"));
+        templateId = params.get("template") ?? undefined;
+        if (text) {
+          // Keep the address clean (and the idea out of shared links) once it is in the box.
+          params.delete("prompt");
+          params.delete("template");
+          const qs = params.toString();
+          window.history.replaceState(window.history.state, "", `${window.location.pathname}${qs ? `?${qs}` : ""}${window.location.hash}`);
+        }
+      } catch {
+        /* no URL access */
+      }
+      if (!text) {
+        const pending = readPendingIdea();
+        text = pending?.text ?? "";
+        templateId = pending?.templateId;
+      }
+      if (!text) return;
+      const known = templateId && (!starters.length || starters.some((s) => s.id === templateId)) ? templateId : undefined;
+      setValue((cur) => (cur.trim() ? cur : text));
+      if (known) {
+        setPicked((cur) => cur ?? known);
+        if (drivesStage) store?.requestScenario(known, "pick");
+      } else if (store) {
+        const m = store.match(text)?.id ?? null;
+        setClosestId(m);
+        if (m && drivesStage) store.requestScenario(m, "match");
+      }
+    }, 0);
+    return () => window.clearTimeout(t);
+  }, [shouldPrefill, starters, drivesStage, store]);
 
   /** Live match (150ms debounce): the starter chip follows it; on the hero it also switches the stage. */
   const scheduleMatch = (text: string, chip?: { id: string; prompt: string } | null) => {
@@ -331,6 +495,14 @@ export function PromptBox({
     typingTarget.current = null;
     if (typedTo !== null) setValue(typedTo);
     const prompt = clampIdea(typedTo ?? value);
+    if (defaultValue && prompt === clampIdea(defaultValue)) {
+      setError("Add what you want to change, after the words already in the box.");
+      shakeElement(shakeRef.current, 6);
+      const el = areaRef.current;
+      el?.focus();
+      el?.setSelectionRange(value.length, value.length);
+      return;
+    }
     if (prompt.length < MIN_CHARS) {
       setError("Describe your idea in at least a sentence so we can create a useful starting point.");
       shakeElement(shakeRef.current, 6);
@@ -353,8 +525,8 @@ export function PromptBox({
   const hint = signedIn ? "Continues in your dashboard." : "Creates a free account first; your idea is carried over.";
 
   return (
-    <form ref={formRef} onSubmit={onSubmit} className={cn("mx-auto w-full text-left", hero ? "max-w-3xl" : "max-w-2xl", className)} aria-label={hero ? "Build an app from a sentence" : "Start a new build"}>
-      <div ref={shakeRef}>
+    <form ref={formRef} onSubmit={onSubmit} className={cn("@container mx-auto w-full text-left", hero ? "max-w-3xl" : "max-w-2xl", className)} aria-label={hero ? "Build an app from a sentence" : "Start a new build"}>
+      <div ref={shakeRef} className="relative">
         <div
           data-active={value.length > 0 ? "" : undefined}
           className={cn(
@@ -403,11 +575,13 @@ export function PromptBox({
             />
             <div className={cn("flex items-center gap-2", hero ? "px-3 pb-3 sm:px-3.5" : "px-2.5 pb-2.5")}>
               {starters.length > 0 ? (
-                <div className="min-w-0 flex-1 sm:flex-none">
+                <div className="min-w-0 flex-1 sm:flex-initial">
                   <StarterPicker starters={starters} picked={picked} closest={closest} onPick={pick} compact={!hero} />
                 </div>
               ) : null}
               <div className="ml-auto flex shrink-0 items-center gap-2.5">
+                {/* Wide enough (the form is a size container): the capability chip sits here, before ⌘↵. Narrower, it moves under the box. */}
+                {aiReady === undefined ? null : <CapabilityChip aiReady={aiReady} className="hidden @lg:inline-flex" />}
                 {value.length > COUNTER_FROM ? (
                   <span className={`text-meta ${cn("tabular-nums", value.length >= IDEA_MAX ? "text-danger" : "text-muted-foreground")}`}>
                     {value.length.toLocaleString("en-US")} / {IDEA_MAX.toLocaleString("en-US")}
@@ -445,6 +619,19 @@ export function PromptBox({
             </div>
           </div>
         </div>
+        {hero ? (
+          // The textarea's description. Always in the accessibility tree; shown under the box (left-aligned,
+          // in the gap above the chips, so nothing moves) while the composer is in use.
+          <p
+            id={hintId}
+            className={cn(
+              "pointer-events-none absolute inset-x-4 top-full mt-1.5 truncate text-[11px] leading-4 text-muted-foreground sm:inset-x-5 sm:text-xs transition-[opacity,translate] duration-(--dur-3) ease-out calm:transition-none",
+              (focused || value.length > 0) && !error ? "translate-y-0 opacity-100" : "-translate-y-0.5 opacity-0",
+            )}
+          >
+            {hint}
+          </p>
+        ) : null}
       </div>
 
       {error ? (
@@ -454,61 +641,50 @@ export function PromptBox({
       ) : null}
 
       {hero ? (
-        <ul aria-label="Example ideas" className="-mx-4 mt-3 flex snap-x snap-mandatory scroll-px-4 gap-2 overflow-x-auto px-4 pb-1 [scrollbar-width:none] sm:mx-0 sm:flex-wrap sm:justify-center sm:overflow-visible sm:px-0 sm:pb-0 lg:-mx-20 [&::-webkit-scrollbar]:hidden">
+        // Phones: a sideways scroller whose right edge fades out, so the cut-off chip reads as "more this way".
+        <ul
+          aria-label="Example ideas"
+          onPointerEnter={prefetchPreviews}
+          onFocus={prefetchPreviews}
+          className="-mx-4 mt-7 flex snap-x snap-mandatory scroll-px-4 gap-2 overflow-x-auto px-4 pb-1 [mask-image:linear-gradient(to_right,black_calc(100%-48px),transparent)] [scrollbar-width:none] sm:mx-0 sm:flex-wrap sm:justify-center sm:overflow-visible sm:px-0 sm:pb-0 sm:[mask-image:none] lg:-mx-20 [&::-webkit-scrollbar]:hidden"
+        >
           {chips.map((chip) => {
             const starter = starters.find((s) => s.id === chip.templateId);
             const active = chipTemplate?.id === chip.templateId && value === chip.prompt;
+            const button = (
+              <button
+                type="button"
+                onClick={() => typeChip(chip)}
+                data-active={active ? "" : undefined}
+                className={cn(
+                  "group/chip inline-flex h-9 items-center gap-2 rounded-full border bg-card/70 pl-1.5 pr-3.5 text-sm text-muted-foreground shadow-[inset_0_1px_0_var(--hairline)] backdrop-blur-sm transition-[border-color,color,background-color,translate] duration-200 hover:-translate-y-px hover:border-border-strong hover:text-foreground calm:hover:translate-y-0",
+                  active ? "border-signal/45 text-foreground" : "border-border",
+                )}
+              >
+                <Thumb id={chip.templateId} shot={TEMPLATE_SHOTS.has(chip.templateId)} className="h-[13px] w-5 rounded-[2px]" />
+                {chip.label}
+              </button>
+            );
             return (
               <li key={chip.templateId} className="relative shrink-0 snap-start">
-                <button
-                  type="button"
-                  onClick={() => typeChip(chip)}
-                  data-active={active ? "" : undefined}
-                  className={cn(
-                    "group/chip peer inline-flex h-9 items-center gap-2 rounded-full border bg-card/70 pl-1.5 pr-3.5 text-sm text-muted-foreground shadow-[inset_0_1px_0_var(--hairline)] backdrop-blur-sm transition-[border-color,color,background-color,translate] duration-200 hover:-translate-y-px hover:border-border-strong hover:text-foreground calm:hover:translate-y-0",
-                    active ? "border-signal/45 text-foreground" : "border-border",
-                  )}
-                >
-                  <Thumb id={chip.templateId} shot={TEMPLATE_SHOTS.has(chip.templateId)} className="h-[13px] w-5 rounded-[2px]" />
-                  {chip.label}
-                </button>
-                {/* Hover/focus preview of the real starter screenshot (decorative). */}
-                {TEMPLATE_SHOTS.has(chip.templateId) ? (
-                  <span
-                    aria-hidden="true"
-                    className="pointer-events-none absolute left-1/2 top-full z-30 mt-2 hidden w-[260px] origin-top -translate-x-1/2 translate-y-1 scale-[0.97] rounded-[14px] border border-border-strong bg-card p-1.5 opacity-0 shadow-xl transition-[opacity,translate,scale] duration-(--dur-3) ease-out peer-hover:translate-y-0 peer-hover:scale-100 peer-hover:opacity-100 peer-focus-visible:translate-y-0 peer-focus-visible:scale-100 peer-focus-visible:opacity-100 md:block calm:transition-none"
-                  >
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src={templateShotFor(chip.templateId, 360)} alt="" width={248} height={155} loading="lazy" decoding="async" className="aspect-[16/10] w-full rounded-[9px] bg-white object-cover object-top" />
-                    <span className="flex items-center justify-between gap-2 px-1 pb-0.5 pt-1.5 text-[11.5px]">
-                      <span className="truncate font-medium text-foreground">{starter?.name ?? chip.label}</span>
-                      <span className="shrink-0 text-muted-foreground">Starter</span>
-                    </span>
-                  </span>
-                ) : null}
+                {canPreview && TEMPLATE_SHOTS.has(chip.templateId) ? (
+                  <ChipPreview templateId={chip.templateId} name={starter?.name ?? chip.label}>
+                    {button}
+                  </ChipPreview>
+                ) : (
+                  button
+                )}
               </li>
             );
           })}
         </ul>
       ) : null}
 
-      <div className={cn("flex flex-wrap items-center justify-center gap-x-4 gap-y-1.5 px-1 text-xs text-muted-foreground", drivesStage ? "mt-3 lg:-mx-28 xl:-mx-40" : "mt-3")}>
-        {aiReady === undefined ? null : aiReady ? (
-          <span className="inline-flex items-center gap-1.5">
-            <span aria-hidden="true" className="size-1.5 rounded-full bg-success shadow-[0_0_0_3px_color-mix(in_oklab,var(--success)_18%,transparent)]" />
-            <span className="text-foreground/80">AI agent ready</span>
-          </span>
-        ) : (
-          <Link href="/docs/ai-agent" className="group/ai inline-flex items-center gap-1.5 text-muted-foreground transition-colors hover:text-foreground">
-            <span aria-hidden="true" className="size-1.5 rounded-full border border-warning" />
-            <span>
-              <span className="text-foreground/80">AI not configured on this deployment</span>
-              <span className="hidden sm:inline"> — editor, runtime and deploy still work</span>
-            </span>
-            <ArrowRight className="size-3 transition-transform group-hover/ai:translate-x-0.5" aria-hidden="true" />
-          </Link>
-        )}
-        <p id={hintId}>{hint}</p>
+      {/* One centred row under the composer: the capability chip when the box is too narrow to hold it,
+          the compact variant's account hint, then the caller's links. */}
+      <div className={cn("flex flex-wrap items-center justify-center gap-x-4 gap-y-2 px-1 text-xs text-muted-foreground", hero ? "mt-4" : "mt-3")}>
+        {aiReady === undefined ? null : <CapabilityChip aiReady={aiReady} className="@lg:hidden" />}
+        {hero ? null : <p id={hintId}>{hint}</p>}
         {footer}
       </div>
     </form>

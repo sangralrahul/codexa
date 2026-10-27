@@ -12,7 +12,7 @@ import { cn } from "@/lib/utils";
 export function FeatureGrid({ features, columns = 3, className }: { features: Feature[]; columns?: 2 | 3 | 4; className?: string }) {
   const cols = { 2: "sm:grid-cols-2", 3: "sm:grid-cols-2 lg:grid-cols-3", 4: "sm:grid-cols-2 lg:grid-cols-4" }[columns];
   return (
-    <ul data-reveal="stagger" className={cn("grid gap-x-10", cols, className)}>
+    <ul data-reveal="stagger" className={cn("grid grid-cols-1 gap-x-10", cols, className)}>
       {features.map((f) => {
         const Icon = f.icon;
         const body = (

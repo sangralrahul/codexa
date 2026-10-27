@@ -78,6 +78,7 @@ export function ProfileChip({
   onName,
   onTimezone,
   onLocale,
+  avatarSeed,
 }: {
   name: string;
   timezone: string;
@@ -90,6 +91,8 @@ export function ProfileChip({
   onName: (v: string) => void;
   onTimezone: (v: string) => void;
   onLocale: (v: string) => void;
+  /** The account menu's avatar seed (stored name, else email), so this avatar keeps its colour while the name is edited. */
+  avatarSeed?: string;
 }) {
   const zones = React.useMemo(() => (open ? allZones(timezone) : []), [open, timezone]);
   const shownName = name.trim() || "Add your name";
@@ -100,7 +103,7 @@ export function ProfileChip({
           type="button"
           className="group inline-flex max-w-full items-center gap-2.5 rounded-full border border-border bg-card/80 py-1 pl-1 pr-3 text-[13px] shadow-[inset_0_1px_0_var(--hairline)] backdrop-blur transition-[border-color,background-color] duration-200 hover:border-border-strong hover:bg-card focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring data-[state=open]:border-border-strong"
         >
-          <Avatar name={name.trim()} size="sm" />
+          <Avatar name={name.trim()} seed={avatarSeed} size="sm" />
           <span className="min-w-0 truncate font-medium text-foreground">{shownName}</span>
           <span aria-hidden="true" className="text-border-strong">
             ·

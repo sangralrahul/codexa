@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ArrowUpRight } from "lucide-react";
+import { ArrowUpRight, Check } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import type { IntegrationDefinition } from "@/config/integrations";
 import { cn } from "@/lib/utils";
@@ -47,7 +47,7 @@ export function IntegrationCard({ integration }: { integration: IntegrationDefin
             planned ? "border-dashed border-border-strong text-muted-foreground" : "border-border bg-surface text-foreground shadow-[inset_0_1px_0_var(--hairline)]",
           )}
         >
-          <IntegrationMark id={i.id} name={i.name} planned={planned} className="size-5" />
+          <IntegrationMark id={i.id} name={i.name} category={i.category} planned={planned} className="size-5" />
         </span>
         <div className="flex flex-wrap justify-end gap-1.5">
           <span className="rounded-full border border-border px-2 py-0.5 font-mono text-[11px] text-muted-foreground">{categoryName(i.category)}</span>
@@ -63,10 +63,11 @@ export function IntegrationCard({ integration }: { integration: IntegrationDefin
       <p className="mt-1.5 text-sm leading-relaxed text-muted-foreground">{i.description}</p>
       <div className="mt-auto pt-4">
         {i.capabilities.length ? (
-          <ul className="flex flex-wrap gap-1.5" aria-label="Capabilities">
+          <ul className="space-y-1.5 border-t border-border pt-3.5" aria-label="Capabilities">
             {i.capabilities.slice(0, 3).map((c) => (
-              <li key={c} className="rounded-md bg-muted px-2 py-0.5 text-[12px] text-muted-foreground">
-                {capabilityLabel(c)}
+              <li key={c} className="flex items-start gap-2 text-[13px] leading-snug text-muted-foreground">
+                <Check className="mt-0.5 size-3.5 shrink-0 text-success" strokeWidth={2.25} aria-hidden="true" />
+                <span>{capabilityLabel(c)}</span>
               </li>
             ))}
           </ul>

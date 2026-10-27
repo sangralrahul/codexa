@@ -8,6 +8,7 @@ import { GettingStarted, type ChecklistMilestones } from "./getting-started";
 import { ContinueBuilding, type ResumeProject } from "./continue-building";
 import { ActivityRiver, type RiverItem } from "./activity-river";
 import { TemplateShowcase } from "./template-showcase";
+import { cn } from "@/lib/utils";
 
 const GUIDES = [
   { href: "/docs/quickstart", title: "Quickstart", body: "From a prompt to a running preview in a few minutes.", icon: Rocket },
@@ -21,7 +22,7 @@ const sectionLink = "link-draw inline-flex items-center gap-1 text-[13px] text-m
 
 function Learn({ cols }: { cols: 2 | 4 }) {
   return (
-    <section aria-labelledby="learn-title" className="pb-6">
+    <section aria-labelledby="learn-title" className="min-w-0 pb-6">
       <div className="mb-3 flex items-baseline justify-between gap-3">
         <h2 id="learn-title" className={sectionTitle}>
           Learn
@@ -30,7 +31,7 @@ function Learn({ cols }: { cols: 2 | 4 }) {
           <BookOpen className="size-3.5" aria-hidden="true" /> All docs
         </Link>
       </div>
-      <ul className={cols === 4 ? "grid gap-3 sm:grid-cols-2 xl:grid-cols-4" : "grid gap-3 sm:grid-cols-2"}>
+      <ul className={cols === 4 ? "grid grid-cols-[minmax(0,1fr)] gap-3 sm:grid-cols-2 xl:grid-cols-4" : "grid grid-cols-[minmax(0,1fr)] gap-3 sm:grid-cols-2"}>
         {GUIDES.map((g) => (
           <li key={g.href}>
             <Link
@@ -74,6 +75,8 @@ export function DashboardCockpit({
   milestones,
   showChecklist,
   canCreate,
+  emailVerified,
+  emailConfigured,
   createIn,
   usage,
   starters,
@@ -87,6 +90,10 @@ export function DashboardCockpit({
   milestones: ChecklistMilestones;
   showChecklist: boolean;
   canCreate: boolean;
+  /** Deploys need a verified email; the checklist locks its deploy step until then. */
+  emailVerified: boolean;
+  /** capabilities.email: whether verification links can be delivered at all. */
+  emailConfigured: boolean;
   createIn: string | null;
   usage: Usage | null;
   starters: TemplateCardData[];
@@ -121,7 +128,7 @@ export function DashboardCockpit({
       <AppPage className="space-y-10 pt-2 lg:space-y-12">
         {firstRun ? (
           <>
-            {showChecklist ? <GettingStarted milestones={milestones} canCreate={canCreate} layout="row" /> : null}
+            {showChecklist ? <GettingStarted milestones={milestones} canCreate={canCreate} emailVerified={emailVerified} emailConfigured={emailConfigured} layout="row" /> : null}
             <section aria-labelledby="starters-title">
               <div className="mb-3 flex items-baseline justify-between gap-3">
                 <h2 id="starters-title" className={sectionTitle}>
@@ -129,7 +136,7 @@ export function DashboardCockpit({
                 </h2>
                 {allTemplates}
               </div>
-              <ul className="grid gap-5 sm:grid-cols-2 xl:grid-cols-4">
+              <ul className="grid grid-cols-[minmax(0,1fr)] gap-5 sm:grid-cols-2 xl:grid-cols-4">
                 {starters.map((t, i) => (
                   <TemplateTile
                     key={t.id}
@@ -160,16 +167,18 @@ export function DashboardCockpit({
           </>
         ) : (
           <>
-            <ContinueBuilding projects={recent} canCreate={canCreate} />
+            <ContinueBuilding projects={recent} canCreate={canCreate} aiConfigured={composer.aiConfigured} />
             {/* The checklist stays one horizontal row until every step is done (and dismissed). */}
-            {showChecklist ? <GettingStarted milestones={milestones} canCreate={canCreate} resumeHref={`/projects/${recent[0].id}`} layout="row" /> : null}
+            {showChecklist ? <GettingStarted milestones={milestones} canCreate={canCreate} emailVerified={emailVerified} emailConfigured={emailConfigured} resumeHref={`/projects/${recent[0].id}`} layout="row" /> : null}
           </>
         )}
 
-        {/* (c) Activity river + This month (first run: Learn + This month). Both columns share one height. */}
-        <div className={usage ? "grid items-stretch gap-5 lg:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]" : "grid gap-5"}>
-          {firstRun ? <Learn cols={2} /> : <ActivityRiver className="h-full" items={activity} />}
-          {usage ? <UsageCard {...usage} className="h-full" /> : null}
+        {/* (c) Activity river + This month (first run: Learn + This month). The single phone column is
+            minmax(0,1fr) so nowrap/truncating text inside can never widen the track past the viewport.
+            Both cards keep their own height (no stretched emptiness under a short river). */}
+        <div className={cn("grid grid-cols-[minmax(0,1fr)] items-start gap-5", usage && "lg:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]")}>
+          {firstRun ? <Learn cols={2} /> : <ActivityRiver items={activity} />}
+          {usage ? <UsageCard {...usage} /> : null}
         </div>
 
         {/* (d) Quick starts and Learn. */}

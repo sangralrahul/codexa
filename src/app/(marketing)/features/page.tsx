@@ -8,9 +8,8 @@ import { Section } from "@/components/marketing/section";
 import { CTABand } from "@/components/marketing/cta-band";
 import { OnThisPage } from "@/components/marketing/on-this-page";
 import { SpecStage, type SpecScene } from "@/components/marketing/spec-stage";
-import { VignettePlate, VIGNETTE_DETAIL, VIGNETTE_PROJECT } from "@/components/marketing/vignette-window";
+import { ILLUSTRATIONS, VignettePlate, VIGNETTE_DETAIL, VIGNETTE_PROJECT } from "@/components/marketing/vignette-window";
 import { Inline } from "@/components/marketing/inline";
-import { VIGNETTES } from "@/components/vignettes/registry";
 import { Odometer } from "@/components/motion/odometer";
 import { Alert } from "@/components/ui/misc";
 import { Badge } from "@/components/ui/badge";
@@ -46,14 +45,20 @@ function SpecIndex() {
           </li>
         ))}
       </ol>
-      <p className="border-t border-border px-5 py-3 font-mono text-[10.5px] text-foreground-dim sm:px-6">Counted from src/content/marketing/features.ts</p>
+      <p className="border-t border-border px-5 py-3 text-[12px] text-muted-foreground sm:px-6" title="Source: src/content/marketing/features.ts">
+        Counted from the product&rsquo;s own feature list. Shipped changes are in the{" "}
+        <Link href="/changelog" className="link-draw text-foreground">
+          changelog
+        </Link>
+        .
+      </p>
     </div>
   );
 }
 
 export default function FeaturesPage() {
   const scenes: SpecScene[] = FEATURE_GROUPS.map((g) => {
-    const V = VIGNETTES[g.visual];
+    const V = ILLUSTRATIONS[g.visual];
     return { id: g.id, label: g.navLabel, node: <V />, detail: VIGNETTE_DETAIL[g.visual], project: VIGNETTE_PROJECT[g.visual] ?? "my-app" };
   });
   return (
@@ -73,7 +78,7 @@ export default function FeaturesPage() {
       />
 
       <Section size="md" className="pt-12 sm:pt-16 lg:pt-20">
-        <div className="grid grid-cols-[minmax(0,1fr)] gap-x-10 lg:grid-cols-[150px_minmax(0,1fr)_minmax(0,1.1fr)] xl:grid-cols-[180px_minmax(0,1fr)_minmax(0,1.1fr)] xl:gap-x-14">
+        <div className="grid grid-cols-[minmax(0,1fr)] gap-x-10 lg:grid-cols-[140px_minmax(0,1fr)_minmax(0,1fr)] xl:grid-cols-[160px_minmax(0,1fr)_minmax(0,1fr)] xl:gap-x-12">
           <aside className="contents lg:sticky lg:top-24 lg:block lg:self-start">
             <OnThisPage items={FEATURE_GROUPS.map((g) => ({ id: g.id, title: g.navLabel }))} label="Spec sheet" rootMargin="-40% 0px -59% 0px" />
           </aside>
@@ -82,8 +87,9 @@ export default function FeaturesPage() {
               const [a, b, ...rest] = g.features;
               return (
                 <section key={g.id} id={g.id} aria-labelledby={`${g.id}-title`} className="scroll-mt-32 pb-16 last:pb-0 lg:min-h-[70svh] lg:scroll-mt-28 lg:pb-24">
-                  <header data-reveal className="relative pt-10">
-                    <span aria-hidden="true" className="mk-num pointer-events-none absolute -top-2 left-0 select-none font-display text-[120px] font-extrabold leading-none tracking-[-0.06em] text-foreground/[0.07] [font-stretch:112%]">
+                  <header data-reveal className="relative pt-8">
+                    {/* Chapter numeral: a hairline outline above the title, which overlaps only its foot. */}
+                    <span aria-hidden="true" className="mk-num mk-chapter-num">
                       {String(i + 1).padStart(2, "0")}
                     </span>
                     <h2 id={`${g.id}-title`} className="text-display-3 relative">
@@ -94,34 +100,38 @@ export default function FeaturesPage() {
                   <div className="mt-8 lg:hidden">
                     <VignettePlate id={g.visual} />
                   </div>
-                  <ul className="mt-8 grid gap-6 border-t border-border pt-8 sm:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2">
+                  {/* The two lead features are full-width rows (icon beside the text), so the copy never
+                      wraps into narrow ragged columns next to the stage. */}
+                  <ul className="mt-8 grid grid-cols-1 gap-7 border-t border-border pt-8 sm:grid-cols-2 sm:gap-x-8 lg:grid-cols-1">
                     {[a, b].filter(Boolean).map((f) => {
                       const Icon = f.icon;
                       return (
-                        <li key={f.title} data-reveal className="group">
+                        <li key={f.title} data-reveal className="group flex gap-4">
                           {Icon ? (
-                            <span aria-hidden="true" className="mb-4 inline-flex size-9 items-center justify-center text-signal-ink">
-                              <Icon className="size-9" strokeWidth={1.25} />
+                            <span aria-hidden="true" className="inline-flex size-9 shrink-0 items-start justify-center pt-0.5 text-signal-ink">
+                              <Icon className="size-8" strokeWidth={1.25} />
                             </span>
                           ) : null}
-                          <h3 className="text-[18px] font-semibold tracking-[-0.015em]">
-                            {f.href ? (
-                              <Link href={f.href} className="link-draw outline-offset-4">
-                                {f.title}
-                              </Link>
-                            ) : (
-                              f.title
-                            )}
-                          </h3>
-                          <p className="mt-2 text-base leading-relaxed text-foreground/80">
-                            <Inline text={f.description} />
-                          </p>
+                          <div className="min-w-0">
+                            <h3 className="text-[18px] font-semibold tracking-[-0.015em]">
+                              {f.href ? (
+                                <Link href={f.href} className="link-draw outline-offset-4">
+                                  {f.title}
+                                </Link>
+                              ) : (
+                                f.title
+                              )}
+                            </h3>
+                            <p className="mt-2 text-base leading-relaxed text-foreground/80">
+                              <Inline text={f.description} />
+                            </p>
+                          </div>
                         </li>
                       );
                     })}
                   </ul>
                   {rest.length ? (
-                    <ul className="mt-8 grid gap-x-8 sm:grid-cols-2">
+                    <ul className="mt-8 grid grid-cols-1 gap-x-8 sm:grid-cols-2">
                       {rest.map((f) => (
                         <li key={f.title} className="border-t border-border py-4">
                           <h3 className="text-[14.5px] font-semibold tracking-tight">

@@ -6,8 +6,8 @@ import { IllustrationBadge } from "@/components/frames/illustration-badge";
 import { cn } from "@/lib/utils";
 
 export type StoryStage = {
-  /** A vignette element (rendered on the server); the story drives its `playing` prop. */
-  node: React.ReactElement<{ playing?: boolean }>;
+  /** A vignette element (rendered on the server); the story drives its `playing` prop (and sizes it with `className`). */
+  node: React.ReactElement<{ playing?: boolean; className?: string }>;
   detail: string;
   project: string;
 };
@@ -16,8 +16,11 @@ export type StoryStage = {
  * "How it works" as sticky scrollytelling (PLAN §5.3): steps on the left, a sticky workspace
  * window on the right whose vignette switches as each step crosses the middle of the viewport,
  * and a rail that fills step by step. Scroll picks the step; the vignette then plays once.
- * Inactive vignettes sit stacked at their final frame (so the stage never changes height).
- * Phones: the stage sits above the list and the step titles (or the numbered chips) switch it.
+ * Inactive vignettes sit stacked at their final frame (so the stage never changes height), and
+ * the active one fills that height (flex-1, top-aligned) instead of floating in a half-empty box.
+ * Inactive steps stay fully legible (muted text, never faded below it): focus is carried by the
+ * title colour, the rail marker and a small shift. Phones: the stage sits above the list and the
+ * step titles (or the numbered chips) switch it.
  */
 export function StoryScroll({
   steps,
@@ -62,10 +65,10 @@ export function StoryScroll({
   };
 
   const current = stages[Math.min(active, stages.length - 1)];
-  const playable = (node: StoryStage["node"], on: boolean) => (React.isValidElement(node) ? React.cloneElement(node, { playing: on }) : node);
+  const playable = (node: StoryStage["node"], on: boolean) => (React.isValidElement(node) ? React.cloneElement(node, { playing: on, className: "flex-1" }) : node);
 
   return (
-    <div className="grid gap-10 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] lg:gap-16">
+    <div className="grid grid-cols-1 gap-10 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] lg:gap-16">
       <div className="order-2 lg:order-1">
         <ol aria-label={label} className="relative">
           <span aria-hidden="true" className="absolute bottom-3 left-[13px] top-3 w-px bg-border" />
@@ -86,7 +89,7 @@ export function StoryScroll({
                 data-on={on ? "" : undefined}
                 className="relative pb-10 pl-12 last:pb-0 lg:flex lg:min-h-[38svh] lg:flex-col lg:justify-center lg:pb-0 lg:first:justify-start lg:first:pt-2"
               >
-                <div className={cn("relative transition-opacity duration-300 lg:opacity-45", on && "lg:opacity-100")}>
+                <div className="relative">
                   <span
                     aria-hidden="true"
                     className={cn(
@@ -96,13 +99,15 @@ export function StoryScroll({
                   >
                     {String(i + 1).padStart(2, "0")}
                   </span>
-                  <h3 className="text-display-4">
-                    <button type="button" onClick={() => select(i)} aria-pressed={on} className="text-left outline-offset-4">
-                      <span className="sr-only">Step {i + 1}: </span>
-                      {s.title}
-                    </button>
-                  </h3>
-                  <div className="mt-3 max-w-md text-[15px] leading-relaxed text-muted-foreground">{s.body}</div>
+                  <div className={cn("transition-transform duration-300 ease-out calm:transition-none", on && "lg:translate-x-1")}>
+                    <h3 className={cn("text-display-4 transition-colors duration-300", on ? "text-foreground" : "lg:text-muted-foreground")}>
+                      <button type="button" onClick={() => select(i)} aria-pressed={on} className="text-left outline-offset-4 hover:text-foreground">
+                        <span className="sr-only">Step {i + 1}: </span>
+                        {s.title}
+                      </button>
+                    </h3>
+                    <div className={cn("mt-3 max-w-md text-[15px] leading-relaxed transition-colors duration-300", on ? "text-foreground/80" : "text-muted-foreground")}>{s.body}</div>
+                  </div>
                 </div>
               </li>
             );
@@ -119,7 +124,7 @@ export function StoryScroll({
                   aria-hidden={i !== active}
                   inert={i !== active}
                   className={cn(
-                    "col-start-1 row-start-1 min-w-0 self-center transition-[opacity,translate,visibility] duration-[420ms] ease-out calm:transition-none",
+                    "col-start-1 row-start-1 flex min-w-0 flex-col transition-[opacity,translate,visibility] duration-[420ms] ease-out calm:transition-none",
                     i === active ? "visible translate-y-0 opacity-100" : "invisible translate-y-2 opacity-0",
                   )}
                 >

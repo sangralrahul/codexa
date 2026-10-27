@@ -66,7 +66,7 @@ export default async function IntegrationsPage({ searchParams }: { searchParams:
               ))}
             </dl>
             <p className="mt-4 max-w-xl text-[13.5px] leading-relaxed text-muted-foreground">
-              <strong className="font-medium text-foreground">Available</strong> means an adapter exists in Codexa today. <strong className="font-medium text-foreground">Planned</strong> means it is on the roadmap and nothing can be connected yet. We do not list integrations we have not built.
+              <strong className="font-medium text-foreground">Available</strong> means an adapter exists in Codexa today. <strong className="font-medium text-foreground">Planned</strong> means it is on the roadmap and nothing can be connected yet. An integration is only marked Available once its adapter ships; planned ones are listed so you can see what is next.
             </p>
           </HubHeader>
           <figure className="relative mx-auto w-full max-w-[560px]">

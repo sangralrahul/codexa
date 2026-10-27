@@ -621,7 +621,11 @@ export function ResetPasswordForm({ token }: { token: string }) {
 
 /* ------------------------------------------------------------------ Verify email */
 
-export function VerifyEmail({ token }: { token: string | null }) {
+/**
+ * /verify-email. `emailConfigured` is capabilities.email: without a provider no verification
+ * email is ever delivered, so the page says so instead of offering "send yourself a new one".
+ */
+export function VerifyEmail({ token, emailConfigured }: { token: string | null; emailConfigured: boolean }) {
   const [state, setState] = useState<"idle" | "ok" | "error">("idle");
   const [message, setMessage] = useState("");
   useEffect(() => {
@@ -638,9 +642,11 @@ export function VerifyEmail({ token }: { token: string | null }) {
     return (
       <div className="auth-rise flex flex-col gap-5">
         <Alert variant="warning" title="This link is missing its token">
-          Open the link from your verification email again, or send yourself a new one.
+          {emailConfigured
+            ? "Open the link from your verification email again, or send yourself a new one."
+            : "Open the full link from your verification message again. Email delivery isn't configured on this server, so new links aren't emailed."}
         </Alert>
-        <VerifyActions />
+        <VerifyActions emailConfigured={emailConfigured} />
       </div>
     );
   }
@@ -676,44 +682,105 @@ export function VerifyEmail({ token }: { token: string | null }) {
       <Alert variant="danger" title="We couldn't verify this link">
         {message}
       </Alert>
-      <VerifyActions />
+      <VerifyActions emailConfigured={emailConfigured} />
     </div>
   );
 }
 
-function VerifyActions() {
+function VerifyActions({ emailConfigured }: { emailConfigured: boolean }) {
   return (
     <div className="flex flex-col gap-3">
-      <ResendVerificationButton size="lg" className="w-full text-[15px]" />
-      <Link href="/dashboard" className={buttonClasses("ghost", "lg", "w-full text-[15px]")}>
+      {emailConfigured ? <ResendVerificationButton size="lg" emailConfigured className="w-full text-[15px]" /> : null}
+      <Link href="/dashboard" className={buttonClasses(emailConfigured ? "ghost" : "primary", "lg", "w-full text-[15px]")}>
         Go to dashboard
       </Link>
-      <p className="text-center text-xs text-muted-foreground">Resending needs you to be signed in.</p>
+      <p className="text-center text-xs text-muted-foreground">
+        {emailConfigured ? "Resending needs you to be signed in." : "Email delivery isn't configured on this server. Ask the operator to set it up."}
+      </p>
     </div>
   );
 }
 
-/** Sends a fresh verification email to the signed-in user (also used by the app shell banner). */
-export function ResendVerificationButton({ size = "sm", className }: { size?: "sm" | "lg"; className?: string } = {}) {
-  const [state, setState] = useState<"idle" | "busy" | "sent" | "error">("idle");
+type ResendState = "idle" | "busy" | "sent" | "verified" | "error";
+
+/**
+ * Asks for a fresh verification link for the signed-in user (app banner, settings, /verify-email).
+ * Pass `emailConfigured` (capabilities.email) from the server: with no email provider the request
+ * is only recorded in the outbox, so the button never says an email was sent. When the prop is
+ * omitted the result stays neutral ("Link requested"), which is true either way.
+ */
+export function ResendVerificationButton({
+  size = "sm",
+  className,
+  emailConfigured,
+}: {
+  size?: "sm" | "lg";
+  className?: string;
+  /** capabilities.email. false: say the request was recorded but no email goes out. */
+  emailConfigured?: boolean;
+} = {}) {
+  const [state, setState] = useState<ResendState>("idle");
+  const [failure, setFailure] = useState("Could not send, try later");
+  const done = state === "sent" || state === "verified";
+
+  const label =
+    state === "sent"
+      ? emailConfigured === true
+        ? "Verification email sent"
+        : emailConfigured === false
+          ? "Recorded · email not configured"
+          : "Link requested"
+      : state === "verified"
+        ? "Already verified"
+        : state === "error"
+          ? failure
+          : "Resend verification email";
+  // The full sentence for screen readers (the button text is short to fit the banner and settings).
+  const status =
+    state === "sent"
+      ? emailConfigured === true
+        ? "A new verification email was sent."
+        : emailConfigured === false
+          ? "Your request was recorded, but email delivery isn't configured on this server, so no email was sent."
+          : "A new verification link was requested."
+      : state === "verified"
+        ? "Your email is already verified."
+        : state === "error"
+          ? failure
+          : "";
+
   return (
-    <Button
-      variant="outline"
-      size={size}
-      className={className}
-      loading={state === "busy"}
-      disabled={state === "sent"}
-      onClick={async () => {
-        setState("busy");
-        try {
-          await api("/api/auth/resend-verification", { method: "POST" });
-          setState("sent");
-        } catch {
-          setState("error");
-        }
-      }}
-    >
-      {state === "sent" ? "Verification email sent" : state === "error" ? "Could not send, try later" : "Resend verification email"}
-    </Button>
+    <>
+      <Button
+        variant="outline"
+        size={size}
+        className={className}
+        loading={state === "busy"}
+        disabled={done}
+        onClick={async () => {
+          setState("busy");
+          try {
+            const res = await api<{ ok: boolean; alreadyVerified?: boolean }>("/api/auth/resend-verification", { method: "POST" });
+            setState(res?.alreadyVerified ? "verified" : "sent");
+          } catch (err) {
+            setFailure(
+              err instanceof ClientApiError && err.status === 429
+                ? "Too many requests, try later"
+                : err instanceof ClientApiError && err.status === 401
+                  ? "Sign in to resend"
+                  : emailConfigured === false
+                    ? "Could not record, try later"
+                    : "Could not send, try later",
+            );
+            setState("error");
+          }
+        }}
+      >
+        {label}
+      </Button>
+      <span role="status" className="sr-only">
+        {status}
+      </span>
+    </>
   );
 }

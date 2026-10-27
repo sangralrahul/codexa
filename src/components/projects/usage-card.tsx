@@ -32,7 +32,7 @@ export function UsageCard({ workspaceName, entitlements, projectCount, className
     { label: "Deployments", used: e.used.deployment, limit: e.limits.deploymentsPerMonth },
   ];
   return (
-    <section aria-labelledby="usage-title" className={cn("e1 flex flex-col rounded-[18px] p-5", className)}>
+    <section aria-labelledby="usage-title" className={cn("e1 flex min-w-0 flex-col rounded-[18px] p-5", className)}>
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
           <h2 id="usage-title" className="text-[15px] font-semibold tracking-[-0.01em]">

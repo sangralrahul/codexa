@@ -7,10 +7,13 @@ import { LogoMark } from "@/components/logo";
 import { Avatar } from "@/components/ui/avatar";
 import { StarterShot } from "./starter-shot";
 import { useTypewriter } from "@/components/motion/timeline";
+import { TEMPLATE_SHOTS, templateShotSrc, templateShotSrcSet } from "@/components/templates/shots";
 
 export type PreviewState = {
   workspaceName: string;
   userName: string;
+  /** The person's avatar seed, the same one the account menu uses (stored name, else email), so every avatar here matches it. */
+  avatarSeed?: string;
   projectName: string;
   template: { id: string; name: string; category: string } | null;
   prompt: string;
@@ -34,6 +37,17 @@ function Thumb({ template, className, sizes }: { template: PreviewState["templat
       )}
     </div>
   );
+}
+
+/** The 20×13 thumbnail of a sidebar "Recent" row: the starter's screenshot, or a code tile for API starters. */
+function MiniThumb({ template }: { template: PreviewState["template"] }) {
+  if (template && TEMPLATE_SHOTS.has(template.id)) {
+    return (
+      // eslint-disable-next-line @next/next/no-img-element
+      <img key={template.id} src={templateShotSrc(template.id)} srcSet={templateShotSrcSet(template.id)} sizes="20px" alt="" width={20} height={13} decoding="async" className="ob-shot-in h-[13px] w-5 shrink-0 rounded-[3px] object-cover object-top shadow-[0_0_0_1px_var(--border)]" />
+    );
+  }
+  return <span className="h-[13px] w-5 shrink-0 rounded-[3px] bg-code-bg shadow-[0_0_0_1px_var(--border)]" />;
 }
 
 /**
@@ -83,10 +97,10 @@ export function WorkspacePreview({ state, variant = "window", className }: { sta
           </span>
           <span className="text-[13px] text-border-strong">/</span>
           <span className="text-[13px] text-muted-foreground">Projects</span>
-          <Avatar name={state.userName} size="sm" className="ml-auto" />
+          <Avatar name={state.userName} seed={state.avatarSeed} size="sm" className="ml-auto" />
         </div>
         <div className="grid min-h-[380px] grid-cols-[140px_minmax(0,1fr)] xl:grid-cols-[156px_minmax(0,1fr)]">
-          {/* Sidebar ghost (the real nav items) */}
+          {/* Sidebar: the real nav items, then "Recent" with the project being set up (as the app's sidebar lists it). */}
           <div className="border-r border-border bg-surface/50 p-2.5">
             {[
               { label: "Dashboard", Icon: LayoutDashboard },
@@ -99,10 +113,13 @@ export function WorkspacePreview({ state, variant = "window", className }: { sta
                 {label}
               </span>
             ))}
-            <div className="mt-4 space-y-1.5 px-2">
-              <span className="block h-1.5 w-3/4 rounded-full bg-border" />
-              <span className="block h-1.5 w-1/2 rounded-full bg-border" />
-            </div>
+            <p className="mt-5 px-2 text-[11px] font-medium text-muted-foreground">Recent</p>
+            <span className="mt-1 flex h-8 min-w-0 items-center gap-2 rounded-lg px-2 text-[12.5px] text-foreground">
+              <MiniThumb template={state.template} />
+              <span key={project} className="ob-swap min-w-0 truncate">
+                {project}
+              </span>
+            </span>
           </div>
           {/* Main */}
           <div className="min-w-0 space-y-4 p-4">
@@ -122,7 +139,7 @@ export function WorkspacePreview({ state, variant = "window", className }: { sta
             </div>
             {/* First chat message */}
             <div className="flex items-start gap-2">
-              <Avatar name={state.userName} size="xs" className="mt-1" />
+              <Avatar name={state.userName} seed={state.avatarSeed} size="xs" className="mt-1" />
               <div className={cn("min-w-0 flex-1 rounded-2xl rounded-tl-md px-3 py-2 text-[12.5px] leading-relaxed shadow-[inset_0_0_0_1px_var(--border)]", state.prompt ? "bg-muted text-foreground" : "bg-transparent text-muted-foreground")}>
                 <span className="line-clamp-4 whitespace-pre-line">
                   {state.prompt || (state.mode === "template" ? "Your first message to the agent goes here when you describe a change." : "Your description becomes the first message to the agent.")}

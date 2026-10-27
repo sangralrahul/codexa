@@ -10,15 +10,20 @@ export type ButtonSize = "sm" | "md" | "lg" | "xl" | "icon";
 export type ButtonAppearance = "marketing" | "app";
 export type ButtonState = "idle" | "loading" | "success";
 
+// Disabled solid fills read as unavailable: a muted surface with muted text and a hairline edge,
+// not a faded primary (which still looks clickable). Loading and success keep the fill.
+const solidUnavailable =
+  "unavailable:bg-muted unavailable:bg-none unavailable:text-muted-foreground unavailable:shadow-[inset_0_0_0_1px_var(--border)] unavailable:opacity-100 unavailable:filter-none";
+
 const variants: Record<ButtonVariant, string> = {
-  primary: "btn-solid bg-primary text-primary-foreground hover:bg-primary-hover shadow-sm",
-  secondary: "btn-solid bg-foreground text-background hover:opacity-90 shadow-sm",
+  primary: cn("btn-solid bg-primary text-primary-foreground hover:bg-primary-hover shadow-sm", solidUnavailable),
+  secondary: cn("btn-solid bg-foreground text-background hover:opacity-90 shadow-sm", solidUnavailable),
   outline: "border border-border-strong bg-background/60 text-foreground shadow-[inset_0_1px_0_var(--hairline)] hover:border-foreground/25 hover:bg-muted",
   ghost: "text-foreground hover:bg-muted",
-  danger: "bg-danger text-danger-foreground shadow-sm hover:opacity-90",
+  danger: cn("bg-danger text-danger-foreground shadow-sm hover:opacity-90", solidUnavailable),
   link: "h-auto px-0 text-foreground underline-offset-4 hover:underline",
   // One per viewport, at most two per page (hero Build, final CTA; IDE Publish).
-  ember: "btn-ember",
+  ember: cn("btn-ember", solidUnavailable),
   soft: "bg-muted text-foreground shadow-[inset_0_0_0_1px_var(--border)] hover:bg-surface-3",
 };
 

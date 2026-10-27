@@ -17,7 +17,9 @@ import { parseTemplateSearch, searchTemplates, summarizeTemplate } from "@/templ
 
 export const metadata = routeMetadata("/docs");
 
-const EXAMPLES = ["deploy to a custom domain", "fix a failing build", "connect PostgreSQL", "roll back a deployment"];
+/** Rotating in the hero field; deliberately different from the "Try" chips under it. */
+const HERO_EXAMPLES = ["roll back a deployment", "share a project", "environment variables"];
+const CHIP_EXAMPLES = ["deploy to a custom domain", "fix a failing build", "connect PostgreSQL"];
 
 const START = [
   { n: "01", verb: "Prompt", title: "Describe what you want", body: "Create an account and a workspace, then write the first prompt. The agent plans before it edits files.", href: "/docs/getting-started", link: "Getting started", Art: PromptArt },
@@ -75,16 +77,16 @@ export default async function DocsIndexPage() {
         </h1>
         <p className="text-lead mt-5">How Codexa works, from your first prompt to a deployed application. Everything here describes the product as it ships today; roadmap items are marked as such.</p>
         <div className="mt-8 max-w-2xl">
-          <SearchTrigger variant="hero" examples={EXAMPLES} />
-          <SearchExamples examples={EXAMPLES.slice(0, 3)} className="mt-4" />
+          <SearchTrigger variant="hero" examples={HERO_EXAMPLES} />
+          <SearchExamples examples={CHIP_EXAMPLES} className="mt-4" />
         </div>
       </header>
 
-      {/* Start here */}
+      {/* The three steps (the "Start here" category below lists every getting-started page) */}
       <section aria-labelledby="start-heading" className="mt-16">
         <div className="flex items-end justify-between gap-4">
           <h2 id="start-heading" className="text-display-4">
-            Start here
+            From prompt to deploy
           </h2>
           <span className="text-meta text-foreground-dim">Illustrations of each step</span>
         </div>
@@ -137,13 +139,13 @@ export default async function DocsIndexPage() {
           </div>
         </div>
         <div className="min-w-0 space-y-3">
-          <CodeBlock language="bash" className="my-0">
+          <CodeBlock language="bash" className="my-0" bodyClassName="whitespace-pre-wrap [overflow-wrap:anywhere]">
             <code>
               <span className="text-code-muted">$ </span>
               <span className="text-syn-fn">curl</span> <span className="text-syn-string">&quot;$HOST/api/v1/templates?category=dashboards&quot;</span>
             </code>
           </CodeBlock>
-          <CodeBlock title={`200 OK · first of ${matches.length}, trimmed`} className="my-0">
+          <CodeBlock title={`200 OK · 1 of ${matches.length} shown`} className="my-0">
             <Json value={sample} />
           </CodeBlock>
         </div>
@@ -174,7 +176,7 @@ export default async function DocsIndexPage() {
                           {d.title}
                           <ArrowUpRight className="size-3.5 text-muted-foreground opacity-0 transition-[opacity,translate] duration-(--dur-2) group-hover:-translate-y-px group-hover:translate-x-px group-hover:opacity-100" aria-hidden="true" />
                         </span>
-                        <span className="mt-0.5 line-clamp-2 block text-sm leading-relaxed text-muted-foreground">{d.description}</span>
+                        <span className="mt-0.5 line-clamp-2 text-sm leading-relaxed text-muted-foreground">{d.description}</span>
                       </span>
                     </Link>
                   </li>

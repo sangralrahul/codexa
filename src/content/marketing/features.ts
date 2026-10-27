@@ -1,6 +1,6 @@
 import { Bot, Bug, Cloud, Code2, Database, Eye, FileDiff, FolderTree, GitBranch, Globe, History, Keyboard, KeyRound, Layers, LayoutTemplate, ListChecks, Lock, MonitorSmartphone, Play, Rocket, RotateCcw, Search, Server, Share2, ShieldCheck, Sparkles, Terminal, Users, Wallet, Wrench } from "lucide-react";
 import type { ComparisonGroup } from "@/components/marketing/comparison-table";
-import type { ContentSection, FAQItem, Feature, VignetteId } from "./types";
+import type { ContentSection, FAQItem, Feature, IllustrationId } from "./types";
 
 export type FeatureGroup = {
   id: string;
@@ -8,8 +8,8 @@ export type FeatureGroup = {
   /** Short label for the index rail and the mobile chip bar. */
   navLabel: string;
   description: string;
-  /** Vignette the sticky stage shows while this group is in view. */
-  visual: VignetteId;
+  /** Illustration the sticky stage shows while this group is in view (each group a different one). */
+  visual: IllustrationId;
   features: Feature[];
   note?: string;
   /** Roadmap items that are not shipped (rendered as a dashed "Not shipped yet" card). */
@@ -21,7 +21,7 @@ export const FEATURE_GROUPS: FeatureGroup[] = [
     id: "ai",
     title: "AI generation and the agent",
     navLabel: "AI and the agent",
-    visual: "agent-run",
+    visual: "agent-modes",
     description: "A provider abstraction for Anthropic and OpenAI models drives a tool-using agent that works on real files.",
     features: [
       { title: "Prompt to project", description: "Start from a sentence. The planner picks a starter template and writes a plan before editing.", icon: Sparkles, href: "/ai-app-builder" },

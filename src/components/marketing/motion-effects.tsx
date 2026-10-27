@@ -30,6 +30,18 @@ const WATCHED = `${REVEAL}, ${ONSCREEN}, ${SCROLLFX}, ${DEVELOP}`;
 
 type MarqueeState = { rate: number; hover: boolean };
 
+/**
+ * React keeps a fiber reference on every DOM node it has created or hydrated. Server HTML inside a
+ * Suspense boundary that is still streaming (e.g. behind an (app) loading.tsx) has none yet, and
+ * writing attributes/classes to it before React hydrates it causes hydration-mismatch errors. Such
+ * nodes are deferred until hydrated (checked by a short poll, applied anyway after HYDRATE_WAIT_MS
+ * so a future React internals change can never leave effects switched off).
+ */
+const HYDRATE_WAIT_MS = 4000;
+function isHydrated(el: Element) {
+  return Object.keys(el).some((k) => k.startsWith("__reactFiber$"));
+}
+
 export function MotionEffects() {
   useEffect(() => {
     const root = document.documentElement;
@@ -81,11 +93,33 @@ export function MotionEffects() {
       }
     };
 
+    /* ---------- Hydration gate ---------- */
+    const pending = new Map<Element, number>();
+    let pendingTimer = 0;
+    const flushPending = () => {
+      pendingTimer = 0;
+      const now = performance.now();
+      for (const [el, since] of pending) {
+        if (!el.isConnected) pending.delete(el);
+        else if (isHydrated(el) || now - since > HYDRATE_WAIT_MS) {
+          pending.delete(el);
+          watch(el, true);
+        }
+      }
+      if (scrollFx.size) writeScrollFx();
+      if (pending.size) pendingTimer = window.setTimeout(flushPending, 120);
+    };
+    const defer = (el: Element) => {
+      if (!pending.has(el)) pending.set(el, performance.now());
+      if (!pendingTimer) pendingTimer = window.setTimeout(flushPending, 120);
+    };
+
     /* ---------- Develop ---------- */
     const develop = (img: HTMLImageElement) => img.setAttribute("data-developed", "");
     const onLoad = (ev: Event) => {
       const t = ev.target;
-      if (t instanceof HTMLImageElement && t.hasAttribute("data-develop")) develop(t);
+      // Not hydrated yet: its deferred watch() develops it once React owns it (it is complete by then).
+      if (t instanceof HTMLImageElement && t.hasAttribute("data-develop") && !pending.has(t)) develop(t);
     };
     document.addEventListener("load", onLoad, true);
     document.addEventListener("error", onLoad, true);
@@ -107,7 +141,11 @@ export function MotionEffects() {
       kick();
     };
 
-    const watch = (el: Element) => {
+    function watch(el: Element, force = false) {
+      if (!force && !isHydrated(el)) {
+        defer(el);
+        return;
+      }
       if (el.matches(REVEAL)) reveal.observe(el);
       if (el.matches(ONSCREEN)) onscreen.observe(el);
       if (el.matches(".marquee") && !marquees.has(el as HTMLElement)) {
@@ -124,8 +162,8 @@ export function MotionEffects() {
         const img = el as HTMLImageElement;
         if (img.complete) develop(img);
       }
-    };
-    const scan = (node: ParentNode) => node.querySelectorAll(WATCHED).forEach(watch);
+    }
+    const scan = (node: ParentNode) => node.querySelectorAll(WATCHED).forEach((el) => watch(el));
     scan(document);
     if (scrollFx.size) writeScrollFx();
 
@@ -341,6 +379,8 @@ export function MotionEffects() {
 
     root.dataset.motionReady = "";
     return () => {
+      window.clearTimeout(pendingTimer);
+      pending.clear();
       reveal.disconnect();
       onscreen.disconnect();
       mo.disconnect();

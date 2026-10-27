@@ -1,5 +1,5 @@
 import * as React from "react";
-import { Globe, Lock, MessageSquare, Code2, Eye, Sparkles } from "lucide-react";
+import { ArrowUp, Globe, Lock, MessageSquare, Code2, Eye, Sparkles } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { LogoMark } from "@/components/logo";
 import { CodeLines } from "@/components/vignettes/code-lines";
@@ -42,6 +42,8 @@ export function PhoneStage({
 }) {
   const shown = tab ?? phoneTabFor(frame.chapter);
   const rows = [...(frame.contextFolded ? [] : frame.context), ...frame.writes, ...frame.checks];
+  const longThread = frame.finished || rows.length + (frame.contextFolded ? 1 : 0) > 4;
+  const composing = !frame.sent && typed.length > 0;
   const live = frame.publish === "live";
   return (
     <div className="e4 flex h-[min(520px,calc(100svh-120px))] min-h-[440px] flex-col overflow-hidden text-[13px]">
@@ -76,51 +78,74 @@ export function PhoneStage({
 
       <div aria-hidden="true" className="relative min-h-0 flex-1 overflow-hidden">
         {shown === "chat" ? (
-          <div key="chat" className="stage-swap absolute inset-0 flex flex-col justify-end gap-2.5 p-3 pt-4 [mask-image:linear-gradient(to_bottom,transparent,black_24px)]">
-            {!frame.working && !frame.finished ? (
-              <div className="mb-auto flex flex-col items-center gap-3 pt-6 text-center">
-                <LogoMark size={26} />
-                <p className="font-display text-[21px] font-semibold leading-tight tracking-[-0.02em] [font-stretch:104%]">
-                  What should we <span className="text-dim">build</span> next?
-                </p>
-                <div className="mt-1 flex w-full max-w-[17rem] items-center gap-2.5 rounded-[12px] border border-border bg-card p-1.5 text-left shadow-sm">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={templateShotFor(scenario.id, 144)} alt="" width={72} height={45} loading="lazy" decoding="async" className="h-[45px] w-[72px] shrink-0 rounded-[7px] bg-white object-cover object-left-top shadow-[0_0_0_1px_var(--border)]" />
-                  <span className="min-w-0">
-                    <span className="block truncate text-[12.5px] font-medium">{scenario.name}</span>
-                    <span className="block text-[11px] text-muted-foreground">
-                      Starter · {scenario.fileCount} files
+          <div key="chat" className="stage-swap absolute inset-0 flex flex-col">
+            {/* Thread: a fresh conversation stacks from the top (the welcome sits centred until the prompt is sent);
+                once the run is long, the newest items stay in view at the bottom under a fade. */}
+            <div className={cn("flex min-h-0 flex-1 flex-col gap-2.5 overflow-hidden p-3 pt-4", longThread ? "justify-end [mask-image:linear-gradient(to_bottom,transparent,black_24px)]" : "justify-start")}>
+              {!frame.sent ? (
+                <div className="my-auto flex flex-col items-center gap-3 text-center">
+                  <LogoMark size={26} />
+                  <p className="font-display text-[21px] font-semibold leading-tight tracking-[-0.02em] [font-stretch:104%]">
+                    What should we <span className="text-dim">build</span> next?
+                  </p>
+                  <div className="mt-1 flex w-full max-w-[17rem] items-center gap-2.5 rounded-[12px] border border-border bg-card p-1.5 text-left shadow-sm">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src={templateShotFor(scenario.id, 144)} alt="" width={72} height={45} loading="lazy" decoding="async" className="h-[45px] w-[72px] shrink-0 rounded-[7px] bg-white object-cover object-left-top shadow-[0_0_0_1px_var(--border)]" />
+                    <span className="min-w-0">
+                      <span className="block truncate text-[12.5px] font-medium">{scenario.name}</span>
+                      <span className="block text-[11px] text-muted-foreground">
+                        Starter · {scenario.fileCount} files
+                      </span>
                     </span>
-                  </span>
+                  </div>
                 </div>
-              </div>
-            ) : (
-              <StarterContext scenario={scenario} className="mb-auto" />
-            )}
-            <div className="ml-8 rounded-2xl rounded-tr-md bg-muted px-3 py-2 text-[12.5px] leading-relaxed shadow-[inset_0_0_0_1px_var(--border)]">
-              {frame.sent ? scenario.prompt : typed || "…"}
-              {!frame.sent && typed.length < scenario.prompt.length ? <span className="caret" /> : null}
+              ) : (
+                <>
+                  <StarterContext scenario={scenario} className="shrink-0" />
+                  <div className="ml-8 shrink-0 rounded-2xl rounded-tr-md bg-muted px-3 py-2 text-[12.5px] leading-relaxed shadow-[inset_0_0_0_1px_var(--border)] [animation:pop-in_var(--dur-4)_var(--ease-out)_both]">
+                    {scenario.prompt}
+                  </div>
+                </>
+              )}
+              {frame.working || frame.finished ? (
+                <div className="shrink-0 rounded-[12px] border border-border bg-card p-2.5">
+                  <div className="mb-1.5 flex items-center gap-2">
+                    <LogoMark size={16} state={frame.finished ? "success" : "running"} />
+                    <span className={cn("text-[12px] font-medium", frame.working && "text-shimmer")}>{frame.stage ?? "Working"}</span>
+                  </div>
+                  <ol>
+                    {frame.contextFolded ? <StepRow state="done" className="py-[3px]" label="Read the project and wrote a plan" /> : null}
+                    {rows.slice(-6).map((r, i, arr) => (
+                      <ToolRow key={r.key} row={r} connector={i < arr.length - 1} illustrative={illustrative} />
+                    ))}
+                  </ol>
+                </div>
+              ) : null}
+              {frame.finished ? (
+                <p className="flex shrink-0 gap-2 rounded-[12px] bg-surface px-2.5 py-2 text-[12px] leading-relaxed shadow-[inset_0_0_0_1px_var(--border)]">
+                  <Sparkles className="mt-0.5 size-3.5 shrink-0 text-signal" />
+                  Type-check and build passed. A snapshot was saved first.
+                </p>
+              ) : null}
             </div>
-            {frame.working || frame.finished ? (
-              <div className="rounded-[12px] border border-border bg-card p-2.5">
-                <div className="mb-1.5 flex items-center gap-2">
-                  <LogoMark size={16} state={frame.finished ? "success" : "running"} />
-                  <span className={cn("text-[12px] font-medium", frame.working && "text-shimmer")}>{frame.stage ?? "Working"}</span>
-                </div>
-                <ol>
-                  {frame.contextFolded ? <StepRow state="done" className="py-[3px]" label="Read the project and wrote a plan" /> : null}
-                  {rows.slice(-6).map((r, i, arr) => (
-                    <ToolRow key={r.key} row={r} connector={i < arr.length - 1} illustrative={illustrative} />
-                  ))}
-                </ol>
+            {/* Composer: the prompt types in here (as in the desktop window), then moves up as the bubble. */}
+            <div className="shrink-0 border-t border-border bg-surface/40 p-2.5">
+              <div className={cn("flex items-end gap-2 rounded-[12px] border bg-background/70 py-2 pl-3 pr-2 text-[12.5px] leading-relaxed transition-[border-color] duration-(--dur-3)", composing ? "border-border-strong" : "border-border")}>
+                <p className={cn("line-clamp-2 min-h-[1.6em] min-w-0 flex-1", composing ? "text-foreground" : "text-muted-foreground")}>
+                  {composing ? (
+                    <>
+                      {typed}
+                      {typed.length < scenario.prompt.length ? <span className="caret" /> : null}
+                    </>
+                  ) : (
+                    "Ask Codexa to change something…"
+                  )}
+                </p>
+                <span className={cn("inline-flex size-6 shrink-0 items-center justify-center rounded-full transition-colors duration-(--dur-2)", composing && typed.length >= scenario.prompt.length ? "bg-signal text-[var(--ember-ink)]" : "bg-muted text-muted-foreground")}>
+                  <ArrowUp className="size-3.5" />
+                </span>
               </div>
-            ) : null}
-            {frame.finished ? (
-              <p className="flex gap-2 rounded-[12px] bg-surface px-2.5 py-2 text-[12px] leading-relaxed shadow-[inset_0_0_0_1px_var(--border)]">
-                <Sparkles className="mt-0.5 size-3.5 shrink-0 text-signal" />
-                Type-check and build passed. A snapshot was saved first.
-              </p>
-            ) : null}
+            </div>
           </div>
         ) : shown === "code" ? (
           <div key="code" className="stage-swap absolute inset-0 flex flex-col bg-code-bg">
@@ -133,10 +158,11 @@ export function PhoneStage({
               {frame.revealed > 0 ? (
                 <CodeLines
                   tokens={tokens.slice(0, 12)}
+                  startLine={scenario.codeStart}
                   revealed={frame.streaming ? Math.min(12, frame.revealed) : undefined}
                   caret={frame.streaming}
-                  errorLines={frame.errorLine !== null ? [frame.errorLine] : undefined}
-                  highlight={frame.fixedLine !== null ? [frame.fixedLine] : undefined}
+                  errorLines={frame.errorLine !== null ? [scenario.codeStart + frame.errorLine - 1] : undefined}
+                  highlight={frame.fixedLine !== null ? [scenario.codeStart + frame.fixedLine - 1] : undefined}
                   className="text-[11.5px]"
                 />
               ) : (

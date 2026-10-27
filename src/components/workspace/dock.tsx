@@ -14,8 +14,9 @@ export type DockTab = "terminal" | "problems";
 
 /**
  * The bottom dock under the canvas (Ctrl/⌘+J): Terminal and Problems. Collapsed, it is a
- * one-line ticker with the last real log line and the error count. The terminal stays
- * mounted either way so no output is lost.
+ * slim bar with the same Terminal | Problems (count) labels, a ticker with the last real log
+ * line (or "Preview not running") and the shortcut. The terminal stays mounted either way so
+ * no output is lost.
  */
 export function Dock({
   open,
@@ -36,6 +37,13 @@ export function Dock({
   const snap = useLogSnapshot(rt.logs);
   const errors = problems.filter((p) => p.severity === "error").length;
   const last = snap.last;
+  const openTo = (t: DockTab) => {
+    onTabChange(t);
+    onOpenChange(true);
+  };
+  const countBadge = (count: number) => (
+    <span className={cn("rounded-full px-1.5 font-mono text-[10.5px] tabular-nums", errors ? "bg-danger/12 text-danger" : count ? "ws-warn-ink bg-warning/12" : "bg-muted text-muted-foreground")}>{count}</span>
+  );
 
   return (
     <div className="ws-card flex h-full min-h-0 flex-col" data-dock={open ? "open" : "collapsed"}>
@@ -73,9 +81,7 @@ export function Dock({
               >
                 <Icon className="size-3.5" aria-hidden="true" />
                 {label}
-                {count ? (
-                  <span className={cn("rounded-full px-1.5 font-mono text-[10.5px] tabular-nums", errors ? "bg-danger/12 text-danger" : "ws-warn-ink bg-warning/12")}>{count}</span>
-                ) : null}
+                {count !== null ? countBadge(count) : null}
               </button>
             ))}
           </div>
@@ -93,34 +99,49 @@ export function Dock({
           ) : null}
         </div>
       ) : (
-        <button
-          type="button"
-          onClick={() => onOpenChange(true)}
-          title="Open the terminal (Ctrl/⌘ J)"
-          className="flex h-full min-h-0 w-full items-center gap-2.5 px-3 text-left transition-colors hover:bg-muted/50 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-ring"
-        >
-          <TerminalSquare className="size-3.5 shrink-0 text-muted-foreground" aria-hidden="true" />
-          {/* Named from its content, so the visible ticker line is part of the button's name. */}
-          <span className="sr-only">Open the terminal. Last line: </span>
-          <span className="min-w-0 flex-1 truncate font-mono text-[11.5px] text-muted-foreground">
-            {last ? (
-              <span key={snap.total} className={cn("ws-ticker-line inline-block", last.stream === "stderr" && "text-danger")}>
-                {stripAnsi(last.line)}
-              </span>
-            ) : snap.conn === "ended" ? (
-              "No runtime running"
-            ) : (
-              "Terminal"
-            )}
-          </span>
-          {errors ? (
-            <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-danger/12 px-1.5 py-0.5 font-mono text-[10.5px] font-medium tabular-nums text-danger">
-              <CircleAlert className="size-3" aria-hidden="true" /> {errors}
-              <span className="sr-only"> {errors === 1 ? "problem" : "problems"}</span>
+        // Collapsed: the same two labels (each opens the dock on its tab), then the live ticker.
+        <div className="flex h-full min-h-0 items-center gap-0.5 px-1.5">
+          <button type="button" onClick={() => openTo("terminal")} className="inline-flex h-6 shrink-0 items-center gap-1.5 rounded-md px-2 text-[12px] font-medium text-foreground/85 transition-colors hover:bg-muted hover:text-foreground focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-ring">
+            <TerminalSquare className="size-3.5 text-muted-foreground" aria-hidden="true" />
+            Terminal
+          </button>
+          <button
+            type="button"
+            onClick={() => openTo("problems")}
+            className="inline-flex h-6 shrink-0 items-center gap-1.5 rounded-md px-2 text-[12px] font-medium text-foreground/85 transition-colors hover:bg-muted hover:text-foreground focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-ring"
+          >
+            {errors ? <CircleAlert className="size-3.5 text-danger" aria-hidden="true" /> : <ListChecks className="size-3.5 text-muted-foreground" aria-hidden="true" />}
+            Problems{" "}
+            {countBadge(problems.length)}
+          </button>
+          <span className="mx-1.5 h-3.5 w-px shrink-0 bg-border" aria-hidden="true" />
+          <button
+            type="button"
+            onClick={() => openTo("terminal")}
+            title="Open the terminal (Ctrl/⌘ J)"
+            className="flex h-6 min-w-0 flex-1 items-center gap-2 rounded-md px-1.5 text-left transition-colors hover:bg-muted/60 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-ring"
+          >
+            {/* Named from its content, so the visible ticker line is part of the button's name. */}
+            <span className="sr-only">{last ? "Open the terminal. Last line: " : "Open the terminal. "}</span>
+            <span className="min-w-0 flex-1 truncate text-[11.5px] text-muted-foreground">
+              {last ? (
+                <span key={snap.total} className={cn("ws-ticker-line inline-block font-mono", last.stream === "stderr" && "text-danger")}>
+                  {stripAnsi(last.line)}
+                </span>
+              ) : rt.status === "running" || rt.status === "starting" ? (
+                "Waiting for output…"
+              ) : (
+                "Preview not running"
+              )}
             </span>
-          ) : null}
-          <ChevronUp className="size-3.5 shrink-0 text-muted-foreground" aria-hidden="true" />
-        </button>
+            {collapsible ? (
+              <span className="hidden shrink-0 md:inline-flex" aria-hidden="true">
+                <Kbd mod>J</Kbd>
+              </span>
+            ) : null}
+            <ChevronUp className="size-3.5 shrink-0 text-muted-foreground" aria-hidden="true" />
+          </button>
+        </div>
       )}
 
       <div id="dock-panel-terminal" role="tabpanel" aria-labelledby="dock-tab-terminal" className="min-h-0 flex-1" hidden={!open || tab !== "terminal"} inert={!open || tab !== "terminal"}>

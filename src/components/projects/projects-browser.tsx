@@ -3,7 +3,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { FolderKanban, LayoutGrid, LayoutTemplate, List, Plus, Search, Sparkles, X } from "lucide-react";
-import { cn } from "@/lib/utils";
 import { readLocal, writeLocal } from "@/lib/client/workspace/storage";
 import { withViewTransition } from "@/lib/client/view-transition";
 import { buttonClasses } from "@/components/ui/button";
@@ -130,6 +129,8 @@ export function ProjectsBrowser({
     links[next]?.focus();
   };
 
+  const filtering = Boolean(query.trim()) || vis !== "all";
+
   const clearFilters = () =>
     withViewTransition(() => {
       setQuery("");
@@ -194,8 +195,10 @@ export function ProjectsBrowser({
         </div>
       </div>
 
-      <p className="text-meta mb-3 text-muted-foreground" aria-live="polite">
-        {filtered.length} of {projects.length} project{projects.length === 1 ? "" : "s"}
+      {/* The count is already in the title and the sidebar: "x of y" only while a filter or search narrows the list.
+          The live region stays mounted so screen readers hear the new count when one is applied. */}
+      <p className={filtering ? "text-meta mb-3 text-muted-foreground" : "sr-only"} aria-live="polite">
+        {filtering ? `${filtered.length} of ${projects.length} project${projects.length === 1 ? "" : "s"}` : ""}
       </p>
 
       {filtered.length === 0 ? (
@@ -206,23 +209,24 @@ export function ProjectsBrowser({
           </button>
         </div>
       ) : layout === "grid" ? (
-        <ul className="grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
+        <ul className="grid grid-cols-[minmax(0,1fr)] gap-5 sm:grid-cols-2 xl:grid-cols-3">
           {filtered.map((p, i) => (
             <li key={p.id}>
               <ProjectCard project={p} layout="grid" showWorkspace={showWorkspace} priority={i === 0} />
             </li>
           ))}
           {canCreate && !query.trim() && vis === "all" ? (
+            // Phones: a compact 64px dashed row; from 640px a full card-height ghost tile.
             <li>
               <Link
                 href="/new-project"
                 style={{ viewTransitionName: "proj-new" }}
-                className="group/ghost flex h-full min-h-[280px] flex-col items-center justify-center gap-3 rounded-[16px] border border-dashed border-border-strong p-6 text-center transition-[border-color,background-color] duration-(--dur-3) hover:border-foreground/30 hover:bg-foreground/[0.02] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+                className="group/ghost flex min-h-16 items-center gap-3 rounded-[16px] border border-dashed border-border-strong px-4 py-3 text-left transition-[border-color,background-color] duration-(--dur-3) hover:border-foreground/30 hover:bg-foreground/[0.02] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring sm:h-full sm:min-h-[280px] sm:flex-col sm:justify-center sm:p-6 sm:text-center"
               >
-                <span className="flex size-11 items-center justify-center rounded-full border border-border bg-card shadow-sm transition-transform duration-(--dur-3) ease-snap group-hover/ghost:rotate-90 group-hover/ghost:scale-105 calm:transition-none">
-                  <Plus className="size-5" aria-hidden="true" />
+                <span className="flex size-9 shrink-0 items-center justify-center rounded-full border border-border bg-card shadow-sm transition-transform duration-(--dur-3) ease-snap group-hover/ghost:rotate-90 group-hover/ghost:scale-105 calm:transition-none sm:size-11">
+                  <Plus className="size-4 sm:size-5" aria-hidden="true" />
                 </span>
-                <span>
+                <span className="min-w-0">
                   <span className="block text-sm font-medium">New project</span>
                   <span className="mt-0.5 block text-xs text-muted-foreground">Describe it, start from a template or import from GitHub</span>
                 </span>

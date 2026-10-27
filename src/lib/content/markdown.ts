@@ -14,26 +14,63 @@ export function computeReadingTime(markdown: string): { minutes: number; words: 
   return { minutes, words, text: `${minutes} min read` };
 }
 
-/** GitHub-compatible heading slug (same rules rehype-slug applies). */
+/**
+ * GitHub-compatible heading slug: the rules github-slugger (used by rehype-slug) applies to a
+ * heading's rendered text. Lowercase, drop everything except letters, marks, numbers, connector
+ * punctuation (so `_` stays: `quota_exceeded (402)` → `quota_exceeded-402`), spaces and hyphens,
+ * then turn spaces into hyphens.
+ */
 export function slugifyHeading(text: string): string {
   return text
     .toLowerCase()
     .trim()
     .replace(/<[^>]+>/g, "")
-    .replace(/[`*_~]/g, "")
-    .replace(/[^\p{L}\p{N} -]/gu, "")
+    .replace(/[^\p{L}\p{M}\p{N}\p{Pc} -]/gu, "")
     .replace(/ /g, "-");
 }
 
-/** Produce unique ids the way github-slugger does: foo, foo-1, foo-2 ... */
+/** Produce unique ids exactly the way github-slugger does: foo, foo-1, foo-2 ... */
 export function createSlugger() {
-  const seen = new Map<string, number>();
+  const occurrences = new Map<string, number>();
   return (text: string) => {
-    const base = slugifyHeading(text);
-    const count = seen.get(base) ?? 0;
-    seen.set(base, count + 1);
-    return count === 0 ? base : `${base}-${count}`;
+    const original = slugifyHeading(text);
+    let result = original;
+    while (occurrences.has(result)) {
+      const n = (occurrences.get(original) ?? 0) + 1;
+      occurrences.set(original, n);
+      result = `${original}-${n}`;
+    }
+    occurrences.set(result, 0);
+    return result;
   };
+}
+
+/**
+ * The rendered text of a single line of inline markdown (what rehype-slug sees): code spans keep
+ * their content verbatim, links/images keep their text, emphasis markers go. Underscores inside
+ * words (`snake_case`) are literal in CommonMark, so only flanking `_` runs are removed.
+ */
+const ESCAPED = { "*": "\uE000", _: "\uE001", "~": "\uE002" } as const;
+const UNESCAPED: Record<string, string> = { "\uE000": "*", "\uE001": "_", "\uE002": "~" };
+
+export function inlineMarkdownText(md: string): string {
+  const parts = md.split(/(`+)([^`]|[^`][\s\S]*?[^`])\1(?!`)/);
+  let out = "";
+  // split() with two capture groups yields [text, ticks, code, text, ticks, code, …].
+  for (let i = 0; i < parts.length; i += 3) {
+    out += parts[i]
+      .replace(/!?\[([^\]]*)\]\([^)]*\)/g, "$1")
+      // Backslash escapes are literal: park escaped markers so the emphasis rules skip them.
+      .replace(/\\([*_~])/g, (_m, c: string) => ESCAPED[c as keyof typeof ESCAPED])
+      .replace(/\\([\\`{}\[\]()#+\-.!])/g, "$1")
+      .replace(/\*+/g, "")
+      .replace(/~~/g, "")
+      .replace(/(^|[^\p{L}\p{N}_])_+(?=\S)/gu, "$1")
+      .replace(/(?<=\S)_+(?=$|[^\p{L}\p{N}_])/gu, "")
+      .replace(/[\uE000-\uE002]/g, (c) => UNESCAPED[c]);
+    if (i + 2 < parts.length) out += parts[i + 2].replace(/^ (.*) $/, "$1");
+  }
+  return out;
 }
 
 /** Extract h2/h3 headings (outside fenced code) with the ids rehype-slug will assign. */
@@ -51,7 +88,7 @@ export function extractHeadings(markdown: string): Heading[] {
     const m = /^(#{1,3})\s+(.+?)\s*#*\s*$/.exec(line);
     if (!m) continue;
     const depth = m[1].length;
-    const text = m[2].replace(/\[([^\]]+)\]\([^)]+\)/g, "$1").replace(/[`*_]/g, "");
+    const text = inlineMarkdownText(m[2]);
     const id = slug(text);
     if (depth === 2 || depth === 3) out.push({ depth, text, id });
   }

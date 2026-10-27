@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { StatusDot } from "@/components/ui/misc";
-import { getStatus } from "@/app/(marketing)/status/health";
+import { getStatus, type ComponentStatus } from "@/app/(marketing)/status/health";
 
 type Summary = { label: string; dot: "ok" | "warn" | "error" | "idle" };
 
@@ -8,10 +8,34 @@ const TTL_MS = 60_000;
 // Only the settled value is reused: on Workers a pending promise must not be shared across requests.
 let memo: { at: number; value: Summary } | null = null;
 
+/** What a visitor loses when a component fails, in their words (the /status page has the detail). */
+const DOWN: Record<string, string> = {
+  web: "Site unavailable",
+  database: "Database unreachable",
+  runner: "Previews unavailable",
+  ai: "AI generation unavailable",
+  email: "Email delivery unavailable",
+};
+const DEGRADED: Record<string, string> = {
+  web: "Site degraded",
+  database: "Database slow",
+  runner: "Previews degraded",
+  ai: "AI generation degraded",
+  email: "Email delivery degraded",
+};
+
+/** Names the failing component; two or more become a count so the pill stays one short line. */
+function failing(components: ComponentStatus[], state: "down" | "degraded"): string {
+  const hit = components.filter((c) => c.state === state);
+  const names = state === "down" ? DOWN : DEGRADED;
+  if (hit.length === 1) return names[hit[0].id] ?? `${hit[0].name} ${state === "down" ? "unavailable" : "degraded"}`;
+  return state === "down" ? `${hit.length} services unavailable` : `${hit.length} services degraded`;
+}
+
 async function summarize(): Promise<Summary> {
   const report = await getStatus();
-  if (report.overall === "down") return { label: "Some systems down", dot: "error" };
-  if (report.overall === "degraded") return { label: "Degraded performance", dot: "warn" };
+  if (report.overall === "down") return { label: failing(report.components, "down"), dot: "error" };
+  if (report.overall === "degraded") return { label: failing(report.components, "degraded"), dot: "warn" };
   const missing = report.components.filter((c) => c.state === "not_configured").length;
   return missing ? { label: `Operational · ${missing} not configured`, dot: "ok" } : { label: "Operational", dot: "ok" };
 }
@@ -36,6 +60,7 @@ export async function FooterStatus() {
   return (
     <Link href="/status" className={pill}>
       <StatusDot status={s.dot} />
+      <span className="sr-only">System status: </span>
       {s.label}
     </Link>
   );

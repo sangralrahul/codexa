@@ -53,7 +53,7 @@ export async function SolutionPageTemplate({ solution }: { solution: Solution })
       />
 
       <Section size="sm">
-        <div className="grid gap-8 lg:grid-cols-12 lg:items-end">
+        <div className="grid grid-cols-1 gap-8 lg:grid-cols-12 lg:items-end">
           <SectionHeader index="01" eyebrow="Start from" title="A real starter, not a blank page." className="lg:col-span-7" />
           <p className="text-lead lg:col-span-5">{solution.intro}</p>
         </div>
@@ -76,7 +76,7 @@ export async function SolutionPageTemplate({ solution }: { solution: Solution })
       </Section>
 
       <Section size="sm" className="border-t border-border/60">
-        <div className="grid gap-10 lg:grid-cols-[7fr_5fr] lg:gap-14">
+        <div className="grid grid-cols-1 gap-10 lg:grid-cols-[minmax(0,7fr)_minmax(0,5fr)] lg:gap-14">
           <div>
             <Kicker>Try this prompt</Kicker>
             <h2 className="text-display-3 mt-5 max-w-[20ch]">Start with an idea that fits.</h2>

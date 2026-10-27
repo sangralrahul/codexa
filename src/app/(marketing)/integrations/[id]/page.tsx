@@ -100,7 +100,7 @@ export default async function IntegrationDetailPage({ params }: { params: Params
           <div className="flex flex-col gap-6 sm:flex-row sm:items-start">
             <span aria-hidden="true" className={cn("relative grid size-[72px] shrink-0 place-items-center rounded-[20px] border", planned ? "border-dashed border-border-strong text-muted-foreground" : "e2 rim text-foreground")}>
               {!planned ? <span className="absolute inset-0 rounded-[20px] bg-[radial-gradient(circle_at_50%_30%,color-mix(in_oklab,var(--signal)_14%,transparent),transparent_70%)]" /> : null}
-              <IntegrationMark id={i.id} name={i.name} planned={planned} className="relative size-8" />
+              <IntegrationMark id={i.id} name={i.name} category={i.category} planned={planned} className="relative size-8" />
             </span>
             <div className="min-w-0 max-w-3xl">
               <p className="text-label flex flex-wrap items-center gap-x-2.5 gap-y-1 text-muted-foreground">

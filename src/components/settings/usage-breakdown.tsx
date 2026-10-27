@@ -24,7 +24,7 @@ export function UsageBreakdown({ kind, rows }: { kind: "projects" | "members"; r
   const maxAi = Math.max(1, ...rows.map((r) => r.ai));
   return (
     <div className="overflow-x-auto">
-      <table className="w-full min-w-[320px] text-sm sm:min-w-[420px]">
+      <table className="w-full min-w-[300px] text-sm">
         <thead>
           <tr className="border-t border-border/80">
             <th scope="col" className={cn(tableHead, "pl-5 sm:pl-6")}>

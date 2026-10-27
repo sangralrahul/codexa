@@ -31,7 +31,7 @@ export default function SolutionsIndexPage() {
         ]}
       />
       <Section size="sm">
-        <ul data-reveal="stagger" data-spotlight="grid" className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <ul data-reveal="stagger" data-spotlight="grid" className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {SOLUTIONS.map((s) => (
             <li key={s.slug}>
               <Link href={`/solutions/${s.slug}`} className="glow-card group flex h-full flex-col rounded-[20px] border border-border p-2.5">

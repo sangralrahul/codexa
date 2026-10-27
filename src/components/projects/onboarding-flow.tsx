@@ -27,7 +27,7 @@ import { StarterShot } from "@/components/auth/onboarding/starter-shot";
 type Mode = "template" | "prompt";
 
 type Props = {
-  user: { name: string; timezone: string; locale: string };
+  user: { name: string; email?: string; timezone: string; locale: string };
   /** Null when the person cannot create projects here (no workspace, or a viewer). */
   workspaceId: string | null;
   workspaceName: string | null;
@@ -43,6 +43,14 @@ type Props = {
 const SOURCE_LABEL: Record<IdeaSource, string> = { home: "From the homepage", cta: "From the homepage", solution: "From a solutions page", command: "From the command menu" };
 
 const EXAMPLES = ["an invoice tracker with GST totals", "a habit tracker with streaks and weekly charts", "a booking page for a yoga studio", "a CRM for a two-person sales team"];
+
+/**
+ * Step actions (Back / Continue / Create). Sticky to the bottom of the viewport inside the
+ * card on a glass surface, so the primary action is on the first screen even when the step
+ * runs past the fold (1440x900, phones). It spans the card's padding edge to edge.
+ */
+const STEP_FOOTER =
+  "ob-footer sticky bottom-0 z-10 -mx-5 mt-8 flex flex-col-reverse items-stretch gap-3 border-t border-border bg-card/85 px-5 pb-[max(1rem,env(safe-area-inset-bottom))] pt-4 backdrop-blur-xl sm:-mx-7 sm:flex-row sm:items-center sm:px-7";
 
 /** Placeholder that types example ideas while the prompt box is empty (static when calm). */
 function useTypedPlaceholder(active: boolean) {
@@ -185,6 +193,8 @@ export function OnboardingFlow({ user, workspaceId, workspaceName, templates, de
   const ideas = ideasFor(goals);
   const placeholder = useTypedPlaceholder(!prompt && !promptFocused);
   const progressStep = launching ? 2 : step;
+  // The same seed as the account menu in the header (stored name, else email): every avatar of this person shares one colour.
+  const avatarSeed = user.name.trim() || user.email || undefined;
 
   const launch = useLaunch({
     title: "Setting up your workspace",
@@ -343,6 +353,7 @@ export function OnboardingFlow({ user, workspaceId, workspaceName, templates, de
   const preview: PreviewState = {
     workspaceName: workspaceName ?? `${name.trim() || "Your"}'s workspace`,
     userName: name.trim() || "You",
+    avatarSeed,
     projectName: step === 0 && !prompt.trim() && !goals.length ? "" : finalName,
     // Always the starter that Create would use, so the preview never shows something else.
     template: template ? { id: template.id, name: template.name, category: template.category } : null,
@@ -390,7 +401,7 @@ export function OnboardingFlow({ user, workspaceId, workspaceName, templates, de
         </div>
       </header>
 
-      <div className="mx-auto grid w-full max-w-[1240px] flex-1 items-start gap-8 px-4 pb-16 pt-6 sm:px-8 lg:grid-cols-[minmax(0,540px)_minmax(0,1fr)] lg:gap-14 lg:pt-12 xl:gap-20">
+      <div className="mx-auto grid w-full max-w-[1240px] flex-1 items-start gap-8 px-4 pb-16 pt-6 sm:px-8 lg:pt-8 lg:grid-cols-[minmax(0,560px)_minmax(0,1fr)] lg:gap-14 xl:gap-16">
         <section aria-labelledby="ob-step-title" className="min-w-0">
           <OnboardingProgress current={progressStep} className="mb-5 md:hidden" />
           <WorkspacePreview state={preview} variant="strip" className="mb-5 lg:hidden" />
@@ -417,6 +428,7 @@ export function OnboardingFlow({ user, workspaceId, workspaceName, templates, de
                       }}
                       onTimezone={setTimezone}
                       onLocale={setLocale}
+                      avatarSeed={avatarSeed}
                     />
                   </div>
                   <p className="text-label text-muted-foreground">Step 1 of 3 · Idea</p>
@@ -454,7 +466,7 @@ export function OnboardingFlow({ user, workspaceId, workspaceName, templates, de
                         id="ob-prompt"
                         ref={promptRef}
                         value={prompt}
-                        rows={5}
+                        rows={3}
                         maxLength={IDEA_MAX}
                         placeholder={placeholder}
                         aria-describedby="ob-prompt-hint"
@@ -464,7 +476,7 @@ export function OnboardingFlow({ user, workspaceId, workspaceName, templates, de
                           clearInterval(typingTimer.current);
                           setPrompt(e.target.value);
                         }}
-                        className="min-h-[140px] resize-none rounded-[17px] border-0 bg-transparent px-4 pt-4 text-[15px] shadow-none focus-visible:shadow-none"
+                        className="min-h-[132px] resize-none lg:min-h-[96px] rounded-[17px] border-0 bg-transparent px-4 pt-4 text-[15px] shadow-none focus-visible:shadow-none"
                       />
                       <div className="flex items-center gap-3 border-t border-border px-4 py-2.5">
                         <p id="ob-prompt-hint" className="min-w-0 flex-1 truncate text-xs text-muted-foreground [@media(pointer:coarse)]:invisible">
@@ -499,7 +511,7 @@ export function OnboardingFlow({ user, workspaceId, workspaceName, templates, de
                     ))}
                   </ul>
 
-                  <div className="mt-8">
+                  <div className="mt-8 lg:mt-6">
                     <div className="flex items-baseline justify-between gap-3">
                       <h2 id="ob-goals-label" className="text-[13px] font-semibold text-foreground">
                         What is it closest to?
@@ -508,7 +520,7 @@ export function OnboardingFlow({ user, workspaceId, workspaceName, templates, de
                         Pick any · keys <Kbd>1</Kbd>–<Kbd>8</Kbd>
                       </span>
                     </div>
-                    <div role="group" aria-labelledby="ob-goals-label" className="mt-3 grid grid-cols-2 gap-2.5 sm:grid-cols-4">
+                    <div role="group" aria-labelledby="ob-goals-label" className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-4">
                       {GOALS.map((g, i) => {
                         const on = goals.includes(g.id);
                         const t = byId.get(g.templateId);
@@ -520,27 +532,32 @@ export function OnboardingFlow({ user, workspaceId, workspaceName, templates, de
                             aria-keyshortcuts={String(i + 1)}
                             onClick={() => toggleGoal(g.id)}
                             className={cn(
-                              "ob-goal group relative flex flex-col rounded-[14px] border bg-card p-1.5 text-left focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring",
+                              "ob-goal group relative flex flex-col rounded-[14px] border bg-card p-1 text-left focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring",
                               on ? "border-transparent" : "border-border hover:-translate-y-0.5 hover:border-border-strong",
                             )}
                           >
                             <span aria-hidden="true" className="shot-pan relative block overflow-hidden rounded-[10px]">
-                              <StarterShot id={g.templateId} category={t?.category ?? g.category} sizes="(min-width: 640px) 130px, 45vw" priority />
-                              <Kbd className="glass absolute left-1.5 top-1.5 hidden h-[18px] min-w-[18px] border border-border px-1 text-[10px] text-foreground shadow-sm sm:inline-flex">{i + 1}</Kbd>
+                              <StarterShot id={g.templateId} category={t?.category ?? g.category} sizes="(min-width: 640px) 130px, 45vw" priority routesFooter={false} />
                               {on ? (
                                 <span className="ob-goal__check absolute right-1.5 top-1.5 flex size-5 items-center justify-center rounded-full bg-signal text-background shadow-md">
                                   <Check className="size-3" />
                                 </span>
                               ) : null}
                             </span>
-                            <span className={cn("block truncate px-1 pb-0.5 pt-2 text-[12.5px] font-medium transition-colors", on ? "text-foreground" : "text-muted-foreground group-hover:text-foreground")}>{g.label}</span>
+                            {/* The shortcut key sits in the label row, never over the screenshot. */}
+                            <span className="flex items-center gap-1.5 px-1 pb-0.5 pt-2">
+                              <span className={cn("min-w-0 flex-1 truncate text-[12px] font-medium transition-colors", on ? "text-foreground" : "text-muted-foreground group-hover:text-foreground")}>{g.label}</span>
+                              <span aria-hidden="true" className="hidden shrink-0 sm:inline-flex">
+                                <Kbd className={cn("h-4 min-w-4 rounded-[4px] border px-1 text-[10px] tabular-nums transition-colors", on ? "border-signal/40 bg-signal/10 text-signal-ink" : "border-border bg-muted")}>{i + 1}</Kbd>
+                              </span>
+                            </span>
                           </button>
                         );
                       })}
                     </div>
                   </div>
 
-                  <div className="mt-8 flex flex-col-reverse items-stretch gap-3 border-t border-border pt-5 sm:flex-row sm:items-center">
+                  <div className={STEP_FOOTER}>
                     <p className="text-xs text-muted-foreground sm:flex-1">
                       {prompt.trim() ? "Next: choose how to start." : goals.length ? "No description yet? You can start from a suggested template." : "Both are optional. You can also skip setup."}
                     </p>
@@ -592,7 +609,7 @@ export function OnboardingFlow({ user, workspaceId, workspaceName, templates, de
                         )}
                         <div className="mt-4 flex items-center gap-3 border-t border-border pt-3">
                           <div aria-hidden="true" className="w-16 shrink-0">
-                            <StarterShot id={template.id} category={template.category} className="rounded-md" sizes="64px" priority />
+                            <StarterShot id={template.id} category={template.category} className="rounded-md" sizes="64px" priority routesFooter={false} />
                           </div>
                           <p className="min-w-0 flex-1 text-xs text-muted-foreground">
                             Builds on <span className="font-medium text-foreground">{template.name}</span>
@@ -657,7 +674,7 @@ export function OnboardingFlow({ user, workspaceId, workspaceName, templates, de
                     </Alert>
                   ) : null}
 
-                  <div className="mt-8 flex flex-col-reverse items-stretch gap-3 border-t border-border pt-5 sm:flex-row sm:items-center">
+                  <div className={STEP_FOOTER}>
                     <Button type="button" variant="ghost" onClick={() => goTo(0)} disabled={launching} aria-keyshortcuts="Escape" className="group">
                       <ArrowLeft className="size-4 transition-transform duration-200 group-hover:-translate-x-0.5" aria-hidden="true" /> Back
                       <span aria-hidden="true" className="ml-1 hidden [@media(pointer:fine)]:sm:inline-flex">
@@ -695,7 +712,7 @@ export function OnboardingFlow({ user, workspaceId, workspaceName, templates, de
           </AnimatedHeight>
         </section>
 
-        <aside aria-label="Preview of your workspace" className="sticky top-28 hidden lg:block">
+        <aside aria-label="Preview of your workspace" className="hidden lg:sticky lg:top-24 lg:block">
           <WorkspacePreview state={preview} />
         </aside>
       </div>

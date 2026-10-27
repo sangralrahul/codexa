@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ArrowUpRight, LifeBuoy, Mail, TriangleAlert } from "lucide-react";
+import { ArrowRight, ArrowUpRight, BookOpen, LifeBuoy, Mail, MessageCircleQuestion, TriangleAlert } from "lucide-react";
 import { routeMetadata } from "@/lib/seo";
 import { getNavigation } from "@/lib/content";
 import { site } from "@/config/site";
@@ -24,8 +24,24 @@ const ERROR_CODES = [
 
 const EXAMPLES = ["preview does not start", "change my plan", "export my data", "invite a teammate"];
 
+/** Docs pages that go deeper on each help area (slugs that exist under content/docs). */
+const RELATED_DOCS: Record<string, string[]> = {
+  Account: ["/docs/authentication", "/docs/billing", "/docs/security"],
+  Building: ["/docs/projects", "/docs/ai-agent", "/docs/editor", "/docs/environment-variables"],
+  Shipping: ["/docs/deployment", "/docs/custom-domains", "/docs/github", "/docs/troubleshooting"],
+};
+
 export default async function HelpIndexPage() {
-  const groups = await getNavigation("help");
+  const [groups, docGroups] = await Promise.all([getNavigation("help"), getNavigation("docs")]);
+  const docTitle = new Map(docGroups.flatMap((g) => g.items.map((d) => [d.href, d.title] as const)));
+  // Cards keep equal heights and end with the docs pages that go deeper on their area: the longest
+  // card lists two, shorter cards list up to four, so no card is left half empty.
+  const most = Math.max(0, ...groups.map((g) => g.items.length));
+  const relatedFor = (category: string, count: number) =>
+    (RELATED_DOCS[category] ?? [])
+      .filter((href) => docTitle.has(href))
+      .slice(0, count >= most ? 2 : 4)
+      .map((href) => ({ href, title: docTitle.get(href)! }));
   return (
     <div data-tone="docs" className="container-x pb-20 pt-6 sm:pt-8 lg:pt-10">
       <Breadcrumbs items={[{ name: "Help center", path: "/help" }]} />
@@ -43,7 +59,7 @@ export default async function HelpIndexPage() {
         </div>
       </header>
 
-      <section aria-labelledby="errors-heading" className="mx-auto mt-12 max-w-4xl rounded-[22px] border border-border bg-surface/60 p-5 sm:p-6">
+      <section aria-labelledby="errors-heading" className="mx-auto mt-12 max-w-6xl rounded-[22px] border border-border bg-surface/60 p-5 sm:p-6">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <h2 id="errors-heading" className="flex items-center gap-2 text-[15px] font-semibold">
             <TriangleAlert className="size-4 text-warning" aria-hidden="true" />
@@ -82,7 +98,7 @@ export default async function HelpIndexPage() {
                 </h2>
                 <span className="text-meta ml-auto text-foreground-dim">{g.items.length}</span>
               </div>
-              <ul className="flex-1">
+              <ul>
                 {g.items.map((d) => (
                   <li key={d.href}>
                     <Link href={d.href} className="group flex items-start gap-3 rounded-[14px] px-3 py-3 transition-colors duration-(--dur-2) hover:bg-surface focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-ring">
@@ -98,6 +114,27 @@ export default async function HelpIndexPage() {
                   </li>
                 ))}
               </ul>
+              {(() => {
+                const related = relatedFor(g.category, g.items.length);
+                return related.length ? (
+                  <div className="mt-auto border-t border-border px-3 pb-2 pt-3">
+                    <p className="text-label flex items-center gap-2 text-foreground-dim">
+                      <BookOpen className="size-3.5" aria-hidden="true" />
+                      In the docs
+                    </p>
+                    <ul className="mt-1.5" aria-label={`${g.category} documentation`}>
+                      {related.map((r) => (
+                        <li key={r.href}>
+                          <Link href={r.href} className="group flex items-center justify-between gap-2 rounded-[10px] px-2 py-1.5 -mx-2 text-[13.5px] text-muted-foreground transition-colors duration-(--dur-2) hover:bg-surface hover:text-foreground focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-ring">
+                            {r.title}
+                            <ArrowRight className="size-3.5 opacity-0 transition-[opacity,translate] duration-(--dur-2) group-hover:translate-x-0.5 group-hover:opacity-100" aria-hidden="true" />
+                          </Link>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                ) : null;
+              })()}
             </section>
           );
         })}
@@ -119,8 +156,8 @@ export default async function HelpIndexPage() {
             <a href={`mailto:${site.company.supportEmail}`} className={buttonClasses("outline", "md")}>
               <Mail className="size-4" aria-hidden="true" /> {site.company.supportEmail}
             </a>
-            <Link href="/faq" className={buttonClasses("ghost", "md")}>
-              FAQ
+            <Link href="/faq" className={buttonClasses("ghost", "md", "text-muted-foreground hover:text-foreground")}>
+              <MessageCircleQuestion className="size-4" aria-hidden="true" /> Read the FAQ
             </Link>
           </div>
         </div>

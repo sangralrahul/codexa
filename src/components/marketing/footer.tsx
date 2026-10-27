@@ -41,8 +41,8 @@ export function MarketingFooter() {
   return (
     <footer className="relative isolate overflow-hidden border-t border-border bg-surface">
       <div aria-hidden="true" className="horizon-line pointer-events-none absolute inset-x-0 top-0 opacity-50" />
-      <div className="container-x pb-6 pt-14 lg:pt-20">
-        <div className="grid gap-10 lg:grid-cols-[minmax(0,1.35fr)_repeat(5,minmax(0,1fr))] lg:gap-8">
+      <div className="container-x pt-14 lg:pt-20">
+        <div className="grid grid-cols-1 gap-10 lg:grid-cols-[minmax(0,1.35fr)_repeat(5,minmax(0,1fr))] lg:gap-8">
           <div className="max-w-xs">
             <Logo />
             <p className="mt-4 text-pretty text-sm leading-relaxed text-muted-foreground">
@@ -93,29 +93,33 @@ export function MarketingFooter() {
             ))}
           </div>
         </div>
-
-        <div className="mt-12 flex flex-col gap-4 border-t border-border pt-6 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between lg:mt-16">
-          <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-xs text-muted-foreground">
-            <Suspense fallback={<FooterStatusFallback />}>
-              <FooterStatus />
-            </Suspense>
-            <span>
-              © {new Date().getFullYear()} {site.company.legalName}
-            </span>
-            <span className="hidden sm:inline">Prices in INR and USD, limits enforced per workspace.</span>
-          </div>
-          <div className="flex flex-wrap items-center gap-3">
-            <MotionToggle />
-            <ThemeToggle />
+      </div>
+      {/* The bottom bar and the wordmark reveal together: the clipped wordmark alone is too short (47px on a
+          phone) to ever cross the reveal observer's line at the very bottom of the page. */}
+      <div className="mk-foot-end" data-split="" data-play="view">
+        <div className="container-x pb-6">
+          <div className="mt-6 flex flex-col gap-4 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between lg:mt-16 lg:border-t lg:border-border lg:pt-6">
+            <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-xs text-muted-foreground">
+              <Suspense fallback={<FooterStatusFallback />}>
+                <FooterStatus />
+              </Suspense>
+              <span>
+                © {new Date().getFullYear()} {site.company.legalName}
+              </span>
+            </div>
+            <div className="flex flex-wrap items-center gap-3">
+              <MotionToggle />
+              <ThemeToggle />
+            </div>
           </div>
         </div>
-      </div>
-      <div aria-hidden="true" className="mk-wordmark" data-split="" data-play="view">
-        {Array.from(WORD).map((c, i) => (
-          <span key={i} className="mk-wordmark__l" style={{ "--i": i, "--n": WORD.length } as React.CSSProperties}>
-            {c}
-          </span>
-        ))}
+        <div aria-hidden="true" className="mk-wordmark">
+          {Array.from(WORD).map((c, i) => (
+            <span key={i} className="mk-wordmark__l" style={{ "--i": i, "--n": WORD.length } as React.CSSProperties}>
+              {c}
+            </span>
+          ))}
+        </div>
       </div>
     </footer>
   );

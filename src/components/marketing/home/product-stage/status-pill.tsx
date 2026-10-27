@@ -1,7 +1,7 @@
 import { cn } from "@/lib/utils";
 import type { StageFrame } from "./script";
 
-/** Header status: Ready → Agent working → Validating → Preview running → Live. */
+/** Header status, the project's state: Ready → Agent working → Validating → Checks passed → Live (the runtime has its own Run button). */
 export function StatusPill({ status, className }: { status: StageFrame["status"]; className?: string }) {
   const dot = {
     idle: "bg-muted-foreground/50",

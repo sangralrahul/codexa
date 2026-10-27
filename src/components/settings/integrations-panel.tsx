@@ -13,7 +13,7 @@ import { Segmented } from "@/components/ui/segmented";
 import { Tooltip } from "@/components/ui/tooltip";
 import { toast } from "@/components/ui/toast";
 import { Dialog, DialogClose, DialogContent, DialogFooter } from "@/components/ui/dialog";
-import { BrandMark } from "@/components/brand/brand-mark";
+import { BrandMark, hasBrandMark } from "@/components/brand/brand-mark";
 import { SettingsCard, tableRow } from "./section";
 import { absoluteTime, relativeTime } from "./usage-model";
 
@@ -24,9 +24,11 @@ type TestPhase = "testing" | "ok" | "fail";
 const UNAVAILABLE = "Workspace connections are not available on this deployment yet. The integrations API has not been enabled.";
 
 function BrandTile({ id, className }: { id: string; className?: string }) {
+  // Brands without a licensed mark get a plain initial, not BrandMark's bordered monogram (a box inside the tile read as a placeholder).
+  const initial = (getIntegration(id)?.name ?? id).replace(/[^A-Za-z0-9]/g, "").slice(0, 1).toUpperCase() || "?";
   return (
     <span aria-hidden="true" className={cn("brand-tile icon-tile flex size-10 shrink-0 items-center justify-center rounded-[11px] text-foreground", className)}>
-      <BrandMark id={id} className="size-[18px]" />
+      {hasBrandMark(id) ? <BrandMark id={id} className="size-[18px]" /> : <span className="font-display text-[17px] font-semibold leading-none tracking-[-0.03em]">{initial}</span>}
     </span>
   );
 }
@@ -166,7 +168,7 @@ export function IntegrationsPanel({ workspaceId, canManage, canTest }: { workspa
             Connected services {state.kind === "ready" ? <span className="font-normal text-muted-foreground">{connections.length}</span> : null}
           </>
         }
-        description="Credentials are encrypted before storage and never returned to the browser."
+        description="Services that projects in this workspace can use. Run a test to check a connection's credentials."
         flush={state.kind === "ready" && connections.length > 0}
       >
         {state.kind === "loading" ? (
@@ -193,7 +195,7 @@ export function IntegrationsPanel({ workspaceId, canManage, canTest }: { workspa
         ) : connections.length === 0 ? (
           <div className="flex flex-col items-start gap-4 rounded-[14px] border border-dashed border-border-strong p-5 sm:flex-row sm:items-center">
             <div className="flex gap-1.5" aria-hidden="true">
-              {["postgres", "openai", "stripe"].map((id) => (
+              {["postgres", "anthropic", "stripe"].map((id) => (
                 <BrandTile key={id} id={id} className="size-9 opacity-80" />
               ))}
             </div>
@@ -311,7 +313,9 @@ export function IntegrationsPanel({ workspaceId, canManage, canTest }: { workspa
                       <p className="text-xs text-foreground-dim">{cat}</p>
                     </div>
                   </div>
-                  <p className="relative z-[2] mt-3 line-clamp-2 flex-1 text-[13px] leading-relaxed text-muted-foreground">{i.description}</p>
+                  <p className="relative z-[2] mt-3 line-clamp-3 flex-1 text-pretty text-[13px] leading-relaxed text-muted-foreground" title={i.description}>
+                    {i.description}
+                  </p>
                   <div className="relative z-[2] mt-4 flex items-center justify-between gap-2">
                     <span className="min-w-0 truncate font-mono text-[11px] text-foreground-dim" title={secret ? "Secret values are encrypted at rest" : undefined}>
                       {i.configFields.length} field{i.configFields.length === 1 ? "" : "s"}

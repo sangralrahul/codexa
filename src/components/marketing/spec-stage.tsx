@@ -5,12 +5,16 @@ import { AppWindow } from "@/components/frames/app-window";
 import { IllustrationBadge } from "@/components/frames/illustration-badge";
 import { cn } from "@/lib/utils";
 
-export type SpecScene = { id: string; label: string; node: React.ReactElement<{ playing?: boolean }>; detail: string; project: string };
+export type SpecScene = { id: string; label: string; node: React.ReactElement<{ playing?: boolean; className?: string }>; detail: string; project: string };
 
 /**
  * The sticky stage of the /features spec sheet: crossfades (opacity, scale .98→1, blur 4px→0,
  * 500ms) to the vignette of the group whose section crosses 40% of the viewport. The vignette
  * plays once when its group first becomes active; the rest wait at their final frames.
+ * The stage sizes to its content: every scene sits in one grid cell, so the window is as tall as
+ * the tallest final frame (never a fixed, half-empty box, and it never changes height), and each
+ * scene fills that height (flex-1) rather than floating in the middle. The chapter label is a
+ * strip pinned under the window chrome.
  */
 export function SpecStage({ scenes, className }: { scenes: SpecScene[]; className?: string }) {
   const [active, setActive] = React.useState(0);
@@ -35,13 +39,13 @@ export function SpecStage({ scenes, className }: { scenes: SpecScene[]; classNam
   const current = scenes[active] ?? scenes[0];
   return (
     <div className={cn("sticky top-24", className)}>
-      <AppWindow project={current.project} toolbar={<IllustrationBadge label="Illustration" detail={current.detail} />} className="h-[600px]" bodyClassName="bg-background/40 p-5 flex flex-col">
-        <p aria-live="polite" className="text-label mb-4 flex items-center gap-2 text-muted-foreground">
+      <AppWindow project={current.project} toolbar={<IllustrationBadge label="Illustration" detail={current.detail} />} bodyClassName="flex flex-col bg-background/40">
+        <p aria-live="polite" className="text-label flex h-9 shrink-0 items-center gap-2 border-b border-border bg-surface/60 px-5 text-muted-foreground">
           <span className="font-mono text-signal-ink">{String(active + 1).padStart(2, "0")}</span>
           <span aria-hidden="true" className="h-px w-5 bg-border-strong" />
           {current.label}
         </p>
-        <div className="grid min-h-0 flex-1">
+        <div className="grid min-h-0 flex-1 p-5">
           {scenes.map((s, i) => {
             const on = i === active;
             return (
@@ -50,11 +54,11 @@ export function SpecStage({ scenes, className }: { scenes: SpecScene[]; classNam
                 aria-hidden={!on}
                 inert={!on}
                 className={cn(
-                  "col-start-1 row-start-1 min-w-0 self-center transition-[opacity,scale,filter,visibility] duration-500 ease-out calm:transition-none",
+                  "col-start-1 row-start-1 flex min-w-0 flex-col transition-[opacity,scale,filter,visibility] duration-500 ease-out calm:transition-none",
                   on ? "visible scale-100 opacity-100 blur-0" : "invisible scale-[0.98] opacity-0 blur-[4px]",
                 )}
               >
-                {React.isValidElement(s.node) ? React.cloneElement(s.node, { playing: on }) : s.node}
+                {React.isValidElement(s.node) ? React.cloneElement(s.node, { playing: on, className: "flex-1" }) : s.node}
               </div>
             );
           })}

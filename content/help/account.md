@@ -1,5 +1,5 @@
 ---
-title: Account
+title: Sign-in and account basics
 description: Sign up, verify your email, reset a password, change your email and delete your account.
 category: Account
 order: 1

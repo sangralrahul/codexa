@@ -34,8 +34,10 @@ function NodeCard({ node, id }: { node: ConstellationNode; id: string }) {
 
 function Orbit({ nodes, radius, reverse, idPrefix }: { nodes: ConstellationNode[]; radius: number; reverse?: boolean; idPrefix: string }) {
   const c = SIZE / 2;
+  // Both rings start half a step off the vertical axis (inner 4 nodes at ±45°/±135°, outer 6 at 0°/±60°/±120°/180°),
+  // so in the resting frame no node sits above another or straight under the centre mark.
   const points = nodes.map((n, i) => {
-    const a = (i / nodes.length) * Math.PI * 2 - Math.PI / 2 + (reverse ? Math.PI / nodes.length : 0);
+    const a = (i / nodes.length) * Math.PI * 2 - Math.PI / 2 + Math.PI / nodes.length;
     return { n, x: c + radius * Math.cos(a), y: c + radius * Math.sin(a) };
   });
   return (
@@ -87,9 +89,10 @@ function Orbit({ nodes, radius, reverse, idPrefix }: { nodes: ConstellationNode[
  * H6 integrations constellation (PLAN §5.2): the user-connectable integrations (the providers
  * registry plus GitHub) as self-hosted brand marks on two slow orbits (120s a turn) around the
  * Codexa mark. Orbits pause on hover, focus, Pause, off-screen and calm; connector dots travel
- * only while it is on screen. Phones get a categorised grid instead.
+ * only while it is on screen. Phones get a categorised grid instead. `footer` (the "Browse
+ * integrations" link) shares a row with the Pause button, clear of the orbit's bottom node.
  */
-export function Constellation({ nodes }: { nodes: ConstellationNode[] }) {
+export function Constellation({ nodes, footer }: { nodes: ConstellationNode[]; footer?: React.ReactNode }) {
   const [paused, setPaused] = React.useState(false);
   const inner = nodes.filter((n) => INNER.has(n.id));
   const outer = nodes.filter((n) => !INNER.has(n.id));
@@ -118,9 +121,6 @@ export function Constellation({ nodes }: { nodes: ConstellationNode[] }) {
             <LogoMark size={52} />
           </div>
         </div>
-        <div className="mt-6 flex justify-center">
-          <PauseButton paused={paused} onToggle={() => setPaused((p) => !p)} label="Pause the integrations orbit" showLabel />
-        </div>
       </div>
 
       {/* Phones: a categorised grid */}
@@ -139,6 +139,11 @@ export function Constellation({ nodes }: { nodes: ConstellationNode[] }) {
           </li>
         ))}
       </ul>
+
+      <div className="mt-8 flex flex-wrap items-center gap-x-4 gap-y-3 md:mt-10 md:justify-center">
+        {footer}
+        <PauseButton paused={paused} onToggle={() => setPaused((p) => !p)} label="Pause the integrations orbit" showLabel className="hidden md:inline-flex" />
+      </div>
     </div>
   );
 }

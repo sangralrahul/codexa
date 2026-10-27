@@ -4,7 +4,9 @@ import { buttonClasses } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import type { TemplateCardData } from "./types";
 import { TemplatePreview } from "./template-preview";
-import { templateMeta } from "./gallery-search";
+import { FEATURED_LEAD, templateMeta } from "./gallery-search";
+
+const FEATURED_IDS: ReadonlySet<string> = new Set(FEATURED_LEAD);
 
 export function templatePreviewHref(id: string) {
   return `/templates/preview/${id}`;
@@ -16,8 +18,12 @@ export type TemplateTileVariant = "browse" | "select" | "compact";
  * The one template tile used by every gallery (PLAN §5.4). Server-safe.
  * - browse: edge-to-edge 16:10 screenshot (slow pan on hover/focus), 15px name, one-line description,
  *   muted meta "React · 12 files · Beginner", a "Featured" label over the image, and actions
- *   (Preview, Use template) revealed on hover/focus-within (always visible without hover).
+ *   (Preview, Use template). With a pointer that hovers, the actions float over the screenshot and
+ *   appear on hover/focus-within; on touch screens they sit in the card body under the meta line
+ *   (no scrim over the screenshot, and the Featured label stays visible).
  *   The whole tile is a stretched link to `href` with a visible focus ring.
+ *   The Featured label marks the gallery's Featured row starters only (FEATURED_LEAD), so a starter
+ *   carries it on every surface or on none. Hooks for galleries: `data-tile-desc`, `data-tile-actions`.
  * - select: no link or actions; wrap it in your own radio/label. Shows a check when `selected`.
  * - compact: smaller tile for rails and "related" lists; link only.
  * `size="lg"` is the Featured-row tile. The tile carries `view-transition-name: tpl-<id>` so filter
@@ -61,6 +67,7 @@ export function TemplateTile({
   const lg = size === "lg";
   const compact = variant === "compact";
   const linked = variant !== "select";
+  const featured = FEATURED_IDS.has(t.id) && !compact;
   const Heading = headingLevel;
   const imgSizes = sizes ?? (lg ? "(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw" : compact ? "(min-width: 1024px) 20vw, (min-width: 640px) 33vw, 50vw" : undefined);
 
@@ -83,19 +90,19 @@ export function TemplateTile({
         )}
       >
         <TemplatePreview id={t.id} category={t.category} priority={priority} sizes={imgSizes} className="rounded-none border-0 shadow-none" />
-        {/* Soft floor so the actions read on any screenshot. */}
+        {/* Soft floor so the floating actions read on any screenshot (pointer devices only; touch keeps the screenshot clean). */}
         {variant === "browse" ? (
           <span
             aria-hidden="true"
-            className="pointer-events-none absolute inset-x-0 bottom-0 z-[1] h-2/5 bg-gradient-to-t from-black/45 via-black/15 to-transparent opacity-0 transition-opacity duration-(--dur-3) group-focus-within/tile:opacity-100 group-hover/tile:opacity-100 [@media(hover:none)]:opacity-100"
+            className="pointer-events-none absolute inset-x-0 bottom-0 z-[1] h-2/5 bg-gradient-to-t from-background/70 via-background/25 to-transparent opacity-0 transition-opacity duration-(--dur-3) group-focus-within/tile:opacity-100 group-hover/tile:opacity-100 [@media(hover:none)]:hidden"
           />
         ) : null}
-        {t.featured && !compact ? (
+        {featured ? (
           <span
             data-featured-label
-            className="absolute bottom-3 left-3 z-[2] inline-flex h-6 items-center gap-1.5 rounded-full bg-black/70 px-2.5 font-mono text-[10px] font-medium uppercase tracking-[0.1em] text-white shadow-sm backdrop-blur-md transition-opacity duration-(--dur-3) group-hover/tile:opacity-0 group-focus-within/tile:opacity-0 [@media(hover:none)]:opacity-0"
+            className="absolute bottom-3 left-3 z-[2] inline-flex h-6 items-center gap-1.5 rounded-full bg-background/85 px-2.5 font-mono text-[10px] font-medium uppercase tracking-[0.1em] text-foreground shadow-[inset_0_0_0_1px_var(--border),var(--shadow-sm)] backdrop-blur-md transition-opacity duration-(--dur-3) group-hover/tile:opacity-0 group-focus-within/tile:opacity-0 [@media(hover:none)]:opacity-100"
           >
-            <Sparkles className="size-3 text-signal-2" aria-hidden="true" />
+            <Sparkles className="size-3 text-signal-ink" aria-hidden="true" />
             Featured
           </span>
         ) : null}
@@ -112,38 +119,6 @@ export function TemplateTile({
         ) : null}
       </div>
 
-      {variant === "browse" ? (
-        // Sits over the image area (same 16:10 box) but outside the media layer, so it stacks above the
-        // stretched title link; the empty area passes clicks through to the link.
-        <div
-          className={cn(
-            "pointer-events-none absolute inset-x-0 top-0 z-[3] flex aspect-[16/10] items-end justify-end p-3 transition-[translate] duration-(--dur-4) ease-out",
-            linked && "group-hover/tile:-translate-y-0.5 calm:group-hover/tile:translate-y-0",
-          )}
-        >
-          <div
-            className={cn(
-              "pointer-events-auto flex flex-wrap items-end justify-end gap-2",
-              "translate-y-1.5 opacity-0 transition-[opacity,translate] duration-(--dur-3) ease-out",
-              "group-focus-within/tile:translate-y-0 group-focus-within/tile:opacity-100 group-hover/tile:translate-y-0 group-hover/tile:opacity-100",
-              "has-[[role=alert]]:translate-y-0 has-[[role=alert]]:opacity-100 [@media(hover:none)]:translate-y-0 [@media(hover:none)]:opacity-100",
-              "[&_[role=alert]]:max-w-[16rem] [&_[role=alert]]:rounded-lg [&_[role=alert]]:bg-card [&_[role=alert]]:p-2 [&_[role=alert]]:shadow-lg",
-            )}
-          >
-            <Link
-              href={previewHref ?? target}
-              {...previewLinkProps}
-              className={buttonClasses("outline", "sm", "border-border bg-card/85 text-foreground backdrop-blur-md hover:bg-card")}
-              aria-label={`Preview ${t.name}`}
-            >
-              <Eye className="size-3.5" aria-hidden="true" />
-              Preview
-            </Link>
-            {action}
-          </div>
-        </div>
-      ) : null}
-
       <div className={cn("px-0.5", lg ? "mt-4" : compact ? "mt-2.5" : "mt-3.5")}>
         <Heading className={cn("font-semibold leading-snug tracking-[-0.01em] text-foreground", lg ? "text-[17px]" : compact ? "text-[14px]" : "text-[15px]")}>
           {linked ? (
@@ -159,9 +134,48 @@ export function TemplateTile({
             t.name
           )}
         </Heading>
-        {!compact ? <p className={cn("mt-1 text-muted-foreground", lg ? "line-clamp-2 text-[14px] leading-relaxed" : "line-clamp-1 text-[13px]")}>{t.description}</p> : null}
+        {!compact ? (
+          <p data-tile-desc="" className={cn("mt-1 text-muted-foreground", lg ? "line-clamp-2 text-[14px] leading-relaxed" : "line-clamp-1 text-[13px]")}>
+            {t.description}
+          </p>
+        ) : null}
         <p className={`text-meta ${cn("text-foreground-dim", compact ? "mt-1" : "mt-2")}`}>{templateMeta(t)}</p>
       </div>
+      {variant === "browse" ? (
+        // Pointer devices: floats over the image area (same 16:10 box) but outside the media layer,
+        // so it stacks above the stretched title link; the empty area passes clicks through to the link.
+        // Touch devices: an in-flow row under the meta line (still above the stretched link).
+        <div
+          data-tile-actions=""
+          className={cn(
+            "pointer-events-none absolute inset-x-0 top-0 z-[3] flex aspect-[16/10] items-end justify-end p-3 transition-[translate] duration-(--dur-4) ease-out",
+            "[@media(hover:none)]:relative [@media(hover:none)]:aspect-auto [@media(hover:none)]:justify-start [@media(hover:none)]:px-0.5 [@media(hover:none)]:pb-0 [@media(hover:none)]:pt-3",
+            linked && "group-hover/tile:-translate-y-0.5 calm:group-hover/tile:translate-y-0",
+          )}
+        >
+          <div
+            className={cn(
+              "pointer-events-auto flex flex-wrap items-end justify-end gap-2",
+              "translate-y-1.5 opacity-0 transition-[opacity,translate] duration-(--dur-3) ease-out",
+              "group-focus-within/tile:translate-y-0 group-focus-within/tile:opacity-100 group-hover/tile:translate-y-0 group-hover/tile:opacity-100",
+              "has-[[role=alert]]:translate-y-0 has-[[role=alert]]:opacity-100",
+              "[@media(hover:none)]:translate-y-0 [@media(hover:none)]:justify-start [@media(hover:none)]:opacity-100 [@media(hover:none)]:transition-none",
+              "[&_[role=alert]]:max-w-[16rem] [&_[role=alert]]:rounded-lg [&_[role=alert]]:bg-card [&_[role=alert]]:p-2 [&_[role=alert]]:shadow-lg",
+            )}
+          >
+            <Link
+              href={previewHref ?? target}
+              {...previewLinkProps}
+              className={buttonClasses("outline", "sm", "border-border bg-card/85 text-foreground backdrop-blur-md hover:bg-card [@media(hover:none)]:bg-card")}
+              aria-label={`Preview ${t.name}`}
+            >
+              <Eye className="size-3.5" aria-hidden="true" />
+              Preview
+            </Link>
+            {action}
+          </div>
+        </div>
+      ) : null}
     </Root>
   );
 }

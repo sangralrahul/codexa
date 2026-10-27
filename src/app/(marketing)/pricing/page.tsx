@@ -42,7 +42,7 @@ export default function PricingPage() {
       </Section>
 
       <Section size="sm" className="border-t border-border/60">
-        <div className="grid gap-10 lg:grid-cols-[5fr_7fr] lg:gap-14">
+        <div className="grid grid-cols-1 gap-10 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] lg:gap-14">
           <aside className="lg:sticky lg:top-24 lg:self-start">
             <div data-reveal className="e3 rounded-[18px] p-6 sm:p-7">
               <Receipt className="size-5 text-signal-ink" aria-hidden="true" />

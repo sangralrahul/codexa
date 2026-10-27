@@ -7,23 +7,32 @@ import type { Scenario } from "../types";
 import type { StageFrame } from "./script";
 
 /**
- * Three glass cards that float over the window edges at different depths (PLAN §5.2):
- * "Snapshot saved" (top-right), "Type-check passed · 0 errors" (bottom-left) and a phone-sized
- * crop of the starter screenshot (right). Each appears when its chapter is reached; the snapshot
- * card is shown during the code chapters only, so it never covers the preview's device switch. Parallax is
- * applied by the parent through --px / --py (−1…1) and each card's --depth. Decorative.
+ * How far a card may hang past the window edge. The stage is `min(1360px, 100vw - 48px)` wide and
+ * centred, so the page gutter beside it is max(24px, (100vw - 1360px) / 2). A card overhangs by the
+ * gutter minus 32px (it always keeps at least 32px of air to the window edge), at most 24px; where
+ * the gutter is narrow (below ~1424px) the value goes negative and the card tucks 8px inside the frame.
+ */
+const EDGE = "clamp(-8px, max(24px, (100vw - 1360px) / 2) - 32px, 24px)";
+
+/**
+ * Three cards that float over the window edges at different depths (PLAN §5.2):
+ * "Snapshot saved" (top-right), "Type-check passed · 0 errors" (bottom-left, above the status bar
+ * so it never covers its text) and a phone-sized crop of the starter screenshot (right). Each
+ * appears when its chapter is reached; the snapshot card is shown during the code chapters only, so
+ * it never covers the preview's device switch. They stay inside the page gutter at every width.
+ * Parallax is applied by the parent through --px / --py (−1…1) and each card's --depth. Decorative.
  */
 export function DepthCards({ frame, scenario }: { frame: StageFrame; scenario: Scenario }) {
-  // Near-opaque glass: the cards float over live UI text, which must not show through.
+  // Opaque card surface: the cards float over live UI text and the white screenshot, which must not show through.
   const card =
-    "absolute z-[4] rounded-[14px] border border-border-strong bg-card/90 shadow-xl backdrop-blur-xl backdrop-saturate-150 [transition:opacity_var(--dur-4)_var(--ease-out),scale_var(--dur-4)_var(--ease-out),translate_200ms_var(--ease-out)] [translate:calc(var(--px,0)*var(--depth)*1px)_calc(var(--py,0)*var(--depth)*1px)] calm:[translate:none]";
+    "absolute z-[4] rounded-[14px] border border-border-strong bg-card shadow-xl [transition:opacity_var(--dur-4)_var(--ease-out),scale_var(--dur-4)_var(--ease-out),translate_200ms_var(--ease-out)] [translate:calc(var(--px,0)*var(--depth)*1px)_calc(var(--py,0)*var(--depth)*1px)] calm:[translate:none]";
   // "Snapshot saved" is a moment in the code chapters; it steps aside once the preview (and its device switch) takes over.
   const snapshot = frame.cards.snapshot && frame.view === "code";
   const phoneSrc = templatePhoneShotSrc(scenario.id) ?? templateShotFor(scenario.id, 360);
   return (
-    <div aria-hidden="true" className="pointer-events-none absolute inset-0 hidden lg:block">
+    <div aria-hidden="true" className="pointer-events-none absolute inset-0 hidden lg:block" style={{ "--edge": EDGE } as React.CSSProperties}>
       <div
-        className={cn(card, "-right-7 top-[132px] flex items-center gap-2.5 px-3 py-2.5", snapshot ? "scale-100 opacity-100" : "scale-95 opacity-0")}
+        className={cn(card, "right-[calc(var(--edge)*-1)] top-[132px] flex items-center gap-2.5 px-3 py-2", snapshot ? "scale-100 opacity-100" : "scale-95 opacity-0")}
         style={{ "--depth": 4 } as React.CSSProperties}
       >
         <span className="inline-flex size-7 items-center justify-center rounded-full bg-signal/12 text-signal">
@@ -35,8 +44,9 @@ export function DepthCards({ frame, scenario }: { frame: StageFrame; scenario: S
         </span>
       </div>
 
+      {/* Sits above the 26px status bar (over the composer's corner), never over the runtime/branch/problems text. */}
       <div
-        className={cn(card, "-bottom-4 -left-8 flex items-center gap-2.5 px-3 py-2.5", frame.cards.typecheck ? "scale-100 opacity-100" : "scale-95 opacity-0")}
+        className={cn(card, "bottom-11 left-[calc(var(--edge)*-1)] flex items-center gap-2.5 px-3 py-2", frame.cards.typecheck ? "scale-100 opacity-100" : "scale-95 opacity-0")}
         style={{ "--depth": 6 } as React.CSSProperties}
       >
         <span className="inline-flex size-7 items-center justify-center rounded-full bg-success/15 text-success">
@@ -48,8 +58,13 @@ export function DepthCards({ frame, scenario }: { frame: StageFrame; scenario: S
         </span>
       </div>
 
+      {/* Smaller below xl, where the canvas is narrower and the gutter is at its minimum. */}
       <div
-        className={cn(card, "-right-10 bottom-10 w-[132px] rounded-[30px] border-0 bg-transparent p-0 shadow-none backdrop-blur-none backdrop-saturate-100", frame.cards.phone ? "scale-100 opacity-100" : "scale-95 opacity-0")}
+        className={cn(
+          card,
+          "bottom-12 right-[calc(var(--edge)*-1)] w-[104px] rounded-[26px] border-0 bg-transparent p-0 shadow-none xl:bottom-10 xl:w-[132px] xl:rounded-[30px]",
+          frame.cards.phone ? "scale-100 opacity-100" : "scale-95 opacity-0",
+        )}
         style={{ "--depth": -5 } as React.CSSProperties}
       >
         <DeviceFrame device="phone" className="w-full!">

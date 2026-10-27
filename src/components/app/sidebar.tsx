@@ -246,8 +246,8 @@ export function AppSidebar({
 
   return (
     <div className="relative flex h-full flex-col">
-      {/* Header: logo mark + the workspace switcher. */}
-      <div className="relative flex h-[52px] shrink-0 items-center gap-1 px-3">
+      {/* Header: logo mark + the workspace switcher (name over plan and role). */}
+      <div className="relative flex h-[52px] shrink-0 items-center gap-0.5 px-3">
         {collapsed && onToggle ? (
           <RailTip show content={<>Expand sidebar <KeyHint keys={["["]} /></>}>
             <button type="button" onClick={onToggle} aria-label="Expand sidebar" className="group/logo relative flex size-10 shrink-0 items-center justify-center rounded-[10px] transition-colors hover:bg-foreground/[0.06]">
@@ -260,10 +260,8 @@ export function AppSidebar({
             <LogoMark size={24} />
           </Link>
         )}
+        {/* The logo mark is the brand; the switcher beside it gets the rest of the row for the workspace name. */}
         <div inert={collapsed} className={cn("flex min-w-0 flex-1 items-center", fade(collapsed))}>
-          <span aria-hidden="true" className="-ml-1.5 mr-0.5 select-none text-[17px] font-light text-border-strong">
-            /
-          </span>
           <WorkspaceSwitcher workspaces={workspaces} currentId={currentId} onNavigate={onNavigate} className="min-w-0 flex-1" />
           {onClose ? (
             <button type="button" onClick={onClose} aria-label="Close navigation" className="ml-1 flex size-8 shrink-0 items-center justify-center rounded-[8px] text-muted-foreground transition-colors hover:bg-foreground/[0.06] hover:text-foreground">

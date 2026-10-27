@@ -14,6 +14,7 @@ import { Avatar } from "@/components/ui/avatar";
 import { Segmented } from "@/components/ui/segmented";
 import { SelectMenu } from "@/components/ui/select-menu";
 import { useLaunch } from "@/components/motion/launch";
+import { isCalm } from "@/lib/client/motion";
 import { TemplatePreview } from "@/components/templates/template-preview";
 import { ProjectThumb } from "@/components/app/project-thumb";
 import { cn } from "@/lib/utils";
@@ -33,7 +34,8 @@ const VIS: { value: ProjectVisibility; icon: typeof Lock }[] = [
 const cap = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
 
 /**
- * New project creation hub: "Describe it" (the composer) | "Start from template" | "Import from
+ * New project creation hub: "Describe it" (the composer, left-aligned under the page header, then
+ * four starters that open the template tab with one selected) | "Start from template" | "Import from
  * GitHub" (a link). The template tab is a 2-column grid beside a sticky Inspector: a large
  * preview that crossfades, the real file count, tags and difficulty, and the project fields
  * (name pre-filled from the template, description behind "+ Add description", workspace,
@@ -131,7 +133,8 @@ export function NewProjectForm({
       />
 
       {tab === "describe" ? (
-        <div className="pop-in mx-auto max-w-4xl pt-2">
+        // One alignment axis with the page header: the composer, its hint and presets are left-aligned in the same column.
+        <div className="pop-in max-w-4xl space-y-12 pt-2">
           <PromptBox
             workspaceId={workspaceId || null}
             workspaces={workspaces.map((w) => ({ id: w.id, name: w.name, plan: w.plan }))}
@@ -139,18 +142,18 @@ export function NewProjectForm({
             templates={templates.map((t) => ({ id: t.id, name: t.name, category: t.category, framework: t.framework, frameworkName: t.frameworkName, fileCount: t.fileCount }))}
             presets={presets}
             aiConfigured={aiConfigured}
+            align="start"
           />
-          <p className="mt-8 text-center text-[13px] text-muted-foreground">
-            Prefer a known starting point?{" "}
-            <button type="button" onClick={() => setTab("template")} className="link-draw font-medium text-foreground">
-              Pick a template
-            </button>{" "}
-            or{" "}
-            <Link href="/import-project" className="link-draw font-medium text-foreground">
-              import a repository
-            </Link>
-            .
-          </p>
+          <StarterRow
+            templates={starterPicks(templates)}
+            total={templates.length}
+            onPick={(id) => {
+              pickTemplate(id);
+              setTab("template");
+              window.scrollTo({ top: 0, behavior: isCalm() ? "auto" : "smooth" });
+            }}
+            onBrowse={() => setTab("template")}
+          />
         </div>
       ) : (
         <form ref={formRef} onSubmit={submit} className="grid items-start gap-8 lg:grid-cols-[minmax(0,1fr)_400px] xl:gap-10">
@@ -352,5 +355,46 @@ function ResponsiveLabel({ short, long }: { short: string; long: string }) {
       <span className="sm:hidden">{short}</span>
       <span className="hidden sm:inline">{long}</span>
     </>
+  );
+}
+
+/** Four starters for the Describe tab: featured first (the list is already featured-first), then the rest. */
+function starterPicks(templates: PickerTemplate[]) {
+  return [...templates.filter((t) => t.featured), ...templates.filter((t) => !t.featured)].slice(0, 4);
+}
+
+/**
+ * "Or start from a template": four starters with their real picture (screenshot, route list or drawn
+ * thumbnail). Picking one opens the template tab with it selected, so the project fields are one step away.
+ */
+function StarterRow({ templates, total, onPick, onBrowse }: { templates: PickerTemplate[]; total: number; onPick: (id: string) => void; onBrowse: () => void }) {
+  if (templates.length === 0) return null;
+  return (
+    <section aria-labelledby="np-starters-title">
+      <div className="mb-3 flex items-baseline justify-between gap-3">
+        <h2 id="np-starters-title" className="text-[15px] font-semibold tracking-[-0.01em]">
+          Or start from a template
+        </h2>
+        <button type="button" onClick={onBrowse} className="link-draw inline-flex shrink-0 items-center gap-1 text-[13px] text-muted-foreground hover:text-foreground">
+          All {total} templates <ArrowRight className="size-3.5" aria-hidden="true" />
+        </button>
+      </div>
+      <ul className="grid grid-cols-2 gap-x-4 gap-y-5 sm:grid-cols-4">
+        {templates.map((t) => (
+          <li key={t.id} className="group/st shot-pan relative min-w-0">
+            <div className="overflow-hidden rounded-[12px] border border-border bg-surface-2 shadow-[inset_0_1px_0_var(--hairline),var(--shadow-sm)] transition-[translate,border-color,box-shadow] duration-(--dur-3) ease-out group-hover/st:-translate-y-0.5 group-hover/st:border-border-strong group-hover/st:shadow-lg group-has-[button:focus-visible]/st:outline-2 group-has-[button:focus-visible]/st:outline-offset-[3px] group-has-[button:focus-visible]/st:outline-ring calm:transition-none calm:group-hover/st:translate-y-0">
+              <TemplatePreview id={t.id} category={t.category} sizes="(min-width: 640px) 220px, 45vw" className="rounded-none border-0 shadow-none" />
+            </div>
+            <p className="mt-2.5 truncate px-0.5 text-[14px] font-semibold tracking-[-0.01em]">
+              <button type="button" onClick={() => onPick(t.id)} className="outline-none after:absolute after:inset-0 after:content-['']">
+                <span className="sr-only">Start from </span>
+                {t.name}
+              </button>
+            </p>
+            <p className="text-meta mt-0.5 truncate px-0.5 text-foreground-dim">{pickerMeta(t)}</p>
+          </li>
+        ))}
+      </ul>
+    </section>
   );
 }

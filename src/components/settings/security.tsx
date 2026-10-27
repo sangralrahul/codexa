@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Download, Eye, EyeOff, KeyRound, Laptop, LogOut, Monitor, Smartphone, Tablet, Terminal, TriangleAlert, type LucideIcon } from "lucide-react";
+import { ChevronDown, Download, Eye, EyeOff, KeyRound, Laptop, LogOut, Monitor, Smartphone, Tablet, Terminal, TriangleAlert, type LucideIcon } from "lucide-react";
 import { api, ClientApiError } from "@/lib/client/api";
 import { cn } from "@/lib/utils";
 import type { SessionItem } from "@/lib/billing/account-service";
@@ -147,11 +147,21 @@ function describeAgent(ua: string | null): { label: string; Icon: LucideIcon } {
   return { label: os ? `${browser} on ${os}` : browser, Icon };
 }
 
+/** The client IP as recorded at sign-in; the API stores "unknown" when no proxy header carried one. */
+function ipLabel(ip: string | null) {
+  const v = ip?.trim();
+  return v && v.toLowerCase() !== "unknown" ? v : "IP not recorded";
+}
+
+/** Rows shown before the disclosure: this device plus the most recently active others. */
+const SESSIONS_PREVIEW = 5;
+
 export function SessionsList({ initial }: { initial: SessionItem[] }) {
   const [sessions, setSessions] = useState(initial);
   const [status, setStatus] = useState<Status>({ kind: "idle" });
   const [busyId, setBusyId] = useState<string | null>(null);
   const [leaving, setLeaving] = useState<ReadonlySet<string>>(new Set());
+  const [expanded, setExpanded] = useState(false);
 
   function collapse(ids: string[]) {
     setLeaving((s) => new Set([...s, ...ids]));
@@ -189,6 +199,10 @@ export function SessionsList({ initial }: { initial: SessionItem[] }) {
 
   const others = sessions.filter((s) => !s.current && !leaving.has(s.id)).length;
   const count = sessions.length - leaving.size;
+  // This device first, then the rest by last activity (the server already orders them that way).
+  const ordered = [...sessions.filter((s) => s.current), ...sessions.filter((s) => !s.current)];
+  const hidden = Math.max(0, ordered.length - SESSIONS_PREVIEW);
+  const shown = expanded ? ordered : ordered.slice(0, SESSIONS_PREVIEW);
   return (
     <SettingsCard
       id="sessions"
@@ -215,8 +229,8 @@ export function SessionsList({ initial }: { initial: SessionItem[] }) {
         </Button>
       }
     >
-      <ul>
-        {sessions.map((s) => {
+      <ul id="sessions-list">
+        {shown.map((s) => {
           const { label, Icon } = describeAgent(s.userAgent);
           return (
             <li key={s.id} className="diff-row" data-collapsed={leaving.has(s.id) ? "" : undefined}>
@@ -234,15 +248,15 @@ export function SessionsList({ initial }: { initial: SessionItem[] }) {
                         </span>
                       ) : null}
                     </p>
-                    <p className="text-xs text-muted-foreground">
-                      <span className="font-mono">{s.ip ?? "IP unknown"}</span> · active{" "}
+                    <p className="text-xs tabular-nums text-muted-foreground">
+                      <span>{ipLabel(s.ip)}</span> · active{" "}
                       <Tooltip content={absoluteTime(s.lastSeenAt)}>
                         <time dateTime={s.lastSeenAt} tabIndex={0} className="rounded underline decoration-dotted decoration-border-strong underline-offset-2 outline-none focus-visible:outline-2 focus-visible:outline-ring" suppressHydrationWarning>
                           {s.current ? "now" : relativeTime(s.lastSeenAt)}
                         </time>
                       </Tooltip>{" "}
                       · expires{" "}
-                      <time dateTime={s.expiresAt} className="font-mono" suppressHydrationWarning>
+                      <time dateTime={s.expiresAt} suppressHydrationWarning>
                         {new Date(s.expiresAt).toLocaleDateString("en-US", { month: "short", day: "numeric" })}
                       </time>
                     </p>
@@ -258,6 +272,14 @@ export function SessionsList({ initial }: { initial: SessionItem[] }) {
           );
         })}
       </ul>
+      {hidden > 0 ? (
+        <div className={cn(tableRow, "px-5 py-2.5 sm:px-6")}>
+          <Button variant="ghost" size="sm" className="-ml-2.5 text-muted-foreground hover:text-foreground" aria-expanded={expanded} aria-controls="sessions-list" onClick={() => setExpanded((v) => !v)}>
+            <ChevronDown className={cn("size-3.5 transition-transform duration-200 calm:transition-none", expanded && "rotate-180")} aria-hidden="true" />
+            {expanded ? "Show fewer" : `Show ${hidden} more`}
+          </Button>
+        </div>
+      ) : null}
       {status.kind === "error" ? (
         <div className="px-5 pb-4 sm:px-6">
           <Alert variant="danger">{status.message}</Alert>

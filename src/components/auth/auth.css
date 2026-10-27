@@ -91,23 +91,28 @@
   pointer-events: none;
 }
 
-/* The screenshot the new one wipes over: it dims as the next app starts "building". */
-@keyframes replay-dim { from { opacity: 1; transform: none; } }
-.replay-under { opacity: 0.22; transform: scale(0.985); animation: replay-dim var(--dur-5) var(--ease-out) both; }
+/* The app that just finished crossfades out to the empty blueprint while the next prompt types,
+   so the picture never disagrees with the example named under it. */
+@keyframes replay-out { from { opacity: 1; transform: none; } }
+.replay-under { opacity: 0; transform: scale(0.985); animation: replay-out 900ms var(--ease-out) 120ms both; }
 
-/* Story progress: the current segment fills over one item (6s); paused with the replay. */
+/* The preview's loading bar (top edge of the browser body): creeps forward per tool call, then completes and fades. */
+.replay-load { transform-origin: 0 50%; opacity: 0.9; transition: transform 420ms var(--ease-out), opacity var(--dur-4) var(--ease-out) 260ms; }
+.replay-load[data-done] { opacity: 0; }
+/* While it builds, the frame's reload arrow turns as a loading spinner (lucide's class on BrowserFrame's icon). */
+@keyframes replay-spin { to { rotate: 360deg; } }
+.replay-stage [data-loading] .lucide-rotate-cw { color: var(--foreground); animation: replay-spin 900ms linear infinite; }
+
+/* Story progress: the current segment fills over one item (9s); paused with the replay. */
 @keyframes replay-fill { from { transform: scaleX(0); } to { transform: scaleX(1); } }
 .replay-seg__fill { transform-origin: 0 50%; transform: scaleX(0); }
 .replay-seg[data-state="done"] .replay-seg__fill { transform: scaleX(1); }
 .replay-seg[data-state="current"] .replay-seg__fill { animation: replay-fill var(--replay-ms, 6000ms) linear var(--replay-delay, 0ms) both; }
 .replay-seg[data-paused] .replay-seg__fill { animation-play-state: paused; }
 
-/* Plan rows that have not run yet: placeholder bars breathing softly while the prompt types. */
-@keyframes replay-ghost { from { opacity: 0.55; } to { opacity: 1; } }
-.replay-ghost { animation: replay-ghost 1.4s var(--ease-in-out) infinite alternate; }
 /* Paused (or scrolled away): the endless loops in the depiction hold still (spinners, pulses, carets).
    One-shot entrances (wipe, row rise) still finish, so a story dot picked while paused lands on a whole frame. */
-.replay-stage[data-paused] :is(.replay-ghost, .step-row__spin, .logo-mark__ring, .logo-mark__caret),
+.replay-stage[data-paused] :is(.step-row__spin, .logo-mark__ring, .logo-mark__caret, .lucide-rotate-cw),
 .replay-stage[data-paused] .live-dot::after,
 .replay-stage[data-paused] .caret::after { animation-play-state: paused; }
 
@@ -158,14 +163,16 @@
 
 /* ---------- Calm: final frames, no tilt, no pulse ---------- */
 @media (prefers-reduced-motion: reduce) {
-  .auth-rise > *, .mail-tile__badge, .pw-rule[data-met] .pw-rule__icon, .replay-under, .replay-ghost { animation: none; }
+  .auth-rise > *, .mail-tile__badge, .pw-rule[data-met] .pw-rule__icon, .replay-under, .replay-stage [data-loading] .lucide-rotate-cw { animation: none; }
+  .replay-load { transition: none; }
   .replay-plane, .replay-stage:hover .replay-plane { transform: none; transition: none; }
   .replay-seg[data-state="current"] .replay-seg__fill { animation: none; transform: scaleX(1); }
   .invite-mark::after { display: none; }
   .auth-glow { transition: none; }
   .pw-meter__seg { transition: none; }
 }
-[data-motion="reduced"] :is(.auth-rise > *, .mail-tile__badge, .pw-rule[data-met] .pw-rule__icon, .replay-under, .replay-ghost) { animation: none; }
+[data-motion="reduced"] :is(.auth-rise > *, .mail-tile__badge, .pw-rule[data-met] .pw-rule__icon, .replay-under, .replay-stage [data-loading] .lucide-rotate-cw) { animation: none; }
+[data-motion="reduced"] .replay-load { transition: none; }
 [data-motion="reduced"] :is(.replay-plane, .replay-stage:hover .replay-plane) { transform: none; transition: none; }
 [data-motion="reduced"] .replay-seg[data-state="current"] .replay-seg__fill { animation: none; transform: scaleX(1); }
 [data-motion="reduced"] .invite-mark::after { display: none; }

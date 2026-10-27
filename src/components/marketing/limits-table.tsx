@@ -1,4 +1,5 @@
 import { PLANS, PLAN_ORDER, formatPrice, isUnlimited } from "@/config/plans";
+import { planCta } from "@/content/marketing/pricing";
 import { ComparisonTable, type Cell, type ColumnHead, type ComparisonGroup } from "./comparison-table";
 
 const n = (v: number) => (isUnlimited(v) ? "Custom" : new Intl.NumberFormat("en-US").format(v));
@@ -12,11 +13,15 @@ const gb = (mb: number) => (isUnlimited(mb) ? "Custom" : mb >= 1000 ? `${mb / 10
  */
 export function LimitsTable({ full = false, className }: { full?: boolean; className?: string }) {
   const plans = PLAN_ORDER.map((id) => PLANS[id]);
-  const head: ColumnHead[] = plans.map((p) => ({
-    sub: p.prices ? (p.prices.USD.month === 0 ? "Free" : `${formatPrice(p.prices.USD.month, "USD")} / month`) : "Custom pricing",
-    href: p.cta.href,
-    cta: p.cta.label,
-  }));
+  const head: ColumnHead[] = plans.map((p) => {
+    const cta = planCta(p.id);
+    return {
+      // "$0 / month" rather than repeating the plan name ("Free / Free").
+      sub: p.prices ? `${formatPrice(p.prices.USD.month, "USD")} / month` : "Custom pricing",
+      href: cta.href,
+      cta: cta.label,
+    };
+  });
   const highlight = plans.findIndex((p) => p.highlight);
   const row = (label: string, f: (p: (typeof plans)[number]) => Cell, hint?: string) => ({ label, values: plans.map(f), hint });
   const groups: ComparisonGroup[] = [
@@ -73,5 +78,5 @@ export function LimitsTable({ full = false, className }: { full?: boolean; class
       },
     );
   }
-  return <ComparisonTable caption="Plan limits and features" columns={plans.map((p) => p.name)} groups={groups} highlightColumn={highlight >= 0 ? highlight : undefined} head={head} collapsible={full} className={className} />;
+  return <ComparisonTable caption="Plan limits and features" columns={plans.map((p) => p.name)} groups={groups} highlightColumn={highlight >= 0 ? highlight : undefined} head={head} collapsible={full} columnNoun="plan" className={className} />;
 }

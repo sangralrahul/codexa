@@ -26,7 +26,7 @@ export default async function OnboardingPage({ searchParams }: { searchParams: S
   return (
     // Full screen (no sidebar; the app shell treats /onboarding as a focus route). Static app lighting only: no canvas in the app.
     <OnboardingFlow
-      user={{ name: user.name, timezone: user.timezone, locale: user.locale }}
+      user={{ name: user.name, email: user.email, timezone: user.timezone, locale: user.locale }}
       workspaceId={workspaceId}
       workspaceName={current?.workspace.name ?? null}
       templates={listTemplateSummaries()}

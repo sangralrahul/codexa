@@ -50,7 +50,7 @@ function Tile({ t, clone, repeat }: { t: WallTile; clone?: boolean; repeat?: boo
         className="wall-tile shot-pan"
       >
         <TemplatePreview id={t.id} category={t.category} sizes="(min-width: 64rem) 360px, (min-width: 40rem) 300px, 260px" className="rounded-none border-0 shadow-none" imgClassName="block" />
-        <span className="wall-tile__caption glass">
+        <span className="wall-tile__caption">
           <span className="wall-tile__name">
             <b>{t.name}</b>
             <span>{t.frameworkName}</span>
@@ -67,8 +67,9 @@ function Tile({ t, clone, repeat }: { t: WallTile; clone?: boolean; repeat?: boo
 /**
  * H3 template theatre (PLAN §5.2, §6.4): real starter screenshots on a tilted plane that
  * flattens as it scrolls in (and on hover), three drifting rows (one on phones) that speed up
- * with scroll velocity and ease to a stop on hover or focus. Clones are aria-hidden and
- * unfocusable; Pause stops the drift; calm shows a static grid of the first row.
+ * with scroll velocity and ease to a stop on hover or focus. Each tile's name card is opaque and
+ * appears on hover (pointer devices) or keyboard focus; on phones the name sits under the shot.
+ * Clones are aria-hidden and unfocusable; Pause stops the drift; calm shows a static grid of the first row.
  */
 export function TemplateWall({ tiles, children }: { tiles: WallTile[]; children?: React.ReactNode }) {
   const [paused, setPaused] = React.useState(false);
@@ -76,7 +77,8 @@ export function TemplateWall({ tiles, children }: { tiles: WallTile[]; children?
 
   return (
     <div className="relative">
-      <div className="wall-stage relative mt-8 h-[186px] overflow-hidden md:mt-12 md:h-[620px]" data-spotlight="grid">
+      {/* Phones: one row of 260px tiles with the name strip under each (162px shot + 30px strip + cell padding). */}
+      <div className="wall-stage relative mt-8 h-[214px] overflow-hidden md:mt-12 md:h-[620px]" data-spotlight="grid">
         <div className="scroll-scale h-full">
           <div className="wall-plane flex h-full flex-col justify-center">
             {rows.map((row, i) => (

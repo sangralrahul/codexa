@@ -26,6 +26,17 @@ describe("headings", () => {
   it("slugifies like rehype-slug", () => {
     expect(slugifyHeading("Ctrl/Cmd+S saves")).toBe("ctrlcmds-saves");
   });
+
+  it("keeps underscores in ids, as rehype-slug does (error-code anchors)", () => {
+    expect(slugifyHeading("quota_exceeded (402)")).toBe("quota_exceeded-402");
+    const md = "## `quota_exceeded` (402)\n\n## The run was refused with quota_exceeded\n\n## **Bold** and _em_ text\n\n## `unauthorized` (401) / `forbidden` (403)\n";
+    expect(extractHeadings(md)).toEqual([
+      { depth: 2, text: "quota_exceeded (402)", id: "quota_exceeded-402" },
+      { depth: 2, text: "The run was refused with quota_exceeded", id: "the-run-was-refused-with-quota_exceeded" },
+      { depth: 2, text: "Bold and em text", id: "bold-and-em-text" },
+      { depth: 2, text: "unauthorized (401) / forbidden (403)", id: "unauthorized-401--forbidden-403" },
+    ]);
+  });
 });
 
 describe("plain text and snippets", () => {

@@ -89,8 +89,12 @@ export function Composer({
       if (canSend) onSend();
     }
   };
-  const placeholder =
-    mode === "ask"
+  // Disabled with a reason (AI not configured): the reason is the placeholder and the hint line is
+  // left to screen readers, since the chat column's empty state already explains it in full.
+  const blocked = Boolean(disabled && disabledReason);
+  const placeholder = blocked
+    ? disabledReason
+    : mode === "ask"
       ? "Ask a question about this project…"
       : mode === "fix"
         ? lastError
@@ -183,7 +187,7 @@ export function Composer({
             disabled={disabled || running}
             rows={3}
             maxLength={COMPOSER_MAX}
-            className="block max-h-56 min-h-[96px] w-full resize-none bg-transparent px-3.5 pt-3 text-[15px] leading-relaxed outline-none [field-sizing:content] placeholder:text-muted-foreground/80 disabled:cursor-not-allowed"
+            className="block max-h-56 min-h-[96px] w-full resize-none bg-transparent px-3.5 pt-3 text-[15px] leading-relaxed outline-none [field-sizing:content] placeholder:text-muted-foreground/80 disabled:cursor-not-allowed disabled:placeholder:text-muted-foreground/70"
             aria-describedby="ai-composer-hint"
           />
           <div className="flex items-center gap-2 px-2 pb-2">
@@ -198,7 +202,7 @@ export function Composer({
                     aria-checked={checked}
                     aria-label={label}
                     title={`${label}: ${hint}`}
-                    disabled={running}
+                    disabled={running || disabled}
                     data-no-ripple
                     onClick={() => onModeChange(id)}
                     onKeyDown={(e) => {
@@ -271,8 +275,8 @@ export function Composer({
           </div>
         </div>
       </div>
-      <p id="ai-composer-hint" className="mt-1.5 flex items-center gap-1.5 truncate px-1 text-[11.5px] text-muted-foreground">
-        {disabled && disabledReason ? (
+      <p id="ai-composer-hint" className={cn("mt-1.5 flex items-center gap-1.5 truncate px-1 text-[11.5px] text-muted-foreground", blocked && "sr-only")}>
+        {blocked ? (
           disabledReason
         ) : running ? (
           "Working… you can stop at any time."

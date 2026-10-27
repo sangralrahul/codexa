@@ -81,7 +81,9 @@ export function TemplateFan({ ids, className, caption = true, stack = false }: {
           return (
           <div key={t.id} className="mk-fan__card" style={{ "--k": k, "--a": Math.abs(k), zIndex: 3 - i } as React.CSSProperties}>
             <div className="flex h-7 items-center gap-1.5 border-b border-border bg-surface/90 px-3">
-              <span className="truncate font-mono text-[10px] text-muted-foreground">{t.name}</span>
+              {/* In a stack only the front card is titled: the cards behind show a sliver of their bar, and a
+                  title cut down to one letter there reads as a clipping bug. */}
+              {stack && i > 0 ? null : <span className="truncate font-mono text-[10px] text-muted-foreground">{t.name}</span>}
             </div>
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img

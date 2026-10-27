@@ -114,7 +114,8 @@ export function PlanHero({
               {showSub.status === "past_due" ? <Alert variant="danger" title="Your last payment failed">Update your payment method to keep {def.name} features. If payment is not received before the period ends, the workspace falls back to the Free plan.</Alert> : null}
             </div>
           ) : null}
-          <div className="mt-auto pt-6">
+          {/* Actions follow the facts directly (no flex push), so the column never opens a gap above them. */}
+          <div className="mt-6">
             <BillingActions workspaceId={workspace.id} overview={overview} role={role} />
           </div>
         </div>
@@ -159,8 +160,8 @@ export function UnlockDiff({ from, to, currency }: { from: Plan; to: Plan; curre
       <div className="flex items-baseline justify-between gap-3 px-4 pt-4">
         <p className="font-display text-[19px] font-semibold tracking-[-0.02em] text-code-fg">Unlock with {target.name}</p>
         {price ? (
-          <p className="shrink-0 font-mono text-xs text-code-muted">
-            from {formatPrice(price.year, currency)}/mo
+          <p className="shrink-0 text-right text-xs tabular-nums text-code-muted">
+            from {formatPrice(price.year, currency)}/mo <span className="whitespace-nowrap">billed annually</span>
           </p>
         ) : null}
       </div>

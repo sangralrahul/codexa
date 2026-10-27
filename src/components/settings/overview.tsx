@@ -5,7 +5,7 @@ import { isUnlimited } from "@/config/plans";
 import type { ChecklistItem, SettingsOverview } from "@/lib/services/settings-overview";
 import { Avatar } from "@/components/ui/avatar";
 import { StatusDot } from "@/components/ui/misc";
-import { BrandMark } from "@/components/brand/brand-mark";
+import { BrandMark, hasBrandMark } from "@/components/brand/brand-mark";
 import { ResendVerificationButton } from "@/components/auth/forms";
 import { LocalTime } from "./local-time";
 import { utcOffset } from "./time";
@@ -67,8 +67,53 @@ function Tick({ done, i }: { done: boolean; i: number }) {
   );
 }
 
+/**
+ * Mini check-ring: one arc per checklist item (done arcs solid, the rest a quiet track), with the count in
+ * the middle. At 0 of n it still reads as "n steps to go" instead of an empty bar.
+ */
+function SetupRing({ done, total }: { done: number; total: number }) {
+  const r = 15;
+  const c = 2 * Math.PI * r;
+  const gap = total > 1 ? 3 : 0;
+  const seg = c / total - gap;
+  return (
+    <span
+      role="progressbar"
+      aria-label="Setup progress"
+      aria-valuemin={0}
+      aria-valuemax={total}
+      aria-valuenow={done}
+      aria-valuetext={`${done} of ${total} done`}
+      className="relative flex size-11 shrink-0 items-center justify-center"
+    >
+      <svg viewBox="0 0 36 36" className="absolute inset-0 size-full -rotate-90" aria-hidden="true">
+        {Array.from({ length: total }).map((_, i) => (
+          <circle
+            key={i}
+            cx="18"
+            cy="18"
+            r={r}
+            fill="none"
+            strokeWidth="3"
+            strokeLinecap="butt"
+            strokeDasharray={`${Math.max(seg, 0.01)} ${c}`}
+            strokeDashoffset={-(i * (seg + gap)) - gap / 2}
+            data-done={i < done ? "" : undefined}
+            className={cn("setup-ring-seg", i < done ? "stroke-foreground" : "stroke-border-strong")}
+            style={{ "--i": i } as React.CSSProperties}
+          />
+        ))}
+      </svg>
+      <span className="relative text-[11px] font-semibold tabular-nums leading-none">
+        {done}
+        <span className="font-normal text-foreground-dim">/{total}</span>
+      </span>
+    </span>
+  );
+}
+
 /** "Finish setting up": built only from real account state; done items draw their check. */
-export function SetupChecklist({ items }: { items: ChecklistItem[] }) {
+export function SetupChecklist({ items, emailConfigured }: { items: ChecklistItem[]; /** capabilities.email: offer "Resend" only when an email can actually go out. */ emailConfigured: boolean }) {
   const done = items.filter((i) => i.done).length;
   if (!items.length) return null;
   if (done === items.length) {
@@ -83,48 +128,45 @@ export function SetupChecklist({ items }: { items: ChecklistItem[] }) {
       </section>
     );
   }
+  // Three per row at lg, two at sm; the last item spans whatever its row has left, so no cell sits empty.
+  const n = items.length;
+  const lastSpan = cn(n % 2 === 1 && "sm:col-span-2", n % 3 === 1 ? "lg:col-span-3" : n % 3 === 2 ? "lg:col-span-2" : "lg:col-span-1");
   return (
     <section aria-labelledby="setup-title" className="settings-card overflow-hidden rounded-[16px]">
-      <div className="flex flex-wrap items-center justify-between gap-3 px-5 pt-5 sm:px-6">
-        <div>
+      <div className="flex items-center gap-3.5 px-5 pt-5 sm:px-6">
+        <SetupRing done={done} total={n} />
+        <div className="min-w-0">
           <h2 id="setup-title" className="text-[15px] font-semibold tracking-[-0.01em]">
             Finish setting up
           </h2>
           <p className="mt-0.5 text-[13px] text-muted-foreground">
-            {done} of {items.length} done
+            {done} of {n} done{done < n ? ` · ${n - done} to go` : ""}
           </p>
         </div>
-        <div className="h-1.5 w-40 overflow-hidden rounded-full bg-muted shadow-[inset_0_0_0_1px_var(--border)]" role="progressbar" aria-label="Setup progress" aria-valuemin={0} aria-valuemax={items.length} aria-valuenow={done} aria-valuetext={`${done} of ${items.length} done`}>
-          <span className="setup-progress block h-full rounded-full bg-[image:var(--ember)]" style={{ width: `${(done / items.length) * 100}%` }} />
-        </div>
       </div>
-      <ul className="mt-4 grid border-t border-border/80 sm:grid-cols-2">
+      {/* Each cell draws its right and bottom hairline; the list clips the ones on the outer edge. */}
+      <ul className="mt-4 grid grid-cols-1 overflow-hidden border-t border-border/80 sm:grid-cols-2 lg:grid-cols-3">
         {items.map((item, i) => {
-          const body = (
-            <>
-              <Tick done={item.done} i={i} />
-              <span className="min-w-0 flex-1">
-                <span className={cn("block text-[13.5px] font-medium", item.done && "text-muted-foreground line-through decoration-border-strong")}>{item.label}</span>
-                <span className="mt-0.5 block text-xs leading-relaxed text-muted-foreground [overflow-wrap:anywhere]">{item.description}</span>
-              </span>
-            </>
+          const text = (
+            <span className="min-w-0 flex-1">
+              <span className={cn("block text-[13.5px] font-medium", item.done && "text-muted-foreground line-through decoration-border-strong")}>{item.label}</span>
+              <span className="mt-0.5 block text-xs leading-relaxed text-muted-foreground [overflow-wrap:anywhere]">{item.description}</span>
+              {!item.done && item.id === "verify-email" && emailConfigured ? <ResendVerificationButton emailConfigured className="mt-2.5 h-7 px-2.5 text-xs" /> : null}
+            </span>
           );
-          const row = "setup-item flex items-start gap-3 px-5 py-3.5 sm:px-6";
+          const row = "setup-item flex h-full items-start gap-3 px-5 py-3.5 sm:px-6";
           return (
-            <li key={item.id} className="border-b border-border/60 last:border-b-0 sm:odd:border-r sm:[&:last-child:nth-child(odd)]:col-span-2 sm:[&:last-child:nth-child(odd)]:border-r-0 sm:[&:nth-last-child(2):nth-child(odd)]:border-b-0" style={{ "--i": i } as React.CSSProperties}>
+            <li key={item.id} className={cn("shadow-[1px_1px_0_0_var(--border)]", i === n - 1 && lastSpan)} style={{ "--i": i } as React.CSSProperties}>
               {!item.done && item.href ? (
                 <Link href={item.href} className={cn(row, "group transition-colors hover:bg-muted/40 focus-visible:bg-muted/40 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-ring")}>
-                  {body}
+                  <Tick done={item.done} i={i} />
+                  {text}
                   <ArrowUpRight className="mt-0.5 size-4 shrink-0 text-foreground-dim transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5 group-hover:text-foreground" aria-hidden="true" />
                 </Link>
               ) : (
                 <div className={row} data-done={item.done ? "" : undefined}>
                   <Tick done={item.done} i={i} />
-                  <span className="min-w-0 flex-1">
-                    <span className={cn("block text-[13.5px] font-medium", item.done && "text-muted-foreground line-through decoration-border-strong")}>{item.label}</span>
-                    <span className="mt-0.5 block text-xs leading-relaxed text-muted-foreground [overflow-wrap:anywhere]">{item.description}</span>
-                    {!item.done && item.id === "verify-email" ? <ResendVerificationButton className="mt-2.5 h-7 px-2.5 text-xs" /> : null}
-                  </span>
+                  {text}
                 </div>
               )}
             </li>
@@ -181,9 +223,10 @@ export function OverviewBento({ data }: { data: SettingsOverview }) {
               <span className="block text-[13px] text-muted-foreground [overflow-wrap:anywhere]">{account.email}</span>
             </span>
           </span>
-          <span className="text-right">
+          {/* Clock and its zone line share one left edge, whether the pair sits beside the name or wraps under it. */}
+          <span className="text-left">
             <LocalTime tz={tz} className="block font-display text-[34px] font-semibold leading-none tracking-[-0.04em] tabular-nums" />
-            <span className="mt-1.5 block font-mono text-[11px] text-foreground-dim">
+            <span className="mt-1.5 block text-xs tabular-nums text-foreground-dim">
               {tz.replace(/_/g, " ")}
               {offset ? ` · ${offset}` : ""}
             </span>
@@ -296,7 +339,7 @@ function WorkspaceTiles({ workspace: w }: { workspace: NonNullable<SettingsOverv
               <span className="mt-3 flex flex-wrap gap-1.5">
                 {w.integrations.providers.slice(0, 6).map((p) => (
                   <span key={p} className="icon-tile flex size-8 items-center justify-center rounded-[9px]" title={p}>
-                    <BrandMark id={p} className="size-4" />
+                    {hasBrandMark(p) ? <BrandMark id={p} className="size-4" /> : <span aria-hidden="true" className="font-display text-[13px] font-semibold leading-none">{p.slice(0, 1).toUpperCase()}</span>}
                   </span>
                 ))}
               </span>
@@ -309,7 +352,7 @@ function WorkspaceTiles({ workspace: w }: { workspace: NonNullable<SettingsOverv
         )}
       </Tile>
 
-      <Tile href="/settings/workspace" icon={Settings2} label="General" className="lg:col-span-2" footer={`Created ${date(w.createdAt, { month: "short", day: "numeric", year: "numeric" })}`}>
+      <Tile href="/settings/workspace" icon={Settings2} label="Workspace" className="lg:col-span-2" footer={`Created ${date(w.createdAt, { month: "short", day: "numeric", year: "numeric" })}`}>
         <span className="flex min-w-0 items-center gap-3">
           <Avatar name={w.name} seed={w.id} shape="square" size="lg" />
           <span className="min-w-0">

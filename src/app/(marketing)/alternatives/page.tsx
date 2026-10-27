@@ -34,14 +34,14 @@ export default function AlternativesPage() {
       </Section>
       <Section size="sm" className="border-t border-border/60">
         <SectionHeader index="01" eyebrow="Side by side" title="Approach comparison." description="Ratings describe the typical product in each category, not any specific one. Codexa's column describes what is implemented today." />
-        <ComparisonTable caption="Comparison of Codexa with hosted AI builders, IDE assistants, and no-code tools" columns={ALTERNATIVES_TABLE.columns} groups={ALTERNATIVES_TABLE.groups} highlightColumn={0} collapsible className="mt-10" />
+        <ComparisonTable caption="Comparison of Codexa with hosted AI builders, IDE assistants, and no-code tools" columns={ALTERNATIVES_TABLE.columns} groups={ALTERNATIVES_TABLE.groups} highlightColumn={0} collapsible columnNoun="tool" className="mt-10" />
       </Section>
       <Section size="sm" className="border-t border-border/60">
         <SectionHeader index="02" eyebrow="Trade-offs" title="What we gave up, and why." className="mb-14" />
         <LandingSections sections={ALTERNATIVES_TRADEOFFS} />
       </Section>
       <Section size="sm" className="border-t border-border/60">
-        <div className="grid gap-10 lg:grid-cols-[5fr_7fr] lg:gap-14">
+        <div className="grid grid-cols-1 gap-10 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] lg:gap-14">
           <SectionHeader index="03" eyebrow="FAQ" title="Questions, answered." />
           <FAQ items={ALTERNATIVES_FAQ} />
         </div>

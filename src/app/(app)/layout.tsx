@@ -7,6 +7,7 @@ import { countProjects, listRecentProjectsForUser } from "@/lib/services/project
 import { getRunningProjectIds } from "@/lib/services/dashboard";
 import { getWorkspaceEntitlements } from "@/lib/services/usage";
 import { PLANS } from "@/config/plans";
+import { capabilities } from "@/lib/env";
 import { getTemplate } from "@/templates";
 import { AppShell } from "@/components/app/app-shell";
 import { DEFAULT_TEMPLATE_ID, listTemplateSummaries } from "@/components/projects/template-summaries";
@@ -43,6 +44,8 @@ export default async function AppLayout({ children }: { children: React.ReactNod
       currentWorkspaceId={current?.workspace.id ?? null}
       isStaff={isStaff(user)}
       emailVerified={Boolean(user.emailVerifiedAt)}
+      emailConfigured={capabilities.email}
+      devMailbox={process.env.NODE_ENV !== "production"}
       usage={entitlements ? { plan: entitlements.plan, projects, projectLimit: entitlements.limits.projects } : null}
       recent={recent.map((p) => ({
         id: p.id,

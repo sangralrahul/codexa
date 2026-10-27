@@ -103,7 +103,7 @@ export function WorkspaceGeneralForm({
       <form ref={formRef} onSubmit={onSubmit} noValidate>
         <SettingsCard
           id="workspace-general"
-          title="General"
+          title="Details"
           description="Name, URL slug and the currency used at checkout."
           layout="split"
           dirty={dirty}

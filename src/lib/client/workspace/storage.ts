@@ -13,12 +13,14 @@ export function wsKey(projectId: string, name: string) {
 /**
  * Layout keys for the agent-first shell. They are new names on purpose: the old
  * `layout` / `panels` values described a different Group and must never be parsed into this one.
+ * shell/split moved to v3 when the defaults changed (agent 340 below 1440, explorer 180, preview 40%),
+ * so earlier, more cramped sizes are not carried over.
  */
 export const LAYOUT_KEYS = {
   /** [Agent | Canvas] sizes (percentages by panel id). */
-  shell: "shell.v2",
+  shell: "shell.v3",
   /** Split view sizes: explorer | editor | preview. */
-  split: "split.v2",
+  split: "split.v3",
   /** Bottom dock: open state, size and tab. */
   dock: "dock.v2",
   /** Canvas view: "preview" | "split" | "code". */

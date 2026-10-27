@@ -47,8 +47,10 @@ export type Scenario = {
   /** src/App.tsx, index.html or src/server.ts. */
   mainFile: string;
   mainLines: number;
-  /** The first 16 lines of the main file, tokenised on the server. */
+  /** 16 consecutive lines of the main file (from the component down), tokenised on the server. */
   code: CompactToken[][];
+  /** The real 1-based line number of the first line in `code`. */
+  codeStart: number;
   /** 1-based line (inside `code`) that the illustrative type error points at. */
   errorLine: number;
   /** Generate chapter writes (real paths and line counts); the last one is the main file. */

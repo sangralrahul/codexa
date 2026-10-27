@@ -164,9 +164,18 @@ export function ProductStage({
           }
           toolbar={
             <span aria-hidden="true" className="flex items-center gap-1.5">
-              <span className={cn("inline-flex h-7 items-center gap-1.5 rounded-[8px] border px-2.5 text-[12px] font-medium transition-colors duration-(--dur-3)", frame.running ? "border-success/30 text-success" : "border-border text-foreground/85")}>
-                {frame.running ? <span className="live-dot" /> : <Play className="size-3" fill="currentColor" strokeWidth={0} />}
-                {frame.running ? "Running" : "Run"}
+              {/* Run mirrors the IDE's runtime button (Run → Starting… → Running). Neutral when running: the header pill is the one green "Live" signal. */}
+              <span className="inline-flex h-7 items-center gap-1.5 rounded-[8px] border border-border bg-background/60 px-2.5 text-[12px] font-medium text-foreground/85 transition-colors duration-(--dur-3)">
+                {frame.running ? (
+                  <span className="live-dot" />
+                ) : frame.starting ? (
+                  <span className="size-3 animate-spin rounded-full border-[1.5px] border-current border-r-transparent text-muted-foreground calm:animate-none" />
+                ) : (
+                  <Play className="size-3 text-success" fill="currentColor" strokeWidth={0} />
+                )}
+                <span key={frame.running ? "running" : frame.starting ? "starting" : "run"} className="[animation:stage-swap-in_var(--dur-3)_var(--ease-out)_both]">
+                  {frame.running ? "Running" : frame.starting ? "Starting…" : "Run"}
+                </span>
               </span>
               <span className="hidden h-7 items-center gap-1.5 rounded-[8px] px-2 text-[12px] text-muted-foreground xl:inline-flex">
                 <Share2 className="size-3.5" /> Share

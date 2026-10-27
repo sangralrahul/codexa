@@ -36,7 +36,7 @@ export default function BrandPage() {
         ]}
       />
       <Section size="sm">
-        <div className="grid gap-4 md:grid-cols-2">
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
           <figure className="flex flex-col items-center justify-center gap-6 rounded-[20px] border border-border bg-white p-12" style={{ "--foreground": "black", "--background": "white", color: "black" } as React.CSSProperties}>
             <div className="flex items-center gap-5">
               <LogoMark size={64} />
@@ -61,7 +61,7 @@ export default function BrandPage() {
       </Section>
       <Section size="sm" className="border-t border-border/60">
         <SectionHeader index="01" eyebrow="Motifs" title="Five, and only five." description="The site and the product use these and nothing else for emphasis." />
-        <ul data-reveal="stagger" className="mt-10 grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
+        <ul data-reveal="stagger" className="mt-10 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-5">
           {MOTIFS.map((m) => (
             <li key={m.name} className="flex flex-col gap-5 rounded-[18px] border border-border bg-card p-5">
               <div aria-hidden="true" className="flex min-h-12 items-center">

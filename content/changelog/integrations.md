@@ -16,7 +16,7 @@ related: [deployments, billing-and-teams]
 
 ## Databases
 
-- PostgreSQL and Supabase connections, encrypted at rest and tested on creation.
+- Connections to your own PostgreSQL and Supabase databases, with credentials encrypted at rest and tested on creation. (These are your app's databases; Codexa's own data lives in Cloudflare D1 since [0.2.0](/changelog/cloudflare-platform).)
 - Schema browser from `information_schema`.
 - SQL runner with a confirmation step for destructive statements (`confirmation_required`).
 

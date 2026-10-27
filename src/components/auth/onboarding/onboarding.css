@@ -49,6 +49,13 @@
 /* The step card's height follows its content (JS animates it); clip only while it moves. */
 .ob-height[data-animating] { overflow: clip; }
 
+/* Sticky step actions: a solid card surface where backdrop blur is unavailable, and
+   controls that receive keyboard focus scroll clear of the sticky bar (and the header). */
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .ob-footer { background-color: var(--card); }
+}
+.ob-height :is(a, button, input, textarea, select, [tabindex]) { scroll-margin-block: 6rem 7rem; }
+
 /* "From the homepage" chip. */
 .ob-chip { animation: pop-in 420ms var(--ease-out) both; }
 

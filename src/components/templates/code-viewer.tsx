@@ -1,5 +1,6 @@
 import * as React from "react";
 import ReactMarkdown, { type Components } from "react-markdown";
+import { WrapText } from "lucide-react";
 import rehypeHighlight from "rehype-highlight";
 import { CopyButton } from "@/components/content/code-block";
 import { tokenize, type CodeLang, type TokenKind } from "@/components/vignettes/tokenize";
@@ -45,6 +46,33 @@ const COLOR: Record<TokenKind, string> = {
   plain: "",
 };
 
+/** True when the file renders line by line, so the "Wrap" toggle can wrap it with numbers aligned. */
+export function canWrapCode(path: string) {
+  return Boolean(TOKEN_LANG[languageForPath(path)]);
+}
+
+/**
+ * "Wrap" toggle for CodeViewer (lines wrap while a `[data-code-wrap]` checkbox inside the nearest
+ * `group/code` ancestor is checked; server-safe: a real checkbox, so it is keyboard- and
+ * screen-reader-operable without JS). Place it anywhere inside a `group/code` ancestor of the
+ * viewer; CodeViewer's own header already includes one.
+ */
+export function CodeWrapToggle({ className }: { className?: string }) {
+  return (
+    <label
+      className={cn(
+        "inline-flex h-7 cursor-pointer select-none items-center gap-1.5 rounded-md px-2 font-mono text-[11.5px] text-code-muted transition-colors duration-(--dur-2) hover:bg-white/[0.06] hover:text-code-fg",
+        "has-[:checked]:bg-white/[0.08] has-[:checked]:text-code-fg has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-ring",
+        className,
+      )}
+    >
+      <input type="checkbox" data-code-wrap="" className="sr-only" />
+      <WrapText className="size-3.5" aria-hidden="true" />
+      Wrap
+    </label>
+  );
+}
+
 const mdComponents: Components = {
   pre: ({ children }) => <>{children}</>,
   code: ({ className, children }) => <code className={cn(className, "block")}>{children}</code>,
@@ -54,7 +82,9 @@ const mdComponents: Components = {
  * Server-rendered, read-only source view with line numbers, on a dark code pane in both themes.
  * TS/TSX/JS/JSON/HTML/CSS/SQL use the shared tokenizer; other files fall back to rehype-highlight.
  * The code is real text in a <pre> (selectable, readable by assistive tech); line numbers are
- * aria-hidden. No Monaco on marketing pages. `bare` drops the header (when the caller draws tabs).
+ * aria-hidden. No Monaco on marketing pages. `bare` drops the header (when the caller draws tabs;
+ * put a CodeWrapToggle in it, inside a `group/code` wrapper). Long lines scroll sideways under a
+ * right-edge fade, or wrap (numbers stay aligned) while the Wrap toggle is on.
  */
 export function CodeViewer({ path, code, className, bare = false, maxHeight }: { path: string; code: string; className?: string; bare?: boolean; maxHeight?: string }) {
   const language = languageForPath(path);
@@ -71,7 +101,7 @@ export function CodeViewer({ path, code, className, bare = false, maxHeight }: {
         <span aria-hidden="true" className="sticky left-0 mr-4 shrink-0 select-none bg-code-bg pr-1 text-right tabular-nums text-code-muted/80" style={{ minWidth: `${width + 1}ch` }}>
           {i + 1}
         </span>
-        <span className="whitespace-pre">
+        <span className={"whitespace-pre group-has-[[data-code-wrap]:checked]/code:min-w-0 group-has-[[data-code-wrap]:checked]/code:whitespace-pre-wrap group-has-[[data-code-wrap]:checked]/code:[overflow-wrap:anywhere]"}>
           {line.length === 0 ? " " : line.map((t, j) => (t.k === "plain" ? <React.Fragment key={j}>{t.v}</React.Fragment> : <span key={j} className={COLOR[t.k]}>{t.v}</span>))}
         </span>
       </span>
@@ -98,7 +128,7 @@ export function CodeViewer({ path, code, className, bare = false, maxHeight }: {
 
   const name = path.split("/").pop() ?? path;
   return (
-    <figure className={cn("min-w-0 overflow-hidden bg-code-bg text-code-fg", !bare && "rounded-[14px] border border-code-border", className)}>
+    <figure className={cn("group/code min-w-0 overflow-hidden bg-code-bg text-code-fg", !bare && "rounded-[14px] border border-code-border", className)}>
       {!bare ? (
         <figcaption className="flex h-10 items-center justify-between gap-3 border-b border-code-border bg-white/[0.02] pl-3.5 pr-1.5">
           <span className="flex min-w-0 items-center gap-2 font-mono text-[12px]">
@@ -109,15 +139,20 @@ export function CodeViewer({ path, code, className, bare = false, maxHeight }: {
             <span className="text-meta text-code-muted">
               {lines.length} line{lines.length === 1 ? "" : "s"}
             </span>
+            {tokenLang ? <CodeWrapToggle /> : null}
             <CopyButton text={code} label={`Copy ${name}`} />
           </span>
         </figcaption>
       ) : (
         <figcaption className="sr-only">{path}</figcaption>
       )}
-      <pre tabIndex={0} aria-label={`${path} source`} className="scrollbar-thin !m-0 !rounded-none !border-0 !bg-transparent !p-0 font-mono text-[12.5px] leading-[1.7] focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-ring" style={maxHeight ? { maxHeight, overflow: "auto" } : undefined}>
-        <code className="block min-w-max px-3 py-3.5">{body}</code>
-      </pre>
+      <div className="relative">
+        <pre tabIndex={0} aria-label={`${path} source`} className="scrollbar-thin !m-0 !rounded-none !border-0 !bg-transparent !p-0 font-mono text-[12.5px] leading-[1.7] focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-ring" style={maxHeight ? { maxHeight, overflow: "auto" } : { overflowX: "auto" }}>
+          <code className={cn("block min-w-max px-3 py-3.5", tokenLang && "group-has-[[data-code-wrap]:checked]/code:min-w-0 group-has-[[data-code-wrap]:checked]/code:pr-5")}>{body}</code>
+        </pre>
+        {/* Lines that run past the edge fade out instead of being cut mid-word (clear of the scrollbars). */}
+        <span aria-hidden="true" className={cn("pointer-events-none absolute bottom-2 right-2 top-0 w-12 bg-gradient-to-l from-code-bg to-transparent", tokenLang && "group-has-[[data-code-wrap]:checked]/code:hidden")} />
+      </div>
     </figure>
   );
 }

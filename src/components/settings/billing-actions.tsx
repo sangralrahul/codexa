@@ -202,7 +202,8 @@ export function BillingActions({
       <div className="flex flex-wrap items-center gap-2">
         {canAdmin && overview.plan !== "enterprise" && overview.plan !== "team" ? (
           <Button onClick={toPlans} disabled={busy !== null}>
-            {overview.plan === "free" ? "Upgrade plan" : "Change plan"} <ArrowDown className="size-3.5" aria-hidden="true" />
+            {/* Without a payment provider the cards below can only be read, not bought: say so in the label. */}
+            {!providersAvailable ? "See plans" : overview.plan === "free" ? "Upgrade plan" : "Change plan"} <ArrowDown className="size-3.5" aria-hidden="true" />
           </Button>
         ) : null}
         {canAdmin && overview.plan === "team" && providersAvailable ? (
@@ -442,7 +443,12 @@ export function PlanCards({
               </ul>
               <div className="mt-5">
                 {reason ? <Tooltip content={reason}>{button}</Tooltip> : button}
-                {reason ? (
+                {reason && !anyProvider ? (
+                  // The button already reads "Checkout not configured"; keep the full reason for screen readers only.
+                  <span id={reasonId} className="sr-only">
+                    {reason}
+                  </span>
+                ) : reason ? (
                   <p id={reasonId} className="mt-2 text-center text-[11.5px] text-muted-foreground">
                     {reason}
                   </p>

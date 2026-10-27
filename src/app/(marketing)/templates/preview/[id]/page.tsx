@@ -10,15 +10,16 @@ import { SplitHeading } from "@/components/motion/split-heading";
 import { BrowserFrame } from "@/components/frames/browser-frame";
 import { DeviceFrame } from "@/components/frames/device-frame";
 import { FrameCaption } from "@/components/frames/illustration-badge";
-import { CodeViewer, FileGlyph, FileTree, RouteList, TemplatePreview, TemplateTile, UseTemplateLink } from "@/components/templates";
+import { CodeViewer, CodeWrapToggle, canWrapCode, FileGlyph, FileTree, RouteList, TemplatePreview, TemplateTile, UseTemplateLink } from "@/components/templates";
 import { RunItHere } from "@/components/templates/run-it-here";
 import { staticSrcDoc } from "@/components/templates/static-srcdoc";
-import { FRAMEWORK_SHORT } from "@/components/templates/gallery-search";
+import { FEATURED_LEAD, FRAMEWORK_SHORT } from "@/components/templates/gallery-search";
 import { templatePhoneShotSrc, TEMPLATE_SHOTS } from "@/components/templates/shots";
 import { TEMPLATE_API_ROUTES } from "@/components/templates/api-routes.generated";
 import { buttonClasses } from "@/components/ui/button";
 import { CopyButton } from "@/components/content/code-block";
 import { getCurrentUser } from "@/lib/auth/session";
+import { capabilities } from "@/lib/env";
 import { jsonLd, pageMetadata } from "@/lib/seo";
 import { FRAMEWORKS, getTemplate, searchTemplates, summarizeTemplate, TEMPLATE_CATEGORIES, type Template } from "@/templates";
 import { cn } from "@/lib/utils";
@@ -61,7 +62,10 @@ export default async function TemplatePreviewPage({ params, searchParams }: { pa
   const phoneShot = templatePhoneShotSrc(t.id);
   const srcDoc = hasShot ? staticSrcDoc(t) : null;
   const port = t.settings.port ?? framework.port;
-  const url = `localhost:${port}${t.previewPath ?? "/"}`;
+  const entryRoute = t.previewPath ?? "/";
+  // The address bar names what the picture is (a starter screenshot), never a dev-server URL.
+  const frameLabel = `Starter screenshot · ${t.id}${entryRoute !== "/" ? entryRoute : ""}`;
+  const featured = (FEATURED_LEAD as readonly string[]).includes(t.id);
   const lines = t.files[selected].replace(/\n$/, "").split("\n").length;
 
   const meta = [
@@ -70,7 +74,7 @@ export default async function TemplatePreviewPage({ params, searchParams }: { pa
     { icon: FileCode2, label: "Files", value: String(paths.length) },
     { icon: Package, label: "Dependencies", value: deps.length ? String(deps.length) : "None" },
     { icon: Terminal, label: "Dev command", value: t.settings.devCommand || framework.devCommand, mono: true },
-    { icon: Route, label: "Opens at", value: t.previewPath ?? "/", mono: true },
+    { icon: Route, label: "Entry route", value: entryRoute, mono: true },
   ];
 
   const shot = <TemplatePreview id={t.id} category={t.category} priority pan sizes="(min-width: 1280px) 900px, (min-width: 1024px) 70vw, 100vw" alt={`${t.name} starter, as built from its own files`} className="rounded-none border-0 shadow-none" />;
@@ -103,7 +107,7 @@ export default async function TemplatePreviewPage({ params, searchParams }: { pa
           <div className="lg:col-span-8">
             <Kicker className="mb-5">
               {category.name} · {FRAMEWORK_SHORT[t.framework]}
-              {t.featured ? " · Featured" : ""}
+              {featured ? " · Featured" : ""}
             </Kicker>
             <SplitHeading as="h1" size="display-2" className="max-w-[16ch]">
               {t.name}
@@ -132,7 +136,7 @@ export default async function TemplatePreviewPage({ params, searchParams }: { pa
                 <RouteList routes={routes} variant="hero" command={t.settings.devCommand || framework.devCommand} className="rounded-none border-0 shadow-none" />
               </div>
             ) : (
-              <BrowserFrame url={url} className={cn("e4 rounded-[18px] shadow-stage", phoneShot && "hidden lg:mr-24 lg:block")} bodyClassName="bg-white">
+              <BrowserFrame url={frameLabel} className={cn("e4 rounded-[18px] shadow-stage", phoneShot && "hidden lg:mr-24 lg:block")} bodyClassName="bg-white">
                 {srcDoc ? (
                   <RunItHere srcDoc={srcDoc} name={t.name}>
                     {shot}
@@ -197,7 +201,7 @@ export default async function TemplatePreviewPage({ params, searchParams }: { pa
             <h2 id="about-heading" className="text-label text-muted-foreground lg:col-span-3 lg:pt-2">
               What you get
             </h2>
-            <p className="text-[1.15rem] leading-relaxed text-foreground/90 sm:text-xl lg:col-span-9 lg:text-display-4 lg:font-normal">{t.longDescription}</p>
+            <p className="max-w-[62ch] text-pretty text-[1.0625rem] leading-relaxed text-foreground/90 sm:text-[1.25rem] lg:col-span-9">{t.longDescription}</p>
           </div>
         </section>
       ) : null}
@@ -206,7 +210,7 @@ export default async function TemplatePreviewPage({ params, searchParams }: { pa
       <section aria-labelledby="files-heading" className="container-x mt-20 scroll-mt-24 lg:mt-24" id="code">
         <div className="flex flex-wrap items-end justify-between gap-4">
           <div>
-            <h2 id="files-heading" className="text-display-3">
+            <h2 id="files-heading" className="text-display-4">
               Files
             </h2>
             <p className="mt-2 text-[15px] text-muted-foreground">Exactly what is copied into a new project: {paths.length} files, nothing generated.</p>
@@ -224,7 +228,7 @@ export default async function TemplatePreviewPage({ params, searchParams }: { pa
               </p>
               <FileTree paths={paths} selected={selected} hrefFor={hrefFor} tone="code" className="scrollbar-thin max-h-56 overflow-auto p-2 lg:max-h-[38rem]" />
             </div>
-            <div className="min-w-0" aria-live="polite">
+            <div className="group/code min-w-0" aria-live="polite">
               <div className="flex h-10 items-stretch justify-between border-b border-code-border">
                 <span className="relative flex min-w-0 items-center gap-2 border-r border-code-border bg-white/[0.04] px-4 font-mono text-[12px] text-code-fg">
                   <span aria-hidden="true" className="absolute inset-x-0 top-0 h-px bg-signal" />
@@ -235,6 +239,7 @@ export default async function TemplatePreviewPage({ params, searchParams }: { pa
                   <span className="text-meta hidden text-code-muted xs:inline">
                     {lines} line{lines === 1 ? "" : "s"}
                   </span>
+                  {canWrapCode(selected) ? <CodeWrapToggle /> : null}
                   <CopyButton text={t.files[selected]} label={`Copy ${selected.split("/").pop() ?? selected}`} />
                 </span>
               </div>
@@ -251,15 +256,15 @@ export default async function TemplatePreviewPage({ params, searchParams }: { pa
           <div className="relative grid gap-10 lg:grid-cols-12 lg:items-center">
             <div className="lg:col-span-5">
               <p className="text-label text-muted-foreground">Remix</p>
-              <h2 id="remix-heading" className="text-display-3 mt-3">
+              <h2 id="remix-heading" className="text-display-4 mt-3">
                 Remix this template
               </h2>
               <p className="mt-4 max-w-md text-[15px] leading-relaxed text-muted-foreground">
-                Describe what to change and the agent starts from {t.name}&apos;s files. Try: <span className="text-foreground">“Start from {t.name} and …”</span>
+                Describe what to change and the agent starts from {t.name}&apos;s files. The box is already started for you: finish <span className="text-foreground">“Start from {t.name} and …”</span>
               </p>
             </div>
             <div className="min-w-0 lg:col-span-7">
-              <PromptBox signedIn={signedIn} variant="compact" defaultTemplateId={t.id} source="cta" className="max-w-none" />
+              <PromptBox signedIn={signedIn} variant="compact" defaultTemplateId={t.id} defaultValue={`Start from ${t.name} and `} source="cta" aiReady={capabilities.ai} className="max-w-none" />
             </div>
           </div>
         </div>
@@ -300,8 +305,8 @@ export default async function TemplatePreviewPage({ params, searchParams }: { pa
             <dd className="font-mono text-[12.5px]">{t.settings.outputDir || framework.outputDir}</dd>
             <dt className="text-muted-foreground">Port</dt>
             <dd className="font-mono text-[12.5px]">{port}</dd>
-            <dt className="text-muted-foreground">Opens at</dt>
-            <dd className="font-mono text-[12.5px]">{t.previewPath ?? "/"}</dd>
+            <dt className="text-muted-foreground">Entry route</dt>
+            <dd className="font-mono text-[12.5px]">{entryRoute}</dd>
           </dl>
           <p className="mt-6 text-sm text-muted-foreground">
             Projects run in an isolated sandbox with a live preview. Read the{" "}

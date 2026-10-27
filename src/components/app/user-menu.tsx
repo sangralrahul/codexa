@@ -45,6 +45,8 @@ export function UserMenu({ user, variant = "avatar", side, align }: { user: Menu
   const [signingOut, setSigningOut] = useState(false);
   const listRef = useRef<HTMLDivElement>(null);
   const displayName = user.name || user.email.split("@")[0];
+  // One seed for this person everywhere (settings, members, onboarding, activity): the name, else the email.
+  const avatarSeed = user.name?.trim() || user.email;
 
   const onKey = (e: React.KeyboardEvent) => {
     if (e.key !== "ArrowDown" && e.key !== "ArrowUp") return;
@@ -62,9 +64,11 @@ export function UserMenu({ user, variant = "avatar", side, align }: { user: Menu
           <button
             type="button"
             className="group flex w-full min-w-0 items-center gap-2.5 rounded-[10px] px-1.5 py-1.5 text-left transition-colors hover:bg-foreground/[0.06] data-[state=open]:bg-foreground/[0.06]"
-            aria-label="Account menu"
           >
-            <Avatar name={displayName} src={user.avatarUrl} seed={user.email} size="sm" />
+            {/* Named by its content ("Account menu: {name} {email}"), so the accessible name always
+                contains the visible text (WCAG 2.5.3); the avatar's initials are decorative. */}
+            <span className="sr-only">Account menu: </span>
+            <Avatar name={displayName} src={user.avatarUrl} seed={avatarSeed} size="sm" />
             <span className="min-w-0 flex-1 leading-tight">
               <span className="block truncate text-[13px] font-medium">{displayName}</span>
               <span className="block truncate text-[11px] text-muted-foreground">{user.email}</span>
@@ -75,9 +79,11 @@ export function UserMenu({ user, variant = "avatar", side, align }: { user: Menu
           <button
             type="button"
             className="rounded-full outline-offset-2 transition-[box-shadow] hover:shadow-[0_0_0_2px_var(--border-strong)] data-[state=open]:shadow-[0_0_0_2px_var(--border-strong)]"
-            aria-label="Account menu"
           >
-            <Avatar name={displayName} src={user.avatarUrl} seed={user.email} size="md" />
+            {/* Named by content, not aria-label: an aria-label without the avatar's visible initials
+                fails axe label-content-name-mismatch (WCAG 2.5.3). The initials are decorative. */}
+            <span className="sr-only">Account menu for {displayName}</span>
+            <Avatar name={displayName} src={user.avatarUrl} seed={avatarSeed} size="md" />
           </button>
         )}
       </PopoverTrigger>
@@ -88,7 +94,7 @@ export function UserMenu({ user, variant = "avatar", side, align }: { user: Menu
         className="w-[280px] p-1.5"
       >
         <div className="flex items-center gap-3 px-2 pb-3 pt-2">
-          <Avatar name={displayName} src={user.avatarUrl} seed={user.email} size="lg" />
+          <Avatar name={displayName} src={user.avatarUrl} seed={avatarSeed} size="lg" />
           <div className="min-w-0">
             <p className="truncate text-sm font-semibold tracking-[-0.01em]">{displayName}</p>
             <p className="truncate text-xs text-muted-foreground">{user.email}</p>

@@ -5,7 +5,7 @@
  * so the AMD loader never runs on the server. Monaco assets (including workers) are served
  * from our own origin at /monaco/vs — never from a CDN.
  */
-import { useCallback, useEffect, useRef } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Editor, DiffEditor, loader, type Monaco, type OnMount } from "@monaco-editor/react";
 import type { editor as MonacoEditorNs } from "monaco-editor";
 import { useTheme } from "@/components/theme/theme-provider";
@@ -93,11 +93,19 @@ const Loading = () => (
   </div>
 );
 
+/** Below this editor width (px) long lines wrap (indented) instead of running off the right edge. */
+const WRAP_BELOW_PX = 520;
+/** Below this editor width (px) the gutter tightens and the type steps down, so code keeps its shape in split view. */
+const COMPACT_BELOW_PX = 560;
+
 export function MonacoCodeEditor({ path, language, value, readOnly, onChange, onMount, onSave, onQuickOpen, onSearchAll, revealLine, revision = 0, marks, onCursor }: CodeEditorProps) {
   const monacoRef = useRef<Monaco | null>(null);
   const theme = useCodexaTheme(monacoRef);
   const editorRef = useRef<MonacoEditorNs.IStandaloneCodeEditor | null>(null);
   const decorations = useRef<MonacoEditorNs.IEditorDecorationsCollection | null>(null);
+  // Word wrap follows the pane width (the options object is re-applied on every render, so it lives in state).
+  const [wrap, setWrap] = useState(false);
+  const [compact, setCompact] = useState(false);
   const cbs = useRef({ onSave, onQuickOpen, onSearchAll, onCursor });
   useEffect(() => {
     cbs.current = { onSave, onQuickOpen, onSearchAll, onCursor };
@@ -114,6 +122,26 @@ export function MonacoCodeEditor({ path, language, value, readOnly, onChange, on
       editor.addCommand(KM.CtrlCmd | KM.Shift | KC.KeyF, () => cbs.current.onSearchAll?.());
       editor.onDidChangeCursorPosition((e) => cbs.current.onCursor?.({ line: e.position.lineNumber, column: e.position.column }));
       decorations.current = editor.createDecorationsCollection([]);
+      // Narrow pane → wrap; wide pane with lines scrolled out of view to the right → an edge fade (CSS).
+      const host = editor.getContainerDomNode();
+      const syncOverflow = () => {
+        const { contentWidth } = editor.getLayoutInfo();
+        host.toggleAttribute("data-overflow-x", editor.getScrollWidth() - editor.getScrollLeft() - contentWidth > 2);
+      };
+      const syncLayout = () => {
+        const { width } = editor.getLayoutInfo();
+        if (width > 0) {
+          setWrap(width < WRAP_BELOW_PX);
+          setCompact(width < COMPACT_BELOW_PX);
+        }
+        syncOverflow();
+      };
+      editor.onDidLayoutChange(syncLayout);
+      editor.onDidScrollChange((e) => {
+        if (e.scrollLeftChanged || e.scrollWidthChanged) syncOverflow();
+      });
+      editor.onDidChangeModel(() => requestAnimationFrame(syncOverflow));
+      syncLayout();
       // Geist Mono may finish loading after Monaco measured the fallback font.
       void document.fonts?.ready.then(() => monaco.editor.remeasureFonts());
       const pos = editor.getPosition();
@@ -177,20 +205,22 @@ export function MonacoCodeEditor({ path, language, value, readOnly, onChange, on
       defaultValue={value}
       theme={theme}
       loading={<Loading />}
+      className="ws-monaco"
       beforeMount={configure}
       onMount={handleMount}
       onChange={(v) => onChange(v ?? "")}
       options={{
         readOnly,
-        fontSize: 13.5,
-        lineHeight: 20,
+        fontSize: compact ? 13 : 13.5,
+        lineHeight: compact ? 19 : 20,
         fontFamily: "var(--font-geist-mono), ui-monospace, SFMono-Regular, Menlo, monospace",
         fontLigatures: true,
         minimap: { enabled: false },
         scrollBeyondLastLine: false,
         automaticLayout: true,
         tabSize: 2,
-        wordWrap: "off",
+        wordWrap: wrap ? "on" : "off",
+        wrappingIndent: compact ? "same" : "indent",
         renderLineHighlight: "line",
         smoothScrolling: true,
         cursorBlinking: "smooth",
@@ -200,10 +230,10 @@ export function MonacoCodeEditor({ path, language, value, readOnly, onChange, on
         stickyScroll: { enabled: true, maxLineCount: 4 },
         bracketPairColorization: { enabled: true },
         guides: { bracketPairs: "active", indentation: true, highlightActiveIndentation: true },
-        lineDecorationsWidth: 10,
+        lineDecorationsWidth: compact ? 6 : 10,
         lineNumbersMinChars: 3,
         glyphMargin: false,
-        folding: true,
+        folding: !compact,
         showFoldingControls: "mouseover",
         overviewRulerBorder: false,
         hideCursorInOverviewRuler: true,

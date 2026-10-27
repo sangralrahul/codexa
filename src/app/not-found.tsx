@@ -32,11 +32,12 @@ export default async function NotFound() {
         <section className="relative overflow-hidden">
           <div aria-hidden="true" className="bg-blueprint pointer-events-none absolute inset-0 -z-10" />
           <div className="container-x flex flex-col items-center pb-20 pt-16 text-center sm:pt-24">
-            <p aria-hidden="true" className="mk-num select-none font-display text-[clamp(6rem,4rem+10vw,12rem)] font-extrabold leading-none tracking-[-0.06em] text-foreground/[0.07] [font-stretch:120%]">
+            {/* The kicker sits above the numeral with clear space, never on top of the digits. */}
+            <Kicker className="justify-center">Not found</Kicker>
+            <p aria-hidden="true" className="mk-num mt-4 select-none font-display text-[clamp(6rem,4rem+10vw,12rem)] font-extrabold leading-[0.9] tracking-[-0.06em] text-foreground/[0.07] [font-stretch:120%]">
               404
             </p>
-            <Kicker className="-mt-6 justify-center sm:-mt-10">Not found</Kicker>
-            <h1 className="text-display-2 mt-5 max-w-[16ch]">
+            <h1 className="text-display-2 mt-4 max-w-[16ch]">
               This page doesn&apos;t exist <span className="mark-select">yet.</span>
             </h1>
             <p className="text-lead mx-auto mt-5">The link may be old or mistyped. Or describe the page you were hoping for, and build it.</p>

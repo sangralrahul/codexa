@@ -27,7 +27,7 @@ export function FAQ({ items, className, withJsonLd = false }: { items: FAQItem[]
       {items.map((it) => (
         <details key={it.question} className="group relative border-b border-border">
           <span aria-hidden="true" className="absolute inset-y-3 -left-px w-[2px] origin-top scale-y-0 rounded-full bg-signal transition-transform duration-300 ease-out group-open:scale-y-100" />
-          <summary className="flex cursor-pointer list-none items-start justify-between gap-6 rounded-md py-5 pl-4 pr-1 text-left text-[15.5px] font-medium tracking-[-0.01em] transition-colors hover:text-foreground sm:text-base [&::-webkit-details-marker]:hidden">
+          <summary className="flex cursor-pointer list-none items-start justify-between gap-6 rounded-md px-4 py-5 text-left text-[15.5px] font-medium tracking-[-0.01em] transition-colors hover:text-foreground sm:text-base [&::-webkit-details-marker]:hidden">
             <span>{it.question}</span>
             <span
               aria-hidden="true"
@@ -37,7 +37,7 @@ export function FAQ({ items, className, withJsonLd = false }: { items: FAQItem[]
               <span className="absolute h-2.5 w-px bg-current transition-transform duration-300 ease-snap group-open:scale-y-0" />
             </span>
           </summary>
-          <div className="pb-6 pl-4 pr-10 text-[15px] leading-relaxed text-muted-foreground">
+          <div className="pb-6 pl-4 pr-14 text-[15px] leading-relaxed text-muted-foreground">
             <p>
               <Inline text={it.answer} />
             </p>

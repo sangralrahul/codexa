@@ -52,9 +52,10 @@ export function ChangelogTicker({ entries }: { entries: TickerEntry[] }) {
               <Link
                 href={e.href}
                 onFocus={() => setIndex(i)}
-                className={cn("group/t flex h-9 items-center gap-3 px-4 text-[13px] transition-opacity duration-(--dur-4)", i === index ? "opacity-100" : "opacity-0")}
+                className={cn("group/t flex h-9 items-center gap-3 px-3.5 text-[13px] transition-opacity duration-(--dur-4) sm:px-4", i === index ? "opacity-100" : "opacity-0")}
               >
-                <time dateTime={e.date} className="shrink-0 font-mono text-[11.5px] tabular-nums text-muted-foreground">
+                {/* Phones keep the room for the title; the date shows from sm. */}
+                <time dateTime={e.date} className="hidden shrink-0 font-mono text-[11.5px] tabular-nums text-muted-foreground sm:inline">
                   {formatDate(e.date)}
                 </time>
                 <span className="min-w-0 truncate font-medium text-foreground">{e.title}</span>

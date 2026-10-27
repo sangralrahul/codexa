@@ -24,10 +24,10 @@ export default function ComparePlansPage() {
         <PricingTable compact />
       </PageHeader>
       <Section size="sm">
-        <SectionHeader index="01" eyebrow="The full table" title="Limits and features." description="Groups collapse. On a phone the plan column stays pinned while the table scrolls sideways." />
+        <SectionHeader index="01" eyebrow="The full table" title="Limits and features." description="Monthly limits reset on the first of each month (UTC). Anything not shipped yet is marked Roadmap." />
         <LimitsTable full className="mt-10" />
       </Section>
-      <CTABand variant="sales" tone="pricing" />
+      <CTABand variant="sales" tone="pricing" secondary={{ label: "See pricing", href: "/pricing" }} />
     </div>
   );
 }

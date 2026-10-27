@@ -157,6 +157,8 @@ export default async function DashboardPage({ searchParams }: { searchParams: Se
       milestones={m}
       showChecklist={showChecklist}
       canCreate={canCreate}
+      emailVerified={!!user.emailVerifiedAt}
+      emailConfigured={capabilities.email}
       createIn={createIn}
       usage={current && entitlements ? { workspaceName: current.workspace.name, entitlements, projectCount } : null}
       starters={starters}

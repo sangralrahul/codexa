@@ -4,6 +4,15 @@ import { site } from "@/config/site";
 const UPDATED = "2026-10-24";
 const sec = site.company.securityEmail;
 const priv = site.company.privacyEmail;
+
+/**
+ * Who runs the service. Until the configured legal name is a registered entity (not just the
+ * product name), say so plainly instead of the circular "Codexa is operated by Codexa".
+ */
+const OPERATOR =
+  site.company.legalName.trim().toLowerCase() === site.name.trim().toLowerCase()
+    ? "Codexa is run by its founding team in India. The legal entity that acts as data controller, and its registered address, will be named here once legal review is complete."
+    : `Codexa is operated by ${site.company.legalName}.`;
 const sup = site.company.supportEmail;
 
 export const TRUST_PAGES: Record<string, ContentPage> = {
@@ -44,7 +53,7 @@ export const TRUST_PAGES: Record<string, ContentPage> = {
         id: "secrets",
         heading: "Secrets and encryption",
         blocks: [
-          { type: "paragraph", text: "Project environment variables and workspace integration credentials are encrypted with an operator-held key before storage (`encryptSecret`) and decrypted only on the server when injected into a sandbox or used to call a provider. The UI shows masked values and the API never returns plaintext secrets." },
+          { type: "paragraph", text: "Project environment variables and workspace integration credentials are encrypted with an operator-held key before storage, by `encryptSecret`, and decrypted only on the server when injected into a sandbox or used to call a provider. The UI shows masked values and the API never returns plaintext secrets." },
           { type: "paragraph", text: "Transport encryption (TLS) is the responsibility of the operator's deployment; the application sets secure cookie attributes when served over HTTPS." },
         ],
       },
@@ -52,7 +61,7 @@ export const TRUST_PAGES: Record<string, ContentPage> = {
         id: "accounts",
         heading: "Accounts and sessions",
         blocks: [
-          { type: "list", items: ["Passwords are hashed with a modern password hashing function; plaintext passwords are never stored or logged.", "Email verification and password reset use single-use, expiring tokens.", "Sessions are httpOnly, SameSite cookies (`codexa_session`); the stored session token is a hash, so a database read alone cannot be used to hijack a session.", "GitHub sign-in is available only when the operator configures OAuth; the OAuth state is checked on callback.", "Workspace roles (owner, admin, editor, viewer) are enforced on the server for every API route."] },
+          { type: "list", items: ["Passwords are hashed with a modern password hashing function; plaintext passwords are never stored or logged.", "Email verification and password reset use single-use, expiring tokens.", "Sessions are httpOnly, SameSite cookies named `codexa_session`; the stored session token is a hash, so a database read alone cannot be used to hijack a session.", "GitHub sign-in is available only when the operator configures OAuth; the OAuth state is checked on callback.", "Workspace roles (owner, admin, editor, viewer) are enforced on the server for every API route."] },
         ],
       },
       {
@@ -101,7 +110,7 @@ export const TRUST_PAGES: Record<string, ContentPage> = {
       { id: "honesty", heading: "Honesty", blocks: [{ type: "paragraph", text: "Every feature described on this site is implemented. Where a capability depends on operator configuration (AI keys, GitHub OAuth, payment providers, Vercel, email) the product shows an explicit \"not configured\" state rather than pretending to work. Roadmap items are labelled as such." }] },
       { id: "contact", heading: "Contact", blocks: [{ type: "definitions", items: [{ term: "Security", detail: `[${sec}](mailto:${sec})` }, { term: "Privacy", detail: `[${priv}](mailto:${priv})` }, { term: "Support", detail: `[${sup}](mailto:${sup})` }] }] },
     ],
-    cta: { title: "Browse the trust center", primary: { label: "Trust center", href: "/trust-center" }, secondary: { label: "Security", href: "/security" } },
+    cta: { title: "Browse the trust center.", primary: { label: "Trust center", href: "/trust-center" }, secondary: { label: "Security", href: "/security" } },
   },
 
   "/trust-center": {
@@ -167,7 +176,7 @@ export const TRUST_PAGES: Record<string, ContentPage> = {
     review: "legal",
     updated: UPDATED,
     sections: [
-      { id: "who", heading: "Who we are", blocks: [{ type: "paragraph", text: `Codexa is operated by ${site.company.legalName}. For privacy questions contact [${priv}](mailto:${priv}).` }] },
+      { id: "who", heading: "Who we are", blocks: [{ type: "paragraph", text: `${OPERATOR} For privacy questions contact [${priv}](mailto:${priv}).` }] },
       {
         id: "data",
         heading: "Data we collect",

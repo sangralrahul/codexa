@@ -3,7 +3,7 @@ import Link from "next/link";
 import { ArrowUpRight } from "lucide-react";
 import { routeMetadata } from "@/lib/seo";
 import { HOW_IT_WORKS_STEPS, PLATFORM_FEATURES, PRODUCT_FAQ, AI_KEY_LIMIT } from "@/content/marketing/product";
-import type { VignetteId } from "@/content/marketing/types";
+import type { IllustrationId } from "@/content/marketing/types";
 import { PageHeader } from "@/components/marketing/page-header";
 import { Section, SectionHeader } from "@/components/marketing/section";
 import { FeatureGrid } from "@/components/marketing/feature-grid";
@@ -15,8 +15,8 @@ import { Alert } from "@/components/ui/misc";
 
 export const metadata = routeMetadata("/product");
 
-const pillars: { title: string; href: string; body: string; visual: VignetteId; label: string }[] = [
-  { title: "Generate", href: "/ai-app-builder", visual: "agent-run", label: "AI app builder", body: "Describe an app and get a real project from a starter template, with a plan you can read before the agent edits anything." },
+const pillars: { title: string; href: string; body: string; visual: IllustrationId; label: string }[] = [
+  { title: "Generate", href: "/ai-app-builder", visual: "plan-steps", label: "AI app builder", body: "Describe an app and get a real project from a starter template, with a plan you can read before the agent edits anything." },
   { title: "Edit", href: "/code-editor", visual: "editor-peek", label: "Code editor", body: "A Monaco editor with tabs, explorer, search and replace, diagnostics, diff view, autosave, and keyboard shortcuts." },
   { title: "Run", href: "/visual-editor", visual: "terminal-stream", label: "Previews", body: "Preview in an isolated sandbox through a host-based proxy, with streamed logs and responsive viewport controls." },
   { title: "Ship", href: "/app-deployment", visual: "deploy-history", label: "Deployment", body: "Deploy to Codexa static hosting with history and rollback, or to Vercel when a token is configured." },
@@ -36,14 +36,16 @@ export default function ProductPage() {
           { label: "Start building", href: "/signup" },
           { label: "See how it works", href: "/how-it-works" },
         ]}
-        visual={<VignetteWindow id="editor-peek" />}
+        visual={<VignetteWindow id="agent-run" />}
       />
 
       <Section size="lg">
         <SectionHeader index="01" eyebrow="The loop" title="Four things Codexa does." description="Every project moves through the same loop. Enter at any point: a prompt, a template, or an imported GitHub repository." />
-        <ul data-spotlight="grid" className="mt-12 grid gap-4 md:grid-cols-2">
+        {/* From md each pair of tiles shares two rows (subgrid): the illustrations in a row are one height and
+            the captions start on one line, so no tile is left with an empty band. */}
+        <ul data-spotlight="grid" className="mt-12 grid grid-cols-1 gap-4 md:grid-cols-2">
           {pillars.map((p, i) => (
-            <li key={p.title} data-reveal data-spotlight-tile style={{ "--reveal-delay": `${(i % 2) * 90}ms` } as React.CSSProperties} className="relative flex flex-col overflow-hidden rounded-[20px] border border-border bg-card p-3 shadow-[inset_0_1px_0_var(--hairline)]">
+            <li key={p.title} data-reveal data-spotlight-tile style={{ "--reveal-delay": `${(i % 2) * 90}ms` } as React.CSSProperties} className="relative flex flex-col overflow-hidden rounded-[20px] border border-border bg-card p-3 shadow-[inset_0_1px_0_var(--hairline)] md:row-span-2 md:grid md:grid-rows-subgrid md:gap-0">
               <VignettePlate id={p.visual} className="border-0 bg-surface/70" />
               <div className="flex items-start justify-between gap-4 px-3 pb-3 pt-5">
                 <div>
@@ -75,7 +77,7 @@ export default function ProductPage() {
       </Section>
 
       <Section size="sm" className="border-t border-border/60">
-        <div className="grid gap-10 lg:grid-cols-[5fr_7fr] lg:gap-14">
+        <div className="grid grid-cols-1 gap-10 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] lg:gap-14">
           <SectionHeader index="04" eyebrow="FAQ" title="Questions, answered." description="Ownership, stacks, AI configuration, where code runs, and what is not shipped yet." />
           <FAQ items={PRODUCT_FAQ} />
         </div>

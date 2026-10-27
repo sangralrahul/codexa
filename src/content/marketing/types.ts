@@ -3,6 +3,26 @@ import type { VignetteId } from "@/components/vignettes/registry";
 
 export type { VignetteId };
 
+/**
+ * Anything a marketing page can show in a window or plate: a shared vignette, or one of the
+ * marketing-only illustrations built from the vignette primitives (src/components/marketing/
+ * agent-illustrations.tsx): "agent-modes" (Build / Ask / Fix), "validate-run" (type-check + build),
+ * "plan-steps" (the propose_plan step on its own), "repair-loop" (validate → repair → validate), and
+ * page-specific sample content for the shared ones ("agent-run-site", "agent-run-ui", "editor-api",
+ * "test-run", "build-log"). A page shows each illustration at most once (hero, steps and bento).
+ */
+export type IllustrationId =
+  | VignetteId
+  | "agent-modes"
+  | "validate-run"
+  | "plan-steps"
+  | "repair-loop"
+  | "agent-run-site"
+  | "agent-run-ui"
+  | "editor-api"
+  | "test-run"
+  | "build-log";
+
 /** Area tint for the site backdrop (globals.css `[data-tone]`). */
 export type Tone = "product" | "trust" | "docs" | "pricing" | "company";
 
@@ -17,8 +37,8 @@ export type ContentBlock =
   | { type: "links"; items: { label: string; href: string; description?: string }[] }
   | { type: "code"; code: string; language?: string }
   | { type: "definitions"; items: { term: string; detail: string }[] }
-  /** Three-up feature cards (title + one line, inline icon). */
-  | { type: "features"; items: Feature[] }
+  /** Three-up feature cards (title + one line, inline icon). `bento`: items with a `visual` become wide illustrated tiles. */
+  | { type: "features"; items: Feature[]; layout?: "grid" | "bento" }
   /** Label + value pairs. Values must be computed from code or config (PLANS, TEMPLATES…), never typed in. */
   | { type: "facts"; items: { label: string; value: string; note?: string }[]; source?: string }
   /** Numbered steps (film strip). */
@@ -68,8 +88,10 @@ export type ContentPage = {
   cta?: { title: string; description?: string; primary: CTALink; secondary?: CTALink };
 };
 
-export type Feature = { title: string; description: string; icon?: LucideIcon; href?: string };
-export type Step = { title: string; description: string; /** Vignette the sticky stage shows while this step is active. */ visual?: VignetteId };
+/** Pictures for wide bento tiles: an illustration, or a CSS-only diagram (enterprise-visuals.tsx). */
+export type FeatureVisual = IllustrationId | "isolation" | "audit-log";
+export type Feature = { title: string; description: string; icon?: LucideIcon; href?: string; /** Only used by `features` blocks with `layout: "bento"`. */ visual?: FeatureVisual };
+export type Step = { title: string; description: string; /** Illustration the sticky stage shows while this step is active. */ visual?: IllustrationId };
 export type FAQItem = { question: string; answer: string };
 export type Limitation = string;
 
@@ -85,10 +107,13 @@ export type ProductPage = {
   mark?: string;
   /** Part of the headline set in the two-tone dim. */
   highlight?: string;
-  /** Vignette in the hero window. */
-  visual: VignetteId;
-  /** Two vignettes for the feature bento (defaults are derived from the steps). */
-  bento?: [VignetteId, VignetteId];
+  /** Illustration in the hero window. */
+  visual: IllustrationId;
+  /**
+   * Illustrations for the first two features (the bento tiles). Each must differ from the hero and
+   * the steps; leave it out when nothing fits and the two features join the plain feature grid.
+   */
+  bento?: [IllustrationId, IllustrationId];
   navLabel?: string;
   /** One sentence shown under the hero, used for "what it is" positioning. */
   positioning?: string;

@@ -37,17 +37,16 @@ import { Skeleton } from "@/components/ui/misc";
 import { Switch } from "@/components/ui/switch";
 import { Tooltip } from "@/components/ui/tooltip";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuRadioGroup, DropdownMenuRadioItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown";
-import { TemplatePreview } from "@/components/templates/template-preview";
-import { TEMPLATE_SHOTS } from "@/components/templates/shots";
 import { cn } from "@/lib/utils";
 import { toolButton } from "./panel-tabs";
 
 /**
- * The preview: a browser card on a dotted stage. The runtime (status polling, sync, the run
- * command) lives in WorkspaceRuntimeProvider, so this panel can be hidden without stopping
- * anything. Every state renders inside the frame, from real runtime data; the iframe src is
- * the raw previewUrl (plus a path the user typed), title "Project preview", and the sandbox
- * attribute is exactly the documented one.
+ * The preview: the workspace card that holds it is the browser window (toolbar + viewport, one
+ * border); the dotted stage appears only around a tablet or phone bezel. The runtime (status
+ * polling, sync, the run command) lives in WorkspaceRuntimeProvider, so this panel can be hidden
+ * without stopping anything. Every state renders inside the frame, from real runtime data; the
+ * iframe src is the raw previewUrl (plus a path the user typed), title "Project preview", and
+ * the sandbox attribute is exactly the documented one.
  */
 export type Device = "desktop" | "tablet" | "mobile";
 export const DEVICES: Record<Device, { width: number | null; label: string }> = {
@@ -70,13 +69,11 @@ function splitUrl(url: string) {
 export function PreviewPanel({
   device = "desktop",
   onDeviceChange,
-  template,
   canEdit,
   showOperatorDetails,
 }: {
   device?: Device;
   onDeviceChange?: (d: Device) => void;
-  template?: { id: string; name: string; category: string } | null;
   canEdit: boolean;
   showOperatorDetails: boolean;
 }) {
@@ -142,8 +139,8 @@ export function PreviewPanel({
   const framed = device !== "desktop";
 
   return (
-    <section className="ws-stage flex h-full min-h-0 flex-col p-2.5" aria-label="Preview">
-      <div className="relative flex min-h-0 flex-1 flex-col overflow-hidden rounded-[14px] border border-border-strong bg-card shadow-lg">
+    <section className="flex h-full min-h-0 flex-col" aria-label="Preview">
+      <div className="relative flex min-h-0 flex-1 flex-col overflow-hidden bg-card">
         {/* Browser toolbar */}
         <div className="flex h-10 shrink-0 items-center gap-1 border-b border-border bg-surface/80 px-1.5">
           <Tooltip content="Reload preview">
@@ -152,7 +149,7 @@ export function PreviewPanel({
             </button>
           </Tooltip>
           <form
-            className="flex h-7 min-w-0 flex-1 items-center gap-1.5 rounded-full bg-muted pl-2.5 pr-1 font-mono text-[11.5px] shadow-[inset_0_0_0_1px_var(--border)] focus-within:shadow-[inset_0_0_0_1px_var(--border-strong),0_0_0_3px_color-mix(in_oklab,var(--ring)_18%,transparent)]"
+            className="flex h-7 min-w-0 flex-1 items-center gap-1.5 rounded-full bg-muted pl-2.5 pr-1 text-[11.5px] shadow-[inset_0_0_0_1px_var(--border)] focus-within:shadow-[inset_0_0_0_1px_var(--border-strong),0_0_0_3px_color-mix(in_oklab,var(--ring)_18%,transparent)]"
             onSubmit={(e) => {
               e.preventDefault();
               if (!previewUrl) return;
@@ -161,10 +158,10 @@ export function PreviewPanel({
               rt.reloadFrame();
             }}
           >
-            {status === "running" ? <Lock className="size-3 shrink-0 text-muted-foreground" aria-hidden="true" /> : <Globe className="size-3 shrink-0 text-muted-foreground/70" aria-hidden="true" />}
             {parts ? (
               <>
-                <span className="hidden max-w-[45%] shrink truncate text-muted-foreground sm:inline" title={parts.host}>
+                {status === "running" ? <Lock className="size-3 shrink-0 text-muted-foreground" aria-hidden="true" /> : <Globe className="size-3 shrink-0 text-muted-foreground/70" aria-hidden="true" />}
+                <span className="hidden max-w-[45%] shrink truncate font-mono text-muted-foreground sm:inline" title={parts.host}>
                   {parts.host}
                 </span>
                 <label htmlFor="preview-path" className="sr-only">
@@ -176,7 +173,7 @@ export function PreviewPanel({
                   onChange={(e) => setDraftPath(e.target.value)}
                   spellCheck={false}
                   autoComplete="off"
-                  className="min-w-0 flex-1 bg-transparent text-foreground outline-none"
+                  className="min-w-0 flex-1 bg-transparent font-mono text-foreground outline-none"
                 />
                 <Tooltip content={copied ? "Copied" : "Copy address"}>
                   <button type="button" onClick={() => void copy()} aria-label="Copy preview address" className="inline-flex size-5 shrink-0 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-background hover:text-foreground">
@@ -185,7 +182,11 @@ export function PreviewPanel({
                 </Tooltip>
               </>
             ) : (
-              <span className="truncate text-muted-foreground/80">{status === "starting" ? "Starting the dev server…" : status === "unavailable" ? (rt.configured ? "Preview unavailable" : "Previews not configured") : "Not running"}</span>
+              // No address yet: plain sans status text (mono is kept for real URLs), not a repeat of the card title.
+              <span className="flex min-w-0 items-center gap-1.5 text-muted-foreground">
+                <span className={cn("size-1.5 shrink-0 rounded-full", status === "starting" ? "bg-signal" : "bg-muted-foreground/45")} aria-hidden="true" />
+                <span className="truncate">{status === "starting" ? "Starting…" : "No address yet"}</span>
+              </span>
             )}
           </form>
           <Tooltip content="Open in a new tab">
@@ -262,7 +263,7 @@ export function PreviewPanel({
         ) : null}
 
         {/* Viewport */}
-        <div className={cn("relative min-h-0 flex-1 overflow-hidden", framed ? "flex items-start justify-center overflow-y-auto bg-surface p-4" : "bg-card")}>
+        <div className={cn("relative min-h-0 flex-1 overflow-hidden", framed ? "ws-stage flex items-start justify-center overflow-y-auto p-4" : "bg-card")}>
           {editing && !calm ? <span className="ws-beam" aria-hidden="true" /> : null}
           {editing ? (
             // Visual only: the agent column's live region already announces each stage once.
@@ -313,7 +314,7 @@ export function PreviewPanel({
                   className="block size-full border-0 bg-white"
                 />
               ) : (
-                <FrameState template={template ?? null} canEdit={canEdit} showOperatorDetails={showOperatorDetails} />
+                <FrameState canEdit={canEdit} showOperatorDetails={showOperatorDetails} />
               )}
             </div>
           </div>
@@ -327,15 +328,14 @@ export function PreviewPanel({
    States inside the frame
    --------------------------------------------------------------------------- */
 
-function FrameState({ template, canEdit, showOperatorDetails }: { template: { id: string; name: string; category: string } | null; canEdit: boolean; showOperatorDetails: boolean }) {
+function FrameState({ canEdit, showOperatorDetails }: { canEdit: boolean; showOperatorDetails: boolean }) {
   const rt = useRuntime();
   const { status, state, session, tail, busy } = rt;
-  const showShot = Boolean(template && TEMPLATE_SHOTS.has(template.id)) && status !== "starting";
 
   if (status === "unknown") {
     return (
       <div className="absolute inset-0" role="status" aria-label="Checking the preview">
-        <SkeletonApp />
+        <SkeletonApp shimmer />
       </div>
     );
   }
@@ -405,30 +405,27 @@ function FrameState({ template, canEdit, showOperatorDetails }: { template: { id
     );
   }
 
+  // Behind the card: a dotted canvas with a faint signal horizon and a still wireframe (never a
+  // picture of an app, so nothing to mislabel), read as "an app behind glass" in both themes. The
+  // card sits in the upper third; a soft scrim keeps it legible without hiding the frame.
   return (
     <div className="absolute inset-0 overflow-auto">
-      <div className="absolute inset-0" aria-hidden="true">
-        {showShot && template ? (
-          <TemplatePreview id={template.id} category={template.category} sizes="50vw" className="size-full rounded-none border-0 opacity-30 shadow-none [filter:blur(2px)_saturate(0.6)]" imgClassName="size-full aspect-auto" />
-        ) : (
-          <SkeletonApp />
-        )}
-        <div className="absolute inset-0 bg-[radial-gradient(70%_60%_at_50%_45%,color-mix(in_oklab,var(--card)_55%,transparent),var(--card)_92%)]" />
+      <div className="absolute inset-0 overflow-hidden" aria-hidden="true">
+        <div className="absolute inset-0 bg-[radial-gradient(color-mix(in_oklab,var(--foreground)_9%,transparent)_1px,transparent_1.5px)] [background-size:16px_16px]" />
+        <div className="absolute inset-0 bg-[radial-gradient(70%_55%_at_100%_100%,color-mix(in_oklab,var(--signal)_4%,transparent),transparent)]" />
+        <SkeletonApp />
+        <div className="absolute inset-0 bg-[radial-gradient(70%_60%_at_50%_32%,color-mix(in_oklab,var(--card)_20%,transparent),transparent)]" />
       </div>
-      {/* The label sits in the flow under the card, so a tall card in a narrow frame never covers it. */}
-      <div className="relative z-[1] flex min-h-full flex-col items-center justify-center gap-3 p-5">
-        {card}
-        {showShot && template ? <p className="max-w-full rounded-full border border-border bg-card/90 px-2.5 py-0.5 text-center text-[11px] text-muted-foreground shadow-sm">Template starting point — not your live app</p> : null}
-      </div>
+      <div className="relative z-[1] flex min-h-full flex-col items-center justify-start p-5 pt-[14%]">{card}</div>
     </div>
   );
 }
 
 function StatusCard({ icon, title, description, tone, children }: { icon: React.ReactNode; title: string; description: string; tone?: "danger"; children?: React.ReactNode }) {
   return (
-    <div className="glass pop-in w-full max-w-md rounded-2xl border border-border-strong p-5 text-center shadow-xl" role={tone === "danger" ? "alert" : undefined}>
-      <span className={cn("rim mx-auto flex size-11 items-center justify-center rounded-xl border border-border-strong bg-card shadow-md", tone === "danger" ? "text-danger" : "text-muted-foreground")}>{icon}</span>
-      <p className="mt-3.5 text-[15px] font-semibold tracking-tight">{title}</p>
+    <div className="glass pop-in w-full max-w-md rounded-2xl border border-border-strong bg-card/85 p-5 text-center shadow-xl backdrop-blur-xl" role={tone === "danger" ? "alert" : undefined}>
+      <span className={cn("mx-auto flex size-11 items-center justify-center rounded-xl border border-border-strong bg-card shadow-md", tone === "danger" ? "text-danger" : "text-muted-foreground")}>{icon}</span>
+      <h2 className="mt-3.5 text-[15px] font-semibold tracking-tight">{title}</h2>
       <p className="mx-auto mt-1 max-w-sm text-[13px] leading-relaxed text-muted-foreground">{description}</p>
       {children}
     </div>
@@ -509,31 +506,36 @@ function LogTail({ lines }: { lines: LogLine[] }) {
   );
 }
 
-/** A decorative app skeleton behind status cards (never presented as the user's app). */
-function SkeletonApp() {
+/**
+ * A decorative app wireframe behind status cards (never presented as the user's app). It only
+ * shimmers while the first status check is in flight; behind a settled state it stays still, so
+ * "unavailable" never looks like "loading".
+ */
+function SkeletonApp({ shimmer = false }: { shimmer?: boolean }) {
+  const bar = (className: string) => (shimmer ? <Skeleton className={className} /> : <div className={cn("rounded-md bg-foreground/[0.06]", className)} />);
   return (
-    <div className="absolute inset-0 overflow-hidden p-5 opacity-70" aria-hidden="true">
+    <div className="absolute inset-0 overflow-hidden p-5" aria-hidden="true">
       <div className="flex items-center gap-3">
-        <Skeleton className="size-7 rounded-lg" />
-        <Skeleton className="h-3 w-24" />
+        {bar("size-7 rounded-lg")}
+        {bar("h-3 w-24")}
         <div className="ml-auto flex gap-2">
-          <Skeleton className="h-3 w-12" />
-          <Skeleton className="h-3 w-12" />
-          <Skeleton className="h-7 w-20 rounded-full" />
+          {bar("h-3 w-12")}
+          {bar("h-3 w-12")}
+          {bar("h-7 w-20 rounded-full")}
         </div>
       </div>
       <div className="mx-auto mt-12 max-w-lg space-y-3 text-center">
-        <Skeleton className="mx-auto h-6 w-3/4" />
-        <Skeleton className="mx-auto h-6 w-1/2" />
-        <Skeleton className="mx-auto mt-4 h-3 w-2/3" />
-        <Skeleton className="mx-auto mt-5 h-9 w-32 rounded-full" />
+        {bar("mx-auto h-6 w-3/4")}
+        {bar("mx-auto h-6 w-1/2")}
+        {bar("mx-auto mt-4 h-3 w-2/3")}
+        {bar("mx-auto mt-5 h-9 w-32 rounded-full")}
       </div>
       <div className="mx-auto mt-12 grid max-w-3xl grid-cols-3 gap-3">
         {[0, 1, 2].map((i) => (
-          <div key={i} className="space-y-2 rounded-xl border border-border p-3">
-            <Skeleton className="h-20 w-full rounded-lg" />
-            <Skeleton className="h-3 w-2/3" />
-            <Skeleton className="h-3 w-1/2" />
+          <div key={i} className={cn("space-y-2 rounded-xl border border-border p-3", !shimmer && "bg-card/50")}>
+            {bar("h-20 w-full rounded-lg")}
+            {bar("h-3 w-2/3")}
+            {bar("h-3 w-1/2")}
           </div>
         ))}
       </div>

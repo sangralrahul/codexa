@@ -84,8 +84,8 @@ export function SectionHeader({
   return (
     <div data-reveal className={cn(s === "display-2" ? "max-w-3xl" : "max-w-2xl", align === "center" && "mx-auto text-center", className)}>
       {eyebrow || index ? (
-        // Type utilities stay outside cn(): tailwind-merge reads `text-label` as a colour and would drop it.
-        <p className={`text-label ${cn("mb-5 flex items-center gap-2.5 text-muted-foreground", align === "center" && "justify-center")}`}>
+        // The shared eyebrow style (text-eyebrow: mono, uppercase, 0.14em, muted; docs/DESIGN.md).
+        <p className={cn("text-eyebrow mb-5 flex items-center gap-2.5", align === "center" && "justify-center")}>
           {index ? <span className="text-signal-ink">{index}</span> : <span aria-hidden="true" className="size-1.5 rounded-full bg-signal" />}
           {index && eyebrow ? <span aria-hidden="true" className="h-px w-5 bg-border-strong" /> : null}
           {eyebrow ? <span>{eyebrow}</span> : null}

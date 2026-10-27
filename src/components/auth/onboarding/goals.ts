@@ -15,7 +15,7 @@ export const GOALS: { id: GoalId; label: string; chip: string; templateId: strin
   { id: "ai", label: "AI app", chip: "Support chatbot", templateId: "vite-react-ai-chat", category: "ai-tools", idea: "A support chatbot with a conversation sidebar and saved chats" },
   { id: "internal", label: "Internal tool", chip: "Ticket review tool", templateId: "vite-react-admin", category: "admin-panels", idea: "An internal tool to review support tickets with filters and an assignee column" },
   { id: "portfolio", label: "Portfolio", chip: "Personal portfolio", templateId: "vite-react-portfolio", category: "portfolios", idea: "A personal portfolio with a projects grid, an about section and a contact form" },
-  { id: "api", label: "API / backend", chip: "Library REST API", templateId: "node-express-api", category: "web-apps", idea: "A REST API for a library: books, members and loans with validation" },
+  { id: "api", label: "Backend API", chip: "Library REST API", templateId: "node-express-api", category: "web-apps", idea: "A REST API for a library: books, members and loans with validation" },
 ];
 
 /** Goal → the template categories (and frameworks) it suggests. */

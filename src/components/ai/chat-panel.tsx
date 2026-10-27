@@ -38,7 +38,7 @@ import { Composer, FIX_DEFAULT_PROMPT, splitContext, withContext, type ComposerC
 import { AssistantParts, stageLabel } from "./message-parts";
 import { RunFooter, useRunDetails } from "./review-changes";
 import { streamGenerate } from "./stream-client";
-import { suggestionsFor, type SuggestionIcon } from "./suggestions";
+import { suggestionsFor, type Suggestion, type SuggestionIcon } from "./suggestions";
 import type { AgentMode, AiStatus, ConversationView, MessagePart, MessageView, RunValidation, RunView, SseEvent } from "./types";
 
 type SendError = { kind: "not_configured" | "quota" | "rate_limited" | "generic"; message: string; prompt: string; mode: AgentMode };
@@ -204,16 +204,21 @@ export function ChatPanel({
   }, [activeId, loadMessages]);
 
   // Follow the stream only while the reader is at the bottom (never yank them while reading).
+  // With no messages there is no stream to follow: the welcome / not-configured state reads from the top.
+  const hasMessages = React.useRef(false);
   React.useEffect(() => {
+    hasMessages.current = messages.length > 0;
     const el = listRef.current;
-    if (el && stick.current) el.scrollTop = el.scrollHeight;
+    if (!el) return;
+    if (!messages.length) el.scrollTop = 0;
+    else if (stick.current) el.scrollTop = el.scrollHeight;
   }, [messages]);
   // Keep the bottom in view when the column itself resizes (revealed, dragged, rotated).
   React.useEffect(() => {
     const el = listRef.current;
     if (!el || typeof ResizeObserver === "undefined") return;
     const ro = new ResizeObserver(() => {
-      if (stick.current && el.clientWidth > 0) el.scrollTop = el.scrollHeight;
+      if (hasMessages.current && stick.current && el.clientWidth > 0) el.scrollTop = el.scrollHeight;
     });
     ro.observe(el);
     return () => ro.disconnect();
@@ -476,8 +481,8 @@ export function ChatPanel({
       <h2 className="sr-only">AI assistant</h2>
       <header className="flex h-12 shrink-0 items-center gap-1.5 border-b border-border px-2.5">
         <ConversationMenu conversations={conversations} activeId={activeId} disabled={Boolean(running)} onPick={(id) => setActiveId(id)} onNew={newChat} title={active?.title ?? "New chat"} />
+        {/* No "Not configured" badge here: the empty state below says it once, in full. */}
         <div className="ml-auto flex items-center gap-1">
-          {notConfigured ? <span className="rounded-full border border-border px-2 py-0.5 text-[11px] font-medium text-muted-foreground">Not configured</span> : null}
           <Tooltip content="New chat">
             <button
               type="button"
@@ -499,7 +504,7 @@ export function ChatPanel({
           if (el.clientWidth === 0) return; // collapsed column: not a reading position
           stick.current = el.scrollHeight - el.scrollTop - el.clientHeight < 96;
         }}
-        className="scrollbar-thin min-h-0 flex-1 overflow-y-auto px-3.5 py-4"
+        className={cn("scrollbar-thin min-h-0 flex-1 overflow-y-auto px-3.5 py-4", notConfigured && !messages.length && "flex flex-col")}
         aria-busy={Boolean(running)}
       >
         {statusError ? (
@@ -510,7 +515,9 @@ export function ChatPanel({
             </button>
           </Alert>
         ) : null}
-        {notConfigured ? <NotConfigured missingEnv={status?.missingEnv ?? []} showOperatorDetails={showOperatorDetails} /> : null}
+        {notConfigured ? (
+          <NotConfigured missingEnv={status?.missingEnv ?? []} showOperatorDetails={showOperatorDetails} centered={!messages.length} suggestions={messages.length ? null : suggestionsFor(templateCategory, framework)} />
+        ) : null}
         {messagesLoading ? (
           <div className="space-y-3" aria-label="Loading messages">
             <Skeleton className="ml-auto h-10 w-2/3 rounded-2xl" />
@@ -580,7 +587,7 @@ export function ChatPanel({
         onCancel={() => void cancel()}
         running={Boolean(running)}
         disabled={notConfigured || !status}
-        disabledReason={notConfigured ? "AI is not configured on this server." : undefined}
+        disabledReason={notConfigured ? "Chat turns on once AI is configured" : undefined}
         lastError={lastError}
         textareaRef={textareaRef}
         model={status?.configured ? { name: status.model, provider: status.provider, mock: status.mock } : null}
@@ -782,13 +789,23 @@ function AssistantMessage({
   );
 }
 
-function NotConfigured({ missingEnv, showOperatorDetails }: { missingEnv: string[]; showOperatorDetails: boolean }) {
+/**
+ * AI not configured: one honest explanation, centred in the column, then what the agent will do
+ * for this project (the same template-aware starting points as the welcome) shown dimmed and
+ * inert, so the column shows the product without pretending it works.
+ */
+function NotConfigured({ missingEnv, showOperatorDetails, centered, suggestions }: { missingEnv: string[]; showOperatorDetails: boolean; centered: boolean; suggestions: Suggestion[] | null }) {
+  // Compact by default so the honest heading and copy always fit the column; the rest is one click away.
+  const [showAll, setShowAll] = React.useState(false);
+  const listId = React.useId();
+  const shown = suggestions ? (showAll ? suggestions : suggestions.slice(0, 2)) : [];
+  const hiddenCount = suggestions ? suggestions.length - shown.length : 0;
   return (
-    <div className="pop-in mx-auto mb-4 flex max-w-sm flex-col items-center px-2 pt-8 text-center">
-      <span className="rim flex size-12 items-center justify-center rounded-2xl border border-border-strong bg-card text-muted-foreground shadow-lg">
+    <div className={cn("pop-in mx-auto mb-4 flex w-full max-w-sm flex-col items-center px-2 text-center", centered ? "my-auto py-2" : "pt-8")}>
+      <span className="flex size-12 items-center justify-center rounded-2xl border border-border-strong bg-card text-muted-foreground shadow-lg">
         <KeyRound className="size-5" aria-hidden="true" />
       </span>
-      <p className="mt-5 font-display text-[22px] font-[650] tracking-tight">AI is not configured</p>
+      <h2 className="mt-5 font-display text-[22px] font-[650] tracking-tight">AI is not configured</h2>
       <p className="mt-1.5 text-[13.5px] leading-relaxed text-muted-foreground">The AI assistant isn&apos;t set up on this server yet. Your files, the editor, previews and version history still work.</p>
       <Button asChild variant="outline" size="sm" className="mt-5">
         <Link href="/docs/ai-agent">Read the AI agent setup guide</Link>
@@ -805,6 +822,46 @@ function NotConfigured({ missingEnv, showOperatorDetails }: { missingEnv: string
             No AI provider key is set. Add {missingEnv.length ? missingEnv.join(" or ") : "ANTHROPIC_API_KEY or OPENAI_API_KEY"} to the server environment and restart the app to enable the agent.
           </p>
         </details>
+      ) : null}
+      {suggestions?.length ? (
+        <div className="mt-7 w-full text-left [@media(max-height:560px)]:hidden">
+          <p id="ai-preview-caption" className="flex items-center gap-2 text-[11.5px] font-medium text-muted-foreground">
+            <span className="h-px flex-1 bg-border" aria-hidden="true" />
+            Available once AI is configured
+            <span className="h-px flex-1 bg-border" aria-hidden="true" />
+          </p>
+          {/* Not buttons: nothing here can be sent until a provider is set up. */}
+          <ul id={listId} className="mt-2.5 space-y-1.5 opacity-70" aria-labelledby="ai-preview-caption">
+            {shown.map((sg) => {
+              const Icon = SUGGESTION_ICONS[sg.icon];
+              return (
+                <li key={sg.title} className="flex items-center gap-2.5 rounded-xl border border-dashed border-border px-2.5 py-2">
+                  <span className="flex size-7 shrink-0 items-center justify-center rounded-lg bg-muted text-muted-foreground" aria-hidden="true">
+                    <Icon className="size-3.5" />
+                  </span>
+                  <span className="min-w-0 flex-1">
+                    <span className="flex items-center gap-1.5 text-[13px] font-medium">
+                      <span className="truncate">{sg.title}</span>
+                      {sg.mode !== "build" ? <span className="shrink-0 rounded-md bg-muted px-1.5 py-px text-[10.5px] font-medium capitalize text-muted-foreground">{sg.mode}</span> : null}
+                    </span>
+                    <span className="block truncate text-[12px] text-muted-foreground">{sg.prompt}</span>
+                  </span>
+                </li>
+              );
+            })}
+          </ul>
+          {hiddenCount > 0 || showAll ? (
+            <button
+              type="button"
+              aria-expanded={showAll}
+              aria-controls={listId}
+              onClick={() => setShowAll((v) => !v)}
+              className="mx-auto mt-2 flex rounded-md px-2 py-1 text-[12px] font-medium text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-2 focus-visible:outline-ring"
+            >
+              {showAll ? "Show fewer" : `Show ${hiddenCount} more`}
+            </button>
+          ) : null}
+        </div>
       ) : null}
     </div>
   );

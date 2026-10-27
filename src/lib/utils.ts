@@ -1,6 +1,35 @@
 import { clsx, type ClassValue } from "clsx";
-import { twMerge } from "tailwind-merge";
+import { extendTailwindMerge } from "tailwind-merge";
 import { site } from "@/config/site";
+
+/**
+ * The design system's type utilities (`@utility text-*` in globals.css) are
+ * font sizes, not colours. Without this, tailwind-merge files every unknown
+ * `text-*` class under text colour, so `cn("text-title", "text-muted-foreground")`
+ * would silently drop `text-title`. `text-dim` / `text-foreground-dim` are
+ * colours and need no entry (unknown `text-*` already merges as a colour).
+ */
+export const TYPE_SCALE_UTILITIES = [
+  "display-1",
+  "display-2",
+  "display-3",
+  "display-4",
+  "title",
+  "lead",
+  "label",
+  "eyebrow",
+  "meta",
+  "app-display",
+  "app-title",
+] as const;
+
+const twMerge = extendTailwindMerge({
+  extend: {
+    classGroups: {
+      "font-size": [{ text: [...TYPE_SCALE_UTILITIES] }],
+    },
+  },
+});
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));

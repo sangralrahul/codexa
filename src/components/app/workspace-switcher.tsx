@@ -40,8 +40,8 @@ function switchTo(id: string, router: ReturnType<typeof useRouter>) {
 }
 
 /**
- * Workspace switcher: the sidebar header trigger (avatar, name, plan pill) opens a panel of
- * workspaces with their role and plan ("Owner · Free"), a check on the current one, a filter
+ * Workspace switcher: the sidebar header trigger (the name over "Free · Owner") opens a panel of
+ * workspaces with their plan and your role ("Free · Owner"), a check on the current one, a filter
  * when there are more than five, and footer actions. Switching writes the `codexa_workspace`
  * cookie and refreshes. `variant="avatar"` is the collapsed-rail trigger.
  */
@@ -90,28 +90,36 @@ export function WorkspaceSwitcher({
     >
       <PopoverTrigger asChild>
         {variant === "avatar" ? (
+          // Both triggers are named by their content (sr-only text around the visible parts) rather
+          // than an aria-label, so the name always contains the visible initials and name (WCAG
+          // 2.5.3, axe label-content-name-mismatch).
           <button
             type="button"
-            aria-label={`Current workspace: ${current.name}. Switch workspace`}
             className={cn("flex size-10 items-center justify-center rounded-[10px] transition-colors hover:bg-foreground/[0.06] data-[state=open]:bg-foreground/[0.06]", className)}
           >
             <WorkspaceAvatar workspace={current} size="sm" />
+            <span className="sr-only">Current workspace: {current.name}. Switch workspace</span>
           </button>
         ) : (
+          // Two lines so the name gets the whole width: the name, then "Free · Owner" (plan and your role).
           <button
             type="button"
-            aria-label={`Current workspace: ${current.name}. Switch workspace`}
+            title={current.name}
             className={cn(
-              "group/ws flex h-9 min-w-0 items-center gap-1.5 rounded-[10px] px-1.5 text-left transition-colors hover:bg-foreground/[0.06] data-[state=open]:bg-foreground/[0.06]",
+              "group/ws flex h-10 min-w-0 items-center gap-1.5 rounded-[10px] pl-2 pr-1.5 text-left transition-colors hover:bg-foreground/[0.06] data-[state=open]:bg-foreground/[0.06]",
               className,
             )}
           >
-            <WorkspaceAvatar workspace={current} size="xs" />
-            <span title={current.name} className="min-w-0 truncate text-[13px] font-semibold tracking-[-0.01em]">
-              {current.name}
+            <span className="sr-only">Current workspace: </span>
+            <span className="min-w-0 flex-1 leading-tight">
+              <span className="block truncate text-[13px] font-semibold tracking-[-0.01em]">{current.name}</span>
+              <span className="sr-only">, </span>
+              <span className="block truncate text-[11.5px] text-muted-foreground">
+                {cap(current.plan)} · {cap(current.role)}
+              </span>
             </span>
-            <PlanPill plan={current.plan} />
-            <ChevronsUpDown className="ml-auto size-3.5 shrink-0 text-muted-foreground transition-colors group-hover/ws:text-foreground" aria-hidden="true" />
+            <span className="sr-only">. Switch workspace</span>
+            <ChevronsUpDown className="size-3.5 shrink-0 text-muted-foreground transition-colors group-hover/ws:text-foreground" aria-hidden="true" />
           </button>
         )}
       </PopoverTrigger>
@@ -162,7 +170,7 @@ export function WorkspaceSwitcher({
                   <span className="min-w-0 flex-1">
                     <span className="block truncate text-[13px] font-medium">{w.name}</span>
                     <span className="block truncate text-xs text-muted-foreground">
-                      {cap(w.role)} · {cap(w.plan)}
+                      {cap(w.plan)} · {cap(w.role)}
                     </span>
                   </span>
                   {active ? <Check className="size-4 shrink-0 text-foreground" aria-label="Current workspace" /> : null}

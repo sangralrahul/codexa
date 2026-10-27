@@ -68,12 +68,13 @@ function TeammateMirror({ name, email, avatarUrl, timezone, role, workspaceName 
   const first = display.split(/\s+/)[0];
   return (
     <aside aria-labelledby="mirror-title" className="settings-card settings-mirror rounded-[16px] p-5 [--card-i:2]">
-      <div className="flex items-start justify-between gap-2">
-        <h2 id="mirror-title" className="text-[15px] font-semibold tracking-[-0.01em]">
-          How teammates see you
-        </h2>
-        <span className="shrink-0 whitespace-nowrap rounded-full bg-muted px-2 py-0.5 text-[11px] font-medium text-muted-foreground">Live preview</span>
-      </div>
+      {/* The chip gets its own line so the heading never wraps beside it in the narrow column. */}
+      <span className="inline-flex items-center gap-1.5 whitespace-nowrap rounded-full bg-muted px-2 py-0.5 text-[11px] font-medium text-muted-foreground shadow-[inset_0_0_0_1px_var(--border)]">
+        <span aria-hidden="true" className="size-1.5 rounded-full bg-success" /> Live preview
+      </span>
+      <h2 id="mirror-title" className="mt-2.5 text-balance text-[15px] font-semibold tracking-[-0.01em]">
+        How teammates see you
+      </h2>
       <p className="mt-1 text-xs text-muted-foreground">Your name and photo as they appear in member lists, comments and presence.</p>
 
       <div className="mt-4 space-y-3" aria-hidden="true">
@@ -102,10 +103,11 @@ function TeammateMirror({ name, email, avatarUrl, timezone, role, workspaceName 
               · <LocalTime tz={timezone} />
             </span>
           </div>
-          <div className="mt-2.5 space-y-1.5 pl-8">
-            <span className="block h-1.5 w-11/12 rounded-full bg-border" />
-            <span className="block h-1.5 w-2/3 rounded-full bg-border" />
-          </div>
+          {/* A sample line (labelled as one), so the frame reads as a comment rather than a loading skeleton. */}
+          <p className="mt-1.5 pl-8 text-[12.5px] leading-relaxed text-foreground/85">
+            Pushed the checkout copy fix. Ready for a look.
+            <span className="ml-1.5 whitespace-nowrap text-[10.5px] text-foreground-dim">Example comment</span>
+          </p>
         </div>
         {/* Presence cursor */}
         <div className="relative h-[84px] overflow-hidden rounded-[12px] border border-border bg-[radial-gradient(color-mix(in_oklab,var(--foreground)_10%,transparent)_1px,transparent_1.4px)] bg-[length:16px_16px]">

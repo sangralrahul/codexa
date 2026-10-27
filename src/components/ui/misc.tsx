@@ -61,12 +61,15 @@ export function Alert({
 
 /**
  * Keyboard key. `mod` prefixes the platform modifier ("⌘" on Apple, "Ctrl" elsewhere),
- * e.g. <Kbd mod>K</Kbd> → ⌘K. Server-safe (the modifier resolves on the client).
+ * e.g. <Kbd mod>K</Kbd> → "⌘ K" / "Ctrl K". The 4px gap keeps "Ctrl" and the key apart
+ * visually, and a collapsed space keeps them apart in the text ("Ctrl K", never "CtrlK").
+ * Server-safe (the modifier resolves on the client).
  */
-export function Kbd({ children, mod = false, className }: { children?: React.ReactNode; mod?: boolean; className?: string }) {
+export function Kbd({ children, mod = false, className, ...rest }: { children?: React.ReactNode; mod?: boolean; className?: string; "aria-hidden"?: boolean | "true" | "false" }) {
   return (
-    <kbd className={cn("inline-flex h-5 min-w-5 items-center justify-center gap-[3px] rounded-[5px] px-1 font-sans text-[11px] font-medium leading-none text-muted-foreground", className)}>
+    <kbd {...rest} className={cn("inline-flex h-5 min-w-5 items-center justify-center gap-1 rounded-[5px] px-1 font-sans text-[11px] font-medium leading-none text-muted-foreground", className)}>
       {mod ? <ModKey /> : null}
+      {mod && children != null && children !== false ? " " : null}
       {children}
     </kbd>
   );

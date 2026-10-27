@@ -6,7 +6,8 @@ import { cn } from "@/lib/utils";
 import { tokenize } from "./tokenize";
 import { useScript } from "./use-script";
 
-const DEFAULT_QUERY = "select name, plan from customers limit 3;";
+// Short enough to fit the narrowest bento tile next to the Run button.
+const DEFAULT_QUERY = "select name, plan from customers;";
 const ROWS: [string, string][] = [
   ["Kite Studio", "pro"],
   ["Banyan Foods", "team"],
@@ -49,7 +50,12 @@ export function SqlRunner({ playing, className, query: initial = DEFAULT_QUERY }
           </label>
           <div className="relative min-w-0 flex-1 font-mono text-[12.5px] leading-7">
             {/* Highlighted copy under a transparent input. */}
-            <div ref={overlay} aria-hidden="true" className="pointer-events-none absolute inset-0 overflow-hidden whitespace-pre px-1.5 text-code-fg">
+            {/* The right edge fades, so a longer (typed) query reads as continuing, not cut off. */}
+            <div
+              ref={overlay}
+              aria-hidden="true"
+              className="pointer-events-none absolute inset-0 overflow-hidden whitespace-pre px-1.5 text-code-fg [mask-image:linear-gradient(to_right,black_calc(100%-1.25rem),transparent)]"
+            >
               {tokens.map((t, i) => (
                 <span key={i} className={COLOR[t.k]}>
                   {t.v}

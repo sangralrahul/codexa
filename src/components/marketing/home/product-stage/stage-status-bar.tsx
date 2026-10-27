@@ -13,19 +13,22 @@ function languageOf(path: string) {
 
 /**
  * The 26px status bar along the bottom of the replayed workspace (mirrors the IDE's StatusBar):
- * runtime state, branch, problems, cursor line, language and the agent. Every item follows the
- * scripted frame, so the illustrative type error shows up here too. Decorative (inside the
- * stage's aria-hidden body).
+ * preview runtime, branch, problems, cursor line, language and the agent. Every item follows the
+ * scripted frame, so the illustrative type error shows up here too. The runtime item names the
+ * preview ("Preview stopped" → "Starting preview…" → "Preview running"), so it never reads as the
+ * agent having stopped while the header says it is working. Decorative (inside the stage's
+ * aria-hidden body).
  */
 export function StageStatusBar({ frame, scenario }: { frame: StageFrame; scenario: Scenario }) {
   const errors = frame.errorLine !== null ? 1 : 0;
-  const runtime = frame.running ? "Running" : frame.boot ? "Starting…" : "Stopped";
+  const runtime = frame.running ? "Preview running" : frame.starting ? "Starting preview…" : "Preview stopped";
   const file = frame.view === "code" ? (frame.activeTab ?? scenario.mainFile) : scenario.mainFile;
-  const line = frame.errorLine ?? frame.fixedLine ?? (frame.streaming ? Math.max(1, frame.revealed) : Math.min(scenario.code.length, 16));
+  const rel = frame.errorLine ?? frame.fixedLine ?? (frame.streaming ? Math.max(1, frame.revealed) : Math.min(scenario.code.length, 16));
+  const line = scenario.codeStart + rel - 1;
   return (
     <div className="flex h-[26px] shrink-0 items-center gap-0.5 px-1.5 text-[11px] text-muted-foreground">
       <span className="inline-flex h-full items-center gap-1.5 px-2">
-        <span className={cn("size-1.5 shrink-0 rounded-full transition-colors duration-(--dur-3)", frame.running ? "live-dot" : frame.boot ? "bg-signal" : "bg-muted-foreground/45")} />
+        <span className={cn("size-1.5 shrink-0 rounded-full transition-colors duration-(--dur-3)", frame.running ? "live-dot" : frame.starting ? "bg-signal" : "bg-muted-foreground/45")} />
         <span key={runtime} className="[animation:stage-swap-in_var(--dur-3)_var(--ease-out)_both]">
           {runtime}
         </span>

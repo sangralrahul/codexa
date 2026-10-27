@@ -14,7 +14,9 @@ export function pageMetadata(input: {
   const title = input.path === "/" ? input.title : `${input.title} · ${site.name}`;
   const image = input.image ?? "/opengraph-image";
   return {
-    title,
+    // Already ends in " · Codexa", so it is absolute: the root layout's title template would
+    // otherwise append the site name a second time ("Pricing · Codexa · Codexa").
+    title: { absolute: title },
     description: input.description,
     alternates: { canonical: url },
     robots: input.noindex ? { index: false, follow: false } : { index: true, follow: true },

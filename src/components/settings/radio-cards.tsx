@@ -7,7 +7,7 @@ export type RadioCardOption<T extends string> = {
   value: T;
   title: React.ReactNode;
   description?: React.ReactNode;
-  /** Right-aligned status (e.g. a "Configured" badge). */
+  /** Status shown on its own line under the title (e.g. a "Configured" badge). */
   badge?: React.ReactNode;
   icon?: React.ReactNode;
   disabled?: boolean;
@@ -85,10 +85,9 @@ export function RadioCards<T extends string>({
             <span aria-hidden="true" className="radio-dot relative mt-0.5 size-4 shrink-0 rounded-full border border-border-strong bg-background" />
             {o.icon ? <span className="mt-px flex shrink-0 text-muted-foreground [&_svg]:size-4">{o.icon}</span> : null}
             <span className="min-w-0 flex-1">
-              <span className="flex flex-wrap items-center gap-x-2 gap-y-1 text-[13.5px] font-medium">
-                {o.title}
-                {o.badge}
-              </span>
+              <span className="block text-[13.5px] font-medium">{o.title}</span>
+              {/* The badge always gets its own line, so every card's description starts at the same height. */}
+              {o.badge ? <span className="mt-1 flex">{o.badge}</span> : null}
               {o.description ? <span className="mt-0.5 block text-xs leading-relaxed text-muted-foreground">{o.description}</span> : null}
             </span>
           </button>

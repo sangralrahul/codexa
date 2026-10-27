@@ -10,7 +10,7 @@ export default async function TemplatesPage({ searchParams }: { searchParams: Pr
       searchParams={sp}
       category="all"
       title="Start from a real app."
-      mark="real app."
+      dim="real app."
       intro="Runnable starters for React single-page apps, static sites and Express APIs. Pick one, then describe what to change: the agent edits real files you can read, run and keep."
       crumbs={[{ name: "Templates", path: "/templates" }]}
     />

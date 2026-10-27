@@ -1,5 +1,8 @@
 import { Bot, Database, GitBranch, Globe, History, KeyRound, Lock, Rocket, Share2, ShieldCheck, Users, Wallet } from "lucide-react";
 import type { Feature, Step, VignetteId } from "./types";
+import { PLANS } from "@/config/plans";
+
+const FREE = PLANS.free.limits;
 
 export type Solution = {
   slug: string;
@@ -103,7 +106,7 @@ export const SOLUTIONS: Solution[] = [
       "A pricing calculator for a freelance service with a lead capture form",
       "A tiny REST API that powers a browser extension",
     ],
-    limitations: [...commonLimits, "The Free plan includes 3 projects, 50 AI requests and 5 deployments a month; see [pricing](/pricing) for the exact limits."],
+    limitations: [...commonLimits, `The Free plan includes ${FREE.projects} projects, ${FREE.aiRequestsPerMonth} AI requests and ${FREE.deploymentsPerMonth} deployments a month; see [pricing](/pricing) for the exact limits.`],
     ctaNoun: "side project",
   },
   {
@@ -118,8 +121,8 @@ export const SOLUTIONS: Solution[] = [
     intro: "No hidden abstraction layer. The agent works on the same files you see in the editor, shows every tool call, and snapshots before it touches anything.",
     workflowIntro: "Designed to fit how engineers already work.",
     workflow: [
-      { title: "Import or start", description: "Import a GitHub repository or begin from a template.", visual: "commit-list" },
-      { title: "Ask, build, or fix", description: "Use Ask mode for explanations, Build mode for features, Fix mode to resolve a failing build.", visual: "agent-run" },
+      { title: "Import or start", description: "Import a GitHub repository or begin from a template.", visual: "editor-peek" },
+      { title: "Ask, build, or fix", description: "Use Ask mode for explanations, Build mode for features, Fix mode to resolve a failing build.", visual: "agent-modes" },
       { title: "Inspect the diff", description: "Every run records the plan, tool calls, changed files, and token usage.", visual: "diff-restore" },
       { title: "Push", description: "Commit from Codexa and push to your branch when GitHub is connected.", visual: "commit-list" },
     ],
@@ -146,7 +149,7 @@ export const SOLUTIONS: Solution[] = [
     workflowIntro: "A study loop that produces portfolio projects.",
     workflow: [
       { title: "Pick a template", description: "Start with a documented React, static, or Express starter.", visual: "viewport-morph" },
-      { title: "Ask questions", description: "Use Ask mode to understand each file before changing it.", visual: "agent-run" },
+      { title: "Ask questions", description: "Use Ask mode to understand each file before changing it.", visual: "agent-modes" },
       { title: "Build in small steps", description: "Request one feature at a time and read the diff.", visual: "editor-peek" },
       { title: "Publish", description: "Deploy to a Codexa subdomain and link it from your résumé.", visual: "deploy-history" },
     ],

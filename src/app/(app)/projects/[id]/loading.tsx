@@ -2,7 +2,7 @@ import "@/components/workspace/workspace.css";
 import { Skeleton } from "@/components/ui/misc";
 import { LogoMark } from "@/components/logo";
 
-/** Mirrors the workspace shell (agent card, explorer, editor, browser frame) while the project opens. */
+/** Mirrors the workspace shell (agent card, Code card, browser card) while the project opens. */
 export default function Loading() {
   return (
     <div role="status" className="ws-root relative flex h-dvh flex-col bg-background">
@@ -16,7 +16,7 @@ export default function Loading() {
           <Skeleton className="size-8 rounded-full" />
         </div>
       </div>
-      <div className="ws-body relative grid min-h-0 flex-1 grid-cols-1 gap-1.5 px-1.5 pb-1.5 lg:grid-cols-[360px_1fr] min-[1440px]:grid-cols-[400px_1fr]" aria-hidden="true">
+      <div className="ws-body relative grid min-h-0 flex-1 grid-cols-1 gap-1.5 px-1.5 pb-1.5 lg:grid-cols-[360px_1fr] min-[1440px]:grid-cols-[380px_1fr]" aria-hidden="true">
         {/* Agent card */}
         <div className="ws-card flex flex-col">
           <div className="flex h-12 items-center gap-2 border-b border-border px-3">
@@ -37,32 +37,34 @@ export default function Loading() {
           </div>
         </div>
         {/* Canvas */}
-        <div className="hidden min-h-0 grid-cols-[200px_1fr_40%] gap-1.5 lg:grid">
-          <div className="ws-card space-y-2 p-3">
-            <Skeleton className="mb-3 h-7 w-full rounded-[10px]" />
-            {[70, 55, 80, 60, 75, 50, 65].map((w, i) => (
-              <Skeleton key={i} className="h-3.5" style={{ width: `${w}%`, marginLeft: i > 0 && i < 5 ? 14 : 0 }} />
-            ))}
-          </div>
-          <div className="ws-card flex flex-col">
-            <div className="flex h-10 items-end gap-1 border-b border-border px-2">
-              <Skeleton className="h-7 w-24 rounded-b-none rounded-t-lg" />
-              <Skeleton className="h-7 w-20 rounded-b-none rounded-t-lg opacity-60" />
-            </div>
-            <div className="flex-1 space-y-2.5 p-4">
-              {[40, 65, 52, 78, 30, 60, 45].map((w, i) => (
-                <Skeleton key={i} className="h-3" style={{ width: `${w}%` }} />
+        <div className="hidden min-h-0 grid-cols-[minmax(0,1fr)_36%] gap-1.5 lg:grid">
+          {/* Code card: explorer and editor joined by a hairline */}
+          <div className="ws-card grid grid-cols-[192px_minmax(0,1fr)]">
+            <div className="space-y-2 border-r border-border p-3">
+              <Skeleton className="mb-3 h-7 w-full rounded-[10px]" />
+              {[70, 55, 80, 60, 75, 50, 65].map((w, i) => (
+                <Skeleton key={i} className="h-3.5" style={{ width: `${w}%`, marginLeft: i > 0 && i < 5 ? 14 : 0 }} />
               ))}
             </div>
-          </div>
-          <div className="ws-card ws-stage p-2.5">
-            <div className="flex h-full flex-col overflow-hidden rounded-[14px] border border-border-strong bg-card">
-              <div className="flex h-10 items-center gap-2 border-b border-border px-2">
-                <Skeleton className="size-6 rounded-md" />
-                <Skeleton className="h-7 flex-1 rounded-full" />
+            <div className="flex flex-col">
+              <div className="flex h-10 items-end gap-1 border-b border-border px-2">
+                <Skeleton className="h-7 w-24 rounded-b-none rounded-t-lg" />
+                <Skeleton className="h-7 w-20 rounded-b-none rounded-t-lg opacity-60" />
               </div>
-              <div className="flex-1" />
+              <div className="flex-1 space-y-2.5 p-4">
+                {[40, 65, 52, 78, 30, 60, 45].map((w, i) => (
+                  <Skeleton key={i} className="h-3" style={{ width: `${w}%` }} />
+                ))}
+              </div>
             </div>
+          </div>
+          {/* Preview card: the card is the browser window */}
+          <div className="ws-card flex flex-col">
+            <div className="flex h-10 items-center gap-2 border-b border-border bg-surface/80 px-2">
+              <Skeleton className="size-6 rounded-md" />
+              <Skeleton className="h-7 flex-1 rounded-full" />
+            </div>
+            <div className="flex-1" />
           </div>
         </div>
       </div>

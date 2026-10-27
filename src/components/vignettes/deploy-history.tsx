@@ -40,6 +40,10 @@ export function DeployHistory({
   const offset = showNewest ? 0 : 1;
   const scriptedLive = newestReady ? 0 : 1;
   const live = chosen ?? scriptedLive;
+  // When the newest row is inserted the list shifts down one row; the badge moves with it in the
+  // same frame (no glide) so it never slides across the "Deploying" row. It glides only when Live
+  // itself changes (cue 2, or a Roll back click).
+  const inserting = started && index === 1 && chosen === null;
 
   const rollBack = (i: number) => {
     setChosen(i);
@@ -57,7 +61,10 @@ export function DeployHistory({
         {/* The Live badge is one element that glides between rows. */}
         <span
           aria-hidden="true"
-          className="absolute right-2 z-[2] inline-flex h-6 items-center gap-1.5 rounded-full bg-success/15 px-2 text-[11px] font-medium text-success transition-transform duration-[420ms] ease-spring calm:transition-none"
+          className={cn(
+            "absolute right-2 z-[2] inline-flex h-6 items-center gap-1.5 rounded-full bg-success/15 px-2 text-[11px] font-medium text-success",
+            inserting ? "transition-none" : "transition-transform duration-[420ms] ease-spring calm:transition-none",
+          )}
           style={{ top: 8, transform: `translateY(${(live - offset) * ROW}px)` }}
         >
           <span className="live-dot" /> Live
@@ -88,7 +95,8 @@ export function DeployHistory({
                       type="button"
                       onClick={() => rollBack(i)}
                       aria-label={`Roll back to ${v.id} (illustration)`}
-                      className="rounded-full border border-border px-2 py-0.5 text-[11px] text-muted-foreground transition-colors hover:border-border-strong hover:text-foreground"
+                      // Fades in once the Live badge has glided off this row, so the two never overlap.
+                      className="rounded-full border border-border px-2 py-0.5 text-[11px] text-muted-foreground transition-colors [animation:codexa-fade-in_var(--dur-2)_var(--ease-out)_400ms_both] hover:border-border-strong hover:text-foreground calm:[animation:none]"
                     >
                       Roll back
                     </button>

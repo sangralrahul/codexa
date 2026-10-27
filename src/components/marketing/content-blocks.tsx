@@ -1,14 +1,64 @@
 import * as React from "react";
 import Link from "next/link";
 import { ArrowRight, ArrowUpRight } from "lucide-react";
-import type { ContentBlock, ContentSection } from "@/content/marketing/types";
+import type { ContentBlock, ContentSection, Feature, FeatureVisual } from "@/content/marketing/types";
 import { Alert } from "@/components/ui/misc";
 import { buttonClasses } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { Inline } from "./inline";
 import { Steps } from "./steps";
-import { VignetteWindow } from "./vignette-window";
+import { VignettePlate, VignetteWindow } from "./vignette-window";
+import { AuditLogVisual, IsolationVisual } from "./enterprise-visuals";
 import { RequestPathDiagram } from "./request-path-diagram";
+
+function FeatureVisualPlate({ visual }: { visual: FeatureVisual }) {
+  if (visual === "isolation") return <IsolationVisual className="h-full" />;
+  if (visual === "audit-log") return <AuditLogVisual className="h-full" />;
+  return <VignettePlate id={visual} className="h-full border-0 bg-surface/70" />;
+}
+
+/**
+ * Bento form of a features block: items with a `visual` are wide tiles (picture above the text,
+ * two to a row from lg; their rows are shared via subgrid so captions line up), the rest compact
+ * tiles in a four-up row underneath.
+ */
+function FeatureBento({ items }: { items: Feature[] }) {
+  const lead = items.filter((f) => f.visual);
+  const rest = items.filter((f) => !f.visual);
+  return (
+    <ul data-reveal="stagger" data-spotlight="grid" className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+      {lead.map((f) => {
+        const Icon = f.icon;
+        return (
+          <li key={f.title} data-spotlight-tile className="flex flex-col overflow-hidden rounded-[20px] border border-border bg-card p-2.5 shadow-[inset_0_1px_0_var(--hairline)] sm:col-span-2 lg:row-span-2 lg:grid lg:grid-rows-subgrid lg:gap-0">
+            <FeatureVisualPlate visual={f.visual!} />
+            <div className="px-3 pb-3 pt-5">
+              <h3 className="flex items-center gap-2.5 text-[17px] font-semibold tracking-[-0.015em]">
+                {Icon ? <Icon className="size-[18px] shrink-0 text-signal-ink" aria-hidden="true" /> : null}
+                {f.title}
+              </h3>
+              <p className="mt-2 max-w-lg text-[14.5px] leading-relaxed text-muted-foreground">
+                <Inline text={f.description} />
+              </p>
+            </div>
+          </li>
+        );
+      })}
+      {rest.map((f) => {
+        const Icon = f.icon;
+        return (
+          <li key={f.title} data-spotlight-tile className="rounded-[16px] border border-border bg-card p-5 shadow-[inset_0_1px_0_var(--hairline)]">
+            {Icon ? <Icon className="size-5 text-signal-ink" strokeWidth={1.5} aria-hidden="true" /> : null}
+            <h3 className="mt-4 text-[15.5px] font-semibold tracking-[-0.01em]">{f.title}</h3>
+            <p className="mt-1.5 text-[14px] leading-relaxed text-muted-foreground">
+              <Inline text={f.description} />
+            </p>
+          </li>
+        );
+      })}
+    </ul>
+  );
+}
 
 function Block({ b, flip }: { b: ContentBlock; flip?: boolean }) {
   switch (b.type) {
@@ -80,7 +130,7 @@ function Block({ b, flip }: { b: ContentBlock; flip?: boolean }) {
     case "links":
       return (
         // An odd last card spans both columns, so the grid never ends on a half-empty row.
-        <ul data-spotlight="grid" className="grid gap-3 sm:grid-cols-2">
+        <ul data-spotlight="grid" className="grid grid-cols-1 gap-3 sm:grid-cols-2">
           {b.items.map((l) => (
             <li key={l.href} className="sm:[&:last-child:nth-child(odd)]:col-span-2">
               <Link href={l.href} className="glow-card group flex h-full items-start justify-between gap-3 rounded-[14px] border border-border p-5">
@@ -104,7 +154,7 @@ function Block({ b, flip }: { b: ContentBlock; flip?: boolean }) {
       return (
         <dl className="divide-y divide-border rounded-[14px] border border-border">
           {b.items.map((d) => (
-            <div key={d.term} className="grid gap-1 p-4 sm:grid-cols-[200px_1fr] sm:gap-4">
+            <div key={d.term} className="grid grid-cols-1 gap-1 p-4 sm:grid-cols-[200px_minmax(0,1fr)] sm:gap-4">
               <dt className="font-medium">{d.term}</dt>
               <dd className="text-[15px] leading-relaxed text-muted-foreground">
                 <Inline text={d.detail} />
@@ -114,8 +164,9 @@ function Block({ b, flip }: { b: ContentBlock; flip?: boolean }) {
         </dl>
       );
     case "features":
+      if (b.layout === "bento") return <FeatureBento items={b.items} />;
       return (
-        <ul data-reveal="stagger" data-spotlight="grid" className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+        <ul data-reveal="stagger" data-spotlight="grid" className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
           {b.items.map((f) => {
             const Icon = f.icon;
             return (
@@ -151,7 +202,7 @@ function Block({ b, flip }: { b: ContentBlock; flip?: boolean }) {
       return <Steps steps={b.items} />;
     case "split":
       return (
-        <div className="grid items-center gap-8 lg:grid-cols-2 lg:gap-12">
+        <div className="grid grid-cols-1 items-center gap-8 lg:grid-cols-2 lg:gap-12">
           <div className={cn("space-y-4", flip && "lg:order-2")}>
             <p className="text-foreground/85">
               <Inline text={b.text} />
@@ -241,10 +292,17 @@ export function LandingSections({ sections }: { sections: ContentSection[] }) {
         const wide = s.blocks.some((b) => WIDE.has(b.type));
         return (
           <section key={s.id} id={s.id} aria-labelledby={`${s.id}-heading`} className="scroll-mt-28 border-t border-border/70 py-14 first:border-t-0 first:pt-0 lg:py-20">
-            <div className={cn("grid gap-8 lg:gap-12", !wide && "lg:grid-cols-12")}>
+            <div className={cn("grid grid-cols-1 gap-8 lg:gap-12", !wide && "lg:grid-cols-12")}>
               <header data-reveal className={cn(wide ? "max-w-3xl" : "lg:col-span-4")}>
-                <p aria-hidden="true" className="text-label text-signal-ink">
-                  {String(i + 1).padStart(2, "0")}
+                {/* The same chapter kicker as SectionHeader: "01 —— INCLUDED" (the short label is the nav label). */}
+                <p aria-hidden="true" className="text-label flex items-center gap-2.5 text-muted-foreground">
+                  <span className="text-signal-ink">{String(i + 1).padStart(2, "0")}</span>
+                  {s.navLabel ? (
+                    <>
+                      <span className="h-px w-5 bg-border-strong" />
+                      <span>{s.navLabel}</span>
+                    </>
+                  ) : null}
                 </p>
                 <h2 id={`${s.id}-heading`} className="text-display-3 mt-4">
                   {s.heading}

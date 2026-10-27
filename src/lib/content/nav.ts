@@ -34,7 +34,7 @@ export const DEV_SIDEBAR: NavGroupLink[] = [
   },
 ];
 
-/** Static sidebar for the learning center. */
+/** Static sidebar for the learning center. /webinars stays reachable by URL but is not in the nav (no sessions yet). */
 export const LEARN_SIDEBAR: NavGroupLink[] = [
   {
     category: "Learn",
@@ -44,7 +44,6 @@ export const LEARN_SIDEBAR: NavGroupLink[] = [
       { title: "Tutorials", href: "/tutorials" },
       { title: "Blog", href: "/blog" },
       { title: "Glossary", href: "/glossary" },
-      { title: "Webinars", href: "/webinars" },
       { title: "Newsletter", href: "/newsletter" },
     ],
   },

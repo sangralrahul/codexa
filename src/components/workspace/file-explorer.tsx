@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useId, useMemo, useRef, useState } from "react";
-import { ChevronRight, FilePlus2, Folder, FolderOpen, FolderPlus, MoreHorizontal, Pencil, RefreshCw, Trash2 } from "lucide-react";
+import { ChevronRight, FilePlus2, Folder, FolderOpen, FolderPlus, MoreHorizontal, Pencil, Plus, RefreshCw, Trash2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { buildTree, dirname, joinPath, validateName, type TreeNode } from "@/lib/client/workspace/paths";
 import type { EditorState } from "@/lib/client/workspace/use-editor-state";
@@ -281,17 +281,28 @@ export function FileExplorer({
 
   return (
     <div className="flex h-full min-h-0 flex-col">
-      <div className="flex h-10 shrink-0 items-center gap-1 pl-2 pr-1.5">
-        <div className="min-w-0 flex-1">{header}</div>
+      {/* Same 40px + hairline as the editor's tab strip, so the joined Code card has one top bar. The header slot
+          clips (with room for focus rings) so it can never spill over the action buttons. */}
+      <div className="flex h-10 shrink-0 items-center gap-1 border-b border-border pl-2 pr-1.5">
+        <div className="-my-1 min-w-0 flex-1 overflow-hidden py-1 pl-0.5 -ml-0.5">{header}</div>
         {canEdit ? (
-          <>
-            <IconButton label="New file" onClick={() => startCreate("file", "")}>
-              <FilePlus2 className="size-4" aria-hidden="true" />
-            </IconButton>
-            <IconButton label="New folder" onClick={() => startCreate("folder", "")}>
-              <FolderPlus className="size-4" aria-hidden="true" />
-            </IconButton>
-          </>
+          <DropdownMenu>
+            <Tooltip content="New file or folder">
+              <DropdownMenuTrigger asChild>
+                <button type="button" aria-label="New file or folder" className={cn(toolButton, "size-7")}>
+                  <Plus className="size-4" aria-hidden="true" />
+                </button>
+              </DropdownMenuTrigger>
+            </Tooltip>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem onSelect={() => startCreate("file", "")}>
+                <FilePlus2 /> New file
+              </DropdownMenuItem>
+              <DropdownMenuItem onSelect={() => startCreate("folder", "")}>
+                <FolderPlus /> New folder
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         ) : null}
         <IconButton
           label="Refresh"
@@ -305,18 +316,18 @@ export function FileExplorer({
         </IconButton>
       </div>
       {filesError ? (
-        <div className="px-2 pb-2">
+        <div className="px-2 py-2">
           <Alert variant="danger" title="Could not load files">
             {filesError}
           </Alert>
         </div>
       ) : null}
       {error ? (
-        <p role="alert" className="mx-2 mb-1 rounded-lg bg-danger/10 px-2 py-1 text-xs text-danger">
+        <p role="alert" className="mx-2 mb-1 mt-2 rounded-lg bg-danger/10 px-2 py-1 text-xs text-danger">
           {error}
         </p>
       ) : null}
-      <div ref={treeRef} className="scrollbar-thin min-h-0 flex-1 overflow-auto pb-2" role="tree" aria-label="Project files" onKeyDown={onKeyDown} data-testid="file-explorer">
+      <div ref={treeRef} className="scrollbar-thin min-h-0 flex-1 overflow-auto pb-2 pt-1.5" role="tree" aria-label="Project files" onKeyDown={onKeyDown} data-testid="file-explorer">
         {pending && pending.kind !== "rename" && pending.dir === "" ? <NameInput depth={0} placeholder={pending.kind === "file" ? "filename.ts" : "folder-name"} onSubmit={submitPending} onCancel={() => setPending(null)} /> : null}
         {tree.length === 0 && !pending ? (
           <div className="px-4 py-10 text-center">
@@ -402,6 +413,68 @@ type NodeCtx = {
   cancelPending: () => void;
 };
 
+let measureCtx: CanvasRenderingContext2D | null | undefined;
+function textWidth(text: string, font: string) {
+  if (measureCtx === undefined) measureCtx = typeof document === "undefined" ? null : document.createElement("canvas").getContext("2d");
+  if (!measureCtx) return text.length * 7;
+  measureCtx.font = font;
+  return measureCtx.measureText(text).width;
+}
+
+/** Fit `name` into `width` px by dropping characters from the middle, keeping the extension plus a little of the stem. */
+function middleEllipsis(name: string, width: number, font: string) {
+  if (width <= 0 || textWidth(name, font) <= width) return name;
+  const dot = name.lastIndexOf(".");
+  const tailLen = Math.min(name.length - 1, dot > 0 ? name.length - dot + 3 : 4);
+  const tail = name.slice(name.length - tailLen);
+  let lo = 0;
+  let hi = name.length - tailLen;
+  // Largest head that still fits with the ellipsis and tail.
+  while (lo < hi) {
+    const mid = Math.ceil((lo + hi) / 2);
+    if (textWidth(name.slice(0, mid) + "…" + tail, font) <= width) lo = mid;
+    else hi = mid - 1;
+  }
+  return name.slice(0, Math.max(lo, 1)) + "…" + tail;
+}
+
+/**
+ * A file name that, when it does not fit, loses characters from the middle so the extension stays
+ * visible ("useLocalSt…rage.ts"). It is measured with a cached canvas and rendered as one string, so
+ * there is never a gap between the ellipsis and the tail. Before measuring (SSR) it falls back to CSS truncate.
+ */
+function MiddleTruncate({ id, name, className }: { id: string; name: string; className?: string }) {
+  const ref = useRef<HTMLSpanElement>(null);
+  const [shown, setShown] = useState(name);
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const fit = () => {
+      const cs = getComputedStyle(el);
+      const font = `${cs.fontStyle} ${cs.fontWeight} ${cs.fontSize} ${cs.fontFamily}`;
+      setShown(middleEllipsis(name, el.clientWidth, font));
+    };
+    fit();
+    if (typeof ResizeObserver === "undefined") return;
+    const ro = new ResizeObserver(fit);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, [name, className]);
+  if (shown === name) {
+    return (
+      <span ref={ref} id={id} className={cn("min-w-0 flex-1 truncate", className)}>
+        {name}
+      </span>
+    );
+  }
+  return (
+    <span ref={ref} id={id} className={cn("min-w-0 flex-1 overflow-hidden whitespace-nowrap", className)}>
+      <span aria-hidden="true">{shown}</span>
+      <span className="sr-only">{name}</span>
+    </span>
+  );
+}
+
 function Node({ node, depth, index, setSize, ctx }: { node: TreeNode; depth: number; index: number; setSize: number; ctx: NodeCtx }) {
   const isFolder = node.type === "folder";
   const isCollapsed = isFolder && ctx.collapsed.has(node.path);
@@ -437,6 +510,7 @@ function Node({ node, depth, index, setSize, ctx }: { node: TreeNode; depth: num
       <div
         onClick={() => ctx.onActivate(node)}
         onDoubleClick={() => ctx.canEdit && !isFolder && ctx.onRename(node.path, false)}
+        title={node.path}
         className={cn(
           "group relative mx-1.5 flex h-7 cursor-pointer items-center gap-1.5 rounded-lg pr-1 text-[13px] transition-colors duration-150",
           isActive ? "bg-muted font-medium text-foreground shadow-[inset_0_0_0_1px_var(--border)]" : ctx.open.has(node.path) ? "text-foreground hover:bg-muted/70" : "text-foreground/80 hover:bg-muted/70 hover:text-foreground",
@@ -458,7 +532,7 @@ function Node({ node, depth, index, setSize, ctx }: { node: TreeNode; depth: num
             <FileIcon name={node.name} />
           </>
         )}
-        <span id={nameId} className={cn("truncate", change === "create" && "text-success", change === "update" && "text-warning")}>{node.name}</span>
+        <MiddleTruncate id={nameId} name={node.name} className={cn(isActive && "font-medium", change === "create" && "text-success", change === "update" && "text-warning")} />
         <span className="ml-auto flex shrink-0 items-center gap-1.5 pl-1">
           {aiTouched ? <span className="ws-ai-dot" title="Changed by the AI in this session" aria-hidden="true" /> : null}
           {!isFolder && ctx.dirty.has(node.path) ? <span className="size-1.5 rounded-full bg-warning" title="Unsaved changes" aria-hidden="true" /> : null}

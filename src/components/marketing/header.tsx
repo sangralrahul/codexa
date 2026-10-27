@@ -84,6 +84,14 @@ const ICONS: Record<string, LucideIcon> = {
 const OPEN_DELAY = 100;
 const CLOSE_GRACE = 200;
 
+/**
+ * Idle nav text. At the top of the page the bar is transparent over the saturated backdrop wash, so the
+ * triggers use foreground at 80% (4.5:1 or better on every area tone, with the scrim in marketing.css);
+ * inside the condensed glass capsule the quieter muted colour reads fine.
+ */
+const TRIGGER_IDLE =
+  "text-foreground/80 hover:text-foreground group-data-[scrolled]/hdr:text-muted-foreground group-data-[scrolled]/hdr:hover:text-foreground";
+
 const isActivePath = (pathname: string, href: string) => pathname === href || pathname.startsWith(href + "/");
 
 /** Platform-aware "Search ⌘K" pill. Opens the site search (the dialog is mounted once in the header). */
@@ -93,7 +101,6 @@ function SearchPill({ className, iconOnlyBelow = "xl" }: { className?: string; i
     <button
       type="button"
       onClick={openSearch}
-      aria-label="Search documentation"
       aria-keyshortcuts={mod === "⌘" ? "Meta+K" : "Control+K"}
       data-no-ripple
       className={cn(
@@ -103,8 +110,10 @@ function SearchPill({ className, iconOnlyBelow = "xl" }: { className?: string; i
       )}
     >
       <Search className="size-4" aria-hidden="true" />
-      <span className={cn(iconOnlyBelow === "xl" && "hidden xl:inline")}>Search</span>
-      <Kbd mod className={cn("ml-1 gap-1 border-0 bg-muted px-1.5 shadow-[inset_0_0_0_1px_var(--border)]", iconOnlyBelow === "xl" && "hidden xl:inline-flex")}>
+      {/* Named from content (not aria-label) so the visible "Search" and the shortcut hint never disagree with the name. */}
+      <span className="sr-only">Search documentation</span>
+      <span aria-hidden="true" className={cn(iconOnlyBelow === "xl" && "hidden xl:inline")}>Search</span>
+      <Kbd mod aria-hidden="true" className={cn("ml-1 border-0 bg-muted px-1.5 shadow-[inset_0_0_0_1px_var(--border)]", iconOnlyBelow === "xl" && "hidden xl:inline-flex")}>
         K
       </Kbd>
     </button>
@@ -246,7 +255,7 @@ export function MarketingHeader({ signedIn, wells }: { signedIn: boolean; wells?
       <span ref={sentinelRef} aria-hidden="true" className="pointer-events-none absolute left-0 top-6 h-px w-px" />
       <header
         ref={headerRef}
-        className="mk-header"
+        className="group/hdr mk-header"
         data-scrolled={scrolled ? "" : undefined}
         data-mega={open ? "" : undefined}
         data-sheet={mobileOpen ? "" : undefined}
@@ -304,7 +313,7 @@ export function MarketingHeader({ signedIn, wells }: { signedIn: boolean; wells?
                           }}
                           className={cn(
                             "relative z-[1] inline-flex h-9 items-center gap-1 rounded-full px-3 text-[13.5px] font-medium transition-colors duration-200",
-                            expanded || current ? "text-foreground" : "text-muted-foreground hover:text-foreground",
+                            expanded || current ? "text-foreground" : TRIGGER_IDLE,
                           )}
                         >
                           {g.label}
@@ -388,7 +397,7 @@ export function MarketingHeader({ signedIn, wells }: { signedIn: boolean; wells?
                         }}
                         className={cn(
                           "relative z-[1] inline-flex h-9 items-center rounded-full px-3 text-[13.5px] font-medium transition-colors duration-200",
-                          isActivePath(pathname, l.href) ? "text-foreground" : "text-muted-foreground hover:text-foreground",
+                          isActivePath(pathname, l.href) ? "text-foreground" : TRIGGER_IDLE,
                         )}
                       >
                         {l.label}
@@ -409,7 +418,7 @@ export function MarketingHeader({ signedIn, wells }: { signedIn: boolean; wells?
                 </Link>
               ) : (
                 <>
-                  <Link href="/login" className={buttonClasses("ghost", "sm", "h-9 px-3.5 text-muted-foreground hover:text-foreground")}>
+                  <Link href="/login" className={buttonClasses("ghost", "sm", cn("h-9 px-3.5", TRIGGER_IDLE))}>
                     Sign in
                   </Link>
                   <Link href="/signup" data-spark data-magnetic className={buttonClasses("secondary", "sm", "h-9 px-4")}>
@@ -420,7 +429,7 @@ export function MarketingHeader({ signedIn, wells }: { signedIn: boolean; wells?
               )}
             </div>
             <div className="flex items-center gap-1 lg:hidden">
-              <SearchPill iconOnlyBelow="xl" className="border-transparent bg-transparent shadow-none" />
+              <SearchPill iconOnlyBelow="xl" className={cn("border-transparent bg-transparent shadow-none", TRIGGER_IDLE)} />
               <button
                 ref={menuButtonRef}
                 type="button"

@@ -8,7 +8,7 @@ import type { Scenario, StageTools } from "../types";
  * Pure module (no React), shared by the desktop window and the phone layout.
  */
 
-/** Lines of the main file the stage shows (scenarios.ts tokenises the first 16). */
+/** Lines of the main file the stage shows (scenarios.ts tokenises a 16-line window). */
 const CODE_LINES = 16;
 
 const CHAPTER_EVENTS = {
@@ -135,6 +135,7 @@ export type StageFrame = {
   /** Visible lines of the main file (all of them unless it is being rewritten). */
   revealed: number;
   streaming: boolean;
+  /** 1-based lines inside the excerpt (add `scenario.codeStart - 1` for the file's own line number). */
   errorLine: number | null;
   fixedLine: number | null;
   terminal: TerminalLine[];
@@ -146,6 +147,8 @@ export type StageFrame = {
   previewWipe: boolean;
   device: "desktop" | "tablet";
   /** Header */
+  /** The dev server is booting (Run shows "Starting…"). */
+  starting: boolean;
   running: boolean;
   publish: "idle" | "publishing" | "flying" | "live";
   versionsVisible: boolean;
@@ -196,7 +199,9 @@ export function frameAt(index: number, s: Scenario, tools: StageTools, maxRepair
   // --- Agent: checks (the Repair Beat)
   const checks: AgentRow[] = [];
   const errLine = Math.min(s.errorLine, s.code.length);
-  if (at("v0")) checks.push({ key: "tc1", tool: tools.run, target: "typecheck", state: at("vErr") ? "error" : "active", detail: at("vErr") ? `1 error · ${main}:${errLine}` : undefined });
+  // The excerpt keeps the file's own numbering: messages quote the real line.
+  const fileLine = s.codeStart + errLine - 1;
+  if (at("v0")) checks.push({ key: "tc1", tool: tools.run, target: "typecheck", state: at("vErr") ? "error" : "active", detail: at("vErr") ? `1 error · ${main}:${fileLine}` : undefined });
   if (at("vRepair")) checks.push({ key: "fix", tool: tools.edit, target: main, state: at("vFixed") ? "done" : "active", detail: at("vFixed") ? "+1 −1" : `Repairing · attempt 1 of ${maxRepairAttempts}` });
   if (at("vFixed")) checks.push({ key: "tc2", tool: tools.run, target: "typecheck", state: at("vClean") ? "done" : "active", detail: at("vClean") ? "0 errors" : undefined });
   if (at("vClean")) checks.push({ key: "build", tool: tools.run, target: "build", state: at("vBuilt") ? "done" : "active", detail: at("vBuilt") ? "built" : undefined });
@@ -212,12 +217,12 @@ export function frameAt(index: number, s: Scenario, tools: StageTools, maxRepair
   if (at("vFixed")) stage = "Validating";
   if (at("rBoot")) stage = "Done";
 
-  // --- Header status
+  // --- Header status: the project's state. The runtime (Run → Starting… → Running) has its own
+  // button and status-bar item, so this pill never repeats it.
   let status: StageFrame["status"] = { label: "Ready", tone: "idle" };
   if (at("dWorking")) status = { label: "Agent working", tone: "busy" };
   if (at("v0")) status = { label: "Validating", tone: "warn" };
-  if (at("r0")) status = { label: "Starting preview", tone: "busy" };
-  if (at("rBoot")) status = { label: "Preview running", tone: "ok" };
+  if (at("vBuilt")) status = { label: "Checks passed", tone: "ok" };
   if (at("sLand")) status = { label: "Live", tone: "live" };
 
   // --- Editor: the project starts as the starter, so its main file is open from the first frame.
@@ -239,7 +244,7 @@ export function frameAt(index: number, s: Scenario, tools: StageTools, maxRepair
   // --- Terminal (validate)
   const terminal: TerminalLine[] = [];
   if (at("v0")) terminal.push({ text: "$ npm run typecheck", tone: "cmd" });
-  if (at("vErr")) terminal.push({ text: `${main}(${errLine},7): error TS2322: Type 'string' is not assignable to type 'number'.`, tone: "error" });
+  if (at("vErr")) terminal.push({ text: `${main}(${fileLine},7): error TS2322: Type 'string' is not assignable to type 'number'.`, tone: "error" });
   if (at("vRepair")) terminal.push({ text: `Repairing · attempt 1 of ${maxRepairAttempts}`, tone: "warn" });
   if (at("vFixed")) terminal.push({ text: "$ npm run typecheck", tone: "cmd" });
   if (at("vClean")) terminal.push({ text: "0 errors", tone: "ok" });
@@ -278,6 +283,7 @@ export function frameAt(index: number, s: Scenario, tools: StageTools, maxRepair
     previewShown: at("rWipe"),
     previewWipe: at("rWipe") && !at("rEnd"),
     device: at("rTablet") && !at("rDesk") ? "tablet" : "desktop",
+    starting: at("r0") && !at("rBoot"),
     running: at("rBoot"),
     publish: at("sLand") ? "live" : at("sFly") ? "flying" : at("s0") ? "publishing" : "idle",
     versionsVisible: at("sLand"),

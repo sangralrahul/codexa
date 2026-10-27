@@ -18,7 +18,7 @@ export const COMPANY_PAGES: Record<string, ContentPage> = {
       { id: "principles", heading: "How we work", blocks: [{ type: "list", items: ["Honest states: when something is not configured or not shipped, the product says so.", "Reversible by default: a snapshot before every AI run.", "Server-side enforcement for authorization and usage limits.", "Built for India and the world: INR and USD pricing, Razorpay and Stripe."] }] },
       { id: "contact", heading: "Get in touch", blocks: [{ type: "links", items: [{ label: "Contact", href: "/contact", description: "General questions." }, { label: "Careers", href: "/careers", description: "No open roles today; register interest." }, { label: "Press", href: "/press", description: "Facts, descriptions, and the mark." }, { label: "Mission", href: "/mission", description: "Why we are doing this." }] }] },
     ],
-    cta: { title: "Try the product rather than the pitch", description: "The Free plan needs no card.", primary: { label: "Start building", href: "/signup" }, secondary: { label: "How it works", href: "/how-it-works" } },
+    cta: { title: "Try the product rather than the pitch.", description: "The Free plan needs no card.", primary: { label: "Start building", href: "/signup" }, secondary: { label: "How it works", href: "/how-it-works" } },
   },
 
   "/mission": {
@@ -33,7 +33,7 @@ export const COMPANY_PAGES: Record<string, ContentPage> = {
       { id: "how", heading: "How", blocks: [{ type: "list", items: ["Generate real projects from starter templates, not proprietary formats.", "Validate in a sandbox before showing the result, and make every run reversible.", "Keep a real editor and a real runtime in the same place as the agent.", "Price in local currencies and support local payment methods, starting with India."] }] },
       { id: "what-not", heading: "What we will not do", blocks: [{ type: "list", items: ["Claim features we have not shipped.", "Fabricate customers, statistics, or certifications.", "Lock your code into the platform."] }] },
     ],
-    cta: { title: "Build something", primary: { label: "Start building", href: "/signup" }, secondary: { label: "About Codexa", href: "/about" } },
+    cta: { title: "Build something.", primary: { label: "Start building", href: "/signup" }, secondary: { label: "About Codexa", href: "/about" } },
   },
 
   "/press": {

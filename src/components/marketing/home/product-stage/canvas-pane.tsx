@@ -4,7 +4,6 @@ import { cn } from "@/lib/utils";
 import { CodeLines } from "@/components/vignettes/code-lines";
 import { FileRow } from "@/components/vignettes/file-row";
 import { StepRow } from "@/components/vignettes/step-row";
-import { DeviceFrame } from "@/components/frames/device-frame";
 import { TemplatePreview } from "@/components/templates/template-preview";
 import type { Token } from "@/components/vignettes/tokenize";
 import type { Scenario } from "../types";
@@ -129,10 +128,11 @@ function CodeView({ frame, scenario, tokens, illustrative }: { frame: StageFrame
             <div className="transition-transform duration-(--dur-4) ease-out calm:transition-none" style={{ transform: `translateY(-${revealShift(frame)}px)` }}>
               <CodeLines
                 tokens={tokens}
+                startLine={scenario.codeStart}
                 revealed={frame.streaming ? frame.revealed : undefined}
                 caret={frame.streaming}
-                errorLines={frame.errorLine !== null ? [frame.errorLine] : undefined}
-                highlight={frame.fixedLine !== null ? [frame.fixedLine] : undefined}
+                errorLines={frame.errorLine !== null ? [scenario.codeStart + frame.errorLine - 1] : undefined}
+                highlight={frame.fixedLine !== null ? [scenario.codeStart + frame.fixedLine - 1] : undefined}
               />
             </div>
           ) : frame.writing ? (
@@ -163,82 +163,113 @@ function CodeView({ frame, scenario, tokens, illustrative }: { frame: StageFrame
   );
 }
 
+/** The tablet beat's bezel inside the preview viewport (12px inset top and bottom, 9px bezel, 3:4 screen). */
+const TABLET_INSET = 12;
+const TABLET_PAD = 9;
+const TABLET_HEIGHT = `calc(100cqh - ${TABLET_INSET * 2}px)`;
+const TABLET_WIDTH = `calc((100cqh - ${TABLET_INSET * 2 + TABLET_PAD * 2}px) * 0.75 + ${TABLET_PAD * 2}px)`;
+
+/**
+ * The preview panel as in the IDE: the address bar, then the running app filling the viewport edge to
+ * edge (no device bezel at desktop). The screenshot keeps one scale (the viewport's width, or more when
+ * the viewport is unusually tall) and is anchored top-left, so it always covers the viewport and shows
+ * the top of the page with no empty band. On the tablet beat the viewport narrows into a bezel (the
+ * page is clipped, not zoomed, like a narrower window) and then glides back to full width.
+ */
 function PreviewView({ frame, scenario, urlRef }: { frame: StageFrame; scenario: Scenario; urlRef?: React.Ref<HTMLSpanElement> }) {
   const live = frame.publish === "live";
   const host = live ? `${scenario.slug}.example.com` : `${scenario.slug}.preview.example.com`;
+  const tablet = frame.device === "tablet";
   return (
-    <div className="relative flex h-full min-h-0 flex-col gap-2.5 bg-surface/40 p-3">
-      <div aria-hidden="true" className="bg-dots pointer-events-none absolute inset-0 opacity-70" />
-      <div className="relative flex min-h-0 flex-1 flex-col overflow-hidden rounded-[12px] border border-border-strong bg-card shadow-lg">
-        <div className="flex h-9 shrink-0 items-center gap-2 border-b border-border bg-surface/80 px-2.5">
-          <RotateCw className={cn("size-3.5 text-muted-foreground transition-transform duration-500", frame.previewWipe && "rotate-180")} />
-          <span
-            ref={urlRef}
-            className={cn(
-              "flex h-6 min-w-0 flex-1 items-center gap-1.5 rounded-full bg-muted px-2.5 font-mono text-[11px] shadow-[inset_0_0_0_1px_var(--border)] transition-[box-shadow] duration-(--dur-4)",
-              live && "shadow-[inset_0_0_0_1px_color-mix(in_oklab,var(--success)_45%,transparent)]",
-            )}
-          >
-            {live ? <Globe className="size-3 shrink-0 text-success" /> : <Lock className="size-3 shrink-0 text-muted-foreground" />}
-            <span key={host} className="truncate text-foreground/85 [animation:stage-swap-in_var(--dur-3)_var(--ease-out)_both]">
-              {host}
+    <div className="relative flex h-full min-h-0 flex-col bg-card">
+      <div className="flex h-9 shrink-0 items-center gap-2 border-b border-border bg-surface/80 px-2.5">
+        <RotateCw className={cn("size-3.5 text-muted-foreground transition-transform duration-500", frame.previewWipe && "rotate-180")} />
+        <span
+          ref={urlRef}
+          className={cn(
+            "flex h-6 min-w-0 flex-1 items-center gap-1.5 rounded-full bg-muted px-2.5 font-mono text-[11px] shadow-[inset_0_0_0_1px_var(--border)] transition-[box-shadow] duration-(--dur-4)",
+            live && "shadow-[inset_0_0_0_1px_color-mix(in_oklab,var(--success)_45%,transparent)]",
+          )}
+        >
+          {live ? <Globe className="size-3 shrink-0 text-success" /> : <Lock className="size-3 shrink-0 text-muted-foreground" />}
+          <span key={host} className="truncate text-foreground/85 [animation:stage-swap-in_var(--dur-3)_var(--ease-out)_both]">
+            {host}
+          </span>
+          {live ? <span className="live-dot ml-auto" /> : null}
+        </span>
+        <span className="hidden items-center gap-0.5 rounded-md bg-muted p-0.5 lg:flex">
+          {([Monitor, Tablet, Smartphone] as const).map((Icon, i) => (
+            <span
+              key={i}
+              className={cn(
+                "inline-flex size-5 items-center justify-center rounded-[5px] transition-colors duration-300",
+                (i === 0 && frame.device === "desktop") || (i === 1 && frame.device === "tablet") ? "bg-card text-foreground shadow-sm" : "text-muted-foreground",
+              )}
+            >
+              <Icon className="size-3" />
             </span>
-            {live ? <span className="live-dot ml-auto" /> : null}
-          </span>
-          <span className="hidden items-center gap-0.5 rounded-md bg-muted p-0.5 lg:flex">
-            {([Monitor, Tablet, Smartphone] as const).map((Icon, i) => (
-              <span
-                key={i}
-                className={cn(
-                  "inline-flex size-5 items-center justify-center rounded-[5px] transition-colors duration-300",
-                  (i === 0 && frame.device === "desktop") || (i === 1 && frame.device === "tablet") ? "bg-card text-foreground shadow-sm" : "text-muted-foreground",
-                )}
-              >
-                <Icon className="size-3" />
-              </span>
-            ))}
-          </span>
-          <ExternalLink className="size-3.5 text-muted-foreground" />
-        </div>
-        <div className="relative min-h-0 flex-1 bg-surface/60">
-          {frame.previewShown ? (
-            <div className="absolute inset-0 flex items-start justify-center p-3 [container-type:size]">
-              <DeviceFrame device={frame.device} fit="height" className={cn(frame.previewWipe && "wipe-in")}>
-                <TemplatePreview id={scenario.id} category={scenario.categoryName} sizes="(min-width: 80rem) 720px, (min-width: 64rem) 56vw, 64vw" className="size-full rounded-none border-0 shadow-none" imgClassName="size-full aspect-auto object-cover object-top" />
-              </DeviceFrame>
-            </div>
-          ) : (
-            <div className="absolute inset-0 p-4">
-              <div className="grid h-full grid-cols-[22%_1fr] gap-3 opacity-80">
-                <div className="space-y-2">
-                  {[60, 80, 70, 50].map((w, i) => (
-                    <span key={i} className="skeleton block h-2.5 rounded-full bg-foreground/[0.06]" style={{ width: `${w}%` }} />
-                  ))}
-                </div>
-                <div className="space-y-3">
-                  <span className="skeleton block h-16 rounded-lg bg-foreground/[0.05]" />
-                  <div className="grid grid-cols-3 gap-2">
-                    {[0, 1, 2].map((i) => (
-                      <span key={i} className="skeleton block h-12 rounded-lg bg-foreground/[0.05]" />
-                    ))}
-                  </div>
-                  <span className="skeleton block h-24 rounded-lg bg-foreground/[0.05]" />
+          ))}
+        </span>
+        <ExternalLink className="size-3.5 text-muted-foreground" />
+      </div>
+      <div className="relative min-h-0 flex-1 overflow-hidden bg-surface/60 [container-type:size]">
+        {/* The stage behind a framed device, as in the IDE: only visible while the viewport is narrowed. */}
+        <div aria-hidden="true" className={cn("bg-dots pointer-events-none absolute inset-0 transition-opacity duration-(--dur-4)", tablet ? "opacity-70" : "opacity-0")} />
+        {frame.previewShown ? (
+          <div className="absolute inset-0 flex items-center justify-center">
+            <div
+              data-device={frame.device}
+              className={cn(
+                "relative shrink-0 transition-[width,height,padding,border-radius,background-color,box-shadow] duration-[450ms] ease-spring calm:transition-none",
+                tablet ? "rounded-[26px] bg-code-bg shadow-xl ring-1 ring-border-strong" : "rounded-none bg-transparent",
+              )}
+              style={{ width: tablet ? TABLET_WIDTH : "100cqw", height: tablet ? TABLET_HEIGHT : "100cqh", padding: tablet ? TABLET_PAD : 0 }}
+            >
+              <div className={cn("relative size-full overflow-hidden bg-white transition-[border-radius] duration-[450ms] ease-spring calm:transition-none", tablet ? "rounded-[18px]" : "rounded-none")}>
+                <div className={cn("size-full", frame.previewWipe && "wipe-in")}>
+                  <TemplatePreview
+                    id={scenario.id}
+                    category={scenario.categoryName}
+                    sizes="(min-width: 80rem) 1040px, (min-width: 64rem) 72vw, 64vw"
+                    className="size-full rounded-none border-0 shadow-none"
+                    imgClassName="aspect-[16/10] h-auto w-[max(100cqw,160cqh)] max-w-none object-cover object-left-top"
+                  />
                 </div>
               </div>
-              {frame.boot ? (
-                <div className="glass absolute left-1/2 top-1/2 w-[min(18rem,80%)] -translate-x-1/2 -translate-y-1/2 rounded-[12px] border border-border px-3 py-2.5 shadow-lg [animation:pop-in_var(--dur-4)_var(--ease-out)_both]">
-                  <ol>
-                    <StepRow state={frame.boot.container} label="Starting container" connector />
-                    <StepRow state={frame.boot.server} label="Dev server" detail={scenario.devCommand} />
-                  </ol>
-                </div>
-              ) : null}
             </div>
-          )}
-        </div>
+          </div>
+        ) : (
+          <div className="absolute inset-0 p-4">
+            <div className="grid h-full grid-cols-[22%_1fr] gap-3 opacity-80">
+              <div className="space-y-2">
+                {[60, 80, 70, 50].map((w, i) => (
+                  <span key={i} className="skeleton block h-2.5 rounded-full bg-foreground/[0.06]" style={{ width: `${w}%` }} />
+                ))}
+              </div>
+              <div className="space-y-3">
+                <span className="skeleton block h-16 rounded-lg bg-foreground/[0.05]" />
+                <div className="grid grid-cols-3 gap-2">
+                  {[0, 1, 2].map((i) => (
+                    <span key={i} className="skeleton block h-12 rounded-lg bg-foreground/[0.05]" />
+                  ))}
+                </div>
+                <span className="skeleton block h-24 rounded-lg bg-foreground/[0.05]" />
+              </div>
+            </div>
+            {frame.boot ? (
+              <div className="glass absolute left-1/2 top-1/2 w-[min(18rem,80%)] -translate-x-1/2 -translate-y-1/2 rounded-[12px] border border-border px-3 py-2.5 shadow-lg [animation:pop-in_var(--dur-4)_var(--ease-out)_both]">
+                <ol>
+                  <StepRow state={frame.boot.container} label="Starting container" connector />
+                  <StepRow state={frame.boot.server} label="Dev server" detail={scenario.devCommand} />
+                </ol>
+              </div>
+            ) : null}
+          </div>
+        )}
       </div>
       {frame.versionsVisible ? (
-        <div className="glass absolute bottom-5 left-5 z-[2] w-56 rounded-[12px] border border-border p-2 shadow-xl [animation:pop-in_var(--dur-4)_var(--ease-out)_both]">
+        // Opaque (not glass): the panel sits over the white screenshot.
+        <div className="absolute bottom-5 left-5 z-[2] w-56 rounded-[12px] border border-border-strong bg-card p-2 shadow-xl [animation:pop-in_var(--dur-4)_var(--ease-out)_both]">
           <p className="px-1 pb-1.5 text-[11px] font-medium text-muted-foreground">Deployments</p>
           <div className="relative space-y-1">
             <span
@@ -253,12 +284,12 @@ function PreviewView({ frame, scenario, urlRef }: { frame: StageFrame; scenario:
             ].map((v, i) => {
               const isLive = (i === 0) === frame.liveOnNew;
               return (
-                <div key={v.id} className={cn("flex h-8 items-center gap-2 rounded-[8px] border px-2 text-[11.5px] transition-colors duration-(--dur-4)", isLive ? "border-success/30 bg-success/[0.05]" : "border-border bg-card/80")}>
+                <div key={v.id} className={cn("flex h-8 items-center gap-2 rounded-[8px] border px-2 text-[11.5px] transition-colors duration-(--dur-4)", isLive ? "border-success/35 bg-success/[0.08]" : "border-border bg-surface")}>
                   <span className="w-5 font-mono font-semibold">{v.id}</span>
                   <span className="min-w-0 truncate text-muted-foreground">{v.note}</span>
                   {/* Once the new version is live, the previous one offers "Roll back" (after the badge has glided away). */}
                   {i === 1 ? (
-                    <span className={cn("ml-auto shrink-0 rounded-[6px] border border-border px-1.5 text-[10.5px] leading-[18px] text-foreground/80 transition-opacity", isLive ? "opacity-0 duration-100" : "opacity-100 delay-300 duration-(--dur-3)")}>
+                    <span className={cn("ml-auto shrink-0 rounded-[6px] border border-border-strong bg-card px-1.5 text-[10.5px] font-medium leading-[18px] text-foreground transition-opacity", isLive ? "opacity-0 duration-100" : "opacity-100 delay-300 duration-(--dur-3)")}>
                       Roll back
                     </span>
                   ) : null}
@@ -273,7 +304,7 @@ function PreviewView({ frame, scenario, urlRef }: { frame: StageFrame; scenario:
   );
 }
 
-/** The canvas card: Preview | Code, the code view (explorer, tabs, editor, terminal) or the framed preview. */
+/** The canvas card: Preview | Code, the code view (explorer, tabs, editor, terminal) or the preview panel. */
 export function CanvasPane({
   frame,
   scenario,

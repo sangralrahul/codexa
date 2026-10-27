@@ -70,7 +70,7 @@ export function Principles({ scenario, maxRepairAttempts }: { scenario: Scenario
           </div>
         </Card>
         <Card n="02" icon={ShieldCheck} title={c.validated.title} body={c.validated.body(repairWord)}>
-          <ValidatedVisual repairWord={repairWord} />
+          <ValidatedVisual repairWord={repairWord} devCommand={scenario.devCommand} port={scenario.port} />
         </Card>
         <Card n="03" icon={History} title={c.reversible.title} body={c.reversible.body}>
           <TimeTravel />

@@ -12,8 +12,11 @@ import { useGallery } from "./gallery-state";
  * actions) and handed over by id; this component only decides which appear, where, and in what
  * order, so a filter change is a pure re-order that the View Transition can morph.
  * Default view: a Featured row of three large tiles, then every other template in a 4-column grid.
+ * Phones (< sm): the Featured row is a horizontal swipe row (proximity snap, the next tile peeks)
+ * and the grid is two columns of compact tiles (name and meta; the tile opens the preview, where
+ * "Use template" lives), so the gallery stays a few screens long instead of eighteen.
  */
-export function GalleryResults({ tiles, featured, className }: { tiles: Record<string, React.ReactNode>; featured: Record<string, React.ReactNode>; className?: string }) {
+export function GalleryResults({ tiles, featured, caption = true, className }: { tiles: Record<string, React.ReactNode>; featured: Record<string, React.ReactNode>; caption?: boolean; className?: string }) {
   const { results, showFeatured, reset, state } = useGallery();
   const lead = FEATURED_LEAD.filter((id) => featured[id]);
   const featuredRow = showFeatured && lead.length === FEATURED_LEAD.length;
@@ -27,9 +30,17 @@ export function GalleryResults({ tiles, featured, className }: { tiles: Record<s
             <h2 id="tpl-featured-heading" className="text-label text-muted-foreground">
               Featured
             </h2>
-            <p className="text-meta hidden text-foreground-dim sm:block">Screenshots captured from each starter&apos;s own build</p>
+            {caption ? <p className="text-meta hidden text-foreground-dim sm:block">Screenshots captured from each starter&apos;s own build</p> : null}
           </div>
-          <ul data-spotlight="grid" className="grid gap-x-6 gap-y-10 md:grid-cols-3" aria-label="Featured templates">
+          <ul
+            data-spotlight="grid"
+            className={cn(
+              "grid gap-x-6 gap-y-10 md:grid-cols-3",
+              "max-sm:-mx-4 max-sm:flex max-sm:snap-x max-sm:snap-proximity max-sm:scroll-px-4 max-sm:gap-4 max-sm:overflow-x-auto max-sm:overscroll-x-contain max-sm:px-4 max-sm:py-1 max-sm:[scrollbar-width:none] max-sm:[&::-webkit-scrollbar]:hidden",
+              "max-sm:[&>li]:w-[82%] max-sm:[&>li]:shrink-0 max-sm:[&>li]:snap-start",
+            )}
+            aria-label="Featured templates"
+          >
             {lead.map((id) => (
               <React.Fragment key={id}>{featured[id]}</React.Fragment>
             ))}
@@ -42,7 +53,16 @@ export function GalleryResults({ tiles, featured, className }: { tiles: Record<s
           <h2 id="tpl-all-heading" className={featuredRow ? "text-label mb-5 text-muted-foreground" : "sr-only"}>
             {featuredRow ? "All templates" : "Results"}
           </h2>
-          <ul data-spotlight="grid" className={cn("grid gap-x-5 gap-y-9 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4", featuredRow && "[&_[data-featured-label]]:hidden")} aria-label="Templates">
+          <ul
+            data-spotlight="grid"
+            className={cn(
+              "grid grid-cols-2 gap-x-3 gap-y-6 sm:gap-x-5 sm:gap-y-9 lg:grid-cols-3 xl:grid-cols-4",
+              // Phones: compact tiles (no description, no action row, smaller title and label).
+              "max-sm:[&_[data-tile-desc]]:hidden max-sm:[&_[data-tile-actions]]:hidden max-sm:[&_[data-featured-label]]:hidden max-sm:[&_h3]:text-[14px] max-sm:[&_[data-spotlight-tile]]:rounded-[12px]",
+              featuredRow && "[&_[data-featured-label]]:hidden",
+            )}
+            aria-label="Templates"
+          >
             {grid.map((t) => (
               <React.Fragment key={t.id}>{tiles[t.id]}</React.Fragment>
             ))}

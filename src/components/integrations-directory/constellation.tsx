@@ -1,10 +1,11 @@
 import type * as React from "react";
 import { INTEGRATIONS } from "@/config/integrations";
+import { hasBrandMark } from "@/components/brand";
 import { IntegrationMark } from "./integration-mark";
 import { LogoMark } from "@/components/logo";
 import { cn } from "@/lib/utils";
 
-type Node = { id: string; name: string; x: number; y: number; available: boolean };
+type Node = { id: string; name: string; category: string; x: number; y: number; available: boolean };
 
 /** Places available integrations on an inner orbit and planned ones on an outer orbit (percent units). */
 function layout(): Node[] {
@@ -13,7 +14,7 @@ function layout(): Node[] {
   const ring = (list: typeof INTEGRATIONS, rx: number, ry: number, offset: number, isAvailable: boolean) =>
     list.map((i, k) => {
       const a = ((-90 + offset + (360 / list.length) * k) * Math.PI) / 180;
-      return { id: i.id, name: i.name, x: 50 + rx * Math.cos(a), y: 50 + ry * Math.sin(a), available: isAvailable };
+      return { id: i.id, name: i.name, category: i.category, x: 50 + rx * Math.cos(a), y: 50 + ry * Math.sin(a), available: isAvailable };
     });
   return [...ring(available, 29, 30, 0, true), ...ring(planned, 45, 44, 180 / Math.max(1, planned.length), false)];
 }
@@ -21,8 +22,9 @@ function layout(): Node[] {
 /**
  * Integrations constellation (decorative; the directory below is the real content). Solid lines
  * fade in once to every available adapter; planned integrations hang off dashed, static lines with
- * their marks at half opacity. Brand marks are only drawn for available adapters; planned ones get a
- * monogram. All counts come from the integrations registry.
+ * their marks at half opacity. Brand marks are only drawn for available adapters (a neutral category
+ * glyph when the icon set has none); planned ones get a monogram plus a small name label, as does any
+ * node without a recognisable mark. All counts come from the integrations registry.
  */
 export function IntegrationsConstellation({ className }: { className?: string }) {
   const nodes = layout();
@@ -65,7 +67,17 @@ export function IntegrationsConstellation({ className }: { className?: string })
           )}
           style={{ left: `${r(n.x)}%`, top: `${r(n.y)}%`, ...(n.available ? ({ animationDelay: `${120 + i * 70}ms` } as React.CSSProperties) : null) }}
         >
-          <IntegrationMark id={n.id} name={n.name} planned={!n.available} className={n.available ? "size-5" : "size-4"} />
+          <IntegrationMark id={n.id} name={n.name} category={n.category} planned={!n.available} className={n.available ? "size-5" : "size-4"} />
+          {!n.available || !hasBrandMark(n.id) ? (
+            <span
+              className={cn(
+                "pointer-events-none absolute left-1/2 top-full mt-1.5 hidden -translate-x-1/2 whitespace-nowrap font-mono text-[10px] leading-none sm:block",
+                n.available ? "text-muted-foreground" : "text-foreground-dim",
+              )}
+            >
+              {n.name}
+            </span>
+          ) : null}
         </span>
       ))}
 

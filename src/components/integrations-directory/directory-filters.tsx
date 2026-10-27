@@ -3,7 +3,8 @@
 import { useRef, useState, useTransition } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { Search, X } from "lucide-react";
-import { Input, Label, Select } from "@/components/ui/input";
+import { Input, Label } from "@/components/ui/input";
+import { SelectMenu } from "@/components/ui/select-menu";
 import { cn } from "@/lib/utils";
 import type { IntegrationCategory } from "@/config/integrations";
 import type { IntegrationSearch } from "./search";
@@ -14,7 +15,13 @@ type Props = {
   resultCount: number;
 };
 
-/** URL-synced search, category chips and status filter for the integrations directory. */
+const STATUS_OPTIONS = [
+  { value: "all", label: "All statuses" },
+  { value: "available", label: "Available", description: "An adapter exists today" },
+  { value: "planned", label: "Planned", description: "On the roadmap; nothing to connect yet" },
+];
+
+/** URL-synced search, category chips and status filter (the same styled SelectMenu as the templates gallery) for the integrations directory. */
 export function DirectoryFilters({ value, categories, resultCount }: Props) {
   const router = useRouter();
   const pathname = usePathname();
@@ -82,11 +89,13 @@ export function DirectoryFilters({ value, categories, resultCount }: Props) {
           <Label htmlFor="integration-status" className="sr-only">
             Status
           </Label>
-          <Select id="integration-status" className="h-11 rounded-[12px]" value={value.status} onChange={(e) => navigate({ status: e.target.value as IntegrationSearch["status"] })}>
-            <option value="all">All statuses</option>
-            <option value="available">Available</option>
-            <option value="planned">Planned</option>
-          </Select>
+          <SelectMenu
+            id="integration-status"
+            className="h-11 rounded-[12px]"
+            value={value.status}
+            onValueChange={(status) => navigate({ status: status as IntegrationSearch["status"] })}
+            options={STATUS_OPTIONS}
+          />
         </div>
       </form>
 

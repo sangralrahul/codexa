@@ -15,7 +15,29 @@ import { CHAPTERS, cue, frameAt } from "./product-stage/script";
 import { useStoryClock } from "./product-stage/use-story-clock";
 
 const STICKY_TOP = 76;
-const pad = (n: number) => String(n).padStart(2, "0");
+/** How much of the figure must be on screen before the replay leaves the finished poster. */
+const ARM_RATIO = 0.4;
+
+/**
+ * True once the figure has been at least ARM_RATIO visible. Until then the replay keeps the poster
+ * (the finished preview), so the peek under the hero shows the result, not an empty first frame.
+ */
+function useArmed(ref: React.RefObject<HTMLElement | null>) {
+  const [armed, setArmed] = React.useState(false);
+  React.useEffect(() => {
+    const el = ref.current;
+    if (armed || !el || typeof IntersectionObserver === "undefined") return;
+    const io = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting && entry.intersectionRatio >= ARM_RATIO) setArmed(true);
+      },
+      { threshold: [0, ARM_RATIO] },
+    );
+    io.observe(el);
+    return () => io.disconnect();
+  }, [ref, armed]);
+  return armed;
+}
 
 function StoryboardBody() {
   const store = useHomeStore();
@@ -24,6 +46,7 @@ function StoryboardBody() {
   const tabsRef = React.useRef<HTMLDivElement>(null);
   const horizonRef = React.useRef<HTMLDivElement>(null);
   const auto = useAutoplay(figureRef, { threshold: 0.1 });
+  const armed = useArmed(figureRef);
   const id = React.useId();
 
   const scenario = store!.scenario;
@@ -31,7 +54,7 @@ function StoryboardBody() {
   const maxRepair = store!.maxRepairAttempts;
   const replaySignal = store?.lastSwitch?.how === "chip" ? store.lastSwitch.at : 0;
 
-  const clock = useStoryClock({ step: scene.step, pinned: scene.pinned, live: auto.playing, calm: auto.calm, setStep: scene.setStep, replaySignal });
+  const clock = useStoryClock({ step: scene.step, pinned: scene.pinned, live: auto.playing && armed, calm: auto.calm, setStep: scene.setStep, replaySignal });
   const frame = React.useMemo(() => frameAt(clock.index, scenario, tools, maxRepair), [clock.index, scenario, tools, maxRepair]);
   const tokens = React.useMemo(() => expandTokens(scenario.code), [scenario]);
   const still = clock.poster || !clock.playing;
@@ -115,8 +138,12 @@ function StoryboardBody() {
                 data-no-ripple
                 className="group/tab flex min-w-0 flex-col gap-2 rounded-md pb-1 pt-1.5 text-left outline-offset-4"
               >
+                {/* Chapters are numbered as steps (1–6), so they never read as the page's "01 —" section kickers. */}
                 <span className={`text-label ${cn("flex items-baseline gap-1.5 truncate transition-colors duration-(--dur-3)", selected ? "text-foreground" : "text-muted-foreground group-hover/tab:text-foreground")}`}>
-                  <span className={cn(selected && "text-signal-ink")}>{pad(i + 1)}</span>
+                  <span className={cn(selected && "text-signal-ink")}>
+                    <span className="sr-only">Step </span>
+                    {i + 1}
+                  </span>
                   <span className="hidden truncate sm:inline">{c.label}</span>
                 </span>
                 <span className="relative block h-[2px] overflow-hidden rounded-full bg-border">
@@ -139,7 +166,7 @@ function StoryboardBody() {
                 <li key={c.id} className={i === shown ? "col-start-1 row-start-1 min-w-0" : "sr-only"}>
                   <div key={i === shown ? `on-${shown}` : "off"} className={cn(i === shown && !clock.poster && "stage-swap")}>
                     <h3 className="text-label text-signal-ink">
-                      {pad(i + 1)} — {c.label}
+                      Step {i + 1} of {CHAPTERS} · {c.label}
                     </h3>
                     <p className="text-display-4 mt-2 max-w-[44ch] text-foreground">{c.caption({ repairWord })}</p>
                   </div>

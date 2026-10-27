@@ -13,7 +13,7 @@ export const HOME_HERO = {
   lines: ["From one sentence", "to a running app."],
   mark: "running app.",
   lead: "Codexa plans the files, writes real code, checks it in a sandbox and runs a live preview you can deploy. Every change is yours to edit or undo.",
-  templatesLink: { label: "or start from a template", href: "/templates" },
+  templatesLink: { label: "Start from a template", href: "/templates" },
   storyLink: { label: "See it build", href: "#watch-it-build" },
 } as const;
 
@@ -122,6 +122,7 @@ export const HOME_STAGE_COPY = {
 };
 
 export const HOME_PROOF = {
+  index: "01 — Proof",
   title: "Built in the open.",
   note: "Numbers read from Codexa's source. We don't publish usage or customer numbers.",
   platformLine: "Runs on Cloudflare Workers and Containers.",

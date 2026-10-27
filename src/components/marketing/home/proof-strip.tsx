@@ -15,9 +15,12 @@ export function ProofStrip({ facts, changelog, status }: { facts: ProofFact[]; c
     <section aria-labelledby="proof-title" className="relative pb-12 pt-16 sm:py-20 lg:pb-12 lg:pt-16">
       <div className="container-x">
         <div data-reveal className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-          <h2 id="proof-title" className="text-display-3">
-            {HOME_PROOF.title}
-          </h2>
+          <div>
+            <p className="text-label mb-4 text-signal-ink">{HOME_PROOF.index}</p>
+            <h2 id="proof-title" className="text-display-3">
+              {HOME_PROOF.title}
+            </h2>
+          </div>
           <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-muted-foreground">
             {status}
             <span className="inline-flex items-center gap-1.5">
@@ -31,27 +34,23 @@ export function ProofStrip({ facts, changelog, status }: { facts: ProofFact[]; c
           {facts.map((f, i) => (
             <div
               key={f.label}
-              className={`relative flex flex-col gap-2.5 p-4 sm:gap-3 sm:p-7 ${i % 2 === 1 ? "border-l border-border" : ""} ${i >= 2 ? "border-t border-border lg:border-t-0" : ""} ${i === 2 ? "lg:border-l" : ""}`}
+              className={`relative flex min-w-0 flex-col gap-2.5 px-3.5 py-4 sm:gap-3 sm:p-7 ${i % 2 === 1 ? "border-l border-border" : ""} ${i >= 2 ? "border-t border-border lg:border-t-0" : ""} ${i === 2 ? "lg:border-l" : ""}`}
             >
               <dt className="order-2 text-sm text-foreground/85">{f.label}</dt>
               <dd className="order-1">
                 <Odometer value={f.value} className="text-display-2 tracking-[-0.04em]" />
               </dd>
-              <dd className="order-3 mt-auto flex items-start gap-1.5 font-mono text-[11px] leading-snug text-muted-foreground">
-                <Braces className="mt-px size-3 shrink-0" aria-hidden="true" />
-                <span className="min-w-0 [overflow-wrap:anywhere]">
-                  {/* Break long symbols after a dot (LIMITS.<wbr>maxRepairAttempts), not mid-word. */}
-                  {f.symbol.split(".").map((part, k) => (
-                    <React.Fragment key={k}>
-                      {k > 0 ? (
-                        <>
-                          .<wbr />
-                        </>
-                      ) : null}
-                      {part}
-                    </React.Fragment>
-                  ))}
-                  <span className="hidden sm:inline"> · {f.file}</span>
+              {/* Source footnote: the identifier on one unbroken line, the file on its own line below (sm+).
+                  On a very narrow cell the identifier truncates (full text in the title) rather than breaking. */}
+              <dd className="order-3 mt-auto min-w-0 font-mono leading-snug text-muted-foreground">
+                <span className="flex min-w-0 items-center gap-1.5">
+                  <Braces className="hidden size-3 shrink-0 sm:block" aria-hidden="true" />
+                  <span title={f.symbol} className="min-w-0 truncate text-[10px] tracking-[-0.01em] sm:text-[11px] sm:tracking-normal">
+                    {f.symbol}
+                  </span>
+                </span>
+                <span title={f.file} className="mt-0.5 hidden truncate text-[11px] sm:block sm:pl-[18px]">
+                  {f.file}
                 </span>
               </dd>
             </div>

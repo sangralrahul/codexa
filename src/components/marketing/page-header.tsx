@@ -94,7 +94,7 @@ export function PageHeader({
       <div className={cn("container-x relative pt-6 sm:pt-8 lg:pt-10", variant === "product" ? "pb-16 lg:pb-24" : "pb-14 lg:pb-20")}>
         <Breadcrumbs items={crumbs} className={cn(center && "flex justify-center")} />
         {variant === "product" ? (
-          <div className={cn("mt-10 grid items-center gap-12 lg:mt-14 lg:gap-14", visual ? "lg:grid-cols-12" : "")}>
+          <div className={cn("mt-10 grid grid-cols-1 items-center gap-12 lg:mt-14 lg:gap-14", visual ? "lg:grid-cols-12" : "")}>
             <div className={cn(visual ? "lg:col-span-5" : "max-w-3xl")}>
               {kicker ? <Kicker className="mb-6">{kicker}</Kicker> : null}
               {heading}
@@ -110,7 +110,7 @@ export function PageHeader({
             ) : null}
           </div>
         ) : variant === "editorial" ? (
-          <div className="mt-10 grid gap-10 lg:mt-14 lg:grid-cols-[minmax(0,1fr)_17rem] lg:items-end lg:gap-16">
+          <div className="mt-10 grid grid-cols-1 gap-10 lg:mt-14 lg:grid-cols-[minmax(0,1fr)_17rem] lg:items-end lg:gap-16">
             <div className="max-w-3xl">
               {kicker ? <Kicker className="mb-6">{kicker}</Kicker> : null}
               {heading}

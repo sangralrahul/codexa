@@ -59,7 +59,7 @@ export default function BrandGuidelinesPage() {
       />
       <Section size="sm">
         <SectionHeader index="01" eyebrow="Colour" title="Neutrals carry the page." description="About 70% neutrals, 20% surfaces, 10% colour. Each swatch shows the live token: left in your current theme, right on ink." />
-        <ul className="mt-10 grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
+        <ul className="mt-10 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-5">
           {colors.map((c) => (
             <li key={c.name} className="rounded-[16px] border border-border bg-card p-3">
               <div aria-hidden="true" className="grid h-16 grid-cols-2 overflow-hidden rounded-[10px] border border-border">
@@ -78,7 +78,7 @@ export default function BrandGuidelinesPage() {
         <SectionHeader index="02" eyebrow="Typography" title="Three faces, three jobs." />
         <ul className="mt-10 divide-y divide-border border-y border-border">
           {type.map((t) => (
-            <li key={t.name} className="grid gap-3 py-6 md:grid-cols-[14rem_minmax(0,1fr)] md:items-baseline">
+            <li key={t.name} className="grid grid-cols-1 gap-3 py-6 md:grid-cols-[14rem_minmax(0,1fr)] md:items-baseline">
               <div>
                 <p className="text-[15px] font-semibold">{t.name}</p>
                 <p className="text-[13px] text-muted-foreground">{t.role}</p>
@@ -90,7 +90,7 @@ export default function BrandGuidelinesPage() {
       </Section>
       <Section size="sm" className="border-t border-border/60">
         <SectionHeader index="03" eyebrow="Usage" title="Do, and don't." />
-        <div className="mt-10 grid gap-4 md:grid-cols-2">
+        <div className="mt-10 grid grid-cols-1 gap-4 md:grid-cols-2">
           <div className="e1 rounded-[20px] p-6 sm:p-7">
             <h3 className="flex items-center gap-2 text-[16px] font-semibold">
               <Check className="size-4 text-success" aria-hidden="true" /> Do

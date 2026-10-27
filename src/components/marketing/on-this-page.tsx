@@ -105,7 +105,13 @@ export function OnThisPage({
     <>
       {/* Phones and tablets: sticky chip bar under the header. */}
       <nav aria-label={label} className={cn("sticky top-16 z-30 -mx-4 mb-8 border-y border-border bg-background/85 backdrop-blur-md sm:-mx-6 lg:hidden", className)}>
-        <ul ref={chipsRef} className="flex snap-x gap-1.5 overflow-x-auto px-4 py-2.5 [scrollbar-width:none] sm:px-6 [&::-webkit-scrollbar]:hidden">
+        {/* scroll-padding keeps snapped chips on the 16px gutter (snapping ignores plain padding); the
+            right edge fades so a cut-off chip reads as "more to scroll", and the end padding lets the
+            last chip clear the fade. */}
+        <ul
+          ref={chipsRef}
+          className="flex snap-x scroll-px-4 gap-1.5 overflow-x-auto py-2.5 pl-4 pr-10 [mask-image:linear-gradient(to_right,black_calc(100%-2.5rem),transparent)] [scrollbar-width:none] sm:scroll-px-6 sm:pl-6 [&::-webkit-scrollbar]:hidden"
+        >
           {items.map((it, i) => {
             const on = it.id === active;
             return (
