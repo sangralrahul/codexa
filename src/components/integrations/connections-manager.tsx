@@ -2,9 +2,10 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { Plug, Plus, Trash2 } from "lucide-react";
+import { BrandMark } from "@/components/brand/brand-mark";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Alert, EmptyState, Skeleton } from "@/components/ui/misc";
+import { Alert, EmptyState, Skeleton, StatusDot } from "@/components/ui/misc";
 import { Dialog, DialogContent, DialogFooter } from "@/components/ui/dialog";
 import { api } from "@/lib/client/api";
 import { ConnectionForm, type ConnectionInfo, type ProviderInfo, type TestResult } from "./connection-form";
@@ -96,15 +97,19 @@ export function ConnectionsManager({ workspaceId, canManage, providerFilter }: {
           <Skeleton className="h-14 w-full" />
         </div>
       ) : visible.length ? (
-        <ul className="divide-y divide-border rounded-xl border border-border bg-card">
+        <ul className="divide-y divide-border overflow-hidden rounded-[14px] border border-border bg-card shadow-[inset_0_1px_0_var(--hairline)]">
           {visible.map((c) => {
             const r = results[c.id];
             return (
-              <li key={c.id} className="space-y-2 p-3">
+              <li key={c.id} className="settings-row space-y-2 p-3">
                 <div className="flex flex-wrap items-center justify-between gap-2">
-                  <div className="min-w-0">
+                  <div className="flex min-w-0 items-start gap-3">
+                    <span aria-hidden="true" className="icon-tile mt-0.5 flex size-9 shrink-0 items-center justify-center rounded-[10px]">
+                      <BrandMark id={c.provider} className="size-4" />
+                    </span>
+                    <div className="min-w-0">
                     <p className="flex flex-wrap items-center gap-2 text-sm font-medium">
-                      <Plug className="size-4 text-muted-foreground" aria-hidden="true" />
+                      <StatusDot status={c.status === "connected" ? "ok" : c.status === "error" ? "error" : "idle"} />
                       <span className="truncate">{c.name}</span>
                       <Badge>{providerName(c.provider)}</Badge>
                       {statusBadge(c)}
@@ -122,6 +127,7 @@ export function ConnectionsManager({ workspaceId, canManage, providerFilter }: {
                         {c.lastError ? ` — ${c.lastError}` : ""}
                       </p>
                     ) : null}
+                    </div>
                   </div>
                   <div className="flex shrink-0 gap-2">
                     <Button size="sm" variant="outline" onClick={() => test(c)} loading={testing === c.id}>

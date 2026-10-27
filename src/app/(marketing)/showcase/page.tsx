@@ -1,6 +1,9 @@
 import Link from "next/link";
-import { Sparkles } from "lucide-react";
-import { Breadcrumbs } from "@/components/marketing/breadcrumbs";
+import { Hammer, Rocket, Send, Sparkles } from "lucide-react";
+import { Breadcrumbs } from "@/components/docs/breadcrumbs";
+import { HubHeader } from "@/components/docs/hub-header";
+import { TemplatePreview } from "@/components/templates";
+import { getTemplate } from "@/templates";
 import { CTABand } from "@/components/marketing/cta-band";
 import { Badge } from "@/components/ui/badge";
 import { buttonClasses } from "@/components/ui/button";
@@ -11,11 +14,86 @@ import { listApproved, listSubmittedBy, serializeShowcaseItem } from "@/lib/serv
 import { routeMetadata } from "@/lib/seo";
 import { ShowcaseCard } from "./_components/showcase-card";
 import { ShowcaseSubmitForm } from "./_components/submit-form";
-import { PageTitle } from "@/components/marketing/backdrop";
 
 export const metadata = routeMetadata("/showcase");
 
 type SearchParams = Promise<{ tag?: string }>;
+
+/** Real starter screenshots shown in the empty state; labelled as templates, never as community work. */
+const FAN = ["vite-react-dashboard", "vite-react-storefront", "vite-react-saas"];
+
+const FLOW = [
+  { n: "01", title: "Build it", body: "Start from a template or a prompt and shape it with the agent. Any project you can edit counts.", Icon: Hammer },
+  { n: "02", title: "Deploy it", body: "Optional: publish to Codexa hosting or Vercel so the entry can link to a live URL.", Icon: Rocket },
+  { n: "03", title: "Submit it", body: "Write a title, description and tags. The team reviews it; project files are never published.", Icon: Send },
+];
+
+function BeTheFirst({ signedIn }: { signedIn: boolean }) {
+  const shots = FAN.map((id) => getTemplate(id)).filter((t): t is NonNullable<typeof t> => Boolean(t));
+  return (
+    <div className="e2 relative mt-6 overflow-hidden rounded-[26px]">
+      <div aria-hidden="true" className="bg-blueprint absolute inset-0 opacity-50 [mask-image:radial-gradient(80%_80%_at_70%_40%,black,transparent)]" />
+      <div className="relative grid gap-10 p-6 sm:p-10 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.05fr)] lg:items-center">
+        <div>
+          <p className="text-label flex items-center gap-2 text-muted-foreground">
+            <Sparkles className="size-3.5" aria-hidden="true" />
+            Empty, for now
+          </p>
+          <h3 className="text-display-3 mt-4">
+            Be the first <span className="text-dim">to publish.</span>
+          </h3>
+          <p className="mt-4 max-w-md text-[15px] leading-relaxed text-muted-foreground">No community projects have been published yet. Build something in Codexa, submit it, and it can be the first entry here.</p>
+          <ol className="mt-8 space-y-4">
+            {FLOW.map(({ n, title, body, Icon }) => (
+              <li key={n} className="flex gap-4">
+                <span className="grid size-9 shrink-0 place-items-center rounded-[11px] border border-border bg-card text-foreground shadow-[inset_0_1px_0_var(--hairline)]">
+                  <Icon className="size-4" aria-hidden="true" />
+                </span>
+                <span>
+                  <span className="flex items-baseline gap-2 text-[15px] font-semibold">
+                    <span className="font-mono text-[11.5px] font-normal text-foreground-dim">{n}</span>
+                    {title}
+                  </span>
+                  <span className="mt-0.5 block text-[13.5px] leading-relaxed text-muted-foreground">{body}</span>
+                </span>
+              </li>
+            ))}
+          </ol>
+          <div className="mt-8 flex flex-wrap gap-3">
+            <Link href={signedIn ? "#submit" : "/login?next=/showcase"} className={buttonClasses("primary", "md")}>
+              {signedIn ? "Submit your project" : "Sign in to submit a project"}
+            </Link>
+            <Link href="/templates" className={buttonClasses("outline", "md")}>
+              Start from a template
+            </Link>
+          </div>
+        </div>
+        <figure className="relative">
+          <div className="relative mx-auto aspect-[16/12.5] w-full max-w-[560px]">
+            {shots.map((t, i) => (
+              <div
+                key={t.id}
+                className={[
+                  "absolute w-[72%] overflow-hidden rounded-[14px] border border-border bg-card shadow-xl transition-transform duration-(--dur-4) ease-(--ease-out) calm:transition-none",
+                  i === 0 ? "left-0 top-[16%] -rotate-[6deg]" : i === 1 ? "left-[16%] top-0 z-[1] rotate-0" : "right-0 top-[27%] z-[2] rotate-[4deg]",
+                ].join(" ")}
+              >
+                <div aria-hidden="true" className="flex h-6 items-center gap-1.5 border-b border-border bg-surface px-2.5">
+                  <span className="size-1.5 rounded-full bg-border-strong" />
+                  <span className="size-1.5 rounded-full bg-border-strong" />
+                  <span className="size-1.5 rounded-full bg-border-strong" />
+                  <span className="ml-2 truncate font-mono text-[9.5px] text-muted-foreground">{t.name}</span>
+                </div>
+                <TemplatePreview id={t.id} category={t.category} sizes="(min-width: 1024px) 400px, 72vw" alt={`${t.name} template screenshot`} />
+              </div>
+            ))}
+          </div>
+          <figcaption className="mt-4 text-center font-mono text-[11.5px] text-muted-foreground">Starter template screenshots · starting points, not community projects</figcaption>
+        </figure>
+      </div>
+    </div>
+  );
+}
 
 export default async function ShowcasePage({ searchParams }: { searchParams: SearchParams }) {
   const [sp, user] = await Promise.all([searchParams, getCurrentUser()]);
@@ -32,22 +110,22 @@ export default async function ShowcasePage({ searchParams }: { searchParams: Sea
 
   return (
     <>
-      <div className="container-x py-10 sm:py-14">
-        <Breadcrumbs items={[{ name: "Showcase", path: "/showcase" }]} />
-        <header className="mt-6 max-w-3xl">
-          <p className="mb-3 text-xs font-semibold uppercase tracking-[0.14em] text-primary">Community showcase</p>
-          <PageTitle className="lg:text-6xl">Projects built with Codexa</PageTitle>
-          <p className="mt-4 text-lg text-muted-foreground">
-            Real projects submitted by people who built them in Codexa and approved by our team. Each entry shows what the author chose to publish: a title, a description, tags and, when there is one, a live URL.
-          </p>
-          <p className="mt-3 text-sm text-muted-foreground">Codexa does not list partners, customers or invented projects here. If the gallery is empty, nobody has published yet.</p>
-        </header>
+      <div data-tone="docs" className="container-x pb-16 pt-6 sm:pt-8 lg:pt-10">
+        <Breadcrumbs items={[{ name: "Showcase", path: "/showcase" }]} className="mb-8" />
+        <HubHeader
+          kicker="Community showcase"
+          title="Built with"
+          dim="Codexa."
+          lead="Real projects submitted by people who built them in Codexa and approved by our team. Each entry shows what the author chose to publish: a title, a description, tags and, when there is one, a live URL."
+        >
+          <p className="mt-4 max-w-2xl text-[13.5px] text-muted-foreground">Codexa does not list partners, customers or invented projects here. If the gallery is empty, nobody has published yet.</p>
+        </HubHeader>
 
-        <section aria-labelledby="entries-heading" className="mt-10">
+        <section aria-labelledby="entries-heading" className="mt-12">
           <div className="flex flex-wrap items-end justify-between gap-4">
-            <h2 id="entries-heading" className="text-xl font-semibold tracking-tight">
+            <h2 id="entries-heading" className="text-display-4">
               Published projects
-              <span className="ml-2 text-sm font-normal text-muted-foreground" role="status">
+              <span className="ml-3 font-mono text-[13px] font-normal tracking-normal text-muted-foreground" role="status">
                 {items.length} {items.length === 1 ? "project" : "projects"}
                 {tag ? ` tagged “${tag}”` : ""}
               </span>
@@ -65,12 +143,14 @@ export default async function ShowcasePage({ searchParams }: { searchParams: Sea
               </nav>
             ) : null}
           </div>
-          {items.length === 0 ? (
+          {items.length === 0 && !tag ? (
+            <BeTheFirst signedIn={Boolean(user)} />
+          ) : items.length === 0 ? (
             <EmptyState
               className="mt-6"
               icon={<Sparkles className="size-8" aria-hidden="true" />}
               title="No community projects have been published yet"
-              description={tag ? `Nothing is tagged “${tag}”. Clear the filter or be the first to publish.` : "Be the first: submit a project you built in Codexa and our team will review it."}
+              description={`Nothing is tagged “${tag}”. Clear the filter or be the first to publish.`}
               action={
                 <Link href={user ? "#submit" : "/login?next=/showcase"} className={buttonClasses("primary", "md")}>
                   {user ? "Submit your project" : "Sign in to submit a project"}
@@ -86,9 +166,9 @@ export default async function ShowcasePage({ searchParams }: { searchParams: Sea
           )}
         </section>
 
-        <section id="submit" aria-labelledby="submit-heading" className="mt-16 grid gap-8 rounded-2xl border border-border bg-surface p-6 sm:p-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.4fr)]">
+        <section id="submit" aria-labelledby="submit-heading" className="mt-16 grid scroll-mt-28 gap-8 rounded-[22px] border border-border bg-surface/60 p-6 sm:p-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.4fr)]">
           <div>
-            <h2 id="submit-heading" className="text-xl font-semibold tracking-tight">
+            <h2 id="submit-heading" className="text-display-4">
               Submit your project
             </h2>
             <p className="mt-2 text-sm text-muted-foreground">
@@ -121,7 +201,7 @@ export default async function ShowcasePage({ searchParams }: { searchParams: Sea
             {user ? (
               <ShowcaseSubmitForm workspaceId={current?.workspace.id ?? null} workspaceName={current?.workspace.name ?? null} />
             ) : (
-              <div className="rounded-xl border border-dashed border-border-strong p-6 text-center">
+              <div className="rounded-[16px] border border-dashed border-border-strong p-6 text-center">
                 <p className="text-sm text-muted-foreground">Sign in to submit one of your projects.</p>
                 <div className="mt-4 flex flex-wrap justify-center gap-2">
                   <Link href="/login?next=/showcase" className={buttonClasses("primary", "md")}>

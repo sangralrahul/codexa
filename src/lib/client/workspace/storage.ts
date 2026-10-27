@@ -10,6 +10,25 @@ export function wsKey(projectId: string, name: string) {
   return `${PREFIX}${projectId}:${name}`;
 }
 
+/**
+ * Layout keys for the agent-first shell. They are new names on purpose: the old
+ * `layout` / `panels` values described a different Group and must never be parsed into this one.
+ */
+export const LAYOUT_KEYS = {
+  /** [Agent | Canvas] sizes (percentages by panel id). */
+  shell: "shell.v2",
+  /** Split view sizes: explorer | editor | preview. */
+  split: "split.v2",
+  /** Bottom dock: open state, size and tab. */
+  dock: "dock.v2",
+  /** Canvas view: "preview" | "split" | "code". */
+  view: "view",
+  /** Preview device: "desktop" | "tablet" | "mobile". */
+  device: "device.v2",
+  /** Explorer sidebar mode: "files" | "search". */
+  side: "side.v2",
+} as const;
+
 export function readLocal<T>(key: string, fallback: T): T {
   if (typeof window === "undefined") return fallback;
   try {

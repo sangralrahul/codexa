@@ -1,20 +1,46 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ArrowUp, Bot, ChevronDown, Check, Globe, LayoutDashboard, Loader2, Server, ShoppingBag, User } from "lucide-react";
-import { projectsApi } from "@/lib/client/workspace/api";
-import { stashInitialPrompt } from "@/lib/client/workspace/storage";
-import { ClientApiError } from "@/lib/client/api";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger } from "@/components/ui/dropdown";
-import { TemplatePreview } from "@/components/templates/template-preview";
+import { Check, ChevronDown, CornerDownLeft, Globe, Link2, Lock, Undo2, X } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown";
+import { AutoGrowTextarea } from "@/components/ui/autogrow-textarea";
+import { Avatar } from "@/components/ui/avatar";
+import { Button } from "@/components/ui/button";
+import { useLaunch } from "@/components/motion/launch";
+import { ProjectThumb } from "@/components/app/project-thumb";
+import { isCalm } from "@/lib/client/motion";
+import { clampIdea, readPendingIdea, type IdeaSource } from "@/lib/client/pending-idea";
+import { usePlatformMod } from "@/lib/client/platform";
+import type { ProjectVisibility } from "@/lib/client/workspace/types";
 import { cn } from "@/lib/utils";
+import { createFromPrompt, describeCreateError, PROMPT_MAX, type CreateError } from "./create-from-prompt";
+import { VISIBILITY_HINTS, VISIBILITY_LABELS } from "./format";
 
-export type PromptTemplate = { id: string; name: string; category: string; frameworkName: string };
-export type PromptPreset = { label: string; icon: keyof typeof PRESET_ICONS; prompt: string; templateId: string };
-
-const PRESET_ICONS = { globe: Globe, dashboard: LayoutDashboard, bot: Bot, shop: ShoppingBag, user: User, server: Server };
+export type PromptTemplate = {
+  id: string;
+  name: string;
+  category: string;
+  framework?: string;
+  frameworkName: string;
+  fileCount?: number;
+};
+export type PromptPreset = {
+  label: string;
+  prompt: string;
+  templateId: string;
+};
+export type PromptWorkspace = { id: string; name: string; plan: string };
 
 const IDEAS = [
   "a habit tracker with streaks and weekly charts",
@@ -24,11 +50,23 @@ const IDEAS = [
   "a recipe app where I can save and tag recipes",
 ];
 
-/** Placeholder that types example ideas while the box is empty (static under reduced motion). */
+const VIS_ICON: Record<ProjectVisibility, typeof Lock> = {
+  private: Lock,
+  unlisted: Link2,
+  public: Globe,
+};
+const SOURCE_LABEL: Record<IdeaSource, string> = {
+  home: "the homepage",
+  cta: "the website",
+  solution: "the website",
+  command: "the command menu",
+};
+
+/** Placeholder that types example ideas while the box is empty and idle (static when calm). */
 function useTypedPlaceholder(active: boolean) {
   const [text, setText] = useState(`Describe your app, e.g. ${IDEAS[0]}`);
   useEffect(() => {
-    if (!active || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    if (!active || isCalm()) return;
     let idea = 0;
     let pos = 0;
     let erasing = false;
@@ -48,176 +86,429 @@ function useTypedPlaceholder(active: boolean) {
       }
       timer = window.setTimeout(tick, erasing ? 18 : 42);
     };
-    timer = window.setTimeout(tick, 600);
+    timer = window.setTimeout(tick, 900);
     return () => clearTimeout(timer);
   }, [active]);
   return text;
 }
 
+const chip =
+  "group/chip inline-flex h-8 min-w-0 shrink-0 items-center gap-2 rounded-[10px] border border-border bg-background/60 px-2 text-xs text-muted-foreground transition-[color,border-color,background-color] hover:border-border-strong hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-ring data-[state=open]:border-border-strong data-[state=open]:text-foreground disabled:pointer-events-none disabled:opacity-50";
+
 /**
- * "What do you want to build?" composer. Creates a project from the chosen template,
- * stores the prompt in sessionStorage under `codexa:initialPrompt` (the AI ChatPanel reads and
- * clears it on first mount) and opens the workspace.
+ * The dashboard composer: "What do you want to build?". A comet border lights while it is focused
+ * or holds text; the toolbar picks the starting template, the workspace (when there is more than one
+ * you can edit) and the visibility. "Build" (Ctrl/⌘ + Enter) creates the project, queues the prompt
+ * for the editor's AI chat under `codexa:initialPrompt`, and the composer grows into the Launch panel
+ * whose rows tick only as the real request resolves. On failure it folds back, shakes, and the error
+ * shows inline (quota errors link to plans).
+ *
+ * Idea passport: `initialPrompt` (from `?prompt=`) or the stashed pending idea pre-fills and focuses
+ * the box with a "Carried over" chip.
  */
 export function PromptBox({
   workspaceId,
+  workspaces = [],
   templateId: defaultTemplateId,
   templates = [],
   presets = [],
   aiConfigured,
+  initialPrompt,
+  initialTemplateId,
+  atLimit = null,
 }: {
+  /** The editable workspace projects are created in (null: the user cannot create). */
   workspaceId: string | null;
+  /** Every workspace the user can create in (a chip appears when there is more than one). */
+  workspaces?: PromptWorkspace[];
   templateId: string;
   templates?: PromptTemplate[];
   presets?: PromptPreset[];
   aiConfigured: boolean;
+  /** Set when the target workspace already uses every project its plan allows (from the plan config and a DB count). */
+  atLimit?: { workspaceId: string; used: number; limit: number; plan: string } | null;
+  /** The idea passport from `?prompt=` (already clamped on the server). */
+  initialPrompt?: string;
+  initialTemplateId?: string;
 }) {
   const router = useRouter();
-  const [prompt, setPrompt] = useState("");
-  const [templateId, setTemplateId] = useState(defaultTemplateId);
+  const mod = usePlatformMod();
+  const formRef = useRef<HTMLFormElement>(null);
+  const areaRef = useRef<HTMLTextAreaElement>(null);
+  const typingRef = useRef(0);
+  const [prompt, setPrompt] = useState(initialPrompt ?? "");
+  const [templateId, setTemplateId] = useState(initialTemplateId ?? defaultTemplateId);
+  const [wsId, setWsId] = useState(workspaceId);
+  const [visibility, setVisibility] = useState<ProjectVisibility>("private");
   const [busy, setBusy] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const placeholder = useTypedPlaceholder(!prompt && Boolean(workspaceId));
+  const [error, setError] = useState<CreateError | null>(null);
+  const [carried, setCarried] = useState<string | null>(initialPrompt ? SOURCE_LABEL.home : null);
+  const launch = useLaunch({ title: "Building from your prompt" });
+  const enabled = Boolean(wsId);
+  const placeholder = useTypedPlaceholder(!prompt && enabled && !carried);
   const template = templates.find((t) => t.id === templateId);
+  const workspace = workspaces.find((w) => w.id === wsId);
+  const length = prompt.length;
+
+  // Idea passport: focus the carried prompt, take the URL param out of the address bar, or fall back to the stashed idea.
+  useEffect(() => {
+    if (!enabled) return;
+    if (initialPrompt) {
+      const pending = readPendingIdea();
+      if (pending && pending.text === initialPrompt) {
+        // eslint-disable-next-line react-hooks/set-state-in-effect -- one-time read of the stashed idea's source after mount
+        setCarried(SOURCE_LABEL[pending.source]);
+      }
+      try {
+        window.history.replaceState(window.history.state, "", window.location.pathname);
+      } catch {
+        /* ignore */
+      }
+    } else {
+      const pending = readPendingIdea();
+      if (!pending) return;
+      setPrompt(clampIdea(pending.text));
+      if (pending.templateId && templates.some((t) => t.id === pending.templateId)) setTemplateId(pending.templateId);
+      setCarried(SOURCE_LABEL[pending.source]);
+    }
+    const el = areaRef.current;
+    if (el) {
+      el.focus({ preventScroll: true });
+      const end = el.value.length;
+      el.setSelectionRange(end, end);
+    }
+    // Mount only.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  useEffect(() => () => window.clearInterval(typingRef.current), []);
+
+  const stopTyping = () => {
+    window.clearInterval(typingRef.current);
+    typingRef.current = 0;
+  };
+
+  /** Presets type themselves in (12ms a character; instantly when calm) and switch the template. */
+  const applyPreset = (p: PromptPreset) => {
+    stopTyping();
+    setTemplateId(p.templateId);
+    setError(null);
+    const el = areaRef.current;
+    el?.focus({ preventScroll: true });
+    if (isCalm()) {
+      setPrompt(p.prompt);
+      return;
+    }
+    let i = 0;
+    setPrompt("");
+    typingRef.current = window.setInterval(() => {
+      i = Math.min(p.prompt.length, i + 2);
+      setPrompt(p.prompt.slice(0, i));
+      if (i >= p.prompt.length) stopTyping();
+    }, 24);
+  };
 
   const submit = async () => {
+    stopTyping();
     const text = prompt.trim();
-    if (!text || !workspaceId) return;
+    if (!text || !wsId || busy) return;
     setBusy(true);
     setError(null);
+    launch.start(formRef.current, [{ id: "create", label: "Creating project", state: "active" }]);
     try {
-      const name = text.split(/[.!?\n]/)[0].trim().slice(0, 60) || "New project";
-      const res = await projectsApi.create({ workspaceId, name, description: text.slice(0, 500), templateId });
-      stashInitialPrompt(text);
-      router.push(`/projects/${res.project.id}`);
+      const project = await createFromPrompt({
+        workspaceId: wsId,
+        text,
+        templateId,
+        visibility,
+      });
+      launch.update("create", "done");
+      if (template && typeof template.fileCount === "number")
+        launch.add({
+          id: "copy",
+          label: `Copied ${template.fileCount} files from ${template.name}`,
+          state: "done",
+        });
+      launch.add({
+        id: "open",
+        label: "Opening the editor",
+        detail: aiConfigured ? "Your prompt goes to the AI agent" : "Your prompt waits in the chat panel",
+      });
+      router.push(`/projects/${project.id}`);
     } catch (err) {
-      if (err instanceof ClientApiError && err.code === "quota_exceeded") setError(`${err.message} `);
-      else setError(err instanceof Error ? err.message : "Could not create the project");
+      const e = describeCreateError(err);
+      setError(e);
+      launch.fail("create", e.message, { collapse: true });
       setBusy(false);
+      window.setTimeout(() => areaRef.current?.focus({ preventScroll: true }), 380);
     }
   };
 
   return (
-    <section aria-label="Describe your idea">
-      <form
-        onSubmit={(e) => {
-          e.preventDefault();
-          void submit();
-        }}
-        className="glass rounded-[22px] border border-border/80 p-1.5 shadow-[0_30px_80px_-30px_rgba(0,0,0,0.45)] transition-[border-color,box-shadow] duration-300 focus-within:border-border-strong focus-within:shadow-[0_0_0_4px_color-mix(in_oklab,var(--foreground)_7%,transparent),0_30px_80px_-30px_rgba(0,0,0,0.45)]"
-      >
-        <div className="rounded-[18px] border border-border/60 bg-card/90">
-          <label htmlFor="idea-prompt" className="sr-only">
-            What do you want to build?
-          </label>
-          <textarea
-            id="idea-prompt"
-            value={prompt}
-            onChange={(e) => setPrompt(e.target.value)}
-            onKeyDown={(e) => {
-              if ((e.metaKey || e.ctrlKey) && e.key === "Enter") void submit();
-            }}
-            rows={3}
-            maxLength={2000}
-            placeholder={placeholder}
-            aria-describedby="idea-hint"
-            disabled={busy || !workspaceId}
-            className="block min-h-[104px] w-full resize-none rounded-t-[18px] bg-transparent px-5 pb-2 pt-4 text-[15px] leading-relaxed placeholder:text-muted-foreground/70 focus:outline-none disabled:opacity-60"
-          />
-          <div className="flex items-center justify-between gap-3 px-3 pb-3">
-            {templates.length ? (
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
+    <section aria-label="Describe your idea" className="w-full">
+      <div className="mx-auto max-w-3xl">
+        <form
+          ref={formRef}
+          onSubmit={(e) => {
+            e.preventDefault();
+            void submit();
+          }}
+          className="rounded-[20px]"
+        >
+          <div data-composer data-onscreen-watch data-active={prompt.trim() ? "" : undefined} className="comet-border rounded-[20px] shadow-[var(--shadow-lg)]">
+            <div className="comet-border__inner overflow-hidden rounded-[19px] bg-card shadow-[inset_0_1px_0_var(--hairline)]">
+              {carried ? (
+                <div className="flex items-center gap-2 px-4 pt-3.5 sm:px-5">
+                  <span className="chip-in inline-flex h-6 items-center gap-1.5 rounded-full bg-selection px-2.5 text-xs font-medium text-foreground shadow-[inset_0_0_0_1px_color-mix(in_oklab,var(--signal)_30%,transparent)]">
+                    <Undo2 className="size-3 -scale-x-100 text-signal-ink" aria-hidden="true" />
+                    Carried over from {carried}
+                    <button
+                      type="button"
+                      onClick={() => setCarried(null)}
+                      className="-mr-1 ml-0.5 flex size-4 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-foreground/10 hover:text-foreground"
+                      aria-label="Dismiss carried-over note"
+                    >
+                      <X className="size-3" aria-hidden="true" />
+                    </button>
+                  </span>
+                </div>
+              ) : null}
+              <label htmlFor="idea-prompt" className="sr-only">
+                What do you want to build?
+              </label>
+              <AutoGrowTextarea
+                ref={areaRef}
+                id="idea-prompt"
+                data-hotkey-search
+                minRows={3}
+                maxRows={12}
+                value={prompt}
+                onChange={(e) => {
+                  stopTyping();
+                  setPrompt(e.target.value);
+                  if (error) setError(null);
+                }}
+                onKeyDown={(e) => {
+                  if ((e.metaKey || e.ctrlKey) && e.key === "Enter") {
+                    e.preventDefault();
+                    void submit();
+                  }
+                }}
+                maxLength={PROMPT_MAX}
+                placeholder={placeholder}
+                aria-describedby="idea-hint"
+                aria-invalid={error ? true : undefined}
+                aria-errormessage={error ? "idea-error" : undefined}
+                disabled={busy || !enabled}
+                className="block min-h-[120px] w-full resize-none bg-transparent px-4 pb-2 pt-4 text-base leading-relaxed placeholder:text-muted-foreground/70 focus:outline-none disabled:opacity-60 sm:px-5"
+              />
+              <div className="flex flex-wrap items-center gap-2 px-3 pb-3 sm:flex-nowrap">
+                <div className="flex min-w-0 flex-1 items-center gap-1.5 overflow-x-auto [scrollbar-width:none]">
+                  {templates.length ? (
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild disabled={!enabled}>
+                        <button type="button" className={cn(chip, "max-w-[156px] pl-1 sm:max-w-[220px]")} aria-label={`Template: ${template?.name ?? "React starter"}. Change template`}>
+                          <ProjectThumb key={templateId} templateId={templateId} framework={template?.framework} size="lg" className="thumb-swap h-6 w-[38px] rounded-[6px]" />
+                          <span className="truncate font-medium text-foreground">{template?.name ?? "React starter"}</span>
+                          <ChevronDown className="size-3.5 shrink-0 transition-transform duration-(--dur-2) group-data-[state=open]/chip:rotate-180" aria-hidden="true" />
+                        </button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="start" className="scrollbar-thin max-h-[360px] w-80 overflow-y-auto">
+                        <DropdownMenuLabel>Start from</DropdownMenuLabel>
+                        <DropdownMenuRadioGroup value={templateId} onValueChange={setTemplateId}>
+                          {templates.map((t) => (
+                            <DropdownMenuRadioItem key={t.id} value={t.id} className="gap-3 py-1.5 pl-2 [&>span:first-child]:hidden">
+                              <ProjectThumb templateId={t.id} framework={t.framework} size="lg" />
+                              <span className="min-w-0 flex-1">
+                                <span className="block truncate text-[13px] text-foreground">{t.name}</span>
+                                <span className="block truncate text-[11.5px] text-muted-foreground">
+                                  {t.frameworkName}
+                                  {typeof t.fileCount === "number" ? ` · ${t.fileCount} files` : ""}
+                                </span>
+                              </span>
+                              {t.id === templateId ? <Check className="size-4 shrink-0" aria-hidden="true" /> : null}
+                            </DropdownMenuRadioItem>
+                          ))}
+                        </DropdownMenuRadioGroup>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem asChild>
+                          <Link href="/dashboard/templates">Browse all templates</Link>
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  ) : null}
+                  {workspaces.length > 1 && workspace ? (
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild disabled={busy}>
+                        <button type="button" className={cn(chip, "max-w-[180px]")} aria-label={`Workspace: ${workspace.name}. Change workspace`}>
+                          <Avatar name={workspace.name} seed={workspace.id} shape="square" size="xs" />
+                          <span className="truncate">{workspace.name}</span>
+                          <ChevronDown className="size-3.5 shrink-0" aria-hidden="true" />
+                        </button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="start" className="w-64">
+                        <DropdownMenuLabel>Create in</DropdownMenuLabel>
+                        <DropdownMenuRadioGroup value={wsId ?? ""} onValueChange={setWsId}>
+                          {workspaces.map((w) => (
+                            <DropdownMenuRadioItem key={w.id} value={w.id} className="gap-2.5 pl-2 [&>span:first-child]:hidden">
+                              <Avatar name={w.name} seed={w.id} shape="square" size="sm" />
+                              <span className="min-w-0 flex-1 truncate text-[13px] text-foreground">{w.name}</span>
+                              <span className="text-xs capitalize text-muted-foreground">{w.plan}</span>
+                              {w.id === wsId ? <Check className="size-4 shrink-0" aria-hidden="true" /> : null}
+                            </DropdownMenuRadioItem>
+                          ))}
+                        </DropdownMenuRadioGroup>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  ) : null}
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild disabled={!enabled}>
+                      <button type="button" className={chip} aria-label={`Visibility: ${VISIBILITY_LABELS[visibility]}. Change visibility`}>
+                        {(() => {
+                          const Icon = VIS_ICON[visibility];
+                          return <Icon className="size-3.5" aria-hidden="true" />;
+                        })()}
+                        <span className="hidden sm:inline">{VISIBILITY_LABELS[visibility]}</span>
+                        <ChevronDown className="size-3.5 shrink-0" aria-hidden="true" />
+                      </button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="start" className="w-72">
+                      <DropdownMenuLabel>Who can open it</DropdownMenuLabel>
+                      <DropdownMenuRadioGroup value={visibility} onValueChange={(v) => setVisibility(v as ProjectVisibility)}>
+                        {(["private", "unlisted", "public"] as const).map((v) => {
+                          const Icon = VIS_ICON[v];
+                          return (
+                            <DropdownMenuRadioItem key={v} value={v} className="items-start gap-2.5 py-2 pl-2 [&>span:first-child]:hidden">
+                              <Icon className="mt-0.5 size-4" aria-hidden="true" />
+                              <span className="min-w-0 flex-1">
+                                <span className="block text-[13px] text-foreground">{VISIBILITY_LABELS[v]}</span>
+                                <span className="block text-xs text-muted-foreground">{VISIBILITY_HINTS[v]}</span>
+                              </span>
+                              {v === visibility ? <Check className="size-4 shrink-0" aria-hidden="true" /> : null}
+                            </DropdownMenuRadioItem>
+                          );
+                        })}
+                      </DropdownMenuRadioGroup>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </div>
+                <div className="ml-auto flex shrink-0 items-center gap-3">
+                  {length >= 1500 ? (
+                    <span className={cn("text-meta", length >= PROMPT_MAX ? "text-danger" : length >= 1800 ? "text-warning" : "text-muted-foreground")} aria-live="polite">
+                      {length.toLocaleString("en-US")} / {PROMPT_MAX.toLocaleString("en-US")}
+                    </span>
+                  ) : null}
+                  <Button
+                    type="submit"
+                    variant="ember"
+                    size="sm"
+                    spark
+                    disabled={!prompt.trim() || !enabled || busy}
+                    aria-label="Start building"
+                    aria-keyshortcuts="Control+Enter Meta+Enter"
+                    className="composer-build h-9 gap-2 px-4"
+                  >
+                    <span>Build</span>
+                    <span data-spark-icon className="hidden items-center gap-0.5 rounded-[6px] bg-black/10 px-1.5 py-0.5 text-[11px] font-semibold leading-none sm:inline-flex">
+                      {mod}
+                      <CornerDownLeft className="size-3" aria-hidden="true" />
+                    </span>
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </form>
+
+        {error ? (
+          <p id="idea-error" role="alert" className="pop-in mt-3 flex items-start gap-2 rounded-xl border border-danger/30 bg-danger/[0.06] px-3.5 py-2.5 text-sm text-foreground">
+            <span className="mt-1.5 size-1.5 shrink-0 rounded-full bg-danger" aria-hidden="true" />
+            <span>
+              {error.message}{" "}
+              {error.quota ? (
+                <Link href="/settings/billing" className="font-medium underline underline-offset-2">
+                  View plans
+                </Link>
+              ) : null}
+            </span>
+          </p>
+        ) : null}
+
+        {atLimit && atLimit.workspaceId === wsId && !error ? (
+          <p className="mt-3 text-pretty text-center text-xs text-muted-foreground">
+            <span className="mr-1.5 inline-block size-1.5 rounded-full bg-warning align-middle" aria-hidden="true" />
+            <span>
+              All {atLimit.limit} projects on the {atLimit.plan} plan are in use in this workspace. Delete one or{" "}
+              <Link href="/settings/billing" className="link-draw font-medium text-foreground">
+                view plans
+              </Link>
+              .
+            </span>
+          </p>
+        ) : null}
+
+        <p id="idea-hint" className="mt-3 flex flex-wrap items-center justify-center gap-x-2 gap-y-1 text-center text-xs text-muted-foreground">
+          {!enabled ? (
+            "You need a workspace with edit access before creating projects."
+          ) : aiConfigured ? (
+            <>
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-success/10 px-2 py-0.5 font-medium text-foreground shadow-[inset_0_0_0_1px_color-mix(in_oklab,var(--success)_28%,transparent)]">
+                <span className="size-1.5 rounded-full bg-success" aria-hidden="true" />
+                Agent ready
+              </span>
+              <span>Codexa creates the project, opens the editor and hands your description to the AI agent.</span>
+            </>
+          ) : (
+            <>
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-warning/10 px-2 py-0.5 font-medium text-foreground shadow-[inset_0_0_0_1px_color-mix(in_oklab,var(--warning)_32%,transparent)]">
+                <span className="size-1.5 rounded-full bg-warning" aria-hidden="true" />
+                AI not configured on this server
+              </span>
+              <span>
+                The project is still created and your description is saved in the chat panel.{" "}
+                <Link href="/docs/ai-agent" className="link-draw font-medium text-foreground">
+                  How AI is set up
+                </Link>
+              </span>
+            </>
+          )}
+        </p>
+      </div>
+
+      {presets.length ? (
+        <div className="mx-auto mt-5 max-w-4xl">
+          <p className="sr-only" id="presets-label">
+            Quick starts
+          </p>
+          <ul
+            aria-labelledby="presets-label"
+            className="edge-fade-x -mx-4 flex gap-2 overflow-x-auto px-4 pb-1 sm:mx-0 sm:flex-wrap sm:justify-center sm:overflow-visible sm:px-0 sm:[mask-image:none]"
+          >
+            {presets.map((p) => {
+              const on = p.templateId === templateId && prompt === p.prompt;
+              return (
+                <li key={p.label} className="shrink-0">
                   <button
                     type="button"
-                    className="inline-flex h-8 min-w-0 items-center gap-2 rounded-full border border-border bg-background/70 pl-1 pr-2.5 text-xs text-muted-foreground transition-colors hover:border-border-strong hover:text-foreground data-[state=open]:border-border-strong data-[state=open]:text-foreground"
-                    aria-label={`Template: ${template?.name ?? "React starter"}. Change template`}
+                    onClick={() => applyPreset(p)}
+                    disabled={!enabled || busy}
+                    aria-pressed={on}
+                    title={p.prompt}
+                    className={cn(
+                      "group/preset flex h-10 items-center gap-2 rounded-xl border bg-card/70 py-1 pl-1.5 pr-3 text-[13px] shadow-[inset_0_1px_0_var(--hairline)] backdrop-blur-sm transition-[border-color,color,translate,box-shadow] duration-(--dur-3) hover:-translate-y-px hover:shadow-[var(--shadow-sm)] disabled:pointer-events-none disabled:opacity-50 calm:hover:translate-y-0",
+                      on ? "border-foreground/40 text-foreground" : "border-border text-muted-foreground hover:border-border-strong hover:text-foreground",
+                    )}
                   >
-                    <TemplatePreview id={template?.id ?? ""} category={template?.category ?? "web-apps"} className="w-9 shrink-0 rounded-full border-0 [&>*]:aspect-square" imgClassName="aspect-square" />
-                    <span className="truncate font-medium">{template?.name ?? "React starter"}</span>
-                    <ChevronDown className="size-3.5 shrink-0" aria-hidden="true" />
+                    <ProjectThumb templateId={p.templateId} size="sm" className="h-6 w-[38px] rounded-[6px]" />
+                    {p.label}
                   </button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="start" className="max-h-80 w-72 overflow-y-auto scrollbar-thin">
-                  <DropdownMenuLabel>Start from</DropdownMenuLabel>
-                  {templates.map((t) => (
-                    <DropdownMenuItem key={t.id} onSelect={() => setTemplateId(t.id)} className="gap-3">
-                      <TemplatePreview id={t.id} category={t.category} className="w-16 shrink-0 rounded-md" />
-                      <span className="min-w-0 flex-1">
-                        <span className="block truncate text-[13px]">{t.name}</span>
-                        <span className="block truncate text-[11px] text-muted-foreground">{t.frameworkName}</span>
-                      </span>
-                      {t.id === templateId ? <Check className="size-4 shrink-0" aria-label="Selected" /> : null}
-                    </DropdownMenuItem>
-                  ))}
-                </DropdownMenuContent>
-              </DropdownMenu>
-            ) : (
-              <span />
-            )}
-            <span className="flex shrink-0 items-center gap-2.5">
-              <span className="hidden text-[11px] text-muted-foreground sm:inline">
-                <kbd>Ctrl</kbd> <kbd>Enter</kbd>
-              </span>
-              <button
-                type="submit"
-                disabled={!prompt.trim() || !workspaceId || busy}
-                aria-label="Start building"
-                className="flex size-9 items-center justify-center rounded-full bg-foreground text-background shadow-md transition-all hover:scale-105 active:scale-95 disabled:pointer-events-none disabled:opacity-30"
-              >
-                {busy ? <Loader2 className="size-4 animate-spin" aria-hidden="true" /> : <ArrowUp className="size-4" aria-hidden="true" />}
-              </button>
-            </span>
-          </div>
-        </div>
-      </form>
-      {presets.length ? (
-        <div className="mt-5 flex flex-wrap justify-center gap-2" aria-label="Quick starts">
-          {presets.map((p, i) => {
-            const Icon = PRESET_ICONS[p.icon];
-            const on = p.templateId === templateId && prompt === p.prompt;
-            return (
-              <button
-                key={p.label}
-                type="button"
-                data-reveal
-                style={{ "--reveal-delay": `${120 + i * 60}ms` } as React.CSSProperties}
-                onClick={() => {
-                  setPrompt(p.prompt);
-                  setTemplateId(p.templateId);
-                  document.getElementById("idea-prompt")?.focus();
-                }}
-                disabled={!workspaceId}
-                aria-pressed={on}
-                className={cn(
-                  "eyebrow-pill inline-flex items-center gap-1.5 rounded-full border px-3.5 py-1.5 text-[13px] transition-[color,border-color,transform] duration-200 hover:-translate-y-0.5 disabled:opacity-50",
-                  on ? "border-foreground text-foreground" : "border-border text-muted-foreground hover:border-border-strong hover:text-foreground",
-                )}
-              >
-                <Icon className="size-3.5" aria-hidden="true" />
-                {p.label}
-              </button>
-            );
-          })}
+                </li>
+              );
+            })}
+          </ul>
         </div>
       ) : null}
-      <p id="idea-hint" className="mt-4 text-center text-xs text-muted-foreground">
-        {!workspaceId
-          ? "You need a workspace with edit access before creating projects."
-          : aiConfigured
-            ? "Codexa creates the project, opens the editor and hands your description to the AI agent."
-            : "AI generation isn't set up on this server yet. The project is still created and your description is saved in the chat panel."}
-      </p>
-      {error ? (
-        <p role="alert" className="pop-in mt-3 text-center text-sm text-danger">
-          {error}
-          {error.includes("Upgrade") ? (
-            <Link href="/settings/billing" className="underline">
-              View plans
-            </Link>
-          ) : null}
-        </p>
-      ) : null}
+      {launch.element}
     </section>
   );
 }

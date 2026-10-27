@@ -1,20 +1,31 @@
+import "@/components/settings/settings.css";
 import { requireUser } from "@/lib/auth/guards";
+import { getCurrentSessionId } from "@/lib/auth/session";
 import { getCurrentWorkspace } from "@/lib/services/current-workspace";
+import { getSettingsNavMeta } from "@/lib/services/settings-overview";
+import { TooltipProvider } from "@/components/ui/tooltip";
 import { SettingsNav } from "@/components/settings/settings-nav";
 
 /**
- * Settings shell: two-column layout (sticky sub-navigation on the left, page
- * content on the right at a comfortable reading width). Each page renders its own <h1> via PageHeader.
+ * Settings shell: a sticky sub-navigation (search, icons, live meta chips) beside the page
+ * column. The column re-mounts through settings/template.tsx on every sub-page change, so it
+ * eases in while the nav pill glides. Each page renders its own <h1> via PageHeader.
  */
 export default async function SettingsLayout({ children }: { children: React.ReactNode }) {
   const user = await requireUser("/settings");
   const { current } = await getCurrentWorkspace(user);
+  const meta = await getSettingsNavMeta(user, current?.workspace.id ?? null, await getCurrentSessionId()).catch(() => null);
   return (
-    <div className="container-x py-8">
-      <div className="flex flex-col gap-6 lg:flex-row lg:gap-12">
-        <SettingsNav workspaceName={current?.workspace.name ?? null} />
-        <div className="min-w-0 max-w-3xl flex-1">{children}</div>
+    <TooltipProvider delayDuration={300}>
+      <div className="settings-shell mx-auto w-full max-w-[1280px] px-4 pb-24 pt-5 sm:px-6 lg:px-10 lg:pb-16 lg:pt-10">
+        <div className="flex flex-col gap-7 lg:flex-row lg:gap-12">
+          <SettingsNav
+            workspaceName={current?.workspace.name ?? null}
+            meta={meta ? { plan: meta.plan?.name ?? null, seats: meta.seats, integrations: meta.integrations, otherSessions: meta.otherSessions } : undefined}
+          />
+          <div className="min-w-0 flex-1">{children}</div>
+        </div>
       </div>
-    </div>
+    </TooltipProvider>
   );
 }

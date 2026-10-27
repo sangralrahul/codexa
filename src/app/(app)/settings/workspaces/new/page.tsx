@@ -8,8 +8,8 @@ export const metadata = pageMetadata({ title: "New workspace", description: "Cre
 export default async function NewWorkspacePage() {
   await requireUser("/settings/workspaces/new");
   return (
-    <div>
-      <PageHeader title="New workspace" description="Workspaces group projects, members and billing." />
+    <div className="settings-stack space-y-6">
+      <PageHeader eyebrow="Workspaces" title="New workspace" description="Workspaces group projects, members and billing. Each one has its own plan." />
       <NewWorkspaceForm />
     </div>
   );

@@ -50,7 +50,7 @@ A request outside your role returns \`403 forbidden\`. A resource in a workspace
 
 ## GitHub sign-in
 
-\`GET /api/auth/github/start\` redirects to GitHub and \`GET /api/auth/github/callback\` completes the flow, only when the operator has configured an OAuth app. The reference marks these endpoints as planned until their handlers are present.
+\`GET /api/auth/github/start\` redirects to GitHub and \`GET /api/auth/github/callback\` completes the flow (signing in, or linking GitHub to the signed-in account). Both work only when the operator has configured an OAuth app with \`GITHUB_CLIENT_ID\` and \`GITHUB_CLIENT_SECRET\`; otherwise \`start\` returns \`503 not_configured\` listing the missing variables.
 
 ## API tokens (planned)
 

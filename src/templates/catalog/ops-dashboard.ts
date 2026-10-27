@@ -61,9 +61,18 @@ export function tick(list: Service[]): Service[] {
   const range = max - min || 1;
   const points = values.map((v, i) => [(i / (values.length - 1)) * w, h - ((v - min) / range) * (h - 4) - 2] as const);
   const d = points.map(([x, y], i) => (i === 0 ? "M" : "L") + x.toFixed(1) + " " + y.toFixed(1)).join(" ");
+  const area = d + " L" + w + " " + h + " L0 " + h + " Z";
+  const id = "spark-" + label.replace(/[^a-z0-9]/gi, "");
   return (
-    <svg viewBox={"0 0 " + w + " " + h} width={w} height={h} role="img" aria-label={label} className={className}>
-      <path d={d} fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round" strokeLinecap="round" />
+    <svg viewBox={"0 0 " + w + " " + h} preserveAspectRatio="none" role="img" aria-label={label} className={className}>
+      <defs>
+        <linearGradient id={id} x1="0" x2="0" y1="0" y2="1">
+          <stop offset="0%" stopColor="currentColor" stopOpacity="0.35" />
+          <stop offset="100%" stopColor="currentColor" stopOpacity="0" />
+        </linearGradient>
+      </defs>
+      <path d={area} fill={"url(#" + id + ")"} />
+      <path d={d} fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round" strokeLinecap="round" vectorEffect="non-scaling-stroke" />
     </svg>
   );
 }
@@ -72,7 +81,9 @@ export function tick(list: Service[]): Service[] {
 import { incidents as seedIncidents, services as seedServices, tick, type Incident, type Service } from "./data";
 import { Sparkline } from "./Sparkline";
 
-const statusColor: Record<Service["status"], string> = { operational: "bg-green-500", degraded: "bg-amber-500", down: "bg-red-500" };
+const statusColor: Record<Service["status"], string> = { operational: "bg-emerald-400", degraded: "bg-amber-400", down: "bg-rose-500" };
+const lineColor: Record<Service["status"], string> = { operational: "text-sky-400", degraded: "text-amber-400", down: "text-rose-400" };
+const incidentTone: Record<Incident["status"], string> = { open: "bg-rose-500/15 text-rose-300", monitoring: "bg-amber-400/15 text-amber-300", resolved: "bg-emerald-400/10 text-emerald-300" };
 const incidentFilters: ("all" | Incident["status"])[] = ["all", "open", "monitoring", "resolved"];
 
 export default function App() {
@@ -88,44 +99,73 @@ export default function App() {
 
   const visibleIncidents = seedIncidents.filter((i) => filter === "all" || i.status === filter);
   const degraded = services.filter((s) => s.status !== "operational").length;
+  const avgLatency = Math.round(services.reduce((sum, s) => sum + (s.latencyMs[s.latencyMs.length - 1] ?? 0), 0) / services.length);
+  const avgErrors = services.reduce((sum, s) => sum + s.errorRate, 0) / services.length;
+  const active = seedIncidents.filter((i) => i.status !== "resolved").length;
 
   return (
     <div className="min-h-screen bg-zinc-950 text-zinc-100">
-      <header className="border-b border-zinc-800 px-4 py-3 sm:px-6">
+      <header className="border-b border-zinc-800/80 bg-zinc-950/80 px-4 py-3 backdrop-blur sm:px-6">
         <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-3">
-          <h1 className="font-semibold tracking-tight">Operations</h1>
-          <label className="flex items-center gap-2 text-sm text-zinc-400">
-            <input type="checkbox" checked={live} onChange={(e) => setLive(e.target.checked)} />
+          <div className="flex items-center gap-3">
+            <span className="grid h-8 w-8 place-items-center rounded-lg bg-gradient-to-br from-sky-400 to-indigo-500 text-sm font-bold text-zinc-950">O</span>
+            <h1 className="font-semibold tracking-tight">Operations</h1>
+            <span className="rounded-md border border-zinc-800 bg-zinc-900 px-2 py-0.5 font-mono text-xs text-zinc-400">production</span>
+          </div>
+          <label className="flex cursor-pointer items-center gap-2.5 text-sm text-zinc-400">
+            <input type="checkbox" checked={live} onChange={(e) => setLive(e.target.checked)} className="peer sr-only" />
+            <span className="relative h-5 w-9 rounded-full bg-zinc-800 transition peer-checked:bg-sky-500 peer-focus-visible:ring-2 peer-focus-visible:ring-sky-400 after:absolute after:left-0.5 after:top-0.5 after:h-4 after:w-4 after:rounded-full after:bg-white after:transition peer-checked:after:translate-x-4" />
             Simulate live updates
           </label>
         </div>
       </header>
       <main className="mx-auto max-w-6xl px-4 py-6 sm:px-6">
-        <p className="text-sm text-zinc-400" role="status">
-          {degraded === 0 ? "All systems operational." : degraded + " service" + (degraded === 1 ? "" : "s") + " degraded."}
-        </p>
-        <section aria-labelledby="services-title" className="mt-4">
-          <h2 id="services-title" className="text-sm font-medium uppercase tracking-wide text-zinc-500">
+        <div className={"flex items-center gap-3 rounded-2xl border px-5 py-4 " + (degraded === 0 ? "border-emerald-500/20 bg-emerald-500/5" : "border-amber-400/20 bg-amber-400/5")}>
+          <span className={"h-2.5 w-2.5 rounded-full " + (degraded === 0 ? "bg-emerald-400" : "bg-amber-400")} />
+          <p className="text-sm" role="status">
+            <span className="font-medium">{degraded === 0 ? "All systems operational." : degraded + " service" + (degraded === 1 ? "" : "s") + " degraded."}</span>
+            <span className="text-zinc-400"> Sample data · replace src/data.ts with your metrics API.</span>
+          </p>
+        </div>
+
+        <dl className="mt-4 grid gap-4 sm:grid-cols-3">
+          {[
+            ["Average latency", avgLatency + " ms"],
+            ["Average error rate", avgErrors.toFixed(2) + "%"],
+            ["Active incidents", String(active)],
+          ].map(([label, value]) => (
+            <div key={label} className="rounded-2xl border border-zinc-800 bg-zinc-900/60 p-4">
+              <dt className="text-xs text-zinc-500">{label}</dt>
+              <dd className="mt-1 text-xl font-semibold tabular-nums">{value}</dd>
+            </div>
+          ))}
+        </dl>
+
+        <section aria-labelledby="services-title" className="mt-8">
+          <h2 id="services-title" className="text-xs font-medium uppercase tracking-[0.14em] text-zinc-500">
             Services
           </h2>
           <ul className="mt-3 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             {services.map((s) => {
               const last = s.latencyMs[s.latencyMs.length - 1] ?? 0;
               return (
-                <li key={s.name} className="rounded-xl border border-zinc-800 bg-zinc-900 p-4">
+                <li key={s.name} className="rounded-2xl border border-zinc-800 bg-gradient-to-b from-zinc-900 to-zinc-950 p-4">
                   <div className="flex items-center justify-between">
                     <h3 className="font-medium">{s.name}</h3>
-                    <span className="flex items-center gap-1.5 text-xs capitalize text-zinc-400">
-                      <span aria-hidden="true" className={"size-2 rounded-full " + statusColor[s.status]} />
+                    <span className="flex items-center gap-1.5 rounded-full bg-zinc-800/80 px-2 py-0.5 text-xs capitalize text-zinc-300">
+                      <span aria-hidden="true" className={"size-1.5 rounded-full " + statusColor[s.status]} />
                       {s.status}
                     </span>
                   </div>
-                  <p className="mt-3 text-2xl font-semibold tabular-nums">
+                  <p className="mt-3 text-3xl font-semibold tabular-nums tracking-tight">
                     {last}
                     <span className="text-sm font-normal text-zinc-500"> ms</span>
                   </p>
-                  <Sparkline values={s.latencyMs} label={s.name + " latency over the last 24 samples"} className="mt-2 text-sky-400" />
-                  <p className="mt-2 text-xs text-zinc-500">Error rate {s.errorRate.toFixed(1)}%</p>
+                  <Sparkline values={s.latencyMs} label={s.name + " latency over the last 24 samples"} className={"mt-2 h-12 w-full " + lineColor[s.status]} />
+                  <p className="mt-2 flex justify-between text-xs text-zinc-500">
+                    <span>Error rate</span>
+                    <span className="tabular-nums text-zinc-300">{s.errorRate.toFixed(1)}%</span>
+                  </p>
                 </li>
               );
             })}
@@ -134,41 +174,43 @@ export default function App() {
 
         <section aria-labelledby="incidents-title" className="mt-10">
           <div className="flex flex-wrap items-center justify-between gap-3">
-            <h2 id="incidents-title" className="text-sm font-medium uppercase tracking-wide text-zinc-500">
+            <h2 id="incidents-title" className="text-xs font-medium uppercase tracking-[0.14em] text-zinc-500">
               Incidents
             </h2>
-            <div className="flex gap-1 rounded-md border border-zinc-800 p-0.5" role="group" aria-label="Filter incidents">
+            <div className="flex gap-1 rounded-lg border border-zinc-800 bg-zinc-900 p-0.5" role="group" aria-label="Filter incidents">
               {incidentFilters.map((f) => (
-                <button key={f} type="button" onClick={() => setFilter(f)} aria-pressed={filter === f} className={"rounded px-2.5 py-1 text-xs capitalize " + (filter === f ? "bg-zinc-100 text-zinc-900" : "text-zinc-400 hover:text-zinc-100")}>
+                <button key={f} type="button" onClick={() => setFilter(f)} aria-pressed={filter === f} className={"rounded-md px-2.5 py-1 text-xs capitalize " + (filter === f ? "bg-zinc-100 text-zinc-900" : "text-zinc-400 hover:text-zinc-100")}>
                   {f}
                 </button>
               ))}
             </div>
           </div>
-          <div className="mt-3 overflow-x-auto rounded-xl border border-zinc-800">
+          <div className="mt-3 overflow-x-auto rounded-2xl border border-zinc-800">
             <table className="w-full min-w-[560px] text-sm">
-              <thead className="bg-zinc-900 text-left text-zinc-400">
+              <thead className="bg-zinc-900 text-left text-xs text-zinc-400">
                 <tr>
-                  <th className="p-3">ID</th>
-                  <th className="p-3">Title</th>
-                  <th className="p-3">Service</th>
-                  <th className="p-3">Status</th>
-                  <th className="p-3">Opened</th>
+                  <th className="px-4 py-3 font-medium">ID</th>
+                  <th className="px-4 py-3 font-medium">Title</th>
+                  <th className="px-4 py-3 font-medium">Service</th>
+                  <th className="px-4 py-3 font-medium">Status</th>
+                  <th className="px-4 py-3 font-medium">Opened</th>
                 </tr>
               </thead>
               <tbody>
                 {visibleIncidents.map((i) => (
-                  <tr key={i.id} className="border-t border-zinc-800">
-                    <td className="p-3 font-mono text-xs text-zinc-400">{i.id}</td>
-                    <td className="p-3">{i.title}</td>
-                    <td className="p-3 text-zinc-400">{i.service}</td>
-                    <td className="p-3 capitalize">{i.status}</td>
-                    <td className="p-3 text-zinc-400">{new Date(i.openedAt).toLocaleString()}</td>
+                  <tr key={i.id} className="border-t border-zinc-800 hover:bg-zinc-900/60">
+                    <td className="px-4 py-3 font-mono text-xs text-zinc-500">{i.id}</td>
+                    <td className="px-4 py-3">{i.title}</td>
+                    <td className="px-4 py-3 text-zinc-400">{i.service}</td>
+                    <td className="px-4 py-3">
+                      <span className={"rounded-full px-2 py-0.5 text-xs capitalize " + incidentTone[i.status]}>{i.status}</span>
+                    </td>
+                    <td className="px-4 py-3 tabular-nums text-zinc-400">{new Date(i.openedAt).toLocaleString()}</td>
                   </tr>
                 ))}
                 {visibleIncidents.length === 0 ? (
                   <tr>
-                    <td colSpan={5} className="p-6 text-center text-zinc-500">
+                    <td colSpan={5} className="p-8 text-center text-zinc-500">
                       No incidents with this status.
                     </td>
                   </tr>

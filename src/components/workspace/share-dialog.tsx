@@ -147,7 +147,7 @@ export function ShareDialog({
               ) : null}
               {error ? <Alert variant="danger">{error}</Alert> : null}
               <div>
-                <h3 className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Active links</h3>
+                <h3 className="mb-2 text-[13px] font-semibold">Active links</h3>
                 {!links ? (
                   <Skeleton className="h-10" />
                 ) : links.length === 0 ? (

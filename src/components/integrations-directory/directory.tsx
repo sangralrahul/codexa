@@ -11,13 +11,13 @@ export function IntegrationsDirectory({ search }: { search: IntegrationSearch })
   const results = searchIntegrations(search);
   return (
     <div className="space-y-6">
-      <Suspense fallback={<div className="h-24 animate-pulse rounded-lg bg-muted" aria-hidden="true" />}>
+      <Suspense fallback={<div className="h-24 animate-pulse rounded-[14px] bg-muted calm:animate-none" aria-hidden="true" />}>
         <DirectoryFilters value={search} categories={INTEGRATION_CATEGORIES.map((c) => ({ id: c.id, name: c.name }))} resultCount={results.length} />
       </Suspense>
       {results.length === 0 ? (
         <EmptyState icon={<Plug className="size-8" aria-hidden="true" />} title="No integrations match" description="Try a different search term, another category, or clear the status filter." />
       ) : (
-        <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3" aria-label="Integrations">
+        <ul data-spotlight="grid" className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3" aria-label="Integrations">
           {results.map((i) => (
             <IntegrationCard key={i.id} integration={i} />
           ))}

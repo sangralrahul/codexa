@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { PageHeader } from "@/components/app/app-shell";
+import { AppPage, PageHeader } from "@/components/app/app-shell";
 import { requireUser } from "@/lib/auth/guards";
 import { capabilities } from "@/lib/env";
 import { getGithubAccountDto } from "@/lib/github/accounts";
@@ -21,7 +21,7 @@ export default async function ConnectGithubPage({ searchParams }: { searchParams
   const account = await getGithubAccountDto(user.id);
   const next = safeNext(sp.next ?? null, "/connect-github");
   return (
-    <div className="container-x max-w-3xl py-8">
+    <AppPage width="narrow">
       <PageHeader title="Connect GitHub" description="Import repositories into Codexa and push your changes back. Codexa never force-pushes and never stores your token unencrypted." />
       <div className="space-y-8">
         <GithubAccountCard configured={capabilities.github} account={account} next={next} errorCode={sp.error ?? null} />
@@ -55,6 +55,6 @@ export default async function ConnectGithubPage({ searchParams }: { searchParams
           </div>
         ) : null}
       </div>
-    </div>
+    </AppPage>
   );
 }

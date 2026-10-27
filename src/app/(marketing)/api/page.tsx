@@ -25,7 +25,7 @@ The Codexa HTTP API is the interface the web application itself uses. It is JSON
 Success responses return the resource under a named key:
 
 \`\`\`json
-{ "project": { "id": "prj_…", "name": "task-tracker", "workspaceId": "ws_…", "templateId": "vite-react-minimal" } }
+{ "project": { "id": "prj_…", "name": "task-tracker", "workspaceId": "ws_…", "templateId": "vite-react-starter" } }
 \`\`\`
 
 Lists return an array under a plural key (\`{ "projects": [...] }\`). Paging is cursor-less today; lists are bounded per workspace.

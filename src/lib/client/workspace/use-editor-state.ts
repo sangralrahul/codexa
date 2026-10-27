@@ -6,7 +6,7 @@ import type { FileEntry } from "./types";
 import { emit, on } from "@/lib/client/events";
 import { ClientApiError } from "@/lib/client/api";
 import { readLocal, writeLocal, wsKey } from "./storage";
-import { dirname } from "./paths";
+import { dirname, entryFileOf } from "./paths";
 
 export const AUTOSAVE_DELAY_MS = 800;
 
@@ -82,10 +82,15 @@ export function useEditorState(projectId: string, initialFiles: FileEntry[], can
   // ---- persistence of tabs ------------------------------------------------
   useEffect(() => {
     // localStorage is only readable after mount; restoring tabs here keeps SSR and the first client render identical.
-    const p = readLocal<Persisted>(wsKey(projectId, "tabs"), { tabs: [], active: null });
+    const p = readLocal<Persisted | null>(wsKey(projectId, "tabs"), null);
     const known = new Set(initialFiles.map((f) => f.path));
-    const t = p.tabs.filter((x) => known.has(x));
-    const a = p.active && known.has(p.active) ? p.active : (t[0] ?? null);
+    let t = (p?.tabs ?? []).filter((x) => known.has(x));
+    // First visit (nothing remembered): open the entry file so the editor is never a dead pane.
+    if (!p && !t.length) {
+      const entry = entryFileOf(known);
+      if (entry) t = [entry];
+    }
+    const a = p?.active && known.has(p.active) ? p.active : (t[0] ?? null);
     // eslint-disable-next-line react-hooks/set-state-in-effect -- one-time hydration from browser storage
     setTabs(t);
     setActive(a);

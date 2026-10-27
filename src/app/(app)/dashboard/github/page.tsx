@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { PageHeader } from "@/components/app/app-shell";
+import { AppPage, PageHeader } from "@/components/app/app-shell";
 import { requireUser } from "@/lib/auth/guards";
 import { capabilities } from "@/lib/env";
 import { getGithubAccountDto } from "@/lib/github/accounts";
@@ -15,7 +15,7 @@ export default async function DashboardGithubPage({ searchParams }: { searchPara
   const account = await getGithubAccountDto(user.id);
   const ready = capabilities.github && account.linked;
   return (
-    <div className="container-x py-8">
+    <AppPage>
       <PageHeader
         title="GitHub repositories"
         description={ready ? `Repositories available to @${account.username}. Import one to start a linked project.` : "Link your GitHub account to browse and import repositories."}
@@ -39,6 +39,6 @@ export default async function DashboardGithubPage({ searchParams }: { searchPara
           <GithubAccountCard configured={capabilities.github} account={account} next="/dashboard/github" errorCode={sp.error ?? null} />
         </div>
       )}
-    </div>
+    </AppPage>
   );
 }

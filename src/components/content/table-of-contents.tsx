@@ -1,15 +1,18 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { Heading } from "@/lib/content/types";
+import { GlideIndicator, useGlide } from "@/components/motion/glide";
 import { cn } from "@/lib/utils";
 
 /**
- * On-page table of contents with scroll-spy. Renders nothing when there are
- * fewer than two headings so short pages do not get an empty rail.
+ * On-page table of contents with scroll-spy: the current section is aria-current="location"
+ * and a 2px signal bar glides to it along the rail. Renders nothing for fewer than two headings.
  */
 export function TableOfContents({ headings, className, title = "On this page" }: { headings: Heading[]; className?: string; title?: string }) {
   const [active, setActive] = useState<string>(headings[0]?.id ?? "");
+  const listRef = useRef<HTMLDivElement>(null);
+  const glide = useGlide(listRef, { selector: '[aria-current="location"]', itemSelector: "a", axis: "y" });
 
   useEffect(() => {
     if (headings.length === 0) return;
@@ -29,25 +32,28 @@ export function TableOfContents({ headings, className, title = "On this page" }:
   if (headings.length < 2) return null;
 
   return (
-    <nav aria-label={title} className={cn("text-sm", className)}>
-      <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">{title}</p>
-      <ul className="space-y-1 border-l border-border">
+    <nav aria-label={title} className={cn("text-[13px]", className)}>
+      <p className="text-label mb-3 text-muted-foreground">{title}</p>
+      <div ref={listRef} className="relative border-l border-border">
+        <GlideIndicator ref={glide} className="left-[-1px] w-[2px] rounded-full bg-signal shadow-none" />
+        <ul className="space-y-0.5">
         {headings.map((h) => (
           <li key={h.id}>
             <a
               href={`#${h.id}`}
               aria-current={active === h.id ? "location" : undefined}
               className={cn(
-                "-ml-px block border-l py-1 pr-2 text-muted-foreground transition hover:text-foreground",
-                h.depth === 3 ? "pl-6" : "pl-3",
-                active === h.id ? "border-primary font-medium text-foreground" : "border-transparent",
+                "relative z-[1] block py-1 pr-2 leading-snug transition-colors duration-(--dur-2) hover:text-foreground",
+                h.depth === 3 ? "pl-6" : "pl-3.5",
+                active === h.id ? "font-medium text-foreground" : "text-muted-foreground",
               )}
             >
               {h.text}
             </a>
           </li>
         ))}
-      </ul>
+        </ul>
+      </div>
     </nav>
   );
 }

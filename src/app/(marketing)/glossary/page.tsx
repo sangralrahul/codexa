@@ -4,7 +4,7 @@ import { groupGlossaryByLetter, GLOSSARY } from "@/lib/content/glossary";
 import { LEARN_SIDEBAR } from "@/lib/content/nav";
 import { ArticleShell } from "@/components/docs/article-layout";
 import { Breadcrumbs } from "@/components/docs/breadcrumbs";
-import { PageTitle } from "@/components/marketing/backdrop";
+import { HubHeader } from "@/components/docs/hub-header";
 
 export const metadata = routeMetadata("/glossary");
 
@@ -12,42 +12,45 @@ export default function GlossaryPage() {
   const groups = groupGlossaryByLetter();
   return (
     <ArticleShell sidebar={LEARN_SIDEBAR}>
-      <Breadcrumbs items={[{ name: "Learn", path: "/learn" }, { name: "Glossary", path: "/glossary" }]} className="mb-4" />
-      <header className="max-w-3xl">
-        <PageTitle>Glossary</PageTitle>
-        <p className="mt-3 text-base text-muted-foreground sm:text-lg">{GLOSSARY.length} terms used across Codexa, each linked to the page that explains it in depth.</p>
-      </header>
-      <nav aria-label="Jump to letter" className="sticky top-16 z-10 -mx-4 mt-6 border-b border-border bg-background/95 px-4 py-2 backdrop-blur">
-        <ul className="flex flex-wrap gap-1">
+      <Breadcrumbs items={[{ name: "Learn", path: "/learn" }, { name: "Glossary", path: "/glossary" }]} className="mb-8" />
+      <HubHeader kicker="Glossary" title="Glossary." dim="The words we use." lead={`${GLOSSARY.length} terms used across Codexa, each linked to the page that explains it in depth.`} />
+      <nav aria-label="Jump to letter" className="sticky top-[7.75rem] z-10 mt-10 rounded-[14px] border border-border bg-card/95 p-1.5 shadow-md backdrop-blur-md lg:top-24">
+        <ul className="flex gap-0.5 overflow-x-auto [scrollbar-width:none] sm:flex-wrap [&::-webkit-scrollbar]:hidden">
           {groups.map((g) => (
             <li key={g.letter}>
-              <a href={`#letter-${g.letter}`} className="inline-flex size-8 items-center justify-center rounded-md text-sm font-medium text-muted-foreground hover:bg-muted hover:text-foreground">
+              <a
+                href={`#letter-${g.letter}`}
+                className="inline-flex size-8 shrink-0 items-center justify-center rounded-[9px] font-mono text-[13px] font-medium text-muted-foreground transition-colors duration-(--dur-2) hover:bg-muted hover:text-foreground focus-visible:outline-2 focus-visible:outline-ring"
+              >
                 {g.letter}
               </a>
             </li>
           ))}
         </ul>
       </nav>
-      <div className="mt-8 space-y-10">
+      <div className="mt-10 space-y-12">
         {groups.map((g) => (
-          <section key={g.letter} aria-labelledby={`letter-${g.letter}`}>
-            <h2 id={`letter-${g.letter}`} className="scroll-mt-32 text-2xl font-semibold tracking-tight">
+          <section key={g.letter} aria-labelledby={`letter-${g.letter}`} className="grid gap-x-8 sm:grid-cols-[4rem_minmax(0,1fr)]">
+            <h2 id={`letter-${g.letter}`} className="font-display scroll-mt-48 text-[40px] font-bold leading-none tracking-[-0.04em] text-foreground-dim lg:scroll-mt-44">
               {g.letter}
             </h2>
-            <dl className="mt-3 divide-y divide-border">
+            <dl className="mt-3 divide-y divide-border border-y border-border sm:mt-0">
               {g.terms.map((t) => (
-                <div key={t.slug} id={t.slug} className="scroll-mt-32 py-4">
-                  <dt className="font-semibold">
-                    <a href={`#${t.slug}`} className="hover:text-primary">
+                <div key={t.slug} id={t.slug} className="group scroll-mt-48 py-5 lg:scroll-mt-44">
+                  <dt className="text-[16px] font-semibold tracking-[-0.01em]">
+                    <a href={`#${t.slug}`} className="inline-flex items-center gap-2 hover:text-foreground">
                       {t.term}
+                      <span aria-hidden="true" className="font-mono text-[12px] font-normal text-foreground-dim opacity-0 transition-opacity group-hover:opacity-100">
+                        #
+                      </span>
                     </a>
                   </dt>
-                  <dd className="mt-1 max-w-3xl text-sm text-muted-foreground">
+                  <dd className="mt-1.5 max-w-3xl text-[14.5px] leading-relaxed text-muted-foreground">
                     {t.definition}
                     {t.href ? (
                       <>
                         {" "}
-                        <Link href={t.href} className="text-primary underline">
+                        <Link href={t.href} className="link-draw whitespace-nowrap font-medium text-foreground">
                           Learn more
                         </Link>
                       </>

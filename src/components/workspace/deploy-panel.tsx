@@ -1,27 +1,16 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
-import { ExternalLink, Globe, History, Rocket, RotateCcw } from "lucide-react";
-import { api, ClientApiError } from "@/lib/client/api";
+import { ExternalLink, Globe, History, Loader2, RotateCcw, Rocket } from "lucide-react";
+import { useDeployments, IN_PROGRESS } from "@/lib/client/workspace/deployments";
+import type { DeploymentDto } from "@/lib/runtime/types";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Alert, EmptyState, Skeleton, Spinner } from "@/components/ui/misc";
-import { Field, Select } from "@/components/ui/input";
-import { Dialog, DialogContent, DialogFooter } from "@/components/ui/dialog";
+import { Alert, EmptyState, LiveDot, Skeleton } from "@/components/ui/misc";
+import { Sheet, SheetContent } from "@/components/ui/sheet";
+import { relativeTime } from "@/components/projects/format";
 import { cn } from "@/lib/utils";
-import type { DeploymentDto } from "@/lib/runtime/types";
+import { SheetHeading } from "./drawer";
 
-type ProviderInfo = { id: "codexa" | "vercel"; name: string; available: boolean; reason: string | null };
-type ListResponse = {
-  deployments: DeploymentDto[];
-  providers: ProviderInfo[];
-  deployHost: string;
-  previewProtocol: "http" | "https";
-  domain: { host: string; cname: string; verificationSupported: boolean; note: string };
-};
-type Role = "owner" | "admin" | "editor" | "viewer";
-
-const base = (id: string) => `/api/v1/projects/${encodeURIComponent(id)}/deployments`;
 const STATUS_BADGE: Record<DeploymentDto["status"], { label: string; variant: "default" | "primary" | "success" | "warning" | "danger" | "outline" }> = {
   queued: { label: "Queued", variant: "default" },
   building: { label: "Building", variant: "primary" },
@@ -31,241 +20,108 @@ const STATUS_BADGE: Record<DeploymentDto["status"], { label: string; variant: "d
   rolled_back: { label: "Superseded", variant: "outline" },
 };
 
-export function DeployPanel({ projectId }: { projectId: string; conversationId?: string }) {
-  const [data, setData] = useState<ListResponse | null>(null);
-  const [role, setRole] = useState<Role>("viewer");
-  const [loadError, setLoadError] = useState<string | null>(null);
-  const [provider, setProvider] = useState<"codexa" | "vercel">("codexa");
-  const [confirmOpen, setConfirmOpen] = useState(false);
-  const [deploying, setDeploying] = useState(false);
-  const [actionError, setActionError] = useState<string | null>(null);
-  const [selectedId, setSelectedId] = useState<string | null>(null);
-  const [selected, setSelected] = useState<DeploymentDto | null>(null);
-  const [rollingBack, setRollingBack] = useState<string | null>(null);
-
-  const load = useCallback(async () => {
-    try {
-      const [list, proj] = await Promise.all([api<ListResponse>(base(projectId)), api<{ role: Role }>(`/api/v1/projects/${encodeURIComponent(projectId)}`)]);
-      setData(list);
-      setRole(proj.role);
-      setLoadError(null);
-    } catch (err) {
-      setLoadError(err instanceof Error ? err.message : "Could not load deployments");
-    }
-  }, [projectId]);
-  useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect -- initial fetch; state is set after the request resolves, not synchronously
-    void load();
-  }, [load]);
-
-  // Poll the selected deployment while it is in progress, and fetch its build log.
-  const fetchSelected = useCallback(
-    async (id: string): Promise<DeploymentDto | null> => {
-      try {
-        const res = await api<{ deployment: DeploymentDto }>(`${base(projectId)}/${id}`);
-        setSelected(res.deployment);
-        return res.deployment;
-      } catch (err) {
-        setActionError(err instanceof Error ? err.message : "Could not load deployment");
-        return null;
-      }
-    },
-    [projectId],
-  );
-  useEffect(() => {
-    if (!selectedId) return;
-    let cancelled = false;
-    let timer: ReturnType<typeof setTimeout> | null = null;
-    const tick = () =>
-      void fetchSelected(selectedId).then((d) => {
-        if (cancelled || !d) return;
-        if (d.status === "queued" || d.status === "building" || d.status === "deploying") timer = setTimeout(tick, 2000);
-        else void load();
-      });
-    tick();
-    return () => {
-      cancelled = true;
-      if (timer) clearTimeout(timer);
-    };
-  }, [selectedId, fetchSelected, load]);
-
-  const canDeploy = role !== "viewer";
-  const canRollback = role === "owner" || role === "admin";
-  const providers = data?.providers ?? [];
-  const chosen = providers.find((p) => p.id === provider);
-  const current = useMemo(() => data?.deployments.find((d) => d.status === "live" && d.provider === provider) ?? null, [data, provider]);
-  const inProgress = data?.deployments.some((d) => d.status === "queued" || d.status === "building" || d.status === "deploying") ?? false;
-
-  const deploy = async () => {
-    setConfirmOpen(false);
-    setDeploying(true);
-    setActionError(null);
-    try {
-      const res = await api<{ deployment: DeploymentDto }>(base(projectId), { method: "POST", json: { provider } });
-      setSelectedId(res.deployment.id);
-      await load();
-    } catch (err) {
-      setActionError(err instanceof ClientApiError ? err.message : err instanceof Error ? err.message : "Deployment failed to start");
-    } finally {
-      setDeploying(false);
-    }
-  };
-
-  const rollback = async (id: string) => {
-    setRollingBack(id);
-    setActionError(null);
-    try {
-      await api(`${base(projectId)}/${id}/rollback`, { method: "POST" });
-      setSelectedId(id);
-      await load();
-    } catch (err) {
-      setActionError(err instanceof Error ? err.message : "Rollback failed");
-    } finally {
-      setRollingBack(null);
-    }
-  };
-
+/**
+ * "Manage deployments": the history (with each build log), rollback for owners and admins,
+ * and the custom domain instructions. Publishing itself happens in the header popover.
+ */
+export function DeploymentsSheet({ open, onOpenChange }: { open: boolean; onOpenChange: (o: boolean) => void }) {
+  const d = useDeployments();
+  const selected = d.tracked;
   return (
-    <section className="flex h-full min-h-0 flex-col overflow-auto bg-background" aria-label="Deploy">
-      <div className="space-y-5 p-4">
-        {loadError && !data ? <Alert variant="danger" title="Could not load deployments">{loadError}</Alert> : null}
-        {actionError ? <Alert variant="danger" title="Something went wrong">{actionError}</Alert> : null}
+    <Sheet open={open} onOpenChange={onOpenChange}>
+      <SheetContent title={<SheetHeading icon={<Rocket className="size-4" aria-hidden="true" />} title="Deployments" />} description="Every published version, its build log, rollback and your domain." width={560}>
+        <div className="space-y-6">
+          {d.loadError && !d.data ? <Alert variant="danger" title="Could not load deployments">{d.loadError}</Alert> : null}
+          {d.publishError ? <Alert variant="danger" title="Something went wrong">{d.publishError}</Alert> : null}
 
-        {/* Publish */}
-        <div className="rounded-xl border border-border bg-card p-4">
-          <h3 className="flex items-center gap-2 text-sm font-semibold">
-            <Rocket className="size-4" aria-hidden="true" /> Publish
-          </h3>
-          {!data ? (
-            <div className="mt-3 space-y-2">
-              <Skeleton className="h-10 w-full" />
-              <Skeleton className="h-9 w-32" />
-            </div>
-          ) : (
-            <>
-              <Field label="Provider" htmlFor="deploy-provider" className="mt-3" hint={chosen && !chosen.available ? chosen.reason ?? undefined : undefined}>
-                <Select id="deploy-provider" value={provider} onChange={(e) => setProvider(e.target.value as "codexa" | "vercel")}>
-                  {providers.map((p) => (
-                    <option key={p.id} value={p.id} disabled={!p.available}>
-                      {p.name}
-                      {p.available ? "" : " (not configured)"}
-                    </option>
-                  ))}
-                </Select>
-              </Field>
-              {current?.url ? (
-                <p className="mt-3 text-xs text-muted-foreground">
-                  Currently live:{" "}
-                  <a href={current.url} target="_blank" rel="noopener noreferrer" className="text-primary underline-offset-2 hover:underline">
-                    {current.url}
-                  </a>
-                </p>
-              ) : (
-                <p className="mt-3 text-xs text-muted-foreground">Nothing is published yet. Publishing makes the current files available at a public URL.</p>
-              )}
-              <div className="mt-3 flex flex-wrap items-center gap-2">
-                <Button onClick={() => setConfirmOpen(true)} disabled={!canDeploy || !chosen?.available || deploying || inProgress} loading={deploying}>
-                  <Rocket className="size-4" aria-hidden="true" /> {current ? "Publish new version" : "Publish"}
-                </Button>
-                {!canDeploy ? <span className="text-xs text-muted-foreground">Viewers cannot publish.</span> : inProgress ? <span className="text-xs text-muted-foreground">A deployment is in progress.</span> : null}
-              </div>
-            </>
-          )}
-        </div>
-
-        {/* Selected deployment status + log */}
-        {selected ? (
-          <div className="rounded-xl border border-border bg-card p-4" aria-live="polite">
-            <div className="flex flex-wrap items-center gap-2">
-              {selected.status === "queued" || selected.status === "building" || selected.status === "deploying" ? <Spinner className="text-primary" /> : null}
-              <Badge variant={STATUS_BADGE[selected.status].variant}>{STATUS_BADGE[selected.status].label}</Badge>
-              <span className="text-xs text-muted-foreground">Deployment {selected.id.slice(0, 8)} · {new Date(selected.createdAt).toLocaleString()}</span>
-              {selected.url && selected.status === "live" ? (
-                <a href={selected.url} target="_blank" rel="noopener noreferrer" className="ml-auto inline-flex items-center gap-1 text-xs text-primary hover:underline">
-                  Open <ExternalLink className="size-3" aria-hidden="true" />
-                </a>
-              ) : null}
-            </div>
-            {selected.error ? <Alert variant="danger" className="mt-3">{selected.error}</Alert> : null}
-            <pre className="mt-3 max-h-64 overflow-auto rounded-md border border-border bg-muted/50 p-2 font-mono text-[11px] leading-5 text-muted-foreground" aria-label="Build log">
-              {selected.buildLog || "Waiting for build output…"}
-            </pre>
-          </div>
-        ) : null}
-
-        {/* History */}
-        <div>
-          <h3 className="flex items-center gap-2 text-sm font-semibold">
-            <History className="size-4" aria-hidden="true" /> History
-          </h3>
-          {!data ? (
-            <div className="mt-3 space-y-2">
-              <Skeleton className="h-12 w-full" />
-              <Skeleton className="h-12 w-full" />
-            </div>
-          ) : data.deployments.length === 0 ? (
-            <EmptyState className="mt-3 p-6" title="No deployments yet" description="Your deployment history, URLs and build logs will appear here." />
-          ) : (
-            <ul className="mt-3 divide-y divide-border rounded-xl border border-border">
-              {data.deployments.map((d) => (
-                <li key={d.id} className={cn("flex flex-wrap items-center gap-2 p-3 text-sm", selectedId === d.id && "bg-muted/40")}>
-                  <Badge variant={STATUS_BADGE[d.status].variant}>{STATUS_BADGE[d.status].label}</Badge>
-                  <button type="button" onClick={() => setSelectedId(d.id)} className="min-w-0 flex-1 truncate text-left hover:underline focus-visible:outline-2 focus-visible:outline-ring" aria-label={`Show details for deployment ${d.id.slice(0, 8)}`}>
-                    <span className="font-mono text-xs">{d.id.slice(0, 8)}</span>
-                    <span className="ml-2 text-xs text-muted-foreground">
-                      {d.provider} · {new Date(d.createdAt).toLocaleString()}
-                    </span>
-                  </button>
-                  {d.url && (d.status === "live" || d.status === "rolled_back") ? (
-                    <a href={d.url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-xs text-primary hover:underline" aria-label={`Open ${d.url}`}>
-                      URL <ExternalLink className="size-3" aria-hidden="true" />
-                    </a>
-                  ) : null}
-                  {d.status === "rolled_back" && d.url ? (
-                    <Button size="sm" variant="outline" onClick={() => void rollback(d.id)} loading={rollingBack === d.id} disabled={!canRollback || rollingBack !== null} title={canRollback ? "Make this version live again" : "Only workspace admins can roll back"}>
-                      <RotateCcw className="size-3.5" aria-hidden="true" /> Restore
-                    </Button>
-                  ) : null}
-                </li>
-              ))}
-            </ul>
-          )}
-        </div>
-
-        {/* Custom domain */}
-        {data ? (
-          <div className="rounded-xl border border-border bg-card p-4">
-            <h3 className="flex items-center gap-2 text-sm font-semibold">
-              <Globe className="size-4" aria-hidden="true" /> Custom domain
+          <section aria-labelledby="dep-history">
+            <h3 id="dep-history" className="flex items-center gap-2 text-[13px] font-semibold">
+              <History className="size-4 text-muted-foreground" aria-hidden="true" /> History
             </h3>
-            <p className="mt-2 text-xs text-muted-foreground">Your site is served at <code className="rounded bg-muted px-1">{data.domain.host}</code>. To use your own domain, create a CNAME record:</p>
-            <dl className="mt-2 grid grid-cols-[auto_1fr] gap-x-3 gap-y-1 font-mono text-xs">
-              <dt className="text-muted-foreground">Type</dt>
-              <dd>CNAME</dd>
-              <dt className="text-muted-foreground">Name</dt>
-              <dd>www (or your subdomain)</dd>
-              <dt className="text-muted-foreground">Target</dt>
-              <dd className="break-all">{data.domain.cname}</dd>
-            </dl>
-            <Alert variant="info" className="mt-3">{data.domain.note}</Alert>
-          </div>
-        ) : null}
-      </div>
+            {!d.data ? (
+              <div className="mt-3 space-y-2">
+                <Skeleton className="h-12 w-full rounded-xl" />
+                <Skeleton className="h-12 w-full rounded-xl" />
+              </div>
+            ) : d.data.deployments.length === 0 ? (
+              <EmptyState className="mt-3 py-8" icon={<Rocket />} title="No deployments yet" description="Publish from the header. Each version, its URL and build log will appear here." />
+            ) : (
+              <ul className="mt-3 overflow-hidden rounded-xl border border-border">
+                {d.data.deployments.map((dep) => {
+                  const badge = STATUS_BADGE[dep.status];
+                  const active = selected?.id === dep.id;
+                  return (
+                    <li key={dep.id} className={cn("border-b border-border last:border-b-0", active && "bg-muted/50")}>
+                      <div className="flex flex-wrap items-center gap-2 px-3 py-2.5 text-sm">
+                        <Badge variant={badge.variant} className={cn("gap-1", dep.status === "live" && "ws-drop")}>
+                          {dep.status === "live" ? <LiveDot /> : IN_PROGRESS.includes(dep.status) ? <Loader2 className="size-3 animate-spin" aria-hidden="true" /> : null}
+                          {badge.label}
+                        </Badge>
+                        <button type="button" onClick={() => d.track(active ? null : dep.id)} className="min-w-0 flex-1 truncate text-left focus-visible:outline-2 focus-visible:outline-ring" aria-expanded={active} aria-label={`Build log for deployment ${dep.id.slice(0, 8)}`}>
+                          <span className="font-mono text-xs">{dep.id.slice(0, 8)}</span>
+                          <span className="ml-2 text-xs text-muted-foreground">
+                            {dep.provider} · {relativeTime(dep.createdAt)}
+                          </span>
+                        </button>
+                        {dep.url && (dep.status === "live" || dep.status === "rolled_back") ? (
+                          <a href={dep.url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground hover:underline" aria-label={`Open ${dep.url}`}>
+                            Open <ExternalLink className="size-3" aria-hidden="true" />
+                          </a>
+                        ) : null}
+                        {dep.status === "rolled_back" && dep.url ? (
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            appearance="app"
+                            className="h-7 px-2.5 text-xs"
+                            onClick={() => void d.rollback(dep.id)}
+                            loading={d.rollingBack === dep.id}
+                            disabled={!d.canRollback || d.rollingBack !== null}
+                            title={d.canRollback ? "Make this version live again" : "Only workspace owners and admins can roll back"}
+                          >
+                            <RotateCcw className="size-3.5" aria-hidden="true" /> Roll back to this
+                          </Button>
+                        ) : null}
+                      </div>
+                      {active && selected ? (
+                        <div className="border-t border-border px-3 py-2.5">
+                          {selected.error ? <p className="mb-2 whitespace-pre-wrap text-xs text-danger">{selected.error}</p> : null}
+                          <pre className="max-h-64 overflow-auto rounded-lg border border-code-border bg-code-bg p-2.5 font-mono text-[11px] leading-5 text-code-fg" aria-label="Build log">
+                            {selected.buildLog || "Waiting for build output…"}
+                          </pre>
+                        </div>
+                      ) : null}
+                    </li>
+                  );
+                })}
+              </ul>
+            )}
+            {!d.canRollback && d.data?.deployments.some((x) => x.status === "rolled_back") ? <p className="mt-2 text-[12px] text-muted-foreground">Only workspace owners and admins can roll back.</p> : null}
+          </section>
 
-      <Dialog open={confirmOpen} onOpenChange={setConfirmOpen}>
-        <DialogContent title="Publish this project?" description="Publishing creates a snapshot of the current files, builds it and makes the result publicly reachable at its URL. Anyone with the link can open it.">
-          <p className="text-sm text-muted-foreground">
-            Provider: <strong className="text-foreground">{chosen?.name ?? provider}</strong>
-            {provider === "codexa" ? <> · URL: <code className="rounded bg-muted px-1 text-xs">{data?.domain.host}</code></> : null}
-          </p>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setConfirmOpen(false)}>Cancel</Button>
-            <Button onClick={() => void deploy()}>
-              <Rocket className="size-4" aria-hidden="true" /> Publish
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-    </section>
+          {d.data ? (
+            <section aria-labelledby="dep-domain" className="rounded-xl border border-border bg-card p-4 shadow-[inset_0_1px_0_var(--hairline)]">
+              <h3 id="dep-domain" className="flex items-center gap-2 text-[13px] font-semibold">
+                <Globe className="size-4 text-muted-foreground" aria-hidden="true" /> Custom domain
+              </h3>
+              <p className="mt-2 text-xs text-muted-foreground">
+                Your site is served at <code className="rounded bg-muted px-1 font-mono">{d.data.domain.host}</code>. To use your own domain, create a CNAME record:
+              </p>
+              <dl className="mt-2 grid grid-cols-[auto_1fr] gap-x-3 gap-y-1 font-mono text-xs">
+                <dt className="text-muted-foreground">Type</dt>
+                <dd>CNAME</dd>
+                <dt className="text-muted-foreground">Name</dt>
+                <dd>www (or your subdomain)</dd>
+                <dt className="text-muted-foreground">Target</dt>
+                <dd className="break-all">{d.data.domain.cname}</dd>
+              </dl>
+              <Alert variant="info" className="mt-3" live={false}>
+                {d.data.domain.note}
+              </Alert>
+            </section>
+          ) : null}
+        </div>
+      </SheetContent>
+    </Sheet>
   );
 }

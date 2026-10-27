@@ -1,72 +1,79 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { ArrowDownToLine, Check, Copy, TerminalSquare, Trash2 } from "lucide-react";
-import type { Terminal } from "@xterm/xterm";
+import type { ITheme, Terminal } from "@xterm/xterm";
 import type { FitAddon } from "@xterm/addon-fit";
-import { StatusDot } from "@/components/ui/misc";
-import { Tooltip, TooltipProvider } from "@/components/ui/tooltip";
+import { useTheme } from "@/components/theme/theme-provider";
+import { Tooltip } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
+import { cssColor, cssColorAlpha } from "@/lib/client/workspace/css-colors";
+import { useLogSnapshot, useRuntime } from "@/lib/client/workspace/runtime";
 import type { LogLine } from "@/lib/runtime/types";
 import { toolButton } from "./panel-tabs";
 
 /**
- * Logs panel: streams the runtime's stdout/stderr/system lines over SSE into
- * an xterm.js terminal (stderr red, system cyan). Falls back to a plain
- * <pre> when xterm cannot be loaded or opened (no WebGL, old browsers, SSR).
+ * The dock's terminal: the runtime's stdout/stderr/system lines (one SSE stream owned by
+ * WorkspaceRuntimeProvider) written into xterm.js with a full ANSI palette read from the
+ * design tokens. Falls back to a plain <pre> when xterm cannot be loaded or opened.
  */
 const MAX_LINES = 5000;
 const COLORS = { stdout: "", stderr: "\x1b[31m", system: "\x1b[36m" } as const;
 const RESET = "\x1b[0m";
 
-type ConnState = "connecting" | "live" | "ended" | "error";
-
-/** xterm needs concrete colours: read the site's code tokens so the terminal matches the theme. */
-function terminalTheme() {
-  const css = getComputedStyle(document.documentElement);
-  const bg = css.getPropertyValue("--code-bg").trim() || "black";
-  const fg = css.getPropertyValue("--code-fg").trim() || "white";
-  return { background: bg, foreground: fg, cursor: bg, selectionBackground: "rgba(255,255,255,0.18)" };
+/** xterm needs concrete colours: every ANSI slot is a token (or a token mixed toward white). */
+function terminalTheme(): ITheme {
+  const bright = (token: string) => cssColor(`color-mix(in oklab, var(${token}) 72%, white)`);
+  return {
+    background: cssColor("var(--code-bg)"),
+    foreground: cssColor("var(--code-fg)"),
+    cursor: cssColor("var(--code-bg)"),
+    cursorAccent: cssColor("var(--code-bg)"),
+    selectionBackground: cssColorAlpha("var(--signal)", 0.3),
+    black: cssColor("color-mix(in oklab, var(--code-bg) 70%, var(--code-fg))"),
+    red: cssColor("var(--danger)"),
+    green: cssColor("var(--success)"),
+    yellow: cssColor("var(--warning)"),
+    blue: cssColor("var(--info)"),
+    magenta: cssColor("var(--accent)"),
+    cyan: cssColor("var(--syn-attr)"),
+    white: cssColor("var(--code-fg)"),
+    brightBlack: cssColor("var(--code-muted)"),
+    brightRed: bright("--danger"),
+    brightGreen: bright("--success"),
+    brightYellow: bright("--signal-2"),
+    brightBlue: bright("--info"),
+    brightMagenta: bright("--accent"),
+    brightCyan: bright("--syn-type"),
+    brightWhite: cssColor("color-mix(in oklab, var(--code-fg) 70%, white)"),
+  };
 }
 
-export function LogsPanel({ projectId }: { projectId: string; conversationId?: string }) {
+const writeLine = (term: Terminal, l: LogLine) => term.write(`${COLORS[l.stream]}${l.line.replace(/\r?\n/g, "\r\n")}${RESET}\r\n`);
+
+export function LogsPanel({ visible = true }: { visible?: boolean }) {
+  const rt = useRuntime();
+  const store = rt.logs;
+  const snap = useLogSnapshot(store);
+  const { resolved } = useTheme();
   const hostRef = useRef<HTMLDivElement>(null);
   const termRef = useRef<Terminal | null>(null);
   const fitRef = useRef<FitAddon | null>(null);
-  const linesRef = useRef<LogLine[]>([]);
   const [fallback, setFallback] = useState(false);
-  const [fallbackLines, setFallbackLines] = useState<LogLine[]>([]);
   const [autoscroll, setAutoscroll] = useState(true);
-  const [conn, setConn] = useState<ConnState>("connecting");
-  const [runtimeStatus, setRuntimeStatus] = useState<string>("stopped");
   const [copied, setCopied] = useState(false);
-  const [hasOutput, setHasOutput] = useState(false);
   const autoscrollRef = useRef(true);
   useEffect(() => {
     autoscrollRef.current = autoscroll;
   }, [autoscroll]);
-
-  const append = useCallback(
-    (line: LogLine) => {
-      linesRef.current.push(line);
-      if (linesRef.current.length === 1) setHasOutput(true);
-      if (linesRef.current.length > MAX_LINES) linesRef.current.splice(0, linesRef.current.length - MAX_LINES);
-      const term = termRef.current;
-      if (term) {
-        term.write(`${COLORS[line.stream]}${line.line.replace(/\r?\n/g, "\r\n")}${RESET}\r\n`);
-        if (autoscrollRef.current) term.scrollToBottom();
-      } else if (fallback) {
-        setFallbackLines((prev) => (prev.length > MAX_LINES ? [...prev.slice(-MAX_LINES + 1), line] : [...prev, line]));
-      }
-    },
-    [fallback],
-  );
 
   // Mount xterm (client only). Any failure flips to the <pre> fallback.
   useEffect(() => {
     let disposed = false;
     let term: Terminal | null = null;
     let ro: ResizeObserver | null = null;
+    let offLine: (() => void) | null = null;
+    let offClear: (() => void) | null = null;
     (async () => {
       try {
         const [{ Terminal }, { FitAddon }] = await Promise.all([import("@xterm/xterm"), import("@xterm/addon-fit")]);
@@ -75,19 +82,30 @@ export function LogsPanel({ projectId }: { projectId: string; conversationId?: s
         term = new Terminal({
           convertEol: true,
           disableStdin: true,
-          fontSize: 12,
-          fontFamily: "ui-monospace, SFMono-Regular, Menlo, monospace",
+          fontSize: 12.5,
+          lineHeight: 1.35,
+          fontFamily: "var(--font-geist-mono), ui-monospace, SFMono-Regular, Menlo, monospace",
           scrollback: MAX_LINES,
           theme: terminalTheme(),
         });
         const fit = new FitAddon();
         term.loadAddon(fit);
         term.open(hostRef.current);
-        fit.fit();
+        try {
+          fit.fit();
+        } catch {
+          /* hidden on mount */
+        }
         termRef.current = term;
         fitRef.current = fit;
-        for (const l of linesRef.current) term.write(`${COLORS[l.stream]}${l.line}${RESET}\r\n`);
+        for (const l of store.lines) writeLine(term, l);
         term.scrollToBottom();
+        offLine = store.onLine((l) => {
+          if (!termRef.current) return;
+          writeLine(termRef.current, l);
+          if (autoscrollRef.current) termRef.current.scrollToBottom();
+        });
+        offClear = store.onClear(() => termRef.current?.clear());
         ro = new ResizeObserver(() => {
           try {
             fit.fit();
@@ -97,69 +115,42 @@ export function LogsPanel({ projectId }: { projectId: string; conversationId?: s
         });
         ro.observe(hostRef.current);
       } catch {
-        if (!disposed) {
-          setFallback(true);
-          setFallbackLines([...linesRef.current]);
-        }
+        if (!disposed) setFallback(true);
       }
     })();
     return () => {
       disposed = true;
+      offLine?.();
+      offClear?.();
       ro?.disconnect();
       term?.dispose();
       termRef.current = null;
     };
-  }, []);
+  }, [store]);
 
-  // SSE subscription. EventSource reconnects on its own when the relay drops;
-  // when the relay says there is no runtime ("end"), we retry every 5s so logs
-  // appear as soon as a preview is started.
-  const [reconnectKey, setReconnectKey] = useState(0);
+  // Follow the site theme (tokens are re-read after the class flips).
   useEffect(() => {
-    const es = new EventSource(`/api/v1/projects/${encodeURIComponent(projectId)}/runtime/logs`);
-    let ended = false;
-    let retry: ReturnType<typeof setTimeout> | null = null;
-    es.onopen = () => setConn("live");
-    es.onerror = () => {
-      if (!ended) setConn("error");
-    };
-    es.addEventListener("log", (e) => {
-      try {
-        append(JSON.parse((e as MessageEvent).data) as LogLine);
-      } catch {
-        /* malformed line */
-      }
+    const raf = requestAnimationFrame(() => {
+      if (termRef.current) termRef.current.options.theme = terminalTheme();
     });
-    es.addEventListener("status", (e) => {
-      try {
-        setRuntimeStatus((JSON.parse((e as MessageEvent).data) as { status: string }).status);
-      } catch {
-        /* ignore */
-      }
-    });
-    es.addEventListener("end", () => {
-      ended = true;
-      setConn("ended");
-      es.close();
-      retry = setTimeout(() => {
-        setConn("connecting");
-        setReconnectKey((k) => k + 1);
-      }, 5000);
-    });
-    return () => {
-      es.close();
-      if (retry) clearTimeout(retry);
-    };
-  }, [projectId, append, reconnectKey]);
+    return () => cancelAnimationFrame(raf);
+  }, [resolved]);
 
-  const clear = () => {
-    linesRef.current = [];
-    termRef.current?.clear();
-    setFallbackLines([]);
-    setHasOutput(false);
-  };
+  // Re-fit when the dock is revealed.
+  useEffect(() => {
+    if (!visible) return;
+    const raf = requestAnimationFrame(() => {
+      try {
+        fitRef.current?.fit();
+      } catch {
+        /* still hidden */
+      }
+    });
+    return () => cancelAnimationFrame(raf);
+  }, [visible]);
+
   const copy = async () => {
-    const text = linesRef.current.map((l) => `[${l.stream}] ${l.line}`).join("\n");
+    const text = store.lines.map((l) => `[${l.stream}] ${l.line}`).join("\n");
     try {
       await navigator.clipboard.writeText(text);
       setCopied(true);
@@ -169,55 +160,51 @@ export function LogsPanel({ projectId }: { projectId: string; conversationId?: s
     }
   };
 
-  const dot = runtimeStatus === "running" ? "ok" : runtimeStatus === "starting" ? "busy" : runtimeStatus === "error" ? "error" : "idle";
-  const connLabel = conn === "live" ? "streaming" : conn === "connecting" ? "connecting" : conn === "ended" ? "no runtime" : "reconnecting";
+  const connLabel = snap.conn === "live" ? "Streaming" : snap.conn === "connecting" ? "Connecting" : snap.conn === "ended" ? "No runtime" : "Reconnecting";
 
   return (
-    <TooltipProvider>
-      <section className="flex h-full min-h-0 flex-col bg-background" aria-label="Logs">
-        <div className="flex h-10 shrink-0 items-center gap-2 border-b border-border px-2">
-          <span className="flex items-center gap-1.5 pl-1 text-xs font-medium" aria-live="polite">
-            <StatusDot status={dot} /> <span>Runtime {runtimeStatus}</span>
-            <span className="rounded-full bg-muted px-1.5 py-0.5 text-[10px] font-normal text-muted-foreground">{connLabel}</span>
-          </span>
-          <div className="ml-auto flex items-center gap-0.5">
-            <Tooltip content={autoscroll ? "Autoscroll on" : "Autoscroll off"}>
-              <button type="button" aria-label="Toggle autoscroll" aria-pressed={autoscroll} onClick={() => setAutoscroll((v) => !v)} className={cn(toolButton, "size-7")}>
-                <ArrowDownToLine className="size-3.5" aria-hidden="true" />
-              </button>
-            </Tooltip>
-            <Tooltip content={copied ? "Copied" : "Copy logs"}>
-              <button type="button" aria-label="Copy logs" onClick={() => void copy()} className={cn(toolButton, "size-7")}>
-                {copied ? <Check className="pop-in size-3.5 text-success" aria-hidden="true" /> : <Copy className="size-3.5" aria-hidden="true" />}
-              </button>
-            </Tooltip>
-            <Tooltip content="Clear">
-              <button type="button" aria-label="Clear logs" onClick={clear} className={cn(toolButton, "size-7")}>
-                <Trash2 className="size-3.5" aria-hidden="true" />
-              </button>
-            </Tooltip>
-          </div>
-        </div>
-        <div className="relative min-h-0 flex-1 bg-code-bg">
-          {fallback ? (
-            <pre className="h-full overflow-auto p-3 font-mono text-[12px] leading-5 text-code-fg" aria-live="polite">
-              {fallbackLines.length ? fallbackLines.map((l, i) => (
-                <div key={i} className={cn(l.stream === "stderr" && "text-danger", l.stream === "system" && "text-info")}>
+    <section className="flex h-full min-h-0 flex-col" aria-label="Terminal">
+      <div className="relative min-h-0 flex-1 bg-code-bg">
+        {fallback ? (
+          <pre className="h-full overflow-auto p-3 font-mono text-[12.5px] leading-5 text-code-fg">
+            {store.lines.length ? (
+              store.lines.slice(-1000).map((l, i) => (
+                <div key={i} className={cn(l.stream === "stderr" && "text-danger", l.stream === "system" && "text-syn-attr")}>
                   {l.line}
                 </div>
-              )) : <span className="text-code-fg/60">No log output yet. Start the preview to see dev server output here.</span>}
-            </pre>
-          ) : (
-            <div ref={hostRef} className="h-full w-full p-2" aria-label="Terminal output" />
-          )}
-          {!fallback && conn === "ended" && !hasOutput ? (
-            <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center gap-2 p-6 text-center text-code-fg/60">
-              <TerminalSquare className="size-6" aria-hidden="true" />
-              <p className="text-xs">No runtime is running. Start the preview to stream its logs here.</p>
-            </div>
-          ) : null}
+              ))
+            ) : (
+              <span className="text-code-muted">No log output yet. Start the preview to see dev server output here.</span>
+            )}
+          </pre>
+        ) : (
+          <div ref={hostRef} className="h-full w-full px-3 py-2" aria-label="Terminal output" role="log" />
+        )}
+        {!fallback && !snap.total ? (
+          <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center gap-2 p-6 text-center text-code-muted">
+            <TerminalSquare className="size-6" aria-hidden="true" />
+            <p className="text-[12.5px]">{snap.conn === "ended" ? "No runtime is running. Start the preview to stream its logs here." : "Waiting for output from the dev server…"}</p>
+          </div>
+        ) : null}
+        <div className="absolute right-2 top-2 flex items-center gap-0.5 rounded-lg border border-code-border bg-code-bg/90 p-0.5 text-code-muted">
+          <span className="px-1.5 font-mono text-[10.5px]">{connLabel}</span>
+          <Tooltip content={autoscroll ? "Autoscroll on" : "Autoscroll off"}>
+            <button type="button" aria-label="Toggle autoscroll" aria-pressed={autoscroll} onClick={() => setAutoscroll((v) => !v)} className={cn(toolButton, "size-6 text-code-muted hover:bg-code-fg/10 hover:text-code-fg aria-pressed:bg-code-fg/10 aria-pressed:text-code-fg")}>
+              <ArrowDownToLine className="size-3.5" aria-hidden="true" />
+            </button>
+          </Tooltip>
+          <Tooltip content={copied ? "Copied" : "Copy logs"}>
+            <button type="button" aria-label="Copy logs" onClick={() => void copy()} className={cn(toolButton, "size-6 text-code-muted hover:bg-code-fg/10 hover:text-code-fg")}>
+              {copied ? <Check className="pop-in size-3.5 text-success" aria-hidden="true" /> : <Copy className="size-3.5" aria-hidden="true" />}
+            </button>
+          </Tooltip>
+          <Tooltip content="Clear">
+            <button type="button" aria-label="Clear logs" onClick={() => store.clear()} className={cn(toolButton, "size-6 text-code-muted hover:bg-code-fg/10 hover:text-code-fg")}>
+              <Trash2 className="size-3.5" aria-hidden="true" />
+            </button>
+          </Tooltip>
         </div>
-      </section>
-    </TooltipProvider>
+      </div>
+    </section>
   );
 }

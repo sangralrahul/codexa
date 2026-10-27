@@ -2,10 +2,12 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { FolderGit2, Unlink } from "lucide-react";
+import { Lock, Unlink } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Alert } from "@/components/ui/misc";
 import { Dialog, DialogContent, DialogFooter } from "@/components/ui/dialog";
+import { Tooltip, TooltipProvider } from "@/components/ui/tooltip";
+import { BrandMark } from "@/components/brand/brand-mark";
 import { api } from "@/lib/client/api";
 
 export type GithubAccountInfo = { linked: boolean; username: string | null; scope: string | null; linkedAt: string | null };
@@ -56,7 +58,7 @@ export function GithubAccountCard({ configured, account, next, errorCode }: { co
         </Alert>
       ) : null}
       {!configured ? (
-        <div role="status" className="rounded-xl border border-border bg-surface/60 p-4 text-sm">
+        <div role="status" className="rounded-[14px] border border-dashed border-border-strong bg-surface/50 p-4 text-sm">
           <p className="font-medium">GitHub is not configured on this server</p>
           <p className="mt-0.5 text-muted-foreground">Linking a GitHub account and importing repositories are unavailable until the server operator enables it.</p>
           <details className="group mt-2 text-xs text-muted-foreground">
@@ -70,10 +72,11 @@ export function GithubAccountCard({ configured, account, next, errorCode }: { co
           </details>
         </div>
       ) : null}
-      <div className="flex flex-col gap-3 rounded-xl border border-border bg-card p-4 sm:flex-row sm:items-center sm:justify-between">
+      <div className="flex flex-col gap-3 rounded-[16px] border border-border bg-card p-4 shadow-[inset_0_1px_0_var(--hairline)] sm:flex-row sm:items-center sm:justify-between">
         <div className="flex min-w-0 items-center gap-3">
-          <span className="flex size-10 shrink-0 items-center justify-center rounded-lg border border-border bg-surface">
-            <FolderGit2 className="size-5" aria-hidden="true" />
+          <span className="icon-tile relative flex size-11 shrink-0 items-center justify-center rounded-[12px]">
+            <BrandMark id="github" className="size-5" />
+            {account.linked ? <span aria-hidden="true" className="absolute -bottom-0.5 -right-0.5 size-2.5 rounded-full bg-success ring-2 ring-card" /> : null}
           </span>
           <div className="min-w-0">
             {account.linked ? (
@@ -109,9 +112,15 @@ export function GithubAccountCard({ configured, account, next, errorCode }: { co
               <a href={startUrl}>Connect GitHub</a>
             </Button>
           ) : (
-            <Button size="sm" disabled title="GitHub is not configured on this server">
-              Connect GitHub
-            </Button>
+            <TooltipProvider delayDuration={200}>
+              <Tooltip content="GitHub is not configured on this server">
+                <span tabIndex={0} className="inline-flex rounded-[10px] outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring">
+                  <Button size="sm" disabled>
+                    <Lock className="size-3.5" aria-hidden="true" /> Connect GitHub
+                  </Button>
+                </span>
+              </Tooltip>
+            </TooltipProvider>
           )}
         </div>
       </div>

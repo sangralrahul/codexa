@@ -63,7 +63,7 @@ export function DirectoryFilters({ value, categories, resultCount }: Props) {
             Search integrations
           </Label>
           <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" aria-hidden="true" />
-          <Input id="integration-search" type="search" value={q} onChange={(e) => onSearchChange(e.target.value)} placeholder="Search integrations (e.g. postgres, stripe, email)" className="pl-9 pr-9" autoComplete="off" />
+          <Input id="integration-search" type="search" value={q} onChange={(e) => onSearchChange(e.target.value)} placeholder="Search integrations (e.g. postgres, stripe, email)" className="h-11 rounded-[12px] pl-9 pr-9" autoComplete="off" />
           {q ? (
             <button
               type="button"
@@ -82,7 +82,7 @@ export function DirectoryFilters({ value, categories, resultCount }: Props) {
           <Label htmlFor="integration-status" className="sr-only">
             Status
           </Label>
-          <Select id="integration-status" value={value.status} onChange={(e) => navigate({ status: e.target.value as IntegrationSearch["status"] })}>
+          <Select id="integration-status" className="h-11 rounded-[12px]" value={value.status} onChange={(e) => navigate({ status: e.target.value as IntegrationSearch["status"] })}>
             <option value="all">All statuses</option>
             <option value="available">Available</option>
             <option value="planned">Planned</option>
@@ -101,7 +101,7 @@ export function DirectoryFilters({ value, categories, resultCount }: Props) {
         ))}
       </div>
 
-      <p className="text-sm text-muted-foreground" role="status" aria-live="polite">
+      <p className="font-mono text-[12.5px] text-muted-foreground" role="status" aria-live="polite">
         {pending ? "Updating…" : `${resultCount} integration${resultCount === 1 ? "" : "s"}`}
         {value.q ? ` matching “${value.q}”` : ""}
       </p>
@@ -116,8 +116,8 @@ function Chip({ active, onClick, children }: { active: boolean; onClick: () => v
       onClick={onClick}
       aria-pressed={active}
       className={cn(
-        "rounded-full border px-3 py-1 text-sm transition-colors focus-visible:outline-2 focus-visible:outline-ring focus-visible:outline-offset-2",
-        active ? "border-foreground bg-foreground text-background" : "border-border bg-background text-muted-foreground hover:border-border-strong hover:text-foreground",
+        "inline-flex h-8 items-center rounded-full border px-3.5 text-[13px] font-medium transition-[color,background-color,border-color] duration-(--dur-2) focus-visible:outline-2 focus-visible:outline-ring focus-visible:outline-offset-2",
+        active ? "border-foreground bg-foreground text-background" : "border-border bg-card/60 text-muted-foreground hover:border-border-strong hover:text-foreground",
       )}
     >
       {children}

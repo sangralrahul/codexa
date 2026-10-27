@@ -1,9 +1,13 @@
 import Link from "next/link";
+import { DoorOpen } from "lucide-react";
 import { pageMetadata } from "@/lib/seo";
 import { requireUser } from "@/lib/auth/guards";
 import { getCurrentWorkspace } from "@/lib/services/current-workspace";
+import { getEffectivePlan } from "@/lib/services/usage";
 import { latestSubscription } from "@/lib/billing/webhooks";
 import { grantsEntitlements } from "@/lib/billing/state";
+import { providerAvailability } from "@/lib/billing/service";
+import { PLANS } from "@/config/plans";
 import { PageHeader } from "@/components/app/app-shell";
 import { SettingsCard } from "@/components/settings/section";
 import { EmptyState } from "@/components/ui/misc";
@@ -25,26 +29,30 @@ export default async function WorkspaceSettingsPage() {
     );
   }
   const ws = current.workspace;
-  const sub = await latestSubscription(ws.id);
+  const [sub, plan] = await Promise.all([latestSubscription(ws.id), getEffectivePlan(ws)]);
   const canEdit = current.role === "owner" || current.role === "admin";
   return (
-    <div className="space-y-6">
-      <PageHeader title="Workspace" description={`General settings for ${ws.name}.`} />
+    <div className="settings-stack space-y-6">
+      <PageHeader eyebrow={`Workspace · ${ws.name}`} title="Workspace" description={`General settings for ${ws.name}.`} />
       <WorkspaceGeneralForm
         workspaceId={ws.id}
         initial={{ name: ws.name, slug: ws.slug, billingCurrency: ws.billingCurrency }}
         canEdit={canEdit}
         hasSubscription={Boolean(sub && grantsEntitlements(sub.status) && sub.provider !== "manual")}
+        providers={providerAvailability()}
+        meta={{ role: current.role, plan: PLANS[plan].name, createdAt: ws.createdAt.toISOString() }}
       />
       <SettingsCard
+        id="leave"
         tone="danger"
+        icon={<DoorOpen />}
         title="Leave workspace"
         description="You will lose access to its projects. The last owner must transfer ownership first."
         hint={
           current.role === "owner" ? (
             <>
               You are an owner. If you are the only one, transfer ownership on the{" "}
-              <Link href="/settings/members" className="underline hover:text-foreground">
+              <Link href="/settings/members" className="underline underline-offset-2 hover:text-foreground">
                 Members
               </Link>{" "}
               page first.

@@ -1,11 +1,11 @@
 import type { ReactNode } from "react";
 import { Markdown, TableOfContents } from "@/components/content";
+import { ReadingProgress } from "@/components/marketing/reading-progress";
 import type { ContentDoc, ContentSummary, Heading } from "@/lib/content/types";
 import { Breadcrumbs, type Crumb } from "./breadcrumbs";
 import { ArticleMeta, EditOnGitHub, PrevNext, RelatedLinks } from "./article-bits";
 import { DocsSidebar, type SidebarGroup } from "./sidebar";
 import { cn } from "@/lib/utils";
-import { PageTitle } from "@/components/marketing/backdrop";
 
 /**
  * Three-column article page: optional sidebar (desktop rail + mobile drawer),
@@ -14,8 +14,8 @@ import { PageTitle } from "@/components/marketing/backdrop";
  */
 export function ArticleShell({ sidebar, children, className }: { sidebar?: SidebarGroup[]; children: ReactNode; className?: string }) {
   return (
-    <div className={cn("container-x", className)}>
-      <div className={cn("grid gap-8 py-6 lg:py-10", sidebar ? "lg:grid-cols-[15rem_minmax(0,1fr)]" : "")}>
+    <div data-tone="docs" className={cn("container-x", className)}>
+      <div className={cn("grid gap-8 py-6 lg:gap-12 lg:py-10", sidebar ? "lg:grid-cols-[15.5rem_minmax(0,1fr)]" : "")}>
         {sidebar ? <DocsSidebar groups={sidebar} /> : null}
         <div className="min-w-0">{children}</div>
       </div>
@@ -32,6 +32,7 @@ export function ArticleBody({
   meta,
   footer,
   aside,
+  kicker,
 }: {
   crumbs: Crumb[];
   title: string;
@@ -41,24 +42,33 @@ export function ArticleBody({
   meta?: ReactNode;
   footer?: ReactNode;
   aside?: ReactNode;
+  /** Small mono label above the title (section or category). */
+  kicker?: string;
 }) {
   const hasToc = headings.length >= 2;
   return (
-    <div className={cn("grid gap-10", hasToc ? "xl:grid-cols-[minmax(0,1fr)_13rem]" : "")}>
+    <div className={cn("grid gap-10", hasToc ? "xl:grid-cols-[minmax(0,1fr)_14rem]" : "")}>
+      <ReadingProgress />
       <article className="min-w-0">
-        <Breadcrumbs items={crumbs} className="mb-4" />
+        <Breadcrumbs items={crumbs} className="mb-8" />
         <header className="max-w-3xl">
-          <PageTitle>{title}</PageTitle>
-          {description ? <p className="mt-3 text-base text-muted-foreground sm:text-lg">{description}</p> : null}
-          {meta ? <div className="mt-4">{meta}</div> : null}
+          {kicker ? <p className="text-label mb-4 text-signal-ink">{kicker}</p> : null}
+          <h1 className="text-display-3">{title}</h1>
+          {description ? <p className="text-lead mt-4">{description}</p> : null}
+          {meta ? <div className="mt-5">{meta}</div> : null}
         </header>
         {hasToc ? (
-          <details className="mt-6 rounded-lg border border-border p-3 xl:hidden">
-            <summary className="cursor-pointer text-sm font-medium">On this page</summary>
-            <ul className="mt-2 space-y-1 text-sm">
+          <details className="group mt-8 rounded-xl border border-border bg-card/60 xl:hidden">
+            <summary className="flex cursor-pointer list-none items-center justify-between px-4 py-3 text-sm font-medium">
+              On this page
+              <span aria-hidden="true" className="text-muted-foreground transition-transform group-open:rotate-45">
+                +
+              </span>
+            </summary>
+            <ul className="space-y-1 border-t border-border px-4 py-3 text-sm">
               {headings.map((h) => (
                 <li key={h.id} className={h.depth === 3 ? "pl-4" : ""}>
-                  <a href={`#${h.id}`} className="text-muted-foreground hover:text-foreground">
+                  <a href={`#${h.id}`} className="block py-0.5 text-muted-foreground hover:text-foreground">
                     {h.text}
                   </a>
                 </li>
@@ -66,14 +76,14 @@ export function ArticleBody({
             </ul>
           </details>
         ) : null}
-        <div className="mt-8">{children}</div>
-        {footer ? <footer className="mt-12 space-y-10 border-t border-border pt-8">{footer}</footer> : null}
+        <div className="mt-10 border-t border-border pt-8">{children}</div>
+        {footer ? <footer className="mt-14 space-y-10 border-t border-border pt-8">{footer}</footer> : null}
       </article>
       {hasToc ? (
         <aside className="hidden xl:block">
-          <div className="sticky top-24 max-h-[calc(100vh-7rem)] overflow-y-auto scrollbar-thin">
+          <div className="scrollbar-thin sticky top-24 max-h-[calc(100vh-7rem)] overflow-y-auto">
             <TableOfContents headings={headings} />
-            {aside ? <div className="mt-6">{aside}</div> : null}
+            {aside ? <div className="mt-6 border-t border-border pt-5">{aside}</div> : null}
           </div>
         </aside>
       ) : null}
@@ -104,6 +114,7 @@ export function ContentArticle({
         title={doc.title}
         description={doc.description}
         headings={doc.headings}
+        kicker={doc.category}
         meta={<ArticleMeta doc={doc} />}
         aside={<EditOnGitHub sourceId={doc.sourceId} />}
         footer={
@@ -119,7 +130,7 @@ export function ContentArticle({
           </>
         }
       >
-        <Markdown>{doc.body}</Markdown>
+        <Markdown className="max-w-[46rem]">{doc.body}</Markdown>
       </ArticleBody>
     </ArticleShell>
   );

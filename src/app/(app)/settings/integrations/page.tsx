@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { ArrowUpRight } from "lucide-react";
 import { pageMetadata } from "@/lib/seo";
 import { requireUser } from "@/lib/auth/guards";
 import { getCurrentWorkspace } from "@/lib/services/current-workspace";
@@ -20,18 +21,20 @@ export default async function IntegrationsSettingsPage() {
       </div>
     );
   }
+  const role = current.role;
   return (
-    <div>
+    <div className="settings-stack space-y-6">
       <PageHeader
+        eyebrow={`Workspace · ${current.workspace.name}`}
         title="Integrations"
         description={`Workspace-level connections for ${current.workspace.name}. Secrets are encrypted before storage and never returned to the browser.`}
         actions={
           <Link href="/integrations" className={buttonClasses("outline", "sm")}>
-            Integration directory
+            Integration directory <ArrowUpRight className="size-3.5" aria-hidden="true" />
           </Link>
         }
       />
-      <IntegrationsPanel workspaceId={current.workspace.id} canManage={current.role === "owner" || current.role === "admin"} />
+      <IntegrationsPanel workspaceId={current.workspace.id} canManage={role === "owner" || role === "admin"} canTest={role !== "viewer"} />
     </div>
   );
 }

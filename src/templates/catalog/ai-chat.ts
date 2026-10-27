@@ -4,7 +4,7 @@ import { USE_LOCAL_STORAGE, VITE_DEPS, VITE_SETTINGS, viteBase } from "../shared
 const files: Record<string, string> = {
   ...viteBase({
     name: "codexa-ai-chat",
-    title: "AI chat",
+    title: "Assistant",
     readme: `# AI chat starter
 
 A chat interface that POSTs the conversation to a configurable HTTP endpoint and renders the reply.
@@ -58,6 +58,17 @@ import { useLocalStorage } from "./useLocalStorage";
 
 const envEndpoint = (import.meta.env.VITE_CHAT_API_URL as string | undefined) ?? "";
 
+const suggestions = [
+  { title: "Summarise a document", prompt: "Summarise the key decisions in this meeting transcript:" },
+  { title: "Draft an email", prompt: "Draft a friendly follow-up email to a customer whose trial ends this week." },
+  { title: "Explain some code", prompt: "Explain what this function does and suggest one improvement:" },
+  { title: "Plan a launch", prompt: "Make a one-week launch checklist for a small SaaS feature." },
+];
+
+function Orb({ size = "h-10 w-10" }: { size?: string }) {
+  return <span aria-hidden="true" className={"inline-block rounded-full bg-[radial-gradient(circle_at_30%_30%,#c4b5fd,#7c3aed_55%,#312e81)] shadow-lg shadow-violet-500/30 " + size} />;
+}
+
 export default function App() {
   const [endpoint, setEndpoint] = useLocalStorage<string>("chat-endpoint", envEndpoint);
   const [messages, setMessages] = useLocalStorage<Message[]>("chat-messages", []);
@@ -66,6 +77,7 @@ export default function App() {
   const [error, setError] = useState<string | null>(null);
   const abort = useRef<AbortController | null>(null);
   const bottom = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLTextAreaElement>(null);
   const configured = endpoint.trim().length > 0;
 
   useEffect(() => {
@@ -93,84 +105,132 @@ export default function App() {
   }
 
   return (
-    <div className="flex h-screen flex-col bg-slate-50 text-slate-900">
-      <header className="border-b border-slate-200 bg-white px-4 py-3">
-        <div className="mx-auto flex max-w-3xl flex-wrap items-center justify-between gap-2">
-          <h1 className="font-semibold">Assistant</h1>
-          <label className="flex items-center gap-2 text-xs text-slate-600">
+    <div className="flex h-screen bg-white text-slate-900">
+      <aside className="hidden w-72 shrink-0 flex-col border-r border-slate-200 bg-slate-50 p-4 md:flex">
+        <div className="flex items-center gap-2.5 px-1">
+          <Orb size="h-7 w-7" />
+          <span className="font-semibold tracking-tight">Assistant</span>
+        </div>
+        <button type="button" onClick={() => setMessages([])} className="mt-6 flex items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm font-medium shadow-sm hover:bg-slate-100">
+          <span aria-hidden="true">＋</span> New chat
+        </button>
+        <p className="mt-6 px-1 text-xs font-medium uppercase tracking-wider text-slate-400">Conversation</p>
+        <p className="mt-2 rounded-lg bg-white px-3 py-2 text-sm text-slate-600 ring-1 ring-slate-200">{messages.length ? messages.length + " messages in this chat" : "No messages yet"}</p>
+        <div className="mt-auto space-y-2">
+          <label className="block text-xs font-medium text-slate-600" htmlFor="endpoint">
             Backend URL
-            <input value={endpoint} onChange={(e) => setEndpoint(e.target.value)} placeholder="https://your-api.example/chat" className="w-56 rounded-md border border-slate-300 px-2 py-1 text-xs" />
           </label>
+          <input id="endpoint" value={endpoint} onChange={(e) => setEndpoint(e.target.value)} placeholder="https://your-api.example/chat" className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs outline-none focus:border-violet-400" />
+          <p className="text-[11px] leading-relaxed text-slate-500">Your server calls the AI provider. Never put provider keys in browser code.</p>
         </div>
-      </header>
+      </aside>
 
-      <main className="flex-1 overflow-y-auto px-4 py-6">
-        <div className="mx-auto max-w-3xl space-y-4">
-          {!configured ? (
-            <div role="status" className="rounded-lg border border-amber-300 bg-amber-50 p-4 text-sm text-amber-900">
-              <p className="font-medium">No backend configured</p>
-              <p className="mt-1">
-                Set <code>VITE_CHAT_API_URL</code> or paste your endpoint above. This template does not call any AI provider directly and ships no API keys — see README.md for the request/response contract.
-              </p>
-            </div>
-          ) : null}
-          {messages.length === 0 && configured ? <p className="text-center text-sm text-slate-500">Send a message to start the conversation.</p> : null}
-          {messages.map((m, i) => (
-            <div key={i} className={"flex " + (m.role === "user" ? "justify-end" : "justify-start")}>
-              <div className={"max-w-[85%] whitespace-pre-wrap rounded-2xl px-4 py-2.5 text-sm " + (m.role === "user" ? "bg-blue-600 text-white" : "border border-slate-200 bg-white")}>
-                <span className="sr-only">{m.role === "user" ? "You: " : "Assistant: "}</span>
-                {m.content}
+      <div className="flex min-w-0 flex-1 flex-col">
+        <header className="flex items-center justify-between gap-3 border-b border-slate-100 px-5 py-3">
+          <h1 className="text-sm font-semibold">New conversation</h1>
+          <label className="flex items-center gap-2 text-xs text-slate-600 md:hidden">
+            Backend URL
+            <input value={endpoint} onChange={(e) => setEndpoint(e.target.value)} placeholder="https://your-api.example/chat" className="w-44 rounded-md border border-slate-300 px-2 py-1 text-xs" />
+          </label>
+        </header>
+
+        {!configured ? (
+          <div role="status" className="mx-auto mt-4 flex w-full max-w-3xl items-center gap-3 rounded-xl border border-amber-200 bg-amber-50 px-4 py-2.5 text-sm text-amber-900">
+            <span className="h-2 w-2 shrink-0 rounded-full bg-amber-500" />
+            <p>
+              <span className="font-medium">No backend configured.</span> Set <code className="rounded bg-amber-100 px-1">VITE_CHAT_API_URL</code> or add a URL in the sidebar. This template calls no AI provider and ships no keys (see README.md).
+            </p>
+          </div>
+        ) : null}
+
+        <main className="flex-1 overflow-y-auto px-5 py-6">
+          <div className="mx-auto max-w-3xl space-y-5">
+            {messages.length === 0 ? (
+              <div className="pt-[8vh] text-center">
+                <Orb size="h-14 w-14" />
+                <h2 className="mt-5 text-3xl font-semibold tracking-tight">How can I help today?</h2>
+                <p className="mt-2 text-slate-500">Pick a starting point or write your own message.</p>
+                <ul className="mx-auto mt-8 grid max-w-2xl gap-3 text-left sm:grid-cols-2">
+                  {suggestions.map((s) => (
+                    <li key={s.title}>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setInput(s.prompt);
+                          inputRef.current?.focus();
+                        }}
+                        className="w-full rounded-2xl border border-slate-200 bg-white p-4 text-left shadow-sm transition hover:border-violet-300 hover:shadow-md"
+                      >
+                        <span className="block text-sm font-medium">{s.title}</span>
+                        <span className="mt-1 block text-xs leading-relaxed text-slate-500">{s.prompt}</span>
+                      </button>
+                    </li>
+                  ))}
+                </ul>
               </div>
-            </div>
-          ))}
-          {pending ? (
-            <p className="text-sm text-slate-500" aria-live="polite">
-              Waiting for the backend…
-            </p>
-          ) : null}
-          {error ? (
-            <p role="alert" className="rounded-md border border-red-200 bg-red-50 p-3 text-sm text-red-700">
-              {error}
-            </p>
-          ) : null}
-          <div ref={bottom} />
-        </div>
-      </main>
+            ) : null}
+            {messages.map((m, i) => (
+              <div key={i} className={"flex gap-3 " + (m.role === "user" ? "justify-end" : "justify-start")}>
+                {m.role === "assistant" ? <Orb size="mt-1 h-7 w-7 shrink-0" /> : null}
+                <div className={"max-w-[80%] whitespace-pre-wrap rounded-2xl px-4 py-2.5 text-sm leading-relaxed " + (m.role === "user" ? "bg-violet-600 text-white" : "bg-slate-100 text-slate-800")}>
+                  <span className="sr-only">{m.role === "user" ? "You: " : "Assistant: "}</span>
+                  {m.content}
+                </div>
+              </div>
+            ))}
+            {pending ? (
+              <p className="flex items-center gap-2 text-sm text-slate-500" aria-live="polite">
+                <span className="h-2 w-2 animate-pulse rounded-full bg-violet-500" /> Waiting for the backend…
+              </p>
+            ) : null}
+            {error ? (
+              <p role="alert" className="rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700">
+                {error}
+              </p>
+            ) : null}
+            <div ref={bottom} />
+          </div>
+        </main>
 
-      <form onSubmit={submit} className="border-t border-slate-200 bg-white p-3">
-        <div className="mx-auto flex max-w-3xl items-end gap-2">
-          <label className="sr-only" htmlFor="chat-input">
-            Message
-          </label>
-          <textarea
-            id="chat-input"
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter" && !e.shiftKey) {
-                e.preventDefault();
-                e.currentTarget.form?.requestSubmit();
-              }
-            }}
-            rows={2}
-            placeholder={configured ? "Ask something… (Enter to send, Shift+Enter for a new line)" : "Configure a backend URL first"}
-            disabled={!configured || pending}
-            className="flex-1 resize-none rounded-lg border border-slate-300 px-3 py-2 text-sm disabled:bg-slate-100"
-          />
-          {pending ? (
-            <button type="button" onClick={() => abort.current?.abort()} className="rounded-lg border border-slate-300 px-4 py-2 text-sm">
-              Stop
-            </button>
-          ) : (
-            <button type="submit" disabled={!configured || !input.trim()} className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white disabled:opacity-50">
-              Send
-            </button>
-          )}
-          <button type="button" onClick={() => setMessages([])} className="rounded-lg border border-slate-300 px-3 py-2 text-sm" disabled={messages.length === 0}>
-            Clear
-          </button>
-        </div>
-      </form>
+        <form onSubmit={submit} className="px-5 pb-5">
+          <div className="mx-auto max-w-3xl rounded-2xl border border-slate-200 bg-white p-2 shadow-lg shadow-slate-900/5 focus-within:border-violet-300">
+            <label className="sr-only" htmlFor="chat-input">
+              Message
+            </label>
+            <textarea
+              id="chat-input"
+              ref={inputRef}
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && !e.shiftKey) {
+                  e.preventDefault();
+                  e.currentTarget.form?.requestSubmit();
+                }
+              }}
+              rows={2}
+              placeholder={configured ? "Ask something… (Enter to send, Shift+Enter for a new line)" : "Configure a backend URL first"}
+              disabled={pending}
+              className="w-full resize-none bg-transparent px-2 py-1.5 text-sm outline-none disabled:opacity-60"
+            />
+            <div className="flex items-center justify-between gap-2 px-1">
+              <button type="button" onClick={() => setMessages([])} className="rounded-lg px-2.5 py-1.5 text-xs text-slate-500 hover:bg-slate-100 disabled:opacity-40" disabled={messages.length === 0}>
+                Clear
+              </button>
+              {pending ? (
+                <button type="button" onClick={() => abort.current?.abort()} className="rounded-xl border border-slate-200 px-4 py-2 text-sm">
+                  Stop
+                </button>
+              ) : (
+                <button type="submit" disabled={!configured || !input.trim()} className="rounded-xl bg-violet-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-violet-700 disabled:opacity-40">
+                  Send
+                </button>
+              )}
+            </div>
+          </div>
+          <p className="mx-auto mt-2 max-w-3xl text-center text-[11px] text-slate-400">Replies come from the backend you configure. This template contains no AI provider code.</p>
+        </form>
+      </div>
     </div>
   );
 }

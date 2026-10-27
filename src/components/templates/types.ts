@@ -5,6 +5,8 @@ export type TemplateCardData = {
   id: string;
   name: string;
   description: string;
+  /** Used by the client-side gallery search (same fields as searchTemplates()). */
+  longDescription?: string;
   category: TemplateCategory;
   framework: string;
   frameworkName: string;

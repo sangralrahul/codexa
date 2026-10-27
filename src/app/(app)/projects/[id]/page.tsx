@@ -1,10 +1,12 @@
+import "@/components/workspace/workspace.css";
 import { notFound, redirect } from "next/navigation";
 import type { Metadata } from "next";
 import { requireUser } from "@/lib/auth/guards";
 import { ApiError } from "@/lib/api";
 import { assertProjectAccess, type ProjectAccess } from "@/lib/services/access";
-import { listFiles, touchProject } from "@/lib/services/projects";
+import { listFiles, listRecentProjectsForUser, touchProject } from "@/lib/services/projects";
 import { serializeProject } from "@/app/api/v1/projects/_lib/serialize";
+import { getTemplate } from "@/templates";
 import { Workspace } from "@/components/workspace/workspace";
 import type { FileEntry, ProjectDto } from "@/lib/client/workspace/types";
 import type { User } from "@/db/schema";
@@ -35,7 +37,7 @@ export default async function ProjectWorkspacePage({ params }: Props) {
   if ("missing" in res) notFound();
   const { project, role, workspace } = res.access;
   const { user } = res;
-  const [files] = await Promise.all([listFiles(project.id), touchProject(project.id)]);
+  const [files, recentRows] = await Promise.all([listFiles(project.id), listRecentProjectsForUser([workspace.id], 7), touchProject(project.id)]);
   const s = serializeProject(project);
   const dto: ProjectDto = {
     ...s,
@@ -44,6 +46,27 @@ export default async function ProjectWorkspacePage({ params }: Props) {
     updatedAt: s.updatedAt.toISOString(),
   };
   const entries: FileEntry[] = files.map((f) => ({ path: f.path, size: f.size, isBinary: f.isBinary, updatedAt: f.updatedAt.toISOString() }));
-  // The workspace is full-screen (AppShell focus mode), so it carries its own breadcrumb and account menu.
-  return <Workspace project={dto} role={role} files={entries} workspaceName={workspace.name} user={{ name: user.name, email: user.email, avatarUrl: user.avatarUrl }} />;
+  // Template metadata only (no file contents): the switcher thumbnail, the welcome suggestions and
+  // the labelled "template starting point" picture in offline preview states.
+  const t = project.templateId ? getTemplate(project.templateId) : undefined;
+  const template = t ? { id: t.id, name: t.name, category: t.category } : null;
+  const recent = recentRows
+    .filter((p) => p.id !== project.id)
+    .slice(0, 6)
+    .map((p) => {
+      const rt = p.templateId ? getTemplate(p.templateId) : undefined;
+      return { id: p.id, name: p.name, templateId: rt ? rt.id : null, category: rt ? rt.category : null };
+    });
+  // The workspace is full-screen (AppShell focus mode), so it carries its own header and account menu.
+  return (
+    <Workspace
+      project={dto}
+      role={role}
+      files={entries}
+      workspaceName={workspace.name}
+      user={{ name: user.name, email: user.email, avatarUrl: user.avatarUrl }}
+      template={template}
+      recent={recent}
+    />
+  );
 }

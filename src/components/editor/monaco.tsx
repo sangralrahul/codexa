@@ -10,38 +10,16 @@ import { Editor, DiffEditor, loader, type Monaco, type OnMount } from "@monaco-e
 import type { editor as MonacoEditorNs } from "monaco-editor";
 import { useTheme } from "@/components/theme/theme-provider";
 import { Spinner } from "@/components/ui/misc";
+import type { LineChanges } from "@/lib/client/workspace/line-diff";
+import { DAY, NIGHT, defineCodexaThemes } from "./monaco-theme";
 
 loader.config({ paths: { vs: "/monaco/vs" } });
 
-let themesDefined = false;
-function defineThemes(monaco: Monaco) {
-  if (themesDefined) return;
-  themesDefined = true;
-  monaco.editor.defineTheme("codexa-dark", {
-    base: "vs-dark",
-    inherit: true,
-    rules: [],
-    colors: {
-      "editor.background": "#0b0c0f",
-      "editor.lineHighlightBackground": "#14161b",
-      "editorGutter.background": "#0b0c0f",
-      "editor.selectionBackground": "#2f4a86",
-      "editorLineNumber.foreground": "#4c5261",
-      "editorLineNumber.activeForeground": "#9aa3b2",
-      "editorIndentGuide.background1": "#1f2229",
-    },
-  });
-  monaco.editor.defineTheme("codexa-light", {
-    base: "vs",
-    inherit: true,
-    rules: [],
-    colors: {
-      "editor.background": "#ffffff",
-      "editor.lineHighlightBackground": "#f4f6f9",
-      "editorLineNumber.foreground": "#9aa3b2",
-      "editorLineNumber.activeForeground": "#5b6270",
-    },
-  });
+let compilerConfigured = false;
+function configure(monaco: Monaco) {
+  defineCodexaThemes(monaco);
+  if (compilerConfigured) return;
+  compilerConfigured = true;
   // TSX/JSX support and quieter diagnostics for project files that reference deps we do not have locally.
   const compiler = {
     jsx: monaco.languages.typescript.JsxEmit.ReactJSX,
@@ -61,6 +39,23 @@ function defineThemes(monaco: Monaco) {
   const diag = { noSemanticValidation: true, noSyntaxValidation: false, noSuggestionDiagnostics: true };
   monaco.languages.typescript.typescriptDefaults.setDiagnosticsOptions(diag);
   monaco.languages.typescript.javascriptDefaults.setDiagnosticsOptions(diag);
+}
+
+/** Re-define the token themes whenever the site theme flips, then apply the matching one. */
+function useCodexaTheme(monacoRef: React.RefObject<Monaco | null>) {
+  const { resolved } = useTheme();
+  const theme = resolved === "dark" ? NIGHT : DAY;
+  useEffect(() => {
+    const monaco = monacoRef.current;
+    if (!monaco) return;
+    // Let the theme class land on <html> before reading the tokens.
+    const raf = requestAnimationFrame(() => {
+      defineCodexaThemes(monaco);
+      monaco.editor.setTheme(theme);
+    });
+    return () => cancelAnimationFrame(raf);
+  }, [theme, monacoRef]);
+  return theme;
 }
 
 export type CodeEditorHandle = {
@@ -86,6 +81,10 @@ export type CodeEditorProps = {
    * race of a fully controlled editor when React state lags behind fast input.
    */
   revision?: number;
+  /** Lines the AI added or modified in this file (gutter marks). */
+  marks?: LineChanges | null;
+  /** Cursor position, for the status bar. */
+  onCursor?: (pos: { line: number; column: number }) => void;
 };
 
 const Loading = () => (
@@ -94,23 +93,31 @@ const Loading = () => (
   </div>
 );
 
-export function MonacoCodeEditor({ path, language, value, readOnly, onChange, onMount, onSave, onQuickOpen, onSearchAll, revealLine, revision = 0 }: CodeEditorProps) {
-  const { resolved } = useTheme();
-  const theme = resolved === "dark" ? "codexa-dark" : "codexa-light";
+export function MonacoCodeEditor({ path, language, value, readOnly, onChange, onMount, onSave, onQuickOpen, onSearchAll, revealLine, revision = 0, marks, onCursor }: CodeEditorProps) {
+  const monacoRef = useRef<Monaco | null>(null);
+  const theme = useCodexaTheme(monacoRef);
   const editorRef = useRef<MonacoEditorNs.IStandaloneCodeEditor | null>(null);
-  const cbs = useRef({ onSave, onQuickOpen, onSearchAll });
+  const decorations = useRef<MonacoEditorNs.IEditorDecorationsCollection | null>(null);
+  const cbs = useRef({ onSave, onQuickOpen, onSearchAll, onCursor });
   useEffect(() => {
-    cbs.current = { onSave, onQuickOpen, onSearchAll };
-  }, [onSave, onQuickOpen, onSearchAll]);
+    cbs.current = { onSave, onQuickOpen, onSearchAll, onCursor };
+  }, [onSave, onQuickOpen, onSearchAll, onCursor]);
 
   const handleMount = useCallback<OnMount>(
     (editor, monaco) => {
       editorRef.current = editor;
+      monacoRef.current = monaco;
       const KM = monaco.KeyMod;
       const KC = monaco.KeyCode;
       editor.addCommand(KM.CtrlCmd | KC.KeyS, () => cbs.current.onSave?.());
       editor.addCommand(KM.CtrlCmd | KC.KeyP, () => cbs.current.onQuickOpen?.());
       editor.addCommand(KM.CtrlCmd | KM.Shift | KC.KeyF, () => cbs.current.onSearchAll?.());
+      editor.onDidChangeCursorPosition((e) => cbs.current.onCursor?.({ line: e.position.lineNumber, column: e.position.column }));
+      decorations.current = editor.createDecorationsCollection([]);
+      // Geist Mono may finish loading after Monaco measured the fallback font.
+      void document.fonts?.ready.then(() => monaco.editor.remeasureFonts());
+      const pos = editor.getPosition();
+      if (pos) cbs.current.onCursor?.({ line: pos.lineNumber, column: pos.column });
       onMount?.({ editor, monaco });
     },
     [onMount],
@@ -139,6 +146,30 @@ export function MonacoCodeEditor({ path, language, value, readOnly, onChange, on
     ed.focus();
   }, [revealLine, path]);
 
+  // AI gutter marks: green bar for added lines, amber for modified ones (from the run's real diff).
+  useEffect(() => {
+    const monaco = monacoRef.current;
+    const collection = decorations.current;
+    if (!collection || !monaco) return;
+    if (!marks) {
+      collection.clear();
+      return;
+    }
+    const success = getComputedStyle(document.documentElement).getPropertyValue("--success").trim();
+    const warning = getComputedStyle(document.documentElement).getPropertyValue("--warning").trim();
+    const deco = (line: number, kind: "added" | "modified"): MonacoEditorNs.IModelDeltaDecoration => ({
+      range: new monaco.Range(line, 1, line, 1),
+      options: {
+        isWholeLine: true,
+        linesDecorationsClassName: kind === "added" ? "ws-gutter-added" : "ws-gutter-modified",
+        className: kind === "added" ? "ws-line-ai" : undefined,
+        overviewRuler: { color: kind === "added" ? success : warning, position: monaco.editor.OverviewRulerLane.Left },
+        stickiness: monaco.editor.TrackedRangeStickiness.NeverGrowsWhenTypingAtEdges,
+      },
+    });
+    collection.set([...marks.added.map((l) => deco(l, "added")), ...marks.modified.map((l) => deco(l, "modified"))]);
+  }, [marks, path, revision]);
+
   return (
     <Editor
       path={`file:///${path}`}
@@ -146,14 +177,15 @@ export function MonacoCodeEditor({ path, language, value, readOnly, onChange, on
       defaultValue={value}
       theme={theme}
       loading={<Loading />}
-      beforeMount={defineThemes}
+      beforeMount={configure}
       onMount={handleMount}
       onChange={(v) => onChange(v ?? "")}
       options={{
         readOnly,
-        fontSize: 13,
+        fontSize: 13.5,
+        lineHeight: 20,
         fontFamily: "var(--font-geist-mono), ui-monospace, SFMono-Regular, Menlo, monospace",
-        fontLigatures: false,
+        fontLigatures: true,
         minimap: { enabled: false },
         scrollBeyondLastLine: false,
         automaticLayout: true,
@@ -162,9 +194,21 @@ export function MonacoCodeEditor({ path, language, value, readOnly, onChange, on
         renderLineHighlight: "line",
         smoothScrolling: true,
         cursorBlinking: "smooth",
-        padding: { top: 12 },
+        cursorSmoothCaretAnimation: "on",
+        cursorWidth: 2,
+        padding: { top: 14, bottom: 14 },
+        stickyScroll: { enabled: true, maxLineCount: 4 },
         bracketPairColorization: { enabled: true },
-        scrollbar: { verticalScrollbarSize: 10, horizontalScrollbarSize: 10 },
+        guides: { bracketPairs: "active", indentation: true, highlightActiveIndentation: true },
+        lineDecorationsWidth: 10,
+        lineNumbersMinChars: 3,
+        glyphMargin: false,
+        folding: true,
+        showFoldingControls: "mouseover",
+        overviewRulerBorder: false,
+        hideCursorInOverviewRuler: true,
+        roundedSelection: true,
+        scrollbar: { verticalScrollbarSize: 10, horizontalScrollbarSize: 10, useShadows: false },
         fixedOverflowWidgets: true,
         ariaLabel: `Editor for ${path}`,
       }}
@@ -178,7 +222,8 @@ export function MonacoCodeEditor({ path, language, value, readOnly, onChange, on
  * disposing them before the widget resets throws inside Monaco, and they are tiny.
  */
 export function MonacoDiff({ original, modified, language, path, modelKey = "diff" }: { original: string; modified: string; language: string; path: string; modelKey?: string }) {
-  const { resolved } = useTheme();
+  const monacoRef = useRef<Monaco | null>(null);
+  const theme = useCodexaTheme(monacoRef);
   return (
     <DiffEditor
       original={original}
@@ -188,14 +233,20 @@ export function MonacoDiff({ original, modified, language, path, modelKey = "dif
       modifiedModelPath={`diff-modified:///${modelKey}/${path}`}
       keepCurrentOriginalModel
       keepCurrentModifiedModel
-      theme={resolved === "dark" ? "codexa-dark" : "codexa-light"}
+      theme={theme}
       loading={<Loading />}
-      beforeMount={defineThemes}
+      beforeMount={configure}
+      onMount={(_e, monaco) => {
+        monacoRef.current = monaco;
+      }}
       options={{
         readOnly: true,
         originalEditable: false,
         renderSideBySide: true,
-        fontSize: 12,
+        fontSize: 12.5,
+        lineHeight: 19,
+        fontFamily: "var(--font-geist-mono), ui-monospace, SFMono-Regular, Menlo, monospace",
+        fontLigatures: true,
         minimap: { enabled: false },
         automaticLayout: true,
         scrollBeyondLastLine: false,
