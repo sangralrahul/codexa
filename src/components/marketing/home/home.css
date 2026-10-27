@@ -295,8 +295,12 @@
   background: radial-gradient(closest-side, color-mix(in oklab, var(--signal) 16%, transparent), transparent);
   filter: blur(20px);
 }
+/* Cards live in the gutters beside the 900px content column: sized to the gutter, inset from the
+   viewport edge (room for the tilt), shown only when the gutters can hold a readable card. */
 .hero-float {
-  position: absolute; width: 330px; margin: 0;
+  --gutter: calc((100vw - 900px) / 2);
+  position: absolute; margin: 0;
+  width: min(330px, calc(var(--gutter) - 64px));
   border-radius: 14px; overflow: hidden;
   background: var(--card);
   border: 1px solid var(--border);
@@ -304,15 +308,15 @@
   animation: hero-float 9s ease-in-out infinite alternate;
   display: none;
 }
-@media (width >= 80rem) { .hero-float { display: block; } }
+@media (width >= 88rem) { .hero-float { display: block; } }
 .hero-float img { display: block; width: 100%; height: auto; }
 .hero-float__bar { display: flex; gap: 5px; padding: 8px 10px; border-bottom: 1px solid var(--border); background: var(--muted); }
 .hero-float__bar span { width: 7px; height: 7px; border-radius: 9999px; background: color-mix(in oklab, var(--foreground) 20%, transparent); }
-.hero-float figcaption { position: absolute; left: 10px; bottom: 10px; padding: 3px 8px; border-radius: 9999px; font-size: 11px; font-weight: 500; background: var(--glass); color: var(--foreground); backdrop-filter: blur(8px); border: 1px solid var(--border); }
-.hero-float--1 { left: calc(50% - 900px); top: 120px; rotate: -7deg; }
-.hero-float--2 { left: calc(50% - 860px); top: 470px; rotate: 5deg; width: 290px; animation-delay: -3s; }
-.hero-float--3 { right: calc(50% - 900px); top: 110px; rotate: 6deg; animation-delay: -5s; }
-.hero-float--4 { right: calc(50% - 860px); top: 460px; rotate: -5deg; width: 290px; animation-delay: -2s; }
+.hero-float figcaption { position: absolute; left: 10px; bottom: 10px; padding: 3px 8px; border-radius: 9999px; font-size: 11px; font-weight: 500; background: var(--glass); color: var(--foreground); backdrop-filter: blur(8px); border: 1px solid var(--border); white-space: nowrap; }
+.hero-float--1 { left: max(28px, calc(var(--gutter) - 330px - 40px)); top: 110px; rotate: -6deg; }
+.hero-float--2 { left: max(40px, calc(var(--gutter) - 300px - 60px)); top: 450px; rotate: 4deg; width: min(300px, calc(var(--gutter) - 80px)); animation-delay: -3s; }
+.hero-float--3 { right: max(28px, calc(var(--gutter) - 330px - 40px)); top: 100px; rotate: 5deg; animation-delay: -5s; }
+.hero-float--4 { right: max(40px, calc(var(--gutter) - 300px - 60px)); top: 440px; rotate: -4deg; width: min(300px, calc(var(--gutter) - 80px)); animation-delay: -2s; }
 @keyframes hero-float { from { translate: 0 -10px; } to { translate: 0 12px; } }
 /* The composer's glow: a slowly turning ring of brand colour behind it. */
 .hero-halo {
