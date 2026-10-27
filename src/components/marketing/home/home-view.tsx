@@ -41,6 +41,8 @@ export function HomeView({
       <HomeStoreProvider starters={data.starters} scenarios={data.scenarios} tools={data.tools} aiReady={aiReady} maxRepairAttempts={data.maxRepairAttempts}>
         {/* H0 + H1 */}
         <HomeHero signedIn={signedIn} announcement={announcement} />
+        {/* Everything after the hero is one sheet that slides up over the pinned hero (home.css). */}
+        <div className="home-cover">
         <Storyboard />
 
         {/* H2 */}
@@ -110,6 +112,7 @@ export function HomeView({
         <PricingTeaser />
         <FaqSection />
         <FinalCta signedIn={signedIn} freePlan={data.freePlan} />
+        </div>
       </HomeStoreProvider>
     </div>
   );

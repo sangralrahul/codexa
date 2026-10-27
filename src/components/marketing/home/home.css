@@ -331,3 +331,34 @@
 @keyframes hero-halo { to { --halo: 360deg; } }
 :is(.hero-float, .hero-halo) { @media (prefers-reduced-motion: reduce) { animation: none; } }
 [data-motion="reduced"] :is(.hero-float, .hero-halo) { animation: none; }
+
+/* ---------- Razorpay-style sheets: the hero pins, the rest of the page slides up over it ---------- */
+[data-page="home"] { timeline-scope: --home-cover; }
+@media (width >= 48rem) {
+  .home-pin {
+    position: sticky;
+    /* A hero taller than the viewport pins by its bottom edge (StickyFit writes --pin-h). */
+    top: min(0px, calc(100svh - var(--pin-h, 100svh)));
+    z-index: 0;
+  }
+}
+.home-cover {
+  position: relative;
+  z-index: 1;
+  background: var(--background);
+  border-top: 1px solid var(--border);
+  border-radius: 36px 36px 0 0;
+  box-shadow: 0 -40px 80px -40px rgba(0, 0, 0, 0.28);
+  padding-top: 3.5rem;
+  view-timeline: --home-cover block;
+}
+.dark .home-cover { box-shadow: 0 -40px 90px -30px rgba(0, 0, 0, 0.85), 0 -1px 0 0 color-mix(in oklab, var(--foreground) 6%, transparent); }
+/* As the sheet rises, the hero behind it sinks back a little and dims. */
+@supports (animation-timeline: view()) {
+  @media (width >= 48rem) {
+    .home-pin > * { animation: home-recede linear both; animation-timeline: --home-cover; animation-range: entry 0% entry 100%; transform-origin: 50% 30%; }
+  }
+}
+@keyframes home-recede { to { scale: 0.92; opacity: 0.35; filter: blur(2px); } }
+@media (prefers-reduced-motion: reduce) { .home-pin > * { animation: none !important; } }
+[data-motion="reduced"] .home-pin > * { animation: none !important; }

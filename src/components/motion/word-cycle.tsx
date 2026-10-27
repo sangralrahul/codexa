@@ -39,7 +39,7 @@ export function WordCycle({ words, interval = 2600, wordClassName }: { words: re
 
   React.useLayoutEffect(() => {
     const m = measures.current[index];
-    if (m) setWidth(m.getBoundingClientRect().width);
+    if (m) setWidth(m.offsetWidth);
   }, [index]);
 
   // Keep the width right when fonts load or the viewport changes the type size.
@@ -48,7 +48,7 @@ export function WordCycle({ words, interval = 2600, wordClassName }: { words: re
     if (!m || typeof ResizeObserver === "undefined") return;
     const ro = new ResizeObserver(() => {
       const cur = measures.current[index];
-      if (cur) setWidth(cur.getBoundingClientRect().width);
+      if (cur) setWidth(cur.offsetWidth);
     });
     ro.observe(m);
     return () => ro.disconnect();

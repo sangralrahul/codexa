@@ -5,7 +5,7 @@ import * as React from "react";
 import { Settings2, ShieldAlert } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { LogoMark } from "@/components/logo";
-import { BrandMark } from "@/components/brand/brand-mark";
+import { BrandTile } from "@/components/brand/brand-mark";
 import { PauseButton } from "@/components/motion/autoplay";
 import type { ConstellationNode } from "./data";
 
@@ -71,8 +71,8 @@ function Orbit({ nodes, radius, reverse, idPrefix }: { nodes: ConstellationNode[
                 aria-describedby={cardId}
                 className="constellation__node group/node relative flex flex-col items-center gap-1.5 rounded-2xl outline-offset-4"
               >
-                <span aria-hidden="true" className="relative flex size-[52px] items-center justify-center rounded-2xl border border-border-strong bg-card text-foreground shadow-md transition-[transform,border-color,box-shadow] duration-(--dur-3) ease-snap group-hover/node:scale-110 group-hover/node:border-signal/50 group-hover/node:shadow-[var(--glow-signal)] group-focus-visible/node:scale-110">
-                  <BrandMark id={p.n.id} className="size-6" />
+                <span aria-hidden="true" className="relative flex transition-transform duration-(--dur-3) ease-snap group-hover/node:scale-110 group-focus-visible/node:scale-110">
+                  <BrandTile id={p.n.id} className="size-[52px]" markClassName="size-6" />
                 </span>
                 <span className="whitespace-nowrap text-[11.5px] font-medium text-muted-foreground transition-colors group-hover/node:text-foreground">{p.n.name}</span>
               </Link>
@@ -128,9 +128,7 @@ export function Constellation({ nodes, footer }: { nodes: ConstellationNode[]; f
         {nodes.map((n) => (
           <li key={n.id}>
             <Link href={n.href} className="e1 flex h-full items-center gap-3 rounded-xl px-3 py-2.5 transition-colors hover:border-border-strong">
-              <span className="flex size-9 shrink-0 items-center justify-center rounded-lg border border-border bg-background">
-                <BrandMark id={n.id} className="size-[18px]" />
-              </span>
+              <BrandTile id={n.id} className="size-9 rounded-lg" markClassName="size-[18px]" />
               <span className="min-w-0">
                 <span className="block truncate text-sm font-medium">{n.name}</span>
                 <span className="block truncate text-[11px] text-muted-foreground">{n.categoryName}</span>
