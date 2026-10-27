@@ -98,6 +98,15 @@
     "node": ">=20.9"
   },
   "overrides": {
-    "dompurify": "3.4.17"
+    "dompurify": "3.4.17",
+    "@node-minify/core": {
+      "glob": "10.5.0"
+    },
+    "@esbuild-kit/core-utils": {
+      "esbuild": "0.25.12"
+    },
+    "miniflare": {
+      "undici": "7.30.1"
+    }
   }
 }
