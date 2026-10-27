@@ -331,3 +331,54 @@
 @keyframes hero-halo { to { --halo: 360deg; } }
 :is(.hero-float, .hero-halo) { @media (prefers-reduced-motion: reduce) { animation: none; } }
 [data-motion="reduced"] :is(.hero-float, .hero-halo) { animation: none; }
+
+/* ---------- "Watch it build" step deck (step-deck.tsx), Razorpay style ---------- */
+.deck-bar {
+  position: sticky;
+  top: 76px;
+  z-index: 30;
+  margin-inline: -8px;
+  padding: 6px 8px 8px;
+  background: color-mix(in oklab, var(--background) 88%, transparent);
+  backdrop-filter: blur(14px);
+  border-radius: 14px;
+}
+.deck-card {
+  position: relative;
+  margin-bottom: 1.5rem;
+  border: 1px solid var(--border);
+  border-radius: 28px;
+  background: var(--card);
+  box-shadow: 0 1px 0 color-mix(in oklab, white 70%, transparent) inset, 0 30px 60px -30px rgba(0, 0, 0, 0.25);
+  overflow: hidden;
+}
+.dark .deck-card { box-shadow: inset 0 1px 0 color-mix(in oklab, var(--foreground) 7%, transparent), 0 30px 70px -30px rgba(0, 0, 0, 0.9); }
+@media (width >= 48rem) {
+  .deck-card {
+    position: sticky;
+    top: var(--pin);
+    margin-bottom: 26svh;
+    transform-origin: 50% 0;
+    transform: scale(calc(1 - var(--depth, 0) * 0.035));
+    will-change: transform;
+  }
+  .deck-card:last-child { margin-bottom: 2rem; }
+  /* Covered cards dim a little as more of the deck lands on them. */
+  .deck-card::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: 40;
+    pointer-events: none;
+    background: #000;
+    opacity: min(0.3, calc(var(--depth, 0) * 0.07));
+  }
+  .dark .deck-card::after { opacity: min(0.5, calc(var(--depth, 0) * 0.14)); }
+  .deck-stage { height: clamp(300px, calc(100svh - 380px), 560px); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .deck-card { position: relative !important; top: auto !important; transform: none !important; margin-bottom: 1.5rem !important; }
+  .deck-card::after { display: none; }
+}
+[data-motion="reduced"] .deck-card { position: relative !important; top: auto !important; transform: none !important; margin-bottom: 1.5rem !important; }
+[data-motion="reduced"] .deck-card::after { display: none; }

@@ -7,8 +7,7 @@ import type { HomeData } from "./data";
 import type { TickerEntry } from "./changelog-ticker";
 import { HomeStoreProvider } from "./home-store";
 import { HomeHero } from "./hero";
-import { StackScroll } from "@/components/motion/stack-scroll";
-import { Storyboard } from "./storyboard";
+import { StepDeck } from "./step-deck";
 import { ProofStrip } from "./proof-strip";
 import { TemplateWall } from "./template-wall";
 import { Principles } from "./principles";
@@ -41,16 +40,9 @@ export function HomeView({
     <div data-page="home" className="relative overflow-x-clip">
       <HomeStoreProvider starters={data.starters} scenarios={data.scenarios} tools={data.tools} aiReady={aiReady} maxRepairAttempts={data.maxRepairAttempts}>
         {/* H0 + H1 */}
-        {/* Each panel sticks while the next slides up over it (Razorpay-style stacked sections). */}
-        <StackScroll>
-        <div className="stack-panel">
-          <HomeHero signedIn={signedIn} announcement={announcement} />
-        </div>
-        <div className="stack-panel pt-14">
-          <Storyboard />
-        </div>
+        <HomeHero signedIn={signedIn} announcement={announcement} />
+        <StepDeck />
 
-        <div className="stack-panel">
         {/* H2 */}
         <ProofStrip facts={data.proof} changelog={changelog} status={status} />
 
@@ -74,19 +66,13 @@ export function HomeView({
             </p>
           </TemplateWall>
         </section>
-        </div>
 
         {/* H4 */}
-        <div className="stack-panel">
-          <Principles scenario={scenario} maxRepairAttempts={data.maxRepairAttempts} />
-        </div>
+        <Principles scenario={scenario} maxRepairAttempts={data.maxRepairAttempts} />
 
         {/* H5 */}
-        <div className="stack-panel">
-          <PlatformGrid scenario={scenario} />
-        </div>
+        <PlatformGrid scenario={scenario} />
 
-        <div className="stack-panel">
         {/* H6: stacked and centred up to xl; from xl the copy sits beside the orbit, so the 600px constellation does not float in empty space. */}
         <section aria-labelledby="integrations-title" className="relative overflow-hidden py-16 sm:py-24 lg:py-28">
           <div className="container-x">
@@ -120,15 +106,11 @@ export function HomeView({
           </div>
         </section>
 
-        </div>
 
         {/* H7–H9 */}
-        <div className="stack-panel">
-          <PricingTeaser />
-          <FaqSection />
-          <FinalCta signedIn={signedIn} freePlan={data.freePlan} />
-        </div>
-        </StackScroll>
+        <PricingTeaser />
+        <FaqSection />
+        <FinalCta signedIn={signedIn} freePlan={data.freePlan} />
       </HomeStoreProvider>
     </div>
   );
