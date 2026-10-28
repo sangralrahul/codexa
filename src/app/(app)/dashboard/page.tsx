@@ -2,8 +2,10 @@ import { cookies } from "next/headers";
 import { requireUser } from "@/lib/auth/guards";
 import { getCurrentWorkspace } from "@/lib/services/current-workspace";
 import { roleAtLeast } from "@/lib/services/access";
-import { countProjects } from "@/lib/services/projects";
-import { getDashboardOverview } from "@/lib/services/dashboard";
+import { listProjects } from "@/lib/services/projects";
+import { getDashboardOverview, getProjectStatuses } from "@/lib/services/dashboard";
+import { serializeProject } from "@/app/api/v1/projects/_lib/serialize";
+import type { ProjectCardItem } from "@/components/projects/project-card";
 import { getWorkspaceEntitlements } from "@/lib/services/usage";
 import { capabilities } from "@/lib/env";
 import { PLANS } from "@/config/plans";
@@ -12,7 +14,6 @@ import { getTemplate, summarizeTemplate, TEMPLATES } from "@/templates";
 import { DEFAULT_TEMPLATE_ID, listTemplateSummaries, templateCategory } from "@/components/projects/template-summaries";
 import type { PromptPreset } from "@/components/projects/prompt-box";
 import { CHECKLIST_COOKIE } from "@/components/projects/getting-started";
-import type { ResumeProject } from "@/components/projects/continue-building";
 import { toStatusDto } from "@/components/projects/status";
 import { DashboardCockpit } from "@/components/projects/dashboard-cockpit";
 import type { TemplateCardData } from "@/components/templates";
@@ -20,22 +21,6 @@ import type { TemplateCardData } from "@/components/templates";
 export const metadata = { title: "Dashboard", robots: { index: false } };
 
 type SearchParams = Promise<{ prompt?: string; template?: string }>;
-
-/** Time-of-day greeting in the user's own time zone (set in their profile); "Welcome back" when it can't be resolved. */
-function greeting(timeZone: string) {
-  try {
-    const hour = Number(
-      new Intl.DateTimeFormat("en-US", {
-        hour: "numeric",
-        hourCycle: "h23",
-        timeZone,
-      }).format(new Date()),
-    );
-    return hour < 5 ? "Welcome back" : hour < 12 ? "Good morning" : hour < 18 ? "Good afternoon" : "Good evening";
-  } catch {
-    return "Welcome back";
-  }
-}
 
 /** The starters the first-run row leads with (the gallery's featured lead), then featured order. */
 const FIRST_RUN = ["vite-react-dashboard", "vite-react-storefront", "vite-react-saas"];
@@ -45,12 +30,29 @@ export default async function DashboardPage({ searchParams }: { searchParams: Se
   const sp = await searchParams;
   const { current, all } = await getCurrentWorkspace(user);
   const workspaceIds = all.map((w) => w.workspace.id);
-  const names = new Map(all.map((w) => [w.workspace.id, w.workspace.name]));
-  const [overview, entitlements, projectCount] = await Promise.all([
-    getDashboardOverview(workspaceIds, { recent: 4, activity: 10 }),
+  const [overview, entitlements, rows] = await Promise.all([
+    getDashboardOverview(workspaceIds, { recent: 4, activity: 0 }),
     current ? getWorkspaceEntitlements(current.workspace) : null,
-    current ? countProjects(current.workspace.id) : 0,
+    current ? listProjects(current.workspace.id) : Promise.resolve([]),
   ]);
+  const projectCount = rows.length;
+  // Recent projects in the current workspace: last opened (or last changed) first, up to 7 plus the "new" tile.
+  const touched = (p: (typeof rows)[number]) => (p.lastOpenedAt ?? p.updatedAt).getTime();
+  const recentRows = [...rows].sort((a, b) => touched(b) - touched(a)).slice(0, 7);
+  const statuses = await getProjectStatuses(recentRows.map((p) => p.id));
+  const projectItems: ProjectCardItem[] = recentRows.map((p) => {
+    const s = serializeProject(p);
+    return {
+      ...s,
+      lastOpenedAt: s.lastOpenedAt?.toISOString() ?? null,
+      createdAt: s.createdAt.toISOString(),
+      updatedAt: s.updatedAt.toISOString(),
+      workspaceName: current!.workspace.name,
+      role: current!.role,
+      category: templateCategory(s.templateId),
+      status: toStatusDto(statuses.get(p.id)),
+    };
+  });
   const checklistDismissed = (await cookies()).get(CHECKLIST_COOKIE)?.value === "done";
 
   // Idea passport: ?prompt= (clamped) and ?template= (only a real template id).
@@ -102,42 +104,20 @@ export default async function DashboardPage({ searchParams }: { searchParams: Se
 
   const firstName = (user.name || user.email.split("@")[0]).split(/\s+/)[0];
 
-  const recent: ResumeProject[] = overview.projects.map(({ project: p, status, lastRun }) => ({
-    id: p.id,
-    name: p.name,
-    description: p.description,
-    templateId: p.templateId,
-    category: templateCategory(p.templateId) ?? "web-apps",
-    framework: p.framework,
-    workspaceName: names.get(p.workspaceId) ?? "Workspace",
-    lastOpenedAt: p.lastOpenedAt?.toISOString() ?? null,
-    updatedAt: p.updatedAt.toISOString(),
-    status: toStatusDto(status),
-    lastRun: lastRun
-      ? {
-          status: lastRun.status,
-          summary: lastRun.summary,
-          changedFiles: lastRun.changedFiles,
-          finishedAt: lastRun.finishedAt?.toISOString() ?? null,
-          createdAt: lastRun.createdAt.toISOString(),
-        }
-      : null,
-  }));
-  const firstRun = recent.length === 0;
-  const hello = `${user.timezone && user.timezone !== "UTC" ? greeting(user.timezone) : firstRun ? "Welcome" : "Welcome back"}, ${firstName}`;
   const m = overview.milestones;
   const showChecklist = canCreate && !(checklistDismissed && m.project && m.preview && m.deploy);
   const cards: TemplateCardData[] = TEMPLATES.map(summarizeTemplate);
   const cardById = new Map(cards.map((c) => [c.id, c]));
-  const starters = FIRST_RUN.map((id) => cardById.get(id)).filter((c): c is TemplateCardData => Boolean(c));
-  const quickStarts = templates
-    .slice(0, 6)
-    .map((t) => cardById.get(t.id))
-    .filter((c): c is TemplateCardData => Boolean(c));
+  // Templates tab: the first-run starters first, then the rest of the featured order (eight tiles).
+  const order = [...FIRST_RUN, ...templates.map((t) => t.id)];
+  const showcase = [...new Set(order)]
+    .map((id) => cardById.get(id))
+    .filter((c): c is TemplateCardData => Boolean(c))
+    .slice(0, 8);
 
   return (
     <DashboardCockpit
-      greeting={current ? hello : `Hi ${firstName}`}
+      firstName={firstName}
       composer={{
         workspaceId: createIn,
         workspaces: editable.map((w) => ({ id: w.workspace.id, name: w.workspace.name, plan: w.workspace.plan })),
@@ -152,17 +132,15 @@ export default async function DashboardPage({ searchParams }: { searchParams: Se
         initialPrompt: carriedPrompt,
         initialTemplateId: carriedTemplate,
       }}
-      recent={recent}
-      activity={overview.activity.map((a) => ({ ...a, createdAt: a.createdAt.toISOString() }))}
+      projects={projectItems}
+      projectCount={projectCount}
       milestones={m}
       showChecklist={showChecklist}
       canCreate={canCreate}
       emailVerified={!!user.emailVerifiedAt}
       emailConfigured={capabilities.email}
       createIn={createIn}
-      usage={current && entitlements ? { workspaceName: current.workspace.name, entitlements, projectCount } : null}
-      starters={starters}
-      quickStarts={quickStarts}
+      templates={showcase}
       templateCount={TEMPLATES.length}
     />
   );

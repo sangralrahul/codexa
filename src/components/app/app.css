@@ -73,3 +73,19 @@
 [data-motion="reduced"] :is(.proj-card, .proj-card__actions, .composer-build) { transition: none; }
 [data-motion="reduced"] :is(.thumb-swap, .chip-in, .river-in > li, .step-done svg, .inspect-swap) { animation: none; }
 [data-motion="reduced"] .proj-card:is(:hover, :focus-within) { translate: none; }
+
+/* ---------- Dashboard home: a quiet light behind the question and composer ---------- */
+.dash-home { position: relative; isolation: isolate; overflow-x: clip; }
+.dash-home::before {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  inset: 0 0 -80px;
+  pointer-events: none;
+  background:
+    radial-gradient(50% 60% at 50% 0%, color-mix(in oklab, var(--glow) 9%, transparent), transparent 75%),
+    radial-gradient(30% 40% at 25% 10%, color-mix(in oklab, var(--silk-1) 6%, transparent), transparent 75%);
+}
+.dark .dash-home::before {
+  background: radial-gradient(50% 60% at 50% 0%, rgba(255, 255, 255, 0.05), transparent 75%);
+}

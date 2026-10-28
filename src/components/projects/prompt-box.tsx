@@ -271,7 +271,7 @@ export function PromptBox({
         label: "Opening the editor",
         detail: aiConfigured ? "Your prompt goes to the AI agent" : "Your prompt waits in the chat panel",
       });
-      router.push(`/projects/${project.id}`);
+      router.push(`/projects/${project.id}?view=preview`);
     } catch (err) {
       const e = describeCreateError(err);
       setError(e);

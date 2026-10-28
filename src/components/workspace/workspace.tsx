@@ -252,6 +252,15 @@ function Shell({
     const shell = readLocal<Layout | null>(wsKey(projectId, LAYOUT_KEYS.shell), null);
     /* eslint-disable react-hooks/set-state-in-effect -- one-time hydration from localStorage after mount (SSR-safe) */
     if (v && VIEWS.includes(v as CanvasView)) setView(v as CanvasView);
+    // A project just created from a prompt opens on chat + preview (?view=preview from the composer).
+    const fromUrl = new URLSearchParams(window.location.search).get("view");
+    const urlView = fromUrl && VIEWS.includes(fromUrl as CanvasView) ? (fromUrl as CanvasView) : null;
+    if (urlView) {
+      setView(urlView);
+      const url = new URL(window.location.href);
+      url.searchParams.delete("view");
+      window.history.replaceState(window.history.state, "", url.pathname + url.search + url.hash);
+    }
     if (d && DEVICES.includes(d as Device)) setDevice(d as Device);
     if (s === "files" || s === "search") setSide(s);
     if (k && typeof k.open === "boolean") setDock({ open: k.open, size: typeof k.size === "number" && k.size > 5 && k.size < 90 ? k.size : 30, tab: k.tab === "problems" ? "problems" : "terminal" });
@@ -260,7 +269,7 @@ function Shell({
     }
     if (shell && typeof shell.agent === "number" && typeof shell.canvas === "number") setShellLayout(shell);
     // First canvas layout for the remembered view, estimated from the window (later switches measure the canvas).
-    const startView = v && VIEWS.includes(v as CanvasView) ? (v as CanvasView) : "split";
+    const startView = urlView ?? (v && VIEWS.includes(v as CanvasView) ? (v as CanvasView) : "split");
     const agentPx = shell && typeof shell.agent === "number" ? (shell.agent / 100) * window.innerWidth : window.innerWidth >= 1440 ? AGENT_WIDE_PX : AGENT_PX;
     const canvasPx = Math.max(400, window.innerWidth - agentPx - 18);
     const files = Math.min(40, Math.max(8, (EXPLORER_PX / canvasPx) * 100));
