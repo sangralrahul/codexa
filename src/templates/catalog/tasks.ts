@@ -53,7 +53,7 @@ export default function App() {
   const done = tasks.filter((t) => t.column === "done").length;
 
   return (
-    <div className="min-h-screen bg-[linear-gradient(180deg,#eef2ff_0%,#f8fafc_320px)] text-slate-900">
+    <div className="min-h-screen bg-[linear-gradient(180deg,#f0fdfa_0%,#f8fafc_320px)] text-slate-900">
       <header className="border-b border-slate-200/70 bg-white/70 backdrop-blur">
         <div className="mx-auto flex max-w-5xl flex-wrap items-center justify-between gap-3 px-4 py-3 sm:px-6">
           <h1 className="flex items-center gap-2.5 font-semibold tracking-tight">

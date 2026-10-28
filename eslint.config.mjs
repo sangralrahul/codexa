@@ -21,6 +21,8 @@ const eslintConfig = defineConfig([
     "containers/runner/dist/**",
     "desktop/node_modules/**",
     "desktop/dist/**",
+    // Template kit sources; type-checked and built per template by scripts/capture-template-shots.ts.
+    "templates-src/**",
   ]),
   // The Electron main process (desktop/) is CommonJS.
   { files: ["desktop/**/*.js"], rules: { "@typescript-eslint/no-require-imports": "off" } },
