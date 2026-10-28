@@ -62,7 +62,7 @@ import { HistoryDrawer } from "./history-drawer";
 import { ShareDialog } from "./share-dialog";
 import { SettingsDrawer } from "./settings-drawer";
 import { ActivityDrawer } from "./activity-drawer";
-import { DeploymentsSheet } from "./deploy-panel";
+import { PublishingSheet } from "./publishing-sheet";
 import { ProjectOverview, type OverviewAction } from "./project-overview";
 import { PresenceProvider } from "./presence";
 import { StatusBar } from "./status-bar";
@@ -846,7 +846,7 @@ function Shell({
           canEdit={canEdit}
         />
         <ActivityDrawer projectId={projectId} open={tool === "activity"} onOpenChange={(o) => !o && setTool(null)} />
-        <DeploymentsSheet open={deploySheet} onOpenChange={setDeploySheet} />
+        <PublishingSheet projectId={projectId} open={deploySheet} onOpenChange={setDeploySheet} />
         <Drawer open={tool === "github"} onOpenChange={(o) => !o && setTool(null)} title="GitHub" icon={<FolderGit2 aria-hidden="true" />} description="Push to and pull from a repository. The workspace stays usable while this is open." width={560} modal={false}>
           <div className="h-full min-h-[320px]">
             {tool === "github" ? (

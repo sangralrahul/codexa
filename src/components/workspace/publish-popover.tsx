@@ -79,7 +79,7 @@ function flight(from: HTMLElement | null, to: HTMLElement | null, text: string) 
  * with their real reason), an inline confirmation, then a stepper that only moves when the
  * server's deployment.status does, a live tail of the build log, and the Ship moment on a
  * real "live". Failure shows the real error with "Fix with AI". History, rollback and the
- * custom domain live in the "Manage deployments" sheet.
+ * custom domains, analytics and site settings live in the Publishing pane (publishing-sheet.tsx).
  */
 export function PublishPopover({ onManage, className, compact, open: openProp, onOpenChange }: { onManage: () => void; className?: string; compact?: boolean; open?: boolean; onOpenChange?: (o: boolean) => void }) {
   const d = useDeployments();
@@ -358,7 +358,7 @@ export function PublishPopover({ onManage, className, compact, open: openProp, o
             }}
             className="mt-2.5 inline-flex w-full items-center justify-center gap-1.5 rounded-lg py-1 text-[12.5px] text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-2 focus-visible:outline-ring"
           >
-            <Settings2 className="size-3.5" aria-hidden="true" /> Manage deployments
+            <Settings2 className="size-3.5" aria-hidden="true" /> Domains, analytics &amp; settings
           </button>
         </div>
       </PopoverContent>

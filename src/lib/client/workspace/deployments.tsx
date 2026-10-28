@@ -8,7 +8,7 @@ import type { WorkspaceRole } from "./types";
 /**
  * Deployments for the workspace: the list, the providers (with their real "not configured"
  * reasons), and one tracked deployment that is polled while it builds. The header's live dot,
- * the Publish popover's stepper and the "Manage deployments" sheet all read this one source,
+ * the Publish popover's stepper and the Publishing pane all read this one source,
  * so "Live" appears exactly when the server says so.
  */
 export type ProviderInfo = { id: "codexa" | "vercel"; name: string; available: boolean; reason: string | null };

@@ -189,6 +189,26 @@ npm run user:admin -- make-admin you@example.com --remote
 If you started on `workers.dev`: do steps 2 and 3, set `APP_URL` to `https://codexa.yourdomain.com`
 (`npx wrangler secret put APP_URL`), start Docker Desktop, and run `npm run cf:deploy` again.
 
+## Let your users connect their own domains (optional)
+
+In the workspace, **Publish → Domains, analytics & settings → Domains** lets a project owner add
+a domain like `shop.example.com`. Codexa shows two DNS records (a TXT record that proves they own
+the domain, and a CNAME that points it at their site) and checks the TXT record for them.
+
+For visitors on those domains to actually reach Codexa, Cloudflare must accept traffic for
+domains that are not yours. That is **Cloudflare for SaaS** (custom hostnames), set up once:
+
+1. In the Cloudflare dashboard, open your domain (for example `creditvault.tech`) →
+   **SSL/TLS → Custom Hostnames** and enable it (free for the first 100 hostnames).
+2. Set the **fallback origin** to your sites host, for example `fallback-sites.creditvault.tech`
+   (create that DNS record as a proxied `AAAA 100::` record, like the wildcard one).
+3. In **Workers Routes**, add the route `*/*` for the Codexa Worker on that zone.
+4. For each verified domain, add it under **Custom Hostnames** (Cloudflare issues the HTTPS
+   certificate automatically).
+
+The Worker serves a verified custom domain from the project's live version. Until those steps
+are done, verification still works, but visitors to the custom domain won't reach the site.
+
 ## Updating later
 
 ```bash

@@ -329,7 +329,7 @@ export function WorkspaceHeader({
                 <Share2 /> Share
               </DropdownMenuItem>
               <DropdownMenuItem onSelect={onManageDeployments}>
-                <Play /> Manage deployments
+                <Play /> Publishing settings
               </DropdownMenuItem>
             </div>
           </DropdownMenuContent>

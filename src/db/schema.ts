@@ -212,6 +212,8 @@ export type ProjectSettings = {
   githubLastTreeSha?: string;
   githubLastCommitSha?: string;
   githubLastSyncAt?: string;
+  /** Publishing: the chosen site name (the <name> in <name>.<DEPLOY_HOST>); default is <workspace>-<project>. */
+  siteName?: string;
 };
 
 export const projectFiles = sqliteTable(
@@ -431,6 +433,19 @@ export const customDomains = sqliteTable(
     createdAt: createdAt(),
   },
   (t) => [uniqueIndex("custom_domains_domain_idx").on(t.domain)],
+);
+
+/** Page views of a published site, per project per UTC day (written by the Worker, worker/sites.ts). */
+export const siteVisits = sqliteTable(
+  "site_visits",
+  {
+    projectId: text("project_id")
+      .notNull()
+      .references(() => projects.id, { onDelete: "cascade" }),
+    day: text("day").notNull(), // YYYY-MM-DD (UTC)
+    views: integer("views").notNull().default(0),
+  },
+  (t) => [primaryKey({ columns: [t.projectId, t.day] })],
 );
 
 // ---------------------------------------------------------------------------

@@ -43,19 +43,46 @@ const SECURITY_HEADERS: Record<string, string> = {
   "content-security-policy": "frame-ancestors 'self'",
 };
 
-const cache = new Map<string, { id: string | null; at: number }>();
+type Live = { id: string; projectId: string } | null;
+const cache = new Map<string, { live: Live; at: number }>();
 
-async function liveDeploymentId(env: Env, slug: string): Promise<string | null> {
-  const hit = cache.get(slug);
-  if (hit && Date.now() - hit.at < 15_000) return hit.id;
-  const row = await env.DB.prepare(
-    "SELECT id FROM deployments WHERE provider = 'codexa' AND status = 'live' AND json_extract(config, '$.slug') = ?1 ORDER BY created_at DESC LIMIT 1",
-  )
-    .bind(slug)
-    .first<{ id: string }>();
-  const id = row?.id ?? null;
-  cache.set(slug, { id, at: Date.now() });
-  return id;
+/** The live Codexa deployment for a site name, or for a verified custom domain. Cached 15s per isolate. */
+async function liveDeployment(env: Env, key: { slug: string } | { domain: string }): Promise<Live> {
+  const k = "slug" in key ? `s:${key.slug}` : `d:${key.domain}`;
+  const hit = cache.get(k);
+  if (hit && Date.now() - hit.at < 15_000) return hit.live;
+  const row =
+    "slug" in key
+      ? await env.DB.prepare(
+          "SELECT id, project_id FROM deployments WHERE provider = 'codexa' AND status = 'live' AND json_extract(config, '$.slug') = ?1 ORDER BY created_at DESC LIMIT 1",
+        )
+          .bind(key.slug)
+          .first<{ id: string; project_id: string }>()
+      : await env.DB.prepare(
+          "SELECT d.id, d.project_id FROM custom_domains c JOIN deployments d ON d.project_id = c.project_id WHERE c.domain = ?1 AND c.verified_at IS NOT NULL AND d.provider = 'codexa' AND d.status = 'live' ORDER BY d.created_at DESC LIMIT 1",
+        )
+          .bind(key.domain)
+          .first<{ id: string; project_id: string }>();
+  const live = row ? { id: row.id, projectId: row.project_id } : null;
+  cache.set(k, { live, at: Date.now() });
+  return live;
+}
+
+/** True when a verified custom domain points at a project (used before falling through to the app). */
+export async function isCustomDomain(env: Env, domain: string): Promise<boolean> {
+  return (await liveDeployment(env, { domain })) !== null;
+}
+
+/** One page view for the project today (UTC). Page loads only: HTML documents, not assets. */
+function countView(env: Env, ctx: ExecutionContext | undefined, projectId: string) {
+  if (!ctx) return;
+  const day = new Date().toISOString().slice(0, 10);
+  ctx.waitUntil(
+    env.DB.prepare("INSERT INTO site_visits (project_id, day, views) VALUES (?1, ?2, 1) ON CONFLICT (project_id, day) DO UPDATE SET views = views + 1")
+      .bind(projectId, day)
+      .run()
+      .catch(() => undefined),
+  );
 }
 
 function notFound(message: string) {
@@ -65,10 +92,11 @@ function notFound(message: string) {
   });
 }
 
-export async function serveSite(request: Request, env: Env, slug: string): Promise<Response> {
+export async function serveSite(request: Request, env: Env, key: { slug: string } | { domain: string }, ctx?: ExecutionContext): Promise<Response> {
   if (request.method !== "GET" && request.method !== "HEAD") return new Response("Method not allowed", { status: 405 });
-  const id = await liveDeploymentId(env, slug);
-  if (!id) return notFound("No site is published at this address.");
+  const live = await liveDeployment(env, key);
+  if (!live) return notFound("No site is published at this address.");
+  const id = live.id;
   const url = new URL(request.url);
   let path = decodeURIComponent(url.pathname).replace(/^\/+/, "");
   if (path.split("/").some((s) => s === ".." || s === ".")) return notFound("Invalid path.");
@@ -91,6 +119,7 @@ export async function serveSite(request: Request, env: Env, slug: string): Promi
     etag: object.httpEtag,
     ...SECURITY_HEADERS,
   });
+  if (request.method === "GET" && ext === "html" && request.headers.get("sec-fetch-dest") !== "iframe" && !/bot|crawler|spider|preview/i.test(request.headers.get("user-agent") ?? "")) countView(env, ctx, live.projectId);
   if (request.headers.get("if-none-match") === object.httpEtag) return new Response(null, { status: 304, headers });
   return new Response(request.method === "HEAD" ? null : (object.body as unknown as ReadableStream), { status: 200, headers });
 }

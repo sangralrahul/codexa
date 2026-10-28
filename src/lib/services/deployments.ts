@@ -37,7 +37,9 @@ export function toDeploymentDto(row: Deployment, opts: { withLog?: boolean } = {
 }
 
 /** Globally unique, DNS-safe label: <workspace slug>-<project slug>, max 63 chars. */
-export function siteSlug(workspace: Pick<Workspace, "slug">, project: Pick<Project, "slug" | "id">): string {
+export function siteSlug(workspace: Pick<Workspace, "slug">, project: Pick<Project, "slug" | "id"> & { settings?: Project["settings"] | null }): string {
+  // A name chosen in Publishing settings wins (validated and checked for uniqueness when set).
+  if (project.settings?.siteName) return project.settings.siteName;
   const raw = `${workspace.slug}-${project.slug}`.toLowerCase().replace(/[^a-z0-9-]/g, "-").replace(/-+/g, "-").replace(/^-|-$/g, "");
   if (raw.length <= 63) return raw || `p-${project.id.slice(0, 8)}`;
   return `${raw.slice(0, 54).replace(/-$/, "")}-${project.id.slice(0, 8)}`;
@@ -164,12 +166,12 @@ export async function rollbackDeployment(project: Project, deploymentId: string,
   return (await getDeployment(project.id, target.id)) ?? target;
 }
 
-export function domainInstructions(project: Pick<Project, "slug" | "id">, workspace: Pick<Workspace, "slug">) {
+export function domainInstructions(project: Pick<Project, "slug" | "id" | "settings">, workspace: Pick<Workspace, "slug">) {
   const slug = siteSlug(workspace, project);
   return {
     host: hostFor(slug, env.DEPLOY_HOST),
     cname: hostFor(slug, env.DEPLOY_HOST).replace(/:\d+$/, ""),
-    verificationSupported: false as const,
-    note: "Custom domain verification is not implemented yet. Point a CNAME at the host above and contact support to attach it; automatic verification is on the roadmap.",
+    verificationSupported: true as const,
+    note: "Add your domain in Publishing → Domains: Codexa shows the DNS records to create and checks them for you.",
   };
 }
