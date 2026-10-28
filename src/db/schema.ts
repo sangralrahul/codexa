@@ -212,6 +212,8 @@ export type ProjectSettings = {
   githubLastTreeSha?: string;
   githubLastCommitSha?: string;
   githubLastSyncAt?: string;
+  /** Project knowledge: rules and facts the AI follows on every request in this project (owner-written). */
+  knowledge?: string;
   /** Publishing: the chosen site name (the <name> in <name>.<DEPLOY_HOST>); default is <workspace>-<project>. */
   siteName?: string;
 };
@@ -662,6 +664,8 @@ export const showcaseEntries = sqliteTable(
     tags: text("tags", { mode: "json" }).$type<string[]>().notNull().$defaultFn(() => []),
     submittedBy: text("submitted_by").references(() => users.id),
     approvedAt: ts("approved_at"),
+    /** Number of times signed-in users copied this entry's project into their own workspace. */
+    remixCount: integer("remix_count").notNull().default(0),
     createdAt: createdAt(),
   },
   (t) => [uniqueIndex("showcase_slug_idx").on(t.slug)],

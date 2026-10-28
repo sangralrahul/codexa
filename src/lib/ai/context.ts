@@ -16,6 +16,8 @@ export type ProjectContext = {
   framework: string;
   frameworkName: string;
   settings: Record<string, unknown>;
+  /** Project knowledge written by the owner (empty when none). */
+  knowledge: string;
   tree: string;
   fileCount: number;
   excerpts: { path: string; content: string }[];
@@ -56,7 +58,8 @@ export async function loadProjectContext(project: Project): Promise<ProjectConte
   return {
     framework: project.framework,
     frameworkName: fw?.name ?? project.framework,
-    settings: (project.settings ?? {}) as Record<string, unknown>,
+    settings: Object.fromEntries(Object.entries(project.settings ?? {}).filter(([k]) => k !== "knowledge" && !k.startsWith("github"))),
+    knowledge: (project.settings?.knowledge ?? "").trim(),
     tree: treeLines.join("\n"),
     fileCount: visible.length,
     excerpts,

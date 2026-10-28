@@ -1,11 +1,11 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Eye, EyeOff, KeyRound, Plus, Settings2, Trash2 } from "lucide-react";
+import { BookOpenText, Eye, EyeOff, KeyRound, Plus, Settings2, Trash2 } from "lucide-react";
 import { envApi, projectsApi } from "@/lib/client/workspace/api";
 import type { EnvVarDto, ProjectSettings } from "@/lib/client/workspace/types";
 import { Button } from "@/components/ui/button";
-import { Field, Input } from "@/components/ui/input";
+import { Field, Input, Textarea } from "@/components/ui/input";
 import { Alert, Skeleton } from "@/components/ui/misc";
 import { Drawer } from "./drawer";
 import { ConfirmDialog } from "./confirm-dialog";
@@ -26,12 +26,64 @@ export function SettingsDrawer({
   canEdit: boolean;
 }) {
   return (
-    <Drawer open={open} onOpenChange={onOpenChange} title="Project settings" icon={<Settings2 aria-hidden="true" />} description="Commands used by the preview runner and build, plus environment variables.">
+    <Drawer open={open} onOpenChange={onOpenChange} title="Project settings" icon={<Settings2 aria-hidden="true" />} description="What the AI should always know, the commands used by the preview and build, and environment variables.">
       <div className="space-y-8 px-5 py-4">
+        <KnowledgeForm projectId={projectId} settings={settings} onSaved={onSettingsSaved} canEdit={canEdit} />
         <CommandsForm projectId={projectId} settings={settings} onSaved={onSettingsSaved} canEdit={canEdit} />
         <EnvVarsEditor projectId={projectId} canEdit={canEdit} />
       </div>
     </Drawer>
+  );
+}
+
+const KNOWLEDGE_MAX = 4000;
+const KNOWLEDGE_EXAMPLE = `Brand: Larder & Loaf, a neighbourhood bakery in Portland.
+Colours: cream #faf8f5 background, terracotta #c2410c accent. Headings in Fraunces.
+Tone: warm and plain-spoken; no exclamation marks.
+Never: stock photos, emoji, purple, lorem ipsum.`;
+
+/** Project knowledge: owner-written rules the AI follows on every request in this project. */
+function KnowledgeForm({ projectId, settings, onSaved, canEdit }: { projectId: string; settings: ProjectSettings; onSaved: (s: ProjectSettings) => void; canEdit: boolean }) {
+  const [text, setText] = useState(settings.knowledge ?? "");
+  const [busy, setBusy] = useState(false);
+  const [msg, setMsg] = useState<{ kind: "ok" | "err"; text: string } | null>(null);
+  const dirty = text.trim() !== (settings.knowledge ?? "").trim();
+  const save = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setBusy(true);
+    setMsg(null);
+    try {
+      const res = await projectsApi.patch(projectId, { settings: { knowledge: text.trim() } });
+      onSaved(res.project.settings);
+      setMsg({ kind: "ok", text: text.trim() ? "Saved. The AI uses this on every request in this project." : "Knowledge cleared." });
+    } catch (err) {
+      setMsg({ kind: "err", text: err instanceof Error ? err.message : "Could not save" });
+    } finally {
+      setBusy(false);
+    }
+  };
+  return (
+    <form onSubmit={save} className="space-y-3" aria-labelledby="settings-knowledge">
+      <div>
+        <h3 id="settings-knowledge" className="flex items-center gap-1.5 text-[13px] font-semibold">
+          <BookOpenText className="size-3.5 text-muted-foreground" aria-hidden="true" /> Project knowledge
+        </h3>
+        <p className="mt-1 text-xs leading-relaxed text-muted-foreground">Rules and facts the AI follows on every request here: brand, colours, tone, tech choices, things to avoid.</p>
+      </div>
+      <Field label="Knowledge" htmlFor="st-knowledge" hint={`${text.length.toLocaleString("en-US")} / ${KNOWLEDGE_MAX.toLocaleString("en-US")} characters`}>
+        <Textarea id="st-knowledge" value={text} onChange={(e) => setText(e.target.value)} disabled={!canEdit} maxLength={KNOWLEDGE_MAX} rows={6} placeholder={KNOWLEDGE_EXAMPLE} className="font-mono text-[12.5px] leading-relaxed" />
+      </Field>
+      {msg ? (
+        <p role={msg.kind === "err" ? "alert" : "status"} className={msg.kind === "err" ? "text-xs text-danger" : "text-xs text-success"}>
+          {msg.text}
+        </p>
+      ) : null}
+      {canEdit ? (
+        <Button type="submit" size="sm" appearance="app" loading={busy} disabled={!dirty}>
+          Save knowledge
+        </Button>
+      ) : null}
+    </form>
   );
 }
 

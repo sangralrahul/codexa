@@ -99,7 +99,7 @@ export function ShowcaseSubmitForm({ workspaceId, workspaceName }: Props) {
   return (
     <form onSubmit={onSubmit} className="space-y-4" aria-describedby="submit-help" noValidate>
       <p id="submit-help" className="text-sm text-muted-foreground">
-        Submissions are reviewed by the Codexa team before they appear publicly. Only the title, description, tags and live URL you enter are published; project files stay private.
+        Submissions are reviewed by the Codexa team before they appear publicly. Only the title, description, tags and live URL you enter are published. Project files stay private unless the project&apos;s visibility is public, in which case signed-in users can remix a copy of them (environment variables and secrets are never copied).
       </p>
       {status.kind === "ok" ? (
         <Alert variant="success" title="Submitted for review">

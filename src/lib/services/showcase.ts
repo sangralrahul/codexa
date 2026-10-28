@@ -26,6 +26,7 @@ export type ShowcaseItem = {
   liveUrl: string | null;
   approvedAt: Date | null;
   createdAt: Date;
+  remixCount: number;
   project: { id: string; name: string; framework: string; frameworkName: string; visibility: "private" | "unlisted" | "public"; templateId: string | null };
   submittedBy: { id: string; name: string } | null;
 };
@@ -52,6 +53,7 @@ function toItem(r: Row): ShowcaseItem {
     liveUrl: r.entry.liveUrl,
     approvedAt: r.entry.approvedAt,
     createdAt: r.entry.createdAt,
+    remixCount: r.entry.remixCount,
     project: { ...r.project, frameworkName: frameworkName(r.project.framework) },
     submittedBy: r.submitter,
   };
@@ -172,6 +174,9 @@ export function serializeShowcaseItem(i: ShowcaseItem) {
     status: i.approvedAt ? ("approved" as const) : ("pending" as const),
     approvedAt: i.approvedAt?.toISOString() ?? null,
     createdAt: i.createdAt.toISOString(),
+    remixCount: i.remixCount,
+    /** Only approved entries whose project is public can be copied into another workspace. */
+    remixable: Boolean(i.approvedAt) && i.project.visibility === "public",
     project: { id: i.project.id, name: i.project.name, framework: i.project.framework, frameworkName: i.project.frameworkName, visibility: i.project.visibility, templateId: i.project.templateId },
     submittedBy: i.submittedBy ? { name: i.submittedBy.name } : null,
   };

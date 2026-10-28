@@ -22,6 +22,7 @@ const settingsSchema = z
     outputDir: z.string().trim().max(100).optional(),
     port: z.number().int().min(1).max(65535).optional(),
     nodeVersion: z.string().trim().max(20).optional(),
+    knowledge: z.string().trim().max(4000, "Knowledge is limited to 4,000 characters").optional(),
   })
   .strict();
 

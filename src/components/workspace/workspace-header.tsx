@@ -49,7 +49,7 @@ const STATUS_LABEL: Record<SaveStatus, string> = { saved: "Saved", saving: "Savi
 const TOOLS: { id: WorkspaceTool; label: string; hint: string; Icon: typeof History }[] = [
   { id: "github", label: "GitHub", hint: "Push and pull a repository", Icon: FolderGit2 },
   { id: "database", label: "Database", hint: "Browse and query a connection", Icon: Database },
-  { id: "settings", label: "Settings", hint: "Commands and environment", Icon: Settings },
+  { id: "settings", label: "Settings", hint: "AI knowledge, commands, environment", Icon: Settings },
   { id: "activity", label: "Activity", hint: "Who changed what", Icon: Activity },
 ];
 

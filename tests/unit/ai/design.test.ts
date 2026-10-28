@@ -8,6 +8,7 @@ const ctx = (framework: string): ProjectContext => ({
   framework,
   frameworkName: framework,
   settings: {},
+  knowledge: "",
   tree: "",
   fileCount: 0,
   excerpts: [],
@@ -67,5 +68,16 @@ describe("starter templates", () => {
     for (const t of TEMPLATES) {
       for (const [path, content] of Object.entries(t.files)) expect(`${t.id}/${path}: ${PURPLE.test(content) ? "has purple" : "ok"}`).toBe(`${t.id}/${path}: ok`);
     }
+  });
+});
+
+describe("project knowledge", () => {
+  it("goes into the system prompt and suppresses the design direction when it describes the look", () => {
+    const withKnowledge = { ...ctx("vite-react"), knowledge: "Brand colour is forest green #166534. Never use emoji." };
+    const system = buildSystemPrompt("build", withKnowledge);
+    expect(system).toContain("<project_knowledge>");
+    expect(system).toContain("Never use emoji.");
+    expect(buildSystemPrompt("build", ctx("vite-react"))).not.toContain("PROJECT KNOWLEDGE");
+    expect(buildUserMessage("build", "a bakery website", withKnowledge, [])).not.toContain("<design_direction>");
   });
 });

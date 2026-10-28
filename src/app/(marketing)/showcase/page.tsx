@@ -25,7 +25,7 @@ const FAN = ["vite-react-dashboard", "vite-react-storefront", "vite-react-saas"]
 const FLOW = [
   { n: "01", title: "Build it", body: "Start from a template or a prompt and shape it with the agent. Any project you can edit counts.", Icon: Hammer },
   { n: "02", title: "Deploy it", body: "Optional: publish to Codexa hosting or Vercel so the entry can link to a live URL.", Icon: Rocket },
-  { n: "03", title: "Submit it", body: "Write a title, description and tags. The team reviews it; project files are never published.", Icon: Send },
+  { n: "03", title: "Submit it", body: "Write a title, description and tags. The team reviews it. Files are only remixable if the project is public.", Icon: Send },
 ];
 
 function BeTheFirst({ signedIn }: { signedIn: boolean }) {
@@ -165,7 +165,7 @@ export default async function ShowcasePage({ searchParams }: { searchParams: Sea
           ) : (
             <ul className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3" aria-label="Showcase projects">
               {items.map((item) => (
-                <ShowcaseCard key={item.id} item={item} />
+                <ShowcaseCard key={item.id} item={item} signedIn={Boolean(user)} />
               ))}
             </ul>
           )}
@@ -177,8 +177,8 @@ export default async function ShowcasePage({ searchParams }: { searchParams: Sea
               Submit your project
             </h2>
             <p className="mt-2 text-sm text-muted-foreground">
-              Anyone with the editor role on a project can submit it. Entries are reviewed by the Codexa team and published with a “Built with Codexa” badge. Project files are never published — only what you write
-              here and, optionally, a live URL.
+              Anyone with the editor role on a project can submit it. Entries are reviewed by the Codexa team and published with a “Built with Codexa” badge. The page shows only what you write
+              here and, optionally, a live URL. If the project&apos;s visibility is public, signed-in users can also remix it (copy its files, never its secrets) into their own workspace.
             </p>
             {user && submissions.length ? (
               <div className="mt-6">

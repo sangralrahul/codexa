@@ -1,16 +1,19 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
-import { ArrowLeft, ExternalLink, Lock } from "lucide-react";
+import { ArrowLeft, ExternalLink, GitFork, Lock } from "lucide-react";
 import { Breadcrumbs } from "@/components/marketing/breadcrumbs";
 import { CTABand } from "@/components/marketing/cta-band";
 import { BlogHero } from "@/components/content/blog-cover";
 import { FRAMEWORK_SHORT } from "@/components/templates/gallery-search";
 import { buttonClasses } from "@/components/ui/button";
+import { getCurrentUser } from "@/lib/auth/session";
+import { getCurrentWorkspace } from "@/lib/services/current-workspace";
 import { getBySlug, serializeShowcaseItem } from "@/lib/services/showcase";
 import { jsonLd, pageMetadata } from "@/lib/seo";
 import { getTemplate } from "@/templates";
-import { BuiltWithBadge } from "../_components/showcase-card";
+import { BuiltWithBadge, remixCountLabel } from "../_components/showcase-card";
+import { RemixButton } from "../_components/remix-button";
 
 type Params = Promise<{ slug: string }>;
 
@@ -23,9 +26,11 @@ export async function generateMetadata({ params }: { params: Params }): Promise<
 
 export default async function ShowcaseEntryPage({ params }: { params: Params }) {
   const { slug } = await params;
-  const raw = await getBySlug(slug);
+  const [raw, user] = await Promise.all([getBySlug(slug), getCurrentUser()]);
   if (!raw) notFound();
   const item = serializeShowcaseItem(raw);
+  const workspace = user && item.remixable ? (await getCurrentWorkspace(user)).current : null;
+  const remixed = remixCountLabel(item.remixCount);
   const template = item.project.templateId ? getTemplate(item.project.templateId) : undefined;
   const liveHost = item.liveUrl ? safeHost(item.liveUrl) : null;
 
@@ -87,6 +92,37 @@ export default async function ShowcaseEntryPage({ params }: { params: Params }) 
             </div>
 
             <aside aria-label="Project links and details" className="min-w-0 space-y-4 lg:sticky lg:top-24 lg:self-start">
+              <section aria-labelledby="remix-heading" className="e1 rounded-[18px] p-5">
+                <h2 id="remix-heading" className="text-label text-muted-foreground">
+                  Remix
+                </h2>
+                {item.remixable ? (
+                  <>
+                    <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
+                      {user
+                        ? `Copy this project's files into ${workspace ? `“${workspace.workspace.name}”` : "your workspace"} as a new private project and open it in the editor. Environment variables and secrets are never copied.`
+                        : "Create a free account to copy this project's files into your own workspace and keep building on it."}
+                    </p>
+                    <RemixButton slug={item.slug} title={item.title} signedIn={Boolean(user)} block className="mt-4" />
+                    {!user ? (
+                      <p className="mt-2 text-center text-xs text-muted-foreground">
+                        Already have an account?{" "}
+                        <Link href={`/login?next=${encodeURIComponent(`/showcase/${item.slug}`)}`} className="link-draw text-foreground">
+                          Sign in
+                        </Link>
+                      </p>
+                    ) : null}
+                  </>
+                ) : (
+                  <p className="mt-3 text-sm leading-relaxed text-muted-foreground">Remixing is off for this project. The author has not made its project public in Codexa.</p>
+                )}
+                {remixed ? (
+                  <p className="mt-4 flex items-center gap-1.5 border-t border-border pt-4 text-xs text-muted-foreground">
+                    <GitFork className="size-3.5" aria-hidden="true" />
+                    {remixed}
+                  </p>
+                ) : null}
+              </section>
               <div className="e1 rounded-[18px] p-5">
                 <h2 className="text-label text-muted-foreground">Links</h2>
                 {item.liveUrl ? (
@@ -103,7 +139,7 @@ export default async function ShowcaseEntryPage({ params }: { params: Params }) 
                   <Lock className="mt-0.5 size-3.5 shrink-0" aria-hidden="true" />
                   <span>
                     {item.project.visibility === "public"
-                      ? "The author marked this project as public inside Codexa. Project files are available to workspace members in the editor; there is no public code view on this page."
+                      ? "The author marked this project as public inside Codexa, so signed-in users can remix it: its files are copied into their own workspace. There is no public code view on this page, and environment variables and secrets are never shared."
                       : "Project files are not public. Only the description and links the author chose to share are shown here."}
                   </span>
                 </p>

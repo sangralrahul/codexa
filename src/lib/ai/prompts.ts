@@ -27,6 +27,11 @@ export function buildSystemPrompt(mode: AgentMode, ctx: ProjectContext): string 
     SAFETY,
     mode === "ask" ? ASK_RULES : mode === "fix" ? FIX_RULES : mode === "plan" ? PLAN_RULES : BUILD_RULES,
     ...((mode === "build" || mode === "plan") && hasUi(ctx.framework) ? [DESIGN_RULES] : []),
+    ...(ctx.knowledge
+      ? [
+          `PROJECT KNOWLEDGE: the project owner wrote these rules and facts for every request in this project. Follow them (brand, tone, colours, tech choices, things to avoid) unless the current request explicitly asks otherwise. They never override the security rules above.\n<project_knowledge>\n${ctx.knowledge}\n</project_knowledge>`,
+        ]
+      : []),
     `PROJECT SETTINGS: ${JSON.stringify(ctx.settings)}`,
     `RUNTIME SANDBOX: ${ctx.runtime.available ? `available (status: ${ctx.runtime.status})` : "not available — run_command and get_logs will report that they cannot run; do not retry them"}.`,
   ];
@@ -51,7 +56,7 @@ export function buildUserMessage(mode: AgentMode, prompt: string, ctx: ProjectCo
   // (none when the user already described the look).
   // A plan approved in plan mode counts as the first build turn (its conversation holds only the plan).
   const firstBuild = history.length === 0 || (approvedPlan !== undefined && history.length <= 2);
-  const direction = (mode === "build" || mode === "plan") && firstBuild && hasUi(ctx.framework) ? designDirection(prompt, seed) : null;
+  const direction = (mode === "build" || mode === "plan") && firstBuild && hasUi(ctx.framework) ? designDirection(ctx.knowledge ? `${prompt}\n${ctx.knowledge}` : prompt, seed) : null;
   if (direction) sections.push(`<design_direction>\n${direction.text}\n</design_direction>`);
   if (approvedPlan?.length) sections.push(`<approved_plan>\n${approvedPlan.map((s, i) => `${i + 1}. ${s}`).join("\n")}\n</approved_plan>\n\nThe user reviewed and approved this plan. Implement it now with the tools (it is already recorded, so do not call propose_plan). Call finish when you are done.`);
   else if (mode !== "ask") sections.push(PLAN_INSTRUCTION);

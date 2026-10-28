@@ -10,6 +10,8 @@ export type ProjectSettings = {
   outputDir?: string;
   port?: number;
   nodeVersion?: string;
+  /** Rules and facts the AI follows on every request in this project. */
+  knowledge?: string;
 };
 
 export type ProjectDto = {

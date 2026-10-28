@@ -1,0 +1,1 @@
+ALTER TABLE `showcase_entries` ADD `remix_count` integer DEFAULT 0 NOT NULL;
