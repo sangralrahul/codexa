@@ -149,7 +149,7 @@ export function FeedbackPanel({ projectId, canEdit }: { projectId: string; canEd
   const shown = filter === "all" ? all : all.filter((c) => c.status === filter);
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 px-5 py-4">
       {canEdit ? (
         <section aria-labelledby="feedback-link-heading" className="space-y-3">
           <div>
