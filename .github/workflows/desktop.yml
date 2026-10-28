@@ -36,9 +36,20 @@ jobs:
       - name: Smoke test (silent install, files and uninstaller present, app launches)
         shell: pwsh
         run: |
-          Start-Process -FilePath "dist\Codexa-Setup-x64.exe" -ArgumentList "/S" -Wait
-          $dir = Join-Path $env:LOCALAPPDATA "Programs\Codexa"
-          if (-not (Test-Path "$dir\Codexa.exe")) { Write-Host "::error::Codexa.exe was not installed to $dir"; exit 1 }
+          $inst = Start-Process -FilePath "dist\Codexa-Setup-x64.exe" -ArgumentList "/S" -Wait -PassThru
+          Write-Host "Installer exit code: $($inst.ExitCode)"
+          # NSIS can hand off to a child process; wait until the installed exe appears (up to 90s).
+          $exe = $null
+          for ($i = 0; $i -lt 45 -and -not $exe; $i++) {
+            $exe = Get-ChildItem -Path "$env:LOCALAPPDATA\Programs", "$env:ProgramFiles" -Filter Codexa.exe -Recurse -Depth 2 -ErrorAction SilentlyContinue | Select-Object -First 1
+            if (-not $exe) { Start-Sleep -Seconds 2 }
+          }
+          if (-not $exe) {
+            $found = (Get-ChildItem "$env:LOCALAPPDATA\Programs" -ErrorAction SilentlyContinue | ForEach-Object Name) -join ", "
+            Write-Host "::error::Codexa.exe not found after install (exit $($inst.ExitCode)). LOCALAPPDATA\Programs contains: $found"; exit 1
+          }
+          $dir = $exe.DirectoryName
+          Write-Host "Found $($exe.FullName)"
           if (-not (Test-Path "$dir\Uninstall Codexa.exe")) { Write-Host "::error::Uninstaller missing"; exit 1 }
           $v = (Get-Item "$dir\Codexa.exe").VersionInfo
           Write-Host "Installed $($v.ProductName) $($v.FileVersion) at $dir"
