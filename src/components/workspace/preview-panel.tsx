@@ -412,7 +412,7 @@ function FrameState({ canEdit, showOperatorDetails }: { canEdit: boolean; showOp
     <div className="absolute inset-0 overflow-auto">
       <div className="absolute inset-0 overflow-hidden" aria-hidden="true">
         <div className="absolute inset-0 bg-[radial-gradient(color-mix(in_oklab,var(--foreground)_9%,transparent)_1px,transparent_1.5px)] [background-size:16px_16px]" />
-        <div className="absolute inset-0 bg-[radial-gradient(70%_55%_at_100%_100%,color-mix(in_oklab,var(--signal)_4%,transparent),transparent)]" />
+        <div className="absolute inset-0 bg-[radial-gradient(70%_55%_at_100%_100%,color-mix(in_oklab,var(--glow)_4%,transparent),transparent)]" />
         <SkeletonApp />
         <div className="absolute inset-0 bg-[radial-gradient(70%_60%_at_50%_32%,color-mix(in_oklab,var(--card)_20%,transparent),transparent)]" />
       </div>

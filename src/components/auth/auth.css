@@ -33,7 +33,7 @@
   position: absolute;
   inset: 0;
   pointer-events: none;
-  background: radial-gradient(560px circle at var(--mx, 50%) var(--my, 30%), color-mix(in oklab, var(--signal) 7%, transparent), transparent 70%);
+  background: radial-gradient(560px circle at var(--mx, 50%) var(--my, 30%), color-mix(in oklab, var(--glow) 7%, transparent), transparent 70%);
   opacity: 0.6;
   transition: opacity var(--dur-5) var(--ease-out);
 }
@@ -66,7 +66,7 @@
   pointer-events: none;
   background:
     radial-gradient(55% 85% at 28% -10%, color-mix(in oklab, var(--silk-1) 26%, transparent), transparent 70%),
-    radial-gradient(45% 75% at 82% -10%, color-mix(in oklab, var(--signal) 18%, transparent), transparent 70%);
+    radial-gradient(45% 75% at 82% -10%, color-mix(in oklab, var(--glow) 18%, transparent), transparent 70%);
 }
 
 /* The horizon lights the frame from behind; a little brighter than a page wash. */
@@ -87,7 +87,7 @@
   bottom: -14%;
   height: 22%;
   border-radius: 50%;
-  background: radial-gradient(closest-side, color-mix(in oklab, var(--signal) 22%, transparent), color-mix(in oklab, var(--silk-1) 10%, transparent) 55%, transparent);
+  background: radial-gradient(closest-side, color-mix(in oklab, var(--glow) 22%, transparent), color-mix(in oklab, var(--silk-1) 10%, transparent) 55%, transparent);
   pointer-events: none;
 }
 

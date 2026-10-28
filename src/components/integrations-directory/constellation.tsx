@@ -82,7 +82,7 @@ export function IntegrationsConstellation({ className }: { className?: string })
       ))}
 
       <span className="absolute left-1/2 top-1/2 grid size-16 -translate-x-1/2 -translate-y-1/2 place-items-center rounded-[20px] border border-border-strong bg-card shadow-lg sm:size-[72px]">
-        <span className="absolute inset-0 rounded-[20px] bg-[radial-gradient(circle_at_50%_40%,color-mix(in_oklab,var(--signal)_22%,transparent),transparent_70%)]" />
+        <span className="absolute inset-0 rounded-[20px] bg-[radial-gradient(circle_at_50%_40%,color-mix(in_oklab,var(--glow)_22%,transparent),transparent_70%)]" />
         <LogoMark size={34} className="relative" />
       </span>
     </div>

@@ -49,7 +49,7 @@ export default function DownloadPage() {
                 <span className="relative size-3 before:absolute before:inset-x-0 before:top-1/2 before:h-px before:-rotate-45 before:bg-current after:absolute after:inset-x-0 after:top-1/2 after:h-px after:rotate-45 after:bg-current" />
               </span>
             </div>
-            <div className="grid flex-1 place-items-center bg-[radial-gradient(60%_70%_at_50%_30%,color-mix(in_oklab,var(--signal)_16%,transparent),transparent_70%)] p-8">
+            <div className="grid flex-1 place-items-center bg-[radial-gradient(60%_70%_at_50%_30%,color-mix(in_oklab,var(--glow)_16%,transparent),transparent_70%)] p-8">
               <div className="flex flex-col items-center text-center">
                 {/* eslint-disable-next-line @next/next/no-img-element -- static app icon */}
                 <img src="/desktop/codexa-app-icon.png" alt="The Codexa app icon" width={112} height={112} className="rounded-[26px] shadow-[0_30px_60px_-20px_rgba(0,0,0,0.5)]" />

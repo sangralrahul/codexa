@@ -55,10 +55,10 @@
   --danger: #b91c1c;
   --danger-foreground: #ffffff;
   --info: #1d4ed8;
-  --code-bg: #0a0c0f;
-  --code-fg: #e6e8ec;
-  --code-border: #1c2027;
-  --code-muted: #808898; /* 5.5:1 on --code-bg */
+  --code-bg: #0c0c0c;
+  --code-fg: #e6e6e6;
+  --code-border: #222222;
+  --code-muted: #8a8a8a; /* 5.5:1 on --code-bg */
   --selection: rgba(240, 81, 42, 0.18);
   --selection-strong: color-mix(in oklab, var(--signal) 24%, transparent);
   /* Selection mark (.mark-select): gradient text ink. */
@@ -85,6 +85,8 @@
   --silk-2: #ff8a66;
   --silk-3: #ffc070;
   --silk-opacity: 0.85;
+  /* Background glows and washes. Light: the signal ember. Dark: neutral light (see .dark). */
+  --glow: var(--signal);
   /* Syntax (code panes stay dark in both themes). */
   --syn-keyword: #c4a7ff;
   --syn-string: #9fe0b0;
@@ -113,24 +115,24 @@
 }
 
 .dark {
-  --background: #08090b;
-  --foreground: #f3f3f0;
-  --foreground-dim: #80858f;
-  --surface: #0d0f12;
-  --surface-2: #121418;
-  --surface-3: #181b20;
-  --card: #0e1013;
-  --card-foreground: #f3f3f0;
-  --muted: #16191e;
-  --muted-foreground: #959ba6;
-  --border: #1e2228;
-  --border-strong: #2c3139;
-  --input: #0b0d10;
+  --background: #0a0a0a;
+  --foreground: #ededed;
+  --foreground-dim: #858585;
+  --surface: #0f0f0f;
+  --surface-2: #141414;
+  --surface-3: #1a1a1a;
+  --card: #111111;
+  --card-foreground: #ededed;
+  --muted: #191919;
+  --muted-foreground: #a1a1a1;
+  --border: #232323;
+  --border-strong: #333333;
+  --input: #0d0d0d;
   --ring: #ff6a45;
   --focus: #a3a6ae;
-  --primary: #f3f3f0;
-  --primary-hover: #dcdcd8;
-  --primary-foreground: #08090b;
+  --primary: #ededed;
+  --primary-hover: #d4d4d4;
+  --primary-foreground: #0a0a0a;
   --signal: #ff5f3a;
   --signal-2: #ffb23e;
   --signal-ink: #ff7a59;
@@ -141,33 +143,36 @@
   --danger: #f04848;
   --danger-foreground: #ffffff;
   --info: #6ea8fe;
-  --code-bg: #0a0c0f;
-  --code-fg: #e6e8ec;
-  --code-border: #1c2027;
-  --code-muted: #808898; /* 5.5:1 on --code-bg */
+  --code-bg: #0c0c0c;
+  --code-fg: #e6e6e6;
+  --code-border: #222222;
+  --code-muted: #8a8a8a; /* 5.5:1 on --code-bg */
   --selection: rgba(255, 95, 58, 0.26);
   --selection-strong: color-mix(in oklab, var(--signal) 42%, transparent);
   /* Higher alpha than on paper so the band reads as lit orange, not brown, over near-black; the
      amber end is pulled toward the signal so it never turns olive. */
-  --mark-ink-1: var(--signal);
-  --mark-ink-2: var(--signal-2);
+  /* Dark: the accent words shimmer in silver, not orange-to-amber (colour on black reads as generated). */
+  --mark-ink-1: #f5f5f5;
+  --mark-ink-2: #9e9e9e;
   --mark-from: color-mix(in oklab, var(--signal) 60%, transparent);
   --mark-to: color-mix(in oklab, color-mix(in oklab, var(--signal-2) 55%, var(--signal)) 52%, transparent);
   --mark-edge: rgba(255, 217, 184, 0.75);
   --comet-head: rgba(255, 246, 236, 0.9);
   --hairline: rgba(255, 255, 255, 0.07);
   --grid-line: rgba(255, 255, 255, 0.045);
-  --glass: rgba(13, 15, 18, 0.64);
+  --glass: rgba(14, 14, 14, 0.7);
   --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4);
   --shadow-md: 0 4px 14px rgba(0, 0, 0, 0.45);
   --shadow-lg: 0 1px 0 rgba(255, 255, 255, 0.05) inset, 0 24px 48px -16px rgba(0, 0, 0, 0.7), 0 4px 12px -4px rgba(0, 0, 0, 0.5);
   --shadow-xl: 0 1px 0 rgba(255, 255, 255, 0.06) inset, 0 40px 80px -24px rgba(0, 0, 0, 0.75);
-  --shadow-stage: 0 1px 0 rgba(255, 255, 255, 0.06) inset, 0 80px 160px -60px rgba(0, 0, 0, 0.9), 0 40px 80px -40px color-mix(in oklab, var(--signal) 18%, transparent);
-  --silk-0: #08090b;
-  --silk-1: #2b45d6;
-  --silk-2: #ff5f3a;
-  --silk-3: #ffb23e;
-  --silk-opacity: 0.7;
+  --shadow-stage: 0 1px 0 rgba(255, 255, 255, 0.06) inset, 0 80px 160px -60px rgba(0, 0, 0, 0.9), 0 0 0 1px rgba(255, 255, 255, 0.04);
+  /* Dark: every wash and glow is neutral light, never coloured haze. */
+  --glow: rgba(255, 255, 255, 0.5);
+  --silk-0: #0a0a0a;
+  --silk-1: rgba(255, 255, 255, 0.38);
+  --silk-2: rgba(255, 255, 255, 0.3);
+  --silk-3: rgba(255, 255, 255, 0.26);
+  --silk-opacity: 0.55;
   color-scheme: dark;
 }
 
@@ -178,7 +183,13 @@
   --ember: linear-gradient(100deg, var(--signal), var(--signal-2));
   --rim: linear-gradient(90deg, transparent 8%, color-mix(in oklab, var(--signal) 80%, transparent) 38%, color-mix(in oklab, var(--signal-2) 70%, transparent) 62%, transparent 92%);
   --glow-signal: 0 0 0 1px color-mix(in oklab, var(--signal) 45%, transparent), 0 12px 40px -12px color-mix(in oklab, var(--signal) 60%, transparent);
-  --keylight: radial-gradient(60% 50% at 50% -10%, color-mix(in oklab, var(--foreground) 6%, transparent), transparent 70%), radial-gradient(28% 18% at 50% 0%, color-mix(in oklab, var(--signal) 5%, transparent), transparent 70%);
+  --keylight: radial-gradient(60% 50% at 50% -10%, color-mix(in oklab, var(--foreground) 6%, transparent), transparent 70%), radial-gradient(28% 18% at 50% 0%, color-mix(in oklab, var(--glow) 5%, transparent), transparent 70%);
+}
+/* Dark: flat ember for the one primary action, a white hairline rim, and a neutral hover lift. */
+.dark {
+  --ember: linear-gradient(180deg, color-mix(in oklab, var(--signal) 92%, white), var(--signal));
+  --rim: linear-gradient(90deg, transparent 8%, rgba(255, 255, 255, 0.22) 50%, transparent 92%);
+  --glow-signal: 0 0 0 1px rgba(255, 255, 255, 0.14), 0 12px 32px -14px rgba(0, 0, 0, 0.8);
 }
 
 /* Area tones (marketing): a page sets data-tone on an element inside <main>; the site backdrop takes the area's light. */
@@ -186,10 +197,8 @@ body:has(main [data-tone="trust"]) { --silk-1: #2fb5a8; --silk-2: #34d399; --sil
 body:has(main [data-tone="docs"]) { --silk-1: #5b5ff0; --silk-2: #8a90a0; --silk-3: #4f8df7; }
 body:has(main [data-tone="pricing"]) { --silk-1: #ffb547; --silk-2: #ff8a66; --silk-3: #ff7aa0; }
 body:has(main [data-tone="company"]) { --silk-1: #ff8a66; --silk-2: #ffc070; --silk-3: #a08bff; }
-.dark body:has(main [data-tone="trust"]) { --silk-1: #0d6e6e; --silk-2: #12a36f; --silk-3: #2b45d6; }
-.dark body:has(main [data-tone="docs"]) { --silk-1: #3b3fd1; --silk-2: #3a3f4b; --silk-3: #2b6fd6; }
-.dark body:has(main [data-tone="pricing"]) { --silk-1: #d98a1c; --silk-2: #ff5f3a; --silk-3: #e0446e; }
-.dark body:has(main [data-tone="company"]) { --silk-1: #ff5f3a; --silk-2: #ffb23e; --silk-3: #7c5cff; }
+/* Dark: area tones stay neutral too (the light theme keeps its colour). */
+.dark body:has(main [data-tone]) { --silk-1: rgba(255, 255, 255, 0.38); --silk-2: rgba(255, 255, 255, 0.3); --silk-3: rgba(255, 255, 255, 0.26); }
 
 @theme inline {
   --color-background: var(--background);
@@ -726,7 +735,7 @@ body:has(main [data-tone="company"]) { --silk-1: #ff8a66; --silk-2: #ffc070; --s
   content: "";
   position: absolute;
   inset: 0;
-  background-image: radial-gradient(color-mix(in oklab, var(--signal) 70%, transparent) 1.2px, transparent 1.6px);
+  background-image: radial-gradient(color-mix(in oklab, var(--glow) 70%, transparent) 1.2px, transparent 1.6px);
   background-size: 22px 22px;
   mask-image: radial-gradient(240px circle at var(--mx, -999px) var(--my, -999px), #000, transparent);
   opacity: 0;
@@ -740,7 +749,7 @@ body:has(main [data-tone="company"]) { --silk-1: #ff8a66; --silk-2: #ffc070; --s
   position: relative;
   height: 1px;
   border: 0;
-  background: linear-gradient(90deg, transparent, color-mix(in oklab, var(--signal) 85%, transparent) 30%, color-mix(in oklab, var(--silk-1) 85%, transparent) 70%, transparent);
+  background: linear-gradient(90deg, transparent, color-mix(in oklab, var(--glow) 85%, transparent) 30%, color-mix(in oklab, var(--silk-1) 85%, transparent) 70%, transparent);
 }
 .horizon-line::after {
   content: "";
@@ -777,7 +786,7 @@ body:has(main [data-tone="company"]) { --silk-1: #ff8a66; --silk-2: #ffc070; --s
   inset: 0;
   overflow: hidden;
   background:
-    radial-gradient(ellipse 46% 42% at 50% -8%, color-mix(in oklab, var(--signal) 30%, transparent), transparent 72%),
+    radial-gradient(ellipse 46% 42% at 50% -8%, color-mix(in oklab, var(--glow) 30%, transparent), transparent 72%),
     radial-gradient(ellipse 34% 34% at 18% -4%, color-mix(in oklab, var(--silk-1) 34%, transparent), transparent 70%),
     radial-gradient(ellipse 34% 34% at 82% -4%, color-mix(in oklab, var(--silk-3) 28%, transparent), transparent 70%);
   mask-image: linear-gradient(to bottom, #000 0%, rgba(0, 0, 0, 0.9) 45%, transparent 100%);
@@ -801,7 +810,7 @@ body:has(main [data-tone="company"]) { --silk-1: #ff8a66; --silk-2: #ffc070; --s
   top: -140px;
   height: 320px;
   border-radius: 9999px;
-  background: linear-gradient(90deg, transparent, color-mix(in oklab, var(--silk-1) 45%, transparent) 25%, color-mix(in oklab, var(--signal) 50%, transparent) 55%, color-mix(in oklab, var(--silk-3) 40%, transparent) 80%, transparent);
+  background: linear-gradient(90deg, transparent, color-mix(in oklab, var(--silk-1) 45%, transparent) 25%, color-mix(in oklab, var(--glow) 50%, transparent) 55%, color-mix(in oklab, var(--silk-3) 40%, transparent) 80%, transparent);
   filter: blur(60px);
   opacity: 0.55;
   animation: aurora-drift 18s ease-in-out infinite alternate;
@@ -839,7 +848,7 @@ body:has(main [data-tone="company"]) { --silk-1: #ff8a66; --silk-2: #ffc070; --s
 }
 .horizon__poster {
   background:
-    radial-gradient(ellipse 38% 55% at 50% 100%, color-mix(in oklab, var(--signal) 38%, transparent), transparent 70%),
+    radial-gradient(ellipse 38% 55% at 50% 100%, color-mix(in oklab, var(--glow) 38%, transparent), transparent 70%),
     radial-gradient(ellipse 60% 70% at 30% 100%, color-mix(in oklab, var(--silk-1) 26%, transparent), transparent 70%),
     radial-gradient(ellipse 50% 60% at 72% 100%, color-mix(in oklab, var(--silk-3) 22%, transparent), transparent 70%);
 }
@@ -847,7 +856,7 @@ body:has(main [data-tone="company"]) { --silk-1: #ff8a66; --silk-2: #ffc070; --s
 .horizon__rim {
   position: absolute;
   inset: 0;
-  background: radial-gradient(ellipse 72% 120% at 50% 132%, transparent 69.6%, color-mix(in oklab, var(--signal) 75%, white 10%) 70%, transparent 70.5%);
+  background: radial-gradient(ellipse 72% 120% at 50% 132%, transparent 69.6%, color-mix(in oklab, var(--glow) 75%, white 10%) 70%, transparent 70.5%);
   opacity: 0.8;
   filter: drop-shadow(0 0 6px color-mix(in oklab, var(--signal) 70%, transparent));
   animation: horizon-breathe 6s ease-in-out infinite alternate;

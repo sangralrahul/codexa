@@ -38,7 +38,7 @@
   right: 22%;
   top: 60px;
   height: 1px;
-  background: linear-gradient(90deg, transparent, color-mix(in oklab, var(--signal) 60%, transparent), color-mix(in oklab, var(--silk-1) 60%, transparent), transparent);
+  background: linear-gradient(90deg, transparent, color-mix(in oklab, var(--glow) 60%, transparent), color-mix(in oklab, var(--silk-1) 60%, transparent), transparent);
   opacity: calc(0.25 + var(--listen) * 0.55);
 }
 

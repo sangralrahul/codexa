@@ -204,7 +204,7 @@
   isolation: isolate;
   background:
     radial-gradient(color-mix(in oklab, var(--foreground) 9%, transparent) 1px, transparent 1.4px) 0 0 / 20px 20px,
-    radial-gradient(70% 60% at 50% 0%, color-mix(in oklab, var(--signal) 4%, transparent), transparent 72%),
+    radial-gradient(70% 60% at 50% 0%, color-mix(in oklab, var(--glow) 4%, transparent), transparent 72%),
     var(--surface);
 }
 .ws-frame { transition: width 450ms var(--ease-spring), max-width 450ms var(--ease-spring), border-radius 450ms var(--ease-spring), padding 450ms var(--ease-spring); }
@@ -218,7 +218,7 @@
   position: absolute;
   inset: 0;
   width: 40%;
-  background: linear-gradient(90deg, transparent, var(--signal), var(--signal-2), transparent);
+  background: linear-gradient(90deg, transparent, var(--glow), var(--glow), transparent);
   animation: ws-beam 1.6s var(--ease-in-out) infinite;
 }
 @keyframes ws-beam { from { transform: translateX(-100%); } to { transform: translateX(260%); } }

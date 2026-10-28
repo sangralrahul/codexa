@@ -43,7 +43,7 @@ export function StarterFan({ starters, caption, className }: { starters: FanStar
     <figure data-reveal data-fan="" className={cn("group/fan relative", className)}>
       <div className="relative h-[clamp(320px,28vw,400px)]">
         {/* Soft floor light under the stack. */}
-        <div aria-hidden="true" className="pointer-events-none absolute inset-x-[8%] bottom-0 top-[18%] -z-10 rounded-[48px] bg-[radial-gradient(60%_60%_at_50%_45%,color-mix(in_oklab,var(--signal)_16%,transparent),transparent_72%)] blur-2xl" />
+        <div aria-hidden="true" className="pointer-events-none absolute inset-x-[8%] bottom-0 top-[18%] -z-10 rounded-[48px] bg-[radial-gradient(60%_60%_at_50%_45%,color-mix(in_oklab,var(--glow)_16%,transparent),transparent_72%)] blur-2xl" />
         {ordered.map((t, i) => {
           const s = slots[i];
           return (

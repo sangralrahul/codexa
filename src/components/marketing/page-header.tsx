@@ -104,7 +104,7 @@ export function PageHeader({
             </div>
             {visual ? (
               <div data-reveal style={{ "--reveal-delay": "160ms" } as React.CSSProperties} className="relative min-w-0 lg:col-span-7">
-                <div aria-hidden="true" className="pointer-events-none absolute -inset-x-10 -bottom-16 top-10 -z-10 rounded-[40px] bg-[radial-gradient(60%_60%_at_60%_40%,color-mix(in_oklab,var(--signal)_14%,transparent),transparent_70%)] blur-2xl" />
+                <div aria-hidden="true" className="pointer-events-none absolute -inset-x-10 -bottom-16 top-10 -z-10 rounded-[40px] bg-[radial-gradient(60%_60%_at_60%_40%,color-mix(in_oklab,var(--glow)_14%,transparent),transparent_70%)] blur-2xl" />
                 {visual}
               </div>
             ) : null}

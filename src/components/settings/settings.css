@@ -163,7 +163,7 @@ button.seat:is(:hover, :focus-visible) { transform: translateY(-2px); border-col
   position: absolute;
   inset: 0;
   pointer-events: none;
-  background: linear-gradient(90deg, transparent, color-mix(in oklab, var(--signal) 14%, transparent), transparent);
+  background: linear-gradient(90deg, transparent, color-mix(in oklab, var(--glow) 14%, transparent), transparent);
   transform: translateX(-100%);
   animation: row-sweep 900ms var(--ease-in-out) 120ms forwards;
 }

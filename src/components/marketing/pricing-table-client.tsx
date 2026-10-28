@@ -169,7 +169,7 @@ function PlanCard({ p, prev, currency, interval, compact, fit }: { p: PricingPla
   return (
     <div className="relative flex h-full flex-col p-6 sm:p-7">
       {p.highlight ? (
-        <div aria-hidden="true" className="pointer-events-none absolute inset-0 rounded-[inherit] bg-[radial-gradient(90%_55%_at_50%_0%,color-mix(in_oklab,var(--signal)_13%,transparent),transparent_70%)]" />
+        <div aria-hidden="true" className="pointer-events-none absolute inset-0 rounded-[inherit] bg-[radial-gradient(90%_55%_at_50%_0%,color-mix(in_oklab,var(--glow)_13%,transparent),transparent_70%)]" />
       ) : null}
       <div className="relative flex items-center justify-between gap-2">
         <h3 className="text-[17px] font-semibold tracking-[-0.01em]">{p.name}</h3>

@@ -130,7 +130,7 @@ export default async function TemplatePreviewPage({ params, searchParams }: { pa
       <section aria-label={`${t.name} screenshot`} className="container-x relative mt-10 lg:mt-14">
         <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_17.5rem] lg:gap-8">
           <figure className="relative min-w-0">
-            <div aria-hidden="true" className="pointer-events-none absolute -inset-x-10 -bottom-10 top-16 -z-10 rounded-[48px] bg-[radial-gradient(60%_60%_at_50%_40%,color-mix(in_oklab,var(--signal)_16%,transparent),transparent_70%)] blur-2xl" />
+            <div aria-hidden="true" className="pointer-events-none absolute -inset-x-10 -bottom-10 top-16 -z-10 rounded-[48px] bg-[radial-gradient(60%_60%_at_50%_40%,color-mix(in_oklab,var(--glow)_16%,transparent),transparent_70%)] blur-2xl" />
             {routes && !hasShot ? (
               <div className="e4 overflow-hidden">
                 <RouteList routes={routes} variant="hero" command={t.settings.devCommand || framework.devCommand} className="rounded-none border-0 shadow-none" />

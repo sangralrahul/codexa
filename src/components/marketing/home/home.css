@@ -292,7 +292,7 @@
 .hero-studio__spot {
   position: absolute; left: 50%; top: -30%; width: min(1400px, 140vw); height: 90%;
   translate: -50% 0;
-  background: radial-gradient(closest-side, color-mix(in oklab, var(--signal) 16%, transparent), transparent);
+  background: radial-gradient(closest-side, color-mix(in oklab, var(--glow) 16%, transparent), transparent);
   filter: blur(20px);
 }
 /* Cards live in the gutters beside the 900px content column: sized to the gutter, inset from the
@@ -322,7 +322,7 @@
 .hero-halo {
   position: absolute; inset: -2px; margin-inline: auto; max-width: calc(48rem + 4px);
   border-radius: 22px; z-index: -1; pointer-events: none;
-  background: conic-gradient(from var(--halo, 0deg), var(--signal), var(--signal-2), color-mix(in oklab, var(--silk-1) 70%, var(--signal)), var(--silk-1), var(--signal));
+  background: conic-gradient(from var(--halo, 0deg), var(--glow), var(--glow), color-mix(in oklab, var(--silk-1) 70%, var(--glow)), var(--silk-1), var(--glow));
   filter: blur(18px); opacity: 0.7;
   animation: hero-halo 8s linear infinite;
 }
@@ -382,3 +382,6 @@
 }
 [data-motion="reduced"] .deck-card { position: relative !important; top: auto !important; transform: none !important; margin-bottom: 1.5rem !important; }
 [data-motion="reduced"] .deck-card::after { display: none; }
+
+/* Dark: the composer halo is a faint white sheen, not a colour ring. */
+.dark .hero-halo { opacity: 0.28; filter: blur(14px); }
