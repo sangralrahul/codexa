@@ -192,7 +192,7 @@ export default function App() {
                   <thead className="bg-surface text-sm text-muted">
                     <tr>
                       {d.table.columns.map((c, i) => (
-                        <th key={c} scope="col" className="px-5 py-3 font-medium sm:px-6" aria-sort={sort?.col === i ? (sort.dir === 1 ? "ascending" : "descending") : "none"}>
+                        <th key={c} scope="col" className="whitespace-nowrap px-5 py-3 font-medium sm:px-6" aria-sort={sort?.col === i ? (sort.dir === 1 ? "ascending" : "descending") : "none"}>
                           <button type="button" className="inline-flex items-center gap-1 hover:text-fg" onClick={() => setSort((s) => (s?.col === i ? { col: i, dir: s.dir === 1 ? -1 : 1 } : { col: i, dir: 1 }))}>
                             {c}
                             <span aria-hidden="true" className="text-xs">
@@ -207,7 +207,7 @@ export default function App() {
                     {rows.map((r) => (
                       <tr key={r.join("|")} className="hover:bg-surface/60">
                         {r.map((c, i) => (
-                          <td key={i} className={`px-5 py-3.5 sm:px-6 ${i === 0 ? "font-medium" : "tabular-nums"}`}>
+                          <td key={i} className={`whitespace-nowrap px-5 py-3.5 sm:px-6 ${i === 0 ? "font-medium" : "tabular-nums"}`}>
                             {i === d.table.statusColumn ? <Pill value={c} /> : c}
                           </td>
                         ))}
