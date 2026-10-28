@@ -4,7 +4,7 @@
  * `sizeMb` here when a new release is published.
  */
 export const DESKTOP = {
-  version: "1.0.0",
+  version: "1.1.0",
   sizeMb: 85,
   fileName: "Codexa-Setup-x64.exe",
   downloadUrl: "https://github.com/sangralrahul/codexa/releases/latest/download/Codexa-Setup-x64.exe",

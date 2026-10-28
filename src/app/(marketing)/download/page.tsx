@@ -14,7 +14,7 @@ const FEATURES = [
   { icon: Globe, title: "The same Codexa", body: "Your account, projects and settings are the ones you use on the web. Sign in once and pick up where you left off." },
   { icon: ExternalLink, title: "Links open in your browser", body: "GitHub, payments, docs and app previews open in your default browser, so the app window stays on Codexa." },
   { icon: WifiOff, title: "Clear when offline", body: "Without a connection you get an offline screen that retries on its own, instead of an error page." },
-  { icon: RotateCcw, title: "Remembers your window", body: "Size, position and maximised state are restored the next time you open Codexa." },
+  { icon: RotateCcw, title: "Updates itself", body: "New versions download in the background and install when you restart. Size, position and maximised state are remembered too." },
   { icon: MousePointerClick, title: "One click to remove", body: "Uninstall from Windows Settings → Apps like any other app. Nothing else is left on your computer." },
 ];
 

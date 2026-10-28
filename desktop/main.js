@@ -1,7 +1,7 @@
 // Codexa for Windows: a desktop window around https://codexa.creditvault.tech.
 // The app runs no generated code locally; everything happens on Codexa's servers, exactly as in a
 // browser. Links to other sites open in the default browser, and an offline page offers a retry.
-const { app, BrowserWindow, Menu, shell, nativeTheme, session } = require("electron");
+const { app, BrowserWindow, Menu, shell, nativeTheme, session, dialog } = require("electron");
 const path = require("node:path");
 const fs = require("node:fs");
 
@@ -36,10 +36,37 @@ function saveState(win) {
 }
 
 let mainWindow = null;
+let splash = null;
+
+/** A small branded window that appears instantly while Codexa loads behind it. */
+function createSplash(dark) {
+  splash = new BrowserWindow({
+    width: 360,
+    height: 300,
+    frame: false,
+    resizable: false,
+    movable: true,
+    center: true,
+    skipTaskbar: true,
+    show: false,
+    backgroundColor: dark ? "#0a0a0a" : "#fbfaf7",
+    webPreferences: { contextIsolation: true, nodeIntegration: false, sandbox: true },
+  });
+  splash.once("ready-to-show", () => splash?.show());
+  splash.on("closed", () => (splash = null));
+  splash.loadFile(path.join(__dirname, "splash.html"));
+}
+
+function revealMain() {
+  if (!mainWindow || mainWindow.isVisible()) return;
+  mainWindow.show();
+  if (splash) splash.close();
+}
 
 function createWindow() {
   const state = loadState();
   const dark = nativeTheme.shouldUseDarkColors;
+  createSplash(dark);
   mainWindow = new BrowserWindow({
     x: state.x,
     y: state.y,
@@ -49,7 +76,7 @@ function createWindow() {
     minHeight: 640,
     title: "Codexa",
     icon: path.join(__dirname, "build", "icon.png"),
-    backgroundColor: dark ? "#08090b" : "#fbfaf7",
+    backgroundColor: dark ? "#0a0a0a" : "#fbfaf7",
     autoHideMenuBar: true,
     show: false,
     webPreferences: {
@@ -61,7 +88,9 @@ function createWindow() {
   });
   if (state.maximized) mainWindow.maximize();
 
-  mainWindow.once("ready-to-show", () => mainWindow.show());
+  // Show the real window once the first page has painted (never keep the splash longer than 12s).
+  mainWindow.webContents.once("did-finish-load", revealMain);
+  setTimeout(revealMain, 12000);
   mainWindow.on("close", () => saveState(mainWindow));
 
   const wc = mainWindow.webContents;
@@ -82,6 +111,36 @@ function createWindow() {
   });
 
   mainWindow.loadURL(APP_URL);
+}
+
+/** Checks GitHub releases for a newer version in the background and installs it on the next restart. */
+function setupAutoUpdates() {
+  if (!app.isPackaged) return;
+  let autoUpdater;
+  try {
+    ({ autoUpdater } = require("electron-updater"));
+  } catch {
+    return;
+  }
+  autoUpdater.autoDownload = true;
+  autoUpdater.autoInstallOnAppQuit = true;
+  autoUpdater.on("error", () => {
+    // Offline or GitHub unreachable: try again on the next launch.
+  });
+  autoUpdater.on("update-downloaded", async (info) => {
+    const { response } = await dialog.showMessageBox(mainWindow ?? undefined, {
+      type: "info",
+      buttons: ["Restart now", "Later"],
+      defaultId: 0,
+      cancelId: 1,
+      title: "Update ready",
+      message: `Codexa ${info.version} is ready to install.`,
+      detail: "Restart Codexa to finish updating. If you choose Later, it installs the next time you quit.",
+    });
+    if (response === 0) autoUpdater.quitAndInstall();
+  });
+  autoUpdater.checkForUpdates().catch(() => {});
+  setInterval(() => autoUpdater.checkForUpdates().catch(() => {}), 6 * 60 * 60 * 1000);
 }
 
 function buildMenu() {
@@ -118,6 +177,7 @@ function buildMenu() {
         { label: "Documentation", click: () => shell.openExternal(`${APP_URL}/docs`) },
         { label: "Status", click: () => shell.openExternal(`${APP_URL}/status`) },
         { label: "Contact support", click: () => shell.openExternal(`${APP_URL}/contact`) },
+        { label: "Release notes", click: () => shell.openExternal("https://github.com/sangralrahul/codexa/releases") },
         { type: "separator" },
         { label: `Version ${app.getVersion()}`, enabled: false },
       ],
@@ -142,8 +202,11 @@ if (!app.requestSingleInstanceLock()) {
     session.defaultSession.setPermissionRequestHandler((_wc, permission, callback) => {
       callback(permission === "clipboard-sanitized-write" || permission === "fullscreen");
     });
+    // Open the connection to Codexa while the window is still being created (faster first paint).
+    session.defaultSession.preconnect({ url: APP_URL, numSockets: 4 });
     buildMenu();
     createWindow();
+    setupAutoUpdates();
   });
 
   app.on("window-all-closed", () => app.quit());
