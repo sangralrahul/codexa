@@ -3,10 +3,11 @@ import { viteReactTemplates } from "./vite-react";
 import { staticTemplates } from "./static";
 import { nodeExpressTemplates } from "./node-express";
 import { catalogTemplates } from "./catalog";
+import { galleryTemplates } from "./gallery";
 
 export type { Template, TemplateCategory, Framework, TemplateDifficulty };
 
-export const TEMPLATES: Template[] = [...viteReactTemplates, ...staticTemplates, ...nodeExpressTemplates, ...catalogTemplates];
+export const TEMPLATES: Template[] = [...viteReactTemplates, ...staticTemplates, ...nodeExpressTemplates, ...catalogTemplates, ...galleryTemplates];
 
 const byId = new Map(TEMPLATES.map((t) => [t.id, t]));
 
