@@ -21,11 +21,13 @@ import {
   Settings,
   Share2,
   Square,
-  Wrench, Cloud, MessageSquareText,
+  Wrench, Cloud, MessageSquareText, Download, Smartphone,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { SaveStatus } from "@/lib/client/workspace/use-editor-state";
-import type { CodexaEvents } from "@/lib/client/events";
+import { emit, type CodexaEvents } from "@/lib/client/events";
+import { api } from "@/lib/client/api";
+import { toast } from "@/components/ui/toast";
 import { useRuntime, useNow, formatElapsed } from "@/lib/client/workspace/runtime";
 import { useAgent } from "@/lib/client/workspace/agent";
 import { useCalm } from "@/lib/client/motion";
@@ -311,6 +313,25 @@ export function WorkspaceHeader({
                 </span>
               </DropdownMenuItem>
             ))}
+            <DropdownMenuSeparator />
+            <DropdownMenuItem asChild>
+              <a href={`/api/v1/projects/${encodeURIComponent(projectId)}/export`} download>
+                <Download />
+                <span className="flex min-w-0 flex-col">
+                  <span>Download ZIP</span>
+                  <span className="truncate text-[11.5px] text-muted-foreground">The source code, ready to run anywhere</span>
+                </span>
+              </a>
+            </DropdownMenuItem>
+            {canEdit ? (
+              <DropdownMenuItem onSelect={() => void makeInstallable(projectId)}>
+                <Smartphone />
+                <span className="flex min-w-0 flex-col">
+                  <span>Make installable</span>
+                  <span className="truncate text-[11.5px] text-muted-foreground">Home-screen app with an offline page</span>
+                </span>
+              </DropdownMenuItem>
+            ) : null}
             <div className="lg:hidden">
               <DropdownMenuSeparator />
               <DropdownMenuItem onSelect={() => openTool("history")}>
@@ -395,6 +416,17 @@ function ViewSwitch({ view, onViewChange, compact }: { view: CanvasView; onViewC
       ]}
     />
   );
+}
+
+/** Add a web manifest, icon, service worker and offline page so the app installs on phones. */
+async function makeInstallable(projectId: string) {
+  try {
+    const res = await api<{ paths: string[] }>(`/api/v1/projects/${encodeURIComponent(projectId)}/pwa`, { method: "POST" });
+    if (res.paths.length) emit("codexa:files-changed", { paths: res.paths, source: "visual" });
+    toast.success(res.paths.length ? "Your app is installable" : "Already installable", "Publish to let people add it to their home screen.");
+  } catch (err) {
+    toast.error("Could not make the app installable", err instanceof Error ? err.message : undefined);
+  }
 }
 
 /** While the agent runs: its live stage and the real elapsed time ("Building · 0:42"). */

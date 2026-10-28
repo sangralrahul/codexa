@@ -6,6 +6,7 @@ import { safePath, safeReadablePath, ToolPathError } from "./paths";
 import { LIMITS, truncateMiddle, truncateTail } from "./truncate";
 import { READ_TOOLS, WRITE_TOOLS, toolDefinition, validateToolInput, type ToolInput, type ToolName } from "./schemas";
 import type { ToolDefinition } from "../provider";
+import { generateProjectImage, MAX_IMAGES_PER_RUN, type ImageAspect } from "../images";
 
 export type AgentMode = "build" | "ask" | "fix" | "plan";
 
@@ -24,22 +25,24 @@ export type ToolContext = {
   mode: AgentMode;
   /** Called before the first mutation (snapshot creation). */
   beforeWrite: () => Promise<void>;
+  /** Image generation budget for this run (absent when image generation is not configured). */
+  images?: { used: number; onGenerated?: () => Promise<void> };
 };
 
 /** Which tools the model may call in each mode. */
-export function toolNamesForMode(mode: AgentMode, phase: "plan" | "work"): ToolName[] {
+export function toolNamesForMode(mode: AgentMode, phase: "plan" | "work", opts: { images?: boolean } = {}): ToolName[] {
   if (phase === "plan") return ["propose_plan"];
   const base: ToolName[] = [...READ_TOOLS, "run_command"];
   if (mode === "ask" || mode === "plan") return base;
-  return [...base, ...WRITE_TOOLS, "finish"];
+  return [...base, ...WRITE_TOOLS, ...(opts.images && mode === "build" ? (["generate_image"] as ToolName[]) : []), "finish"];
 }
 
-export function toolDefinitionsFor(mode: AgentMode, phase: "plan" | "work"): ToolDefinition[] {
-  return toolNamesForMode(mode, phase).map(toolDefinition);
+export function toolDefinitionsFor(mode: AgentMode, phase: "plan" | "work", opts: { images?: boolean } = {}): ToolDefinition[] {
+  return toolNamesForMode(mode, phase, opts).map(toolDefinition);
 }
 
 export function isKnownTool(name: string): name is ToolName {
-  return ["list_files", "read_file", "write_file", "edit_file", "delete_file", "search_files", "run_command", "get_logs", "propose_plan", "finish"].includes(name);
+  return ["list_files", "read_file", "write_file", "edit_file", "delete_file", "search_files", "run_command", "get_logs", "generate_image", "propose_plan", "finish"].includes(name);
 }
 
 const fmtSize = (n: number) => `${n} B`;
@@ -72,6 +75,15 @@ export async function executeTool(ctx: ToolContext, name: string, rawInput: unkn
         return await runCommand(ctx, validated.value as ToolInput<"run_command">);
       case "get_logs":
         return await runGetLogs(ctx, validated.value as ToolInput<"get_logs">);
+      case "generate_image": {
+        const input = validated.value as ToolInput<"generate_image">;
+        if (!ctx.images) return { output: "Image generation is not configured on this server. Use CSS shapes or colour blocks instead.", isError: true };
+        if (ctx.images.used >= MAX_IMAGES_PER_RUN) return { output: `The limit of ${MAX_IMAGES_PER_RUN} images per request is reached. Reuse an image you already generated.`, isError: true };
+        ctx.images.used++;
+        const img = await generateProjectImage({ projectId: ctx.projectId, prompt: input.prompt, aspect: input.aspect as ImageAspect });
+        await ctx.images.onGenerated?.();
+        return { output: `Image ready (${img.width}×${img.height} WebP). Use it as: <img src="${img.url}" alt="${input.alt.replace(/"/g, "&quot;")}" width="${img.width}" height="${img.height}" loading="lazy" /> (style it with object-cover and an aspect ratio).` };
+      }
       case "propose_plan": {
         const { steps } = validated.value as ToolInput<"propose_plan">;
         return { output: `Plan recorded (${steps.length} steps). Proceed with the implementation.`, control: { type: "plan", steps } };

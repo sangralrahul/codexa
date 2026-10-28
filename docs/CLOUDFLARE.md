@@ -119,6 +119,7 @@ into the code.
 npx wrangler secret put SESSION_SECRET          # a long random string (see below)
 npx wrangler secret put ENCRYPTION_KEY          # a different long random string. Never change it later.
 npx wrangler secret put ANTHROPIC_API_KEY       # your Anthropic key
+npx wrangler secret put OPENAI_API_KEY          # optional: AI image generation (OPENAI_IMAGE_MODEL, default gpt-image-1)
 npx wrangler secret put CUSTOMERIO_APP_API_KEY  # your Customer.io App API key
 npx wrangler secret put CUSTOMERIO_REGION       # us or eu (where your Customer.io workspace is)
 npx wrangler secret put EMAIL_FROM              # e.g. Codexa <no-reply@yourdomain.com> (domain verified in Customer.io)

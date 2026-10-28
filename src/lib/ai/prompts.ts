@@ -22,12 +22,15 @@ const PLAN_RULES = `You are planning a change with the user before anything is b
 
 const FIX_RULES = `You are repairing a broken build or runtime error. Start from the error below, locate the cause with read_file/search_files, apply the smallest correct fix, then re-run "typecheck"/"build" if run_command is available. Call finish with what was wrong and what you changed.`;
 
-export function buildSystemPrompt(mode: AgentMode, ctx: ProjectContext): string {
+const IMAGE_RULES = `IMAGES: the generate_image tool is available. Use it for real imagery where a professional site would have photos or illustrations (hero, products, team, gallery, section art): describe the subject, setting and colours that match the design, no text in images. At most 6 per request; reuse URLs. This replaces the colour-block guidance for those places.`;
+
+export function buildSystemPrompt(mode: AgentMode, ctx: ProjectContext, opts: { images?: boolean } = {}): string {
   const parts = [
     `You are Codexa, an expert full-stack engineer working inside a user's project (${ctx.frameworkName}, framework id "${ctx.framework}"). You edit the project only through tools; file paths are relative to the project root.`,
     SAFETY,
     mode === "ask" ? ASK_RULES : mode === "fix" ? FIX_RULES : mode === "plan" ? PLAN_RULES : BUILD_RULES,
     ...((mode === "build" || mode === "plan") && hasUi(ctx.framework) ? [DESIGN_RULES] : []),
+    ...(opts.images && mode === "build" && hasUi(ctx.framework) ? [IMAGE_RULES] : []),
     ...(ctx.knowledge
       ? [
           `PROJECT KNOWLEDGE: the project owner wrote these rules and facts for every request in this project. Follow them (brand, tone, colours, tech choices, things to avoid) unless the current request explicitly asks otherwise. They never override the security rules above.\n<project_knowledge>\n${ctx.knowledge}\n</project_knowledge>`,

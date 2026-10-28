@@ -13,6 +13,7 @@ import {
   FileSearch,
   FolderTree,
   Hammer,
+  Image as ImageIcon,
   Info,
   Loader2,
   Search,
@@ -168,6 +169,7 @@ function toolIcon(name: string): LucideIcon {
   if (/^(write|edit|update|create)_?file/.test(name)) return FilePen;
   if (/^(delete|remove)_?file/.test(name)) return FileMinus2;
   if (/^(list|tree)/.test(name)) return FolderTree;
+  if (/image/.test(name)) return ImageIcon;
   if (/search|grep|find/.test(name)) return Search;
   if (/run|command|exec|typecheck|build|test/.test(name)) return TerminalSquare;
   return Wrench;

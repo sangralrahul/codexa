@@ -39,6 +39,11 @@ export const toolSchemas = {
   get_logs: z.object({
     lines: z.number().int().min(1).max(LIMITS.logLines).optional().describe("How many trailing log lines to return (default 100)"),
   }),
+  generate_image: z.object({
+    prompt: z.string().min(10).max(1000).describe("What the image shows: subject, setting, mood, colours that match the design. No text in the image."),
+    aspect: z.enum(["square", "landscape", "portrait"]).describe("landscape for heroes and banners, square for products and avatars, portrait for tall cards"),
+    alt: z.string().min(1).max(200).describe("Alt text describing the image for screen readers"),
+  }),
   propose_plan: z.object({
     steps: z.array(z.string().min(1).max(300)).min(1).max(12).describe("Short, concrete implementation steps in order"),
   }),
@@ -64,6 +69,8 @@ export const toolDescriptions: Record<ToolName, string> = {
   search_files: "Search file contents for a substring (case-insensitive). Returns path, line number and the matching line.",
   run_command: "Run an allowlisted command (install, build, typecheck, test, lint) in the project sandbox and return its exit code and truncated output. Only available when the runtime sandbox is running.",
   get_logs: "Return the latest runtime (dev server) log lines for the project, if the sandbox is running.",
+  generate_image:
+    "Generate a real image (photo or illustration) for the app and get a permanent https URL to use in <img src>. Use it for hero images, product photos and section imagery instead of colour blocks, at most a few per request. The image is not a project file; reference the returned URL directly.",
   propose_plan: "Record a short implementation plan (3-8 steps) before making changes. Call this exactly once at the start of a build.",
   finish: "Call this when the task is complete (or cannot be completed) with a summary for the user. This ends the run.",
 };
@@ -110,6 +117,8 @@ export function summarizeToolInput(name: string, input: unknown): string {
       return s(i.command);
     case "get_logs":
       return i.lines ? `${String(i.lines)} lines` : "latest";
+    case "generate_image":
+      return `${s(i.aspect)}: ${s(i.alt).slice(0, 70)}`;
     case "propose_plan":
       return Array.isArray(i.steps) ? `${i.steps.length} steps` : "";
     case "finish":
