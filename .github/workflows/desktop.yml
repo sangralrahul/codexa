@@ -33,20 +33,24 @@ jobs:
       - name: Build installer (x64)
         run: npx electron-builder --win nsis --x64 --publish never
 
-      - name: Smoke test (silent install, files and uninstaller present)
+      - name: Smoke test (silent install, files and uninstaller present, app launches)
         shell: pwsh
         run: |
           Start-Process -FilePath "dist\Codexa-Setup-x64.exe" -ArgumentList "/S" -Wait
           $dir = Join-Path $env:LOCALAPPDATA "Programs\Codexa"
-          if (-not (Test-Path "$dir\Codexa.exe")) { Get-ChildItem "$env:LOCALAPPDATA\Programs" -Recurse -Depth 1 | Out-String | Write-Host; throw "Codexa.exe was not installed" }
-          if (-not (Test-Path "$dir\Uninstall Codexa.exe")) { throw "Uninstaller missing" }
+          if (-not (Test-Path "$dir\Codexa.exe")) { Write-Host "::error::Codexa.exe was not installed to $dir"; exit 1 }
+          if (-not (Test-Path "$dir\Uninstall Codexa.exe")) { Write-Host "::error::Uninstaller missing"; exit 1 }
           $v = (Get-Item "$dir\Codexa.exe").VersionInfo
           Write-Host "Installed $($v.ProductName) $($v.FileVersion) at $dir"
-          $p = Start-Process -FilePath "$dir\Codexa.exe" -PassThru
-          Start-Sleep -Seconds 15
-          if ($p.HasExited) { throw "Codexa exited right after launch (code $($p.ExitCode))" }
-          Stop-Process -Id $p.Id -Force
-          Write-Host "App launched and stayed running"
+          # The installer may already have opened Codexa (single instance): close it, then launch fresh.
+          Get-Process -Name Codexa -ErrorAction SilentlyContinue | Stop-Process -Force
+          Start-Sleep -Seconds 2
+          Start-Process -FilePath "$dir\Codexa.exe"
+          Start-Sleep -Seconds 20
+          $running = Get-Process -Name Codexa -ErrorAction SilentlyContinue
+          if (-not $running) { Write-Host "::error::Codexa is not running 20 seconds after launch"; exit 1 }
+          Write-Host "Codexa running ($($running.Count) processes)"
+          $running | Stop-Process -Force
 
       - name: Version
         id: version
