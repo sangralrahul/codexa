@@ -1,4 +1,4 @@
-import { templateShotSrc } from "@/components/templates/shots";
+import { templateShotSrc, templateShotSrcSet } from "@/components/templates/shots";
 import { TEMPLATES } from "@/templates";
 
 /**
@@ -21,7 +21,7 @@ export function HeroFloats() {
             <span />
           </div>
           {/* eslint-disable-next-line @next/next/no-img-element -- static screenshot, decorative */}
-          <img src={templateShotSrc(t.id)} alt="" width={1440} height={900} loading="eager" decoding="async" />
+          <img src={templateShotSrc(t.id)} srcSet={templateShotSrcSet(t.id)} sizes="330px" alt="" width={1440} height={900} decoding="async" fetchPriority="low" />
           <figcaption>{t.name} starter</figcaption>
         </figure>
       ))}

@@ -322,13 +322,10 @@
 .hero-halo {
   position: absolute; inset: -2px; margin-inline: auto; max-width: calc(48rem + 4px);
   border-radius: 22px; z-index: -1; pointer-events: none;
-  background: conic-gradient(from var(--halo, 0deg), var(--glow), var(--glow), color-mix(in oklab, var(--silk-1) 70%, var(--glow)), var(--silk-1), var(--glow));
+  background: conic-gradient(from 200deg, var(--glow), var(--glow-2), color-mix(in oklab, var(--silk-1) 70%, var(--glow)), var(--silk-1), var(--glow));
   filter: blur(18px); opacity: 0.7;
-  animation: hero-halo 8s linear infinite;
 }
 .hero-halo { height: calc(100% - 4.5rem); }
-@property --halo { syntax: "<angle>"; inherits: false; initial-value: 0deg; }
-@keyframes hero-halo { to { --halo: 360deg; } }
 :is(.hero-float, .hero-halo) { @media (prefers-reduced-motion: reduce) { animation: none; } }
 [data-motion="reduced"] :is(.hero-float, .hero-halo) { animation: none; }
 
@@ -339,8 +336,7 @@
   z-index: 30;
   margin-inline: -8px;
   padding: 6px 8px 8px;
-  background: color-mix(in oklab, var(--background) 88%, transparent);
-  backdrop-filter: blur(14px);
+  background: var(--background);
   border-radius: 14px;
 }
 .deck-card {

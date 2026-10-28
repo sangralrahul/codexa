@@ -43,6 +43,8 @@ export function HomeView({
         <HomeHero signedIn={signedIn} announcement={announcement} />
         <StepDeck />
 
+        {/* Below the deck, each block skips rendering until it is near the viewport (.cv-auto). */}
+        <div className="cv-auto">
         {/* H2 */}
         <ProofStrip facts={data.proof} changelog={changelog} status={status} />
 
@@ -66,12 +68,19 @@ export function HomeView({
             </p>
           </TemplateWall>
         </section>
+        </div>
 
         {/* H4 */}
-        <Principles scenario={scenario} maxRepairAttempts={data.maxRepairAttempts} />
+        <div className="cv-auto">
+          <Principles scenario={scenario} maxRepairAttempts={data.maxRepairAttempts} />
+        </div>
 
         {/* H5 */}
-        <PlatformGrid scenario={scenario} />
+        <div className="cv-auto">
+          <PlatformGrid scenario={scenario} />
+        </div>
+
+        <div className="cv-auto">
 
         {/* H6: stacked and centred up to xl; from xl the copy sits beside the orbit, so the 600px constellation does not float in empty space. */}
         <section aria-labelledby="integrations-title" className="relative overflow-hidden py-16 sm:py-24 lg:py-28">
@@ -107,10 +116,14 @@ export function HomeView({
         </section>
 
 
+        </div>
+
         {/* H7–H9 */}
-        <PricingTeaser />
-        <FaqSection />
-        <FinalCta signedIn={signedIn} freePlan={data.freePlan} />
+        <div className="cv-auto">
+          <PricingTeaser />
+          <FaqSection />
+          <FinalCta signedIn={signedIn} freePlan={data.freePlan} />
+        </div>
       </HomeStoreProvider>
     </div>
   );

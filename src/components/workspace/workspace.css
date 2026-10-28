@@ -218,7 +218,7 @@
   position: absolute;
   inset: 0;
   width: 40%;
-  background: linear-gradient(90deg, transparent, var(--glow), var(--glow), transparent);
+  background: linear-gradient(90deg, transparent, var(--glow), var(--glow-2), transparent);
   animation: ws-beam 1.6s var(--ease-in-out) infinite;
 }
 @keyframes ws-beam { from { transform: translateX(-100%); } to { transform: translateX(260%); } }

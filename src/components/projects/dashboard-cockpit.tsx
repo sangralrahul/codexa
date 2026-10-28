@@ -1,9 +1,10 @@
 import Link from "next/link";
-import { ArrowRight, ArrowUpRight, BookOpen, Database, FolderGit2, Globe2, MessageSquareText, Rocket } from "lucide-react";
+import { ArrowRight, ArrowUpRight, BookOpen, Database, FolderGit2, Globe2, MessageSquareText, Plus, Rocket } from "lucide-react";
+import { buttonClasses } from "@/components/ui/button";
 import { AppPage } from "@/components/app/app-shell";
 import { TemplateTile, UseTemplateButton, type TemplateCardData } from "@/components/templates";
 import { PromptBox } from "./prompt-box";
-import { UsageCard } from "./usage-card";
+import type { UsageCard } from "./usage-card";
 import { GettingStarted, type ChecklistMilestones } from "./getting-started";
 import { ContinueBuilding, type ResumeProject } from "./continue-building";
 import { ActivityRiver, type RiverItem } from "./activity-river";
@@ -57,15 +58,58 @@ function Learn({ cols }: { cols: 2 | 4 }) {
 
 type Usage = React.ComponentProps<typeof UsageCard>;
 
+const fmt = (v: number) => v.toLocaleString("en-US");
+
+/** One headline number for the overview strip: value, limit and a thin bar (no bar when unlimited). */
+function Stat({ label, used, limit }: { label: string; used: number; limit: number }) {
+  const unlimited = limit < 0;
+  const pct = unlimited || limit === 0 ? 0 : Math.min(1, used / limit);
+  const tone = pct >= 0.9 ? "bg-danger" : pct >= 0.7 ? "bg-warning" : "bg-foreground/70";
+  return (
+    <div className="min-w-0 px-5 py-4">
+      <dt className="text-[12.5px] text-muted-foreground">{label}</dt>
+      <dd className="mt-1.5 flex items-baseline gap-1.5">
+        <span className="font-display text-[26px] font-semibold leading-none tracking-[-0.02em] tabular-nums">{fmt(used)}</span>
+        <span className="text-[13px] text-muted-foreground tabular-nums">{unlimited ? "/ unlimited" : `/ ${fmt(limit)}`}</span>
+      </dd>
+      <div className="mt-3 h-1 overflow-hidden rounded-full bg-muted" aria-hidden="true">
+        <div className={cn("h-full rounded-full", tone)} style={{ width: `${Math.max(pct * 100, used > 0 ? 3 : 0)}%` }} />
+      </div>
+    </div>
+  );
+}
+
+/** The overview strip: this workspace's usage this month, from getWorkspaceEntitlements. */
+function Overview({ usage }: { usage: Usage }) {
+  const e = usage.entitlements;
+  return (
+    <section aria-labelledby="overview-title">
+      <div className="mb-3 flex items-baseline justify-between gap-3">
+        <h2 id="overview-title" className={sectionTitle}>
+          This month
+        </h2>
+        <Link href="/settings/usage" className={sectionLink}>
+          Usage details <ArrowRight className="size-3.5" aria-hidden="true" />
+        </Link>
+      </div>
+      <dl className="e1 grid grid-cols-2 divide-border overflow-hidden rounded-[16px] lg:grid-cols-4 lg:divide-x [&>*:nth-child(-n+2)]:border-b [&>*:nth-child(-n+2)]:border-border lg:[&>*:nth-child(-n+2)]:border-b-0 [&>*:nth-child(odd)]:border-r [&>*:nth-child(odd)]:border-border lg:[&>*:nth-child(odd)]:border-r-0">
+        <Stat label="Projects" used={usage.projectCount} limit={e.limits.projects} />
+        <Stat label="AI requests" used={e.used.ai_request} limit={e.limits.aiRequestsPerMonth} />
+        <Stat label="Preview minutes" used={e.used.runtime_minutes} limit={e.limits.runtimeMinutesPerMonth} />
+        <Stat label="Deployments" used={e.used.deployment} limit={e.limits.deploymentsPerMonth} />
+      </dl>
+    </section>
+  );
+}
+
 /**
- * The dashboard cockpit (presentation only; the page loads every value from the database and
- * the plan/template config):
- * (a) a compact hero (mono greeting, headline, the composer) under a static glow that brightens
- *     while the composer is focused or holds text;
- * (b) Continue building (returning users) or "Start with one of these" (first run), then the
- *     first-run checklist as one horizontal row until it is done and dismissed;
- * (c) the Activity river beside "This month" (first run: Learn beside "This month");
- * (d) Quick starts and Learn.
+ * The dashboard (presentation only; the page loads every value from the database and the
+ * plan/template config):
+ * (a) a page header: greeting, workspace and plan, Import and New project;
+ * (b) "This month": the workspace's usage as four headline numbers, then the composer;
+ * (c) Continue building (returning users) or "Start with one of these" (first run), with the
+ *     first-run checklist as one row until it is done and dismissed;
+ * (d) the Activity river (first run: Learn), then Quick starts and Learn.
  */
 export function DashboardCockpit({
   greeting,
@@ -109,23 +153,46 @@ export function DashboardCockpit({
 
   return (
     <>
-      {/* (a) Compact hero: greeting, headline, the composer. The light behind it listens to the composer (CSS only). */}
-      <div className="dash-hero">
-        <div className="dash-glow" aria-hidden="true" />
-        <AppPage className="pb-4 pt-8 lg:pb-6 lg:pt-12">
-          <section aria-labelledby="dash-title" className="mx-auto max-w-4xl">
-            <p className="text-center font-mono text-[11.5px] font-medium uppercase tracking-[0.16em] text-muted-foreground">{greeting}</p>
-            <h1 id="dash-title" className="text-app-display mt-3 text-balance text-center">
-              What will you <span className="text-dim">build</span> today?
+      {/* (a) Page header: greeting, workspace and plan, and the two ways to start. */}
+      <AppPage className="pb-2 pt-8 lg:pt-10">
+        <header className="flex flex-wrap items-end justify-between gap-x-6 gap-y-4">
+          <div className="min-w-0">
+            <h1 id="dash-title" className="text-[26px] font-semibold leading-tight tracking-[-0.02em] sm:text-[30px]">
+              {greeting}
             </h1>
-            <div className="mt-7">
-              <PromptBox {...composer} />
+            {usage ? (
+              <p className="mt-1 truncate text-[14px] text-muted-foreground">
+                {usage.workspaceName} · <span className="capitalize">{usage.entitlements.plan}</span> plan
+              </p>
+            ) : null}
+          </div>
+          {canCreate ? (
+            <div className="flex shrink-0 items-center gap-2">
+              <Link href="/import-project" className={buttonClasses("outline", "md", "gap-1.5")}>
+                <FolderGit2 className="size-4" aria-hidden="true" /> Import
+              </Link>
+              <Link href="/new-project" className={buttonClasses("primary", "md", "gap-1.5")}>
+                <Plus className="size-4" aria-hidden="true" /> New project
+              </Link>
             </div>
-          </section>
-        </AppPage>
-      </div>
+          ) : null}
+        </header>
+      </AppPage>
 
-      <AppPage className="space-y-10 pt-2 lg:space-y-12">
+      <AppPage className="space-y-10 pt-6 lg:space-y-12">
+        {usage ? <Overview usage={usage} /> : null}
+
+        {/* (b) The composer, as a working surface rather than a hero. */}
+        <section aria-labelledby="compose-title">
+          <div className="mb-3 flex items-baseline justify-between gap-3">
+            <h2 id="compose-title" className={sectionTitle}>
+              Start a new project
+            </h2>
+            <span className="text-[13px] text-muted-foreground">Describe it in a sentence, or pick a starter</span>
+          </div>
+          <PromptBox {...composer} />
+        </section>
+
         {firstRun ? (
           <>
             {showChecklist ? <GettingStarted milestones={milestones} canCreate={canCreate} emailVerified={emailVerified} emailConfigured={emailConfigured} layout="row" /> : null}
@@ -176,10 +243,7 @@ export function DashboardCockpit({
         {/* (c) Activity river + This month (first run: Learn + This month). The single phone column is
             minmax(0,1fr) so nowrap/truncating text inside can never widen the track past the viewport.
             Both cards keep their own height (no stretched emptiness under a short river). */}
-        <div className={cn("grid grid-cols-[minmax(0,1fr)] items-start gap-5", usage && "lg:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]")}>
-          {firstRun ? <Learn cols={2} /> : <ActivityRiver items={activity} />}
-          {usage ? <UsageCard {...usage} /> : null}
-        </div>
+        {firstRun ? <Learn cols={4} /> : <ActivityRiver items={activity} />}
 
         {/* (d) Quick starts and Learn. */}
         {!firstRun ? (

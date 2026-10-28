@@ -87,6 +87,7 @@
   --silk-opacity: 0.85;
   /* Background glows and washes. Light: the signal ember. Dark: neutral light (see .dark). */
   --glow: var(--signal);
+  --glow-2: var(--signal-2);
   /* Syntax (code panes stay dark in both themes). */
   --syn-keyword: #c4a7ff;
   --syn-string: #9fe0b0;
@@ -168,6 +169,7 @@
   --shadow-stage: 0 1px 0 rgba(255, 255, 255, 0.06) inset, 0 80px 160px -60px rgba(0, 0, 0, 0.9), 0 0 0 1px rgba(255, 255, 255, 0.04);
   /* Dark: every wash and glow is neutral light, never coloured haze. */
   --glow: rgba(255, 255, 255, 0.5);
+  --glow-2: rgba(255, 255, 255, 0.32);
   --silk-0: #0a0a0a;
   --silk-1: rgba(255, 255, 255, 0.38);
   --silk-2: rgba(255, 255, 255, 0.3);
@@ -894,8 +896,7 @@ body:has(main [data-tone="company"]) { --silk-1: #ff8a66; --silk-2: #ffc070; --s
 
 .bg-noise {
   background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/></filter><rect width='100%' height='100%' filter='url(%23n)' opacity='0.5'/></svg>");
-  opacity: 0.05;
-  mix-blend-mode: overlay;
+  opacity: 0.035;
 }
 
 /* ==========================================================================
@@ -1082,11 +1083,11 @@ body:has(main [data-tone="company"]) { --silk-1: #ff8a66; --silk-2: #ffc070; --s
 
 /* M1 Rise: hidden only once JS has marked the page. Animation (not a lasting transform), so hover lifts still work. */
 .js [data-reveal]:not([data-reveal="stagger"]):not(.is-visible) { opacity: 0; }
-.js [data-reveal]:not([data-reveal="stagger"]).is-visible { animation: reveal-rise var(--dur-5) var(--ease-out) var(--reveal-delay, 0ms) backwards; }
+.js [data-reveal]:not([data-reveal="stagger"]).is-visible { animation: reveal-rise var(--dur-4) var(--ease-out) var(--reveal-delay, 0ms) backwards; }
 .js [data-reveal="stagger"]:not(.is-visible) > * { opacity: 0; }
 .js [data-reveal="stagger"].is-visible > * {
-  animation: reveal-rise var(--dur-5) var(--ease-out) backwards;
-  animation-delay: calc(var(--reveal-delay, 0ms) + var(--stagger-i, 0) * 60ms);
+  animation: reveal-rise var(--dur-4) var(--ease-out) backwards;
+  animation-delay: calc(var(--reveal-delay, 0ms) + var(--stagger-i, 0) * 40ms);
 }
 [data-reveal="stagger"] > :nth-child(2) { --stagger-i: 1; }
 [data-reveal="stagger"] > :nth-child(3) { --stagger-i: 2; }
@@ -1096,7 +1097,7 @@ body:has(main [data-tone="company"]) { --silk-1: #ff8a66; --silk-2: #ffc070; --s
 [data-reveal="stagger"] > :nth-child(7) { --stagger-i: 6; }
 [data-reveal="stagger"] > :nth-child(8) { --stagger-i: 7; }
 [data-reveal="stagger"] > :nth-child(n + 9) { --stagger-i: 8; }
-@keyframes reveal-rise { from { opacity: 0; transform: translateY(20px); filter: blur(4px); } }
+@keyframes reveal-rise { from { opacity: 0; transform: translateY(12px); } }
 .js [data-reveal]:not([data-reveal="stagger"]):not(.is-visible),
 .js [data-reveal]:not([data-reveal="stagger"]).is-visible,
 .js [data-reveal="stagger"]:not(.is-visible) > *,
@@ -1316,6 +1317,9 @@ img[data-developed], .develop { animation: develop 700ms var(--ease-out) backwar
 .logo-mark[data-state="error"] { animation: shake 360ms var(--ease-out); --shake: 2px; }
 .logo-mark__notch { transform-origin: 29px 3px; animation: pop-in var(--dur-3) var(--ease-snap) both; }
 .logo-mark { @variant calm { animation: none; & * { animation: none !important; } & .logo-mark__halo { display: none; } } }
+
+/* Off-screen sections skip layout and paint until they are near the viewport (scroll performance). */
+.cv-auto { content-visibility: auto; contain-intrinsic-size: auto 900px; }
 
 /* Text shimmer: the current stage label while an agent works. */
 .text-shimmer {

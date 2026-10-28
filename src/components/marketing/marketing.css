@@ -285,7 +285,7 @@
   position: absolute;
   inset: 0 auto 0 0;
   width: 28%;
-  background: linear-gradient(100deg, transparent, color-mix(in oklab, var(--glow) 14%, transparent) 45%, color-mix(in oklab, var(--glow) 10%, transparent) 55%, transparent);
+  background: linear-gradient(100deg, transparent, color-mix(in oklab, var(--glow) 14%, transparent) 45%, color-mix(in oklab, var(--glow-2) 10%, transparent) 55%, transparent);
   transform: translateX(-110%);
   opacity: 0;
 }

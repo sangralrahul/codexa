@@ -6,42 +6,6 @@
    at the end of the file.
    ========================================================================== */
 
-/* ---------- Dashboard: a backdrop that listens (static light, no canvas) ---------- */
-/* overflow-x: clip keeps the wide glow from adding a horizontal scrollbar (desktop and phones) while it still bleeds upward. */
-.dash-hero { position: relative; isolation: isolate; overflow-x: clip; --listen: 0; }
-.dash-hero:has([data-composer][data-active]) { --listen: 0.7; }
-.dash-hero:has([data-composer]:focus-within) { --listen: 1; }
-.dash-glow {
-  position: absolute;
-  z-index: -1;
-  left: 50%;
-  top: -60px;
-  width: min(1400px, 140vw);
-  height: 520px;
-  translate: -50% 0;
-  pointer-events: none;
-  background:
-    radial-gradient(34% 52% at 50% 0%, color-mix(in oklab, var(--silk-2) 30%, transparent), transparent 72%),
-    radial-gradient(30% 46% at 30% 0%, color-mix(in oklab, var(--silk-1) 24%, transparent), transparent 72%),
-    radial-gradient(26% 42% at 70% 0%, color-mix(in oklab, var(--silk-3) 24%, transparent), transparent 72%);
-  mask-image: linear-gradient(black 30%, transparent 92%);
-  opacity: calc(0.42 + var(--listen) * 0.5);
-  transform: scaleY(calc(0.9 + var(--listen) * 0.12));
-  transform-origin: 50% 0;
-  transition: opacity 600ms var(--ease-out), transform 900ms var(--ease-out);
-}
-/* The horizon line under the glow brightens with it. */
-.dash-glow::after {
-  content: "";
-  position: absolute;
-  left: 22%;
-  right: 22%;
-  top: 60px;
-  height: 1px;
-  background: linear-gradient(90deg, transparent, color-mix(in oklab, var(--glow) 60%, transparent), color-mix(in oklab, var(--silk-1) 60%, transparent), transparent);
-  opacity: calc(0.25 + var(--listen) * 0.55);
-}
-
 /* ---------- Horizontal snap rows with edge fades (presets, filters on phones) ---------- */
 .edge-fade-x {
   mask-image: linear-gradient(90deg, transparent, black 16px, black calc(100% - 28px), transparent);
@@ -102,10 +66,10 @@
 
 /* ---------- Calm: final frames ---------- */
 @media (prefers-reduced-motion: reduce) {
-  .dash-glow, .proj-card, .proj-card__actions, .composer-build { transition: none; }
+  .proj-card, .proj-card__actions, .composer-build { transition: none; }
   .thumb-swap, .chip-in, .river-in > li, .step-done svg, .inspect-swap { animation: none; }
   .proj-card:is(:hover, :focus-within) { translate: none; }
 }
-[data-motion="reduced"] :is(.dash-glow, .proj-card, .proj-card__actions, .composer-build) { transition: none; }
+[data-motion="reduced"] :is(.proj-card, .proj-card__actions, .composer-build) { transition: none; }
 [data-motion="reduced"] :is(.thumb-swap, .chip-in, .river-in > li, .step-done svg, .inspect-swap) { animation: none; }
 [data-motion="reduced"] .proj-card:is(:hover, :focus-within) { translate: none; }

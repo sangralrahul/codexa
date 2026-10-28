@@ -1,0 +1,13 @@
+# Cloudflare Workers static assets: browser caching for files served straight from the asset store.
+# Next's build output is content-hashed, so it can be cached for a year.
+/_next/static/*
+  Cache-Control: public, max-age=31536000, immutable
+
+/monaco/*
+  Cache-Control: public, max-age=2592000, stale-while-revalidate=86400
+
+/templates/*
+  Cache-Control: public, max-age=604800, stale-while-revalidate=86400
+
+/desktop/*
+  Cache-Control: public, max-age=604800, stale-while-revalidate=86400
