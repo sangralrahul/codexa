@@ -1,4 +1,6 @@
+import type { ExecutionContext } from "@cloudflare/workers-types";
 import type { Env } from "./env";
+import { INSPECTOR_JS, INSPECTOR_PATH, REVIEW_PARAM, injectInspector } from "../services/runner/inspector";
 
 /**
  * Codexa hosting: serves the live deployment for <slug>.<DEPLOY_HOST> from
@@ -85,6 +87,21 @@ function countView(env: Env, ctx: ExecutionContext | undefined, projectId: strin
   );
 }
 
+/** True when a page is requested for client review (the Codexa review page frames it with this). */
+export function isReviewRequest(url: URL): boolean {
+  return url.searchParams.get(REVIEW_PARAM) === "1";
+}
+
+/** Review pages live on the app's origin, so in review mode the app may frame the site too. */
+export function reviewFrameAncestors(appUrl: string | undefined): string {
+  try {
+    if (appUrl) return `frame-ancestors 'self' ${new URL(appUrl).origin}`;
+  } catch {
+    /* not a URL: fall back to same-origin framing only */
+  }
+  return "frame-ancestors 'self'";
+}
+
 function notFound(message: string) {
   return new Response(`<!doctype html><title>Not found</title><body style="font-family:system-ui;padding:3rem"><h1>Not found</h1><p>${message}</p></body>`, {
     status: 404,
@@ -98,6 +115,12 @@ export async function serveSite(request: Request, env: Env, key: { slug: string 
   if (!live) return notFound("No site is published at this address.");
   const id = live.id;
   const url = new URL(request.url);
+  // The visual inspector (comment pins on review pages). Inert unless a framing page turns it on.
+  if (url.pathname === INSPECTOR_PATH) {
+    return new Response(request.method === "HEAD" ? null : INSPECTOR_JS, {
+      headers: { "content-type": "text/javascript; charset=utf-8", "cache-control": "public, max-age=300", ...SECURITY_HEADERS },
+    });
+  }
   let path = decodeURIComponent(url.pathname).replace(/^\/+/, "");
   if (path.split("/").some((s) => s === ".." || s === ".")) return notFound("Invalid path.");
   if (!path || path.endsWith("/")) path += "index.html";
@@ -120,6 +143,15 @@ export async function serveSite(request: Request, env: Env, key: { slug: string 
     ...SECURITY_HEADERS,
   });
   if (request.method === "GET" && ext === "html" && request.headers.get("sec-fetch-dest") !== "iframe" && !/bot|crawler|spider|preview/i.test(request.headers.get("user-agent") ?? "")) countView(env, ctx, live.projectId);
+  if (ext === "html" && isReviewRequest(url)) {
+    // Client review: add the inspector tag. Only with the review parameter, never cached, and
+    // frameable by the app's review page.
+    headers.delete("etag");
+    headers.set("cache-control", "no-store");
+    headers.set("content-security-policy", reviewFrameAncestors(env.APP_URL));
+    const html = injectInspector(await object.text());
+    return new Response(request.method === "HEAD" ? null : html, { status: 200, headers });
+  }
   if (request.headers.get("if-none-match") === object.httpEtag) return new Response(null, { status: 304, headers });
   return new Response(request.method === "HEAD" ? null : (object.body as unknown as ReadableStream), { status: 200, headers });
 }

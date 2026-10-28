@@ -32,3 +32,9 @@ export function labelFor(host: string, base: string | null): string | null {
   const label = host.slice(0, host.length - suffix.length);
   return LABEL.test(label) ? label : null;
 }
+
+/**
+ * Query parameter that opens a Codexa-hosted page for client review: the Worker (and the local
+ * runner) then add the visual inspector so the review page can pin comments to elements.
+ */
+export const REVIEW_PARAM = "__codexa_review";

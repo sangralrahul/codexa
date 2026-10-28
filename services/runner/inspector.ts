@@ -1,11 +1,20 @@
 /**
- * The visual-edit inspector, injected into preview HTML by the preview proxy (never into published
- * sites). It does nothing until the Codexa editor that frames the preview turns it on with a
- * postMessage; then it highlights the hovered element, reports a clicked element (tag, classes,
- * text, outline HTML, position, a few computed styles) and can apply temporary inline styles or
- * text so a change can be previewed before it is written to the source files.
- * It only talks to its parent window, and only answers the origin that turned it on.
+ * The visual-edit inspector, injected into preview HTML by the preview proxy, and into published
+ * sites only when they are opened for client review (`?__codexa_review=1`, see worker/sites.ts).
+ * It does nothing until the Codexa page that frames it turns it on with a postMessage; then it
+ * highlights the hovered element, reports a clicked element (tag, classes, text, outline HTML,
+ * position, a few computed styles) and can apply temporary inline styles or text so a change can
+ * be previewed before it is written to the source files.
+ * Review pages also send {type:"locate", items:[{id, path}]}; the inspector answers
+ * {type:"located", page, items:[{id, rect|null}]} and re-answers on scroll, resize and layout or
+ * route changes until locate is sent with no items, so the parent can draw comment pins, and
+ * {type:"reveal", path} scrolls that element into view.
+ * It only talks to its parent window, and only answers the origin that first spoke to it.
  */
+import { REVIEW_PARAM } from "../../src/lib/hosts";
+
+export { REVIEW_PARAM };
+
 export const INSPECTOR_PATH = "/__codexa/inspect.js";
 
 export const INSPECTOR_TAG = `<script src="${INSPECTOR_PATH}" defer></script>`;
@@ -85,7 +94,7 @@ export const INSPECTOR_JS = `(() => {
     saved = el ? { style: el.getAttribute("style") || "", text: el.children.length === 0 ? el.textContent : null } : null;
     place(selBox, el);
     label.style.display = "none";
-    post(el ? Object.assign({ type: "select" }, { element: describe(el) }) : { type: "deselect" });
+    post(el ? Object.assign({ type: "select" }, { element: describe(el), page: location.pathname }) : { type: "deselect" });
   };
   const onMove = (e) => {
     if (!on) return;
@@ -106,7 +115,44 @@ export const INSPECTOR_JS = `(() => {
     if (el && !isOverlay(el) && el !== document.documentElement) select(el);
   };
   const block = (e) => { if (on) { e.preventDefault(); e.stopPropagation(); } };
-  const reflow = () => { if (selected) { place(selBox, selected); post({ type: "rect", rect: describe(selected).rect }); } if (hovered) place(hoverBox, hovered); };
+  // Comment pins (review pages): resolve each element path and report where it is on screen.
+  let locateItems = null;
+  let locateFrame = 0;
+  let locateTimer = 0;
+  const find = (path) => {
+    if (typeof path !== "string" || !path || path.length > 600) return null;
+    for (const sel of path.indexOf("#") === -1 ? ["body > " + path, path] : [path, "body > " + path]) {
+      try { const el = document.querySelector(sel); if (el && !isOverlay(el)) return el; } catch (err) { /* invalid selector */ }
+    }
+    return null;
+  };
+  const locate = () => {
+    locateFrame = 0;
+    if (!locateItems) return;
+    const items = locateItems.map((it) => {
+      const el = find(it.path);
+      if (!el) return { id: it.id, rect: null };
+      const r = el.getBoundingClientRect();
+      return { id: it.id, rect: r.width || r.height ? { x: r.left, y: r.top, width: r.width, height: r.height } : null };
+    });
+    post({ type: "located", page: location.pathname, viewport: { width: window.innerWidth, height: window.innerHeight }, items });
+  };
+  const relocate = () => { if (locateItems && !locateFrame) locateFrame = requestAnimationFrame(locate); };
+  const reflow = () => { if (selected) { place(selBox, selected); post({ type: "rect", rect: describe(selected).rect }); } if (hovered) place(hoverBox, hovered); relocate(); };
+  // A review link keeps review mode across full page loads to same-site pages.
+  if (new URLSearchParams(location.search).get("${REVIEW_PARAM}") === "1") {
+    window.addEventListener("click", (e) => {
+      if (on || e.defaultPrevented) return;
+      const a = e.target && e.target.closest ? e.target.closest("a[href]") : null;
+      if (!a || a.target === "_blank") return;
+      try {
+        const u = new URL(a.href, location.href);
+        if (u.origin !== location.origin || u.searchParams.get("${REVIEW_PARAM}") === "1") return;
+        u.searchParams.set("${REVIEW_PARAM}", "1");
+        a.href = u.toString();
+      } catch (err) { /* not a URL */ }
+    }, true);
+  }
   window.addEventListener("mousemove", onMove, true);
   window.addEventListener("click", onClick, true);
   window.addEventListener("mousedown", block, true);
@@ -119,7 +165,19 @@ export const INSPECTOR_JS = `(() => {
     const d = e.data;
     if (!d || d.source !== "codexa-editor") return;
     if (parentOrigin && e.origin !== parentOrigin) return;
-    if (d.type === "inspect") {
+    if (d.type === "locate") {
+      parentOrigin = e.origin;
+      const items = Array.isArray(d.items) ? d.items.slice(0, 500).filter((it) => it && typeof it.id === "string") : [];
+      locateItems = items.length ? items : null;
+      clearInterval(locateTimer);
+      // Layout shifts and client-side route changes do not fire scroll/resize: re-check every second.
+      if (locateItems) { locateTimer = setInterval(relocate, 1000); locate(); }
+      else post({ type: "located", page: location.pathname, viewport: { width: window.innerWidth, height: window.innerHeight }, items: [] });
+    } else if (d.type === "reveal") {
+      parentOrigin = e.origin;
+      const el = find(d.path);
+      if (el) { el.scrollIntoView({ block: "center", behavior: "smooth" }); relocate(); }
+    } else if (d.type === "inspect") {
       parentOrigin = e.origin;
       on = Boolean(d.on);
       mount();

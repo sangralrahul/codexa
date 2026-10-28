@@ -15,7 +15,7 @@ import type { RunnerConfig } from "./config";
 import { routeHost } from "./lib/hosts";
 import type { SessionManager, Session } from "./sessions";
 import type { DeploymentManager } from "./deployments";
-import { INSPECTOR_JS, INSPECTOR_PATH, injectInspector } from "./inspector";
+import { INSPECTOR_JS, INSPECTOR_PATH, REVIEW_PARAM, injectInspector } from "./inspector";
 
 const MIME: Record<string, string> = {
   ".html": "text/html; charset=utf-8",
@@ -178,10 +178,18 @@ async function serveSite(slug: string, req: http.IncomingMessage, res: http.Serv
   if (!target) return sendPage(res, page("Site not found", `<p>Nothing has been published at <code>${escapeHtml(slug)}</code> yet.</p>`));
   const root = deployments.siteDir(target);
   let pathname: string;
+  let review = false;
   try {
-    pathname = decodeURIComponent(new URL(req.url || "/", "http://x").pathname);
+    const u = new URL(req.url || "/", "http://x");
+    pathname = decodeURIComponent(u.pathname);
+    review = u.searchParams.get(REVIEW_PARAM) === "1";
   } catch {
     return sendPage(res, page("Bad request", "", 400));
+  }
+  // Client review (same as worker/sites.ts): the inspector script, and its tag only on ?__codexa_review=1 pages.
+  if (pathname === INSPECTOR_PATH) {
+    res.writeHead(200, { "content-type": "text/javascript; charset=utf-8", "cache-control": "no-store" });
+    return res.end(req.method === "HEAD" ? undefined : INSPECTOR_JS);
   }
   if (pathname.includes("\0")) return sendPage(res, page("Bad request", "", 400));
   let file = path.resolve(root, "." + pathname);
@@ -199,6 +207,11 @@ async function serveSite(slug: string, req: http.IncomingMessage, res: http.Serv
       st = await fsp.stat(file).catch(() => null);
     }
     if (!st?.isFile()) return sendPage(res, page("Not found", `<p><code>${escapeHtml(pathname)}</code> does not exist on this site.</p>`));
+  }
+  if (review && contentTypeFor(file).startsWith("text/html")) {
+    const body = injectInspector(await fsp.readFile(file, "utf8"));
+    res.writeHead(200, { "content-type": "text/html; charset=utf-8", "content-length": Buffer.byteLength(body), "cache-control": "no-store", "x-codexa-deployment": target });
+    return res.end(req.method === "HEAD" ? undefined : body);
   }
   const immutable = isImmutableAsset(pathname);
   res.writeHead(200, {

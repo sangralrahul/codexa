@@ -13,6 +13,8 @@ export type Env = {
   /** e.g. -sites.example.com or sites.example.com; empty without a domain */
   DEPLOY_HOST?: string;
   PREVIEW_PROTOCOL?: string;
+  /** The app's own address (a secret, see wrangler.jsonc); review pages on it frame published sites. */
+  APP_URL?: string;
 };
 
 export const RUNNER_CONTROL_HEADER = "x-codexa-runner";
