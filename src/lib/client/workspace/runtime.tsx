@@ -135,7 +135,7 @@ export function useOptionalRuntime(): RuntimeContextValue | null {
   return React.useContext(RuntimeContext);
 }
 
-export function WorkspaceRuntimeProvider({ projectId, children }: { projectId: string; children: React.ReactNode }) {
+export function WorkspaceRuntimeProvider({ projectId, autoStart = false, children }: { projectId: string; /** Start the preview when the project opens and it is not running (editors only). */ autoStart?: boolean; children: React.ReactNode }) {
   const [state, setState] = React.useState<RuntimeStateDto | null>(null);
   const [loadError, setLoadError] = React.useState<string | null>(null);
   const [busy, setBusy] = React.useState<RuntimeCommand | null>(null);
@@ -253,6 +253,16 @@ export function WorkspaceRuntimeProvider({ projectId, children }: { projectId: s
   );
 
   React.useEffect(() => on("codexa:run-command", (d) => void run(d.command)), [run]);
+
+  // Open a project → the preview starts by itself (once per visit, never after a failure or a
+  // manual stop in this visit), so the app is on screen without pressing Run.
+  const autoStarted = React.useRef(false);
+  React.useEffect(() => {
+    if (!autoStart || autoStarted.current || status === "unknown") return;
+    autoStarted.current = true;
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- starts the runtime (a request); state follows its response
+    if (status === "stopped") void run("start");
+  }, [autoStart, status, run]);
 
   // Persisted "Reload after sync" preference (the old key is respected as is).
   React.useEffect(() => {

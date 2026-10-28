@@ -55,7 +55,7 @@ export function DashboardCockpit({
     <li className="min-w-0">
       <Link
         href="/new-project"
-        className="group/new flex aspect-[16/10] h-full min-h-40 flex-col items-center justify-center gap-3 rounded-[16px] border border-dashed border-border-strong text-center transition-[border-color,background-color] duration-(--dur-3) hover:border-foreground/30 hover:bg-surface focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+        className="group/new flex h-full min-h-40 w-full flex-col items-center justify-center gap-3 rounded-[16px] border border-dashed border-border-strong text-center transition-[border-color,background-color] duration-(--dur-3) hover:border-foreground/30 hover:bg-surface focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
       >
         <span className="flex size-10 items-center justify-center rounded-full border border-border bg-card shadow-sm transition-transform duration-(--dur-3) group-hover/new:scale-105 calm:transition-none">
           <Plus className="size-5" aria-hidden="true" />
@@ -112,9 +112,7 @@ export function DashboardCockpit({
             <h1 id="dash-title" className="text-center text-[30px] font-semibold leading-[1.1] tracking-[-0.03em] text-balance sm:text-[40px]">
               What should we build, {firstName}?
             </h1>
-            <p className="mx-auto mt-3 max-w-xl text-center text-[15px] text-muted-foreground">
-              Describe an app in a sentence. Codexa plans it, writes the code and runs a live preview you can keep changing in chat.
-            </p>
+            <p className="mx-auto mt-3 max-w-xl text-center text-[15px] text-muted-foreground">Describe it in a sentence. Codexa builds it and runs a live preview.</p>
             <div className="mt-8">
               <PromptBox {...composer} />
             </div>
@@ -122,10 +120,10 @@ export function DashboardCockpit({
         </AppPage>
       </div>
 
-      <AppPage className="space-y-10 pb-16 pt-2">
+      <AppPage className="space-y-8 pb-16 pt-2">
         {/* (b) First-run checklist. */}
         {showChecklist ? (
-          <GettingStarted milestones={milestones} canCreate={canCreate} emailVerified={emailVerified} emailConfigured={emailConfigured} resumeHref={projects[0] ? `/projects/${projects[0].id}` : undefined} layout="row" />
+          <GettingStarted milestones={milestones} canCreate={canCreate} emailVerified={emailVerified} emailConfigured={emailConfigured} resumeHref={projects[0] ? `/projects/${projects[0].id}` : undefined} layout={firstRun ? "row" : "strip"} />
         ) : null}
 
         {/* (c) Projects and templates. */}

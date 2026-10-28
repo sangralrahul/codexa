@@ -173,7 +173,7 @@ export function Workspace(props: {
   recent?: RecentProject[];
 }) {
   return (
-    <WorkspaceRuntimeProvider projectId={props.project.id}>
+    <WorkspaceRuntimeProvider projectId={props.project.id} autoStart={props.role !== "viewer"}>
       <AgentProvider projectId={props.project.id}>
         <DeploymentsProvider projectId={props.project.id} role={props.role}>
           <Shell {...props} />
@@ -216,6 +216,10 @@ function Shell({
   const [side, setSide] = useState<"files" | "search">("files");
   const [dock, setDock] = useState<DockState>({ open: false, size: 30, tab: "terminal" });
   const [mobileTab, setMobileTab] = useState<MobileTab>("chat");
+  // Monaco (~1 MB) loads the first time code is on screen, not while only chat + preview show.
+  const codeVisible = isDesktop ? view !== "preview" : mobileTab === "code";
+  const [codeSeen, setCodeSeen] = useState(false);
+  if (mounted && codeVisible && !codeSeen) setCodeSeen(true);
   const mobileTouched = useRef(false);
   const [palette, setPalette] = useState<false | "files" | "commands">(false);
   const [searchFocus, setSearchFocus] = useState(0);
@@ -628,7 +632,7 @@ function Shell({
     />
   );
 
-  const editor = <EditorArea state={state} canEdit={canEdit} onQuickOpen={() => setPalette("files")} onSearchAll={openSearch} onCursor={setCursor} onHandle={onEditorHandle} overview={overview} />;
+  const editor = <EditorArea mountEditor={codeSeen} state={state} canEdit={canEdit} onQuickOpen={() => setPalette("files")} onSearchAll={openSearch} onCursor={setCursor} onHandle={onEditorHandle} overview={overview} />;
 
   const chat = (
     <ChatPanel projectId={projectId} projectName={project.name} templateCategory={template?.category ?? null} framework={project.framework} canEdit={canEdit} showOperatorDetails={isAdmin} />

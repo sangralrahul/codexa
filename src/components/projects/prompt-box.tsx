@@ -578,24 +578,23 @@ export function PromptBox({
             "You need a workspace with edit access before creating projects."
           ) : aiConfigured ? (
             <>
-              <span className="inline-flex items-center gap-1.5 rounded-full bg-success/10 px-2 py-0.5 font-medium text-foreground shadow-[inset_0_0_0_1px_color-mix(in_oklab,var(--success)_28%,transparent)]">
+              <span className="inline-flex items-center gap-1.5">
                 <span className="size-1.5 rounded-full bg-success" aria-hidden="true" />
                 Agent ready
               </span>
-              <span>Codexa creates the project, opens the editor and hands your description to the AI agent.</span>
+              <span aria-hidden="true">·</span>
+              <span>Paste a screenshot to build from a design</span>
             </>
           ) : (
             <>
-              <span className="inline-flex items-center gap-1.5 rounded-full bg-warning/10 px-2 py-0.5 font-medium text-foreground shadow-[inset_0_0_0_1px_color-mix(in_oklab,var(--warning)_32%,transparent)]">
+              <span className="inline-flex items-center gap-1.5">
                 <span className="size-1.5 rounded-full bg-warning" aria-hidden="true" />
-                AI not configured on this server
+                AI is not configured on this server
               </span>
-              <span>
-                The project is still created and your description is saved in the chat panel.{" "}
-                <Link href="/docs/ai-agent" className="link-draw font-medium text-foreground">
-                  How AI is set up
-                </Link>
-              </span>
+              <span aria-hidden="true">·</span>
+              <Link href="/docs/ai-agent" className="link-draw font-medium text-foreground">
+                How to set it up
+              </Link>
             </>
           )}
         </p>
@@ -610,7 +609,7 @@ export function PromptBox({
             aria-labelledby="presets-label"
             className={cn(
               // Phones: one swipeable row whose right edge fades out (wide enough to read as "more this way").
-              "edge-fade-x preset-row -mx-4 flex gap-2 overflow-x-auto px-4 pb-1 sm:mx-0 sm:flex-wrap sm:overflow-visible sm:px-0 sm:[mask-image:none]",
+              "edge-fade-x preset-row -mx-4 flex gap-1.5 overflow-x-auto px-4 pb-1 sm:mx-0 sm:flex-wrap sm:overflow-visible sm:px-0 sm:[mask-image:none]",
               start ? "sm:justify-start" : "sm:justify-center",
             )}
           >
@@ -625,11 +624,10 @@ export function PromptBox({
                     aria-pressed={on}
                     title={p.prompt}
                     className={cn(
-                      "group/preset flex h-10 items-center gap-2 rounded-xl border bg-card/70 py-1 pl-1.5 pr-3 text-[13px] shadow-[inset_0_1px_0_var(--hairline)] backdrop-blur-sm transition-[border-color,color,translate,box-shadow] duration-(--dur-3) hover:-translate-y-px hover:shadow-[var(--shadow-sm)] disabled:pointer-events-none disabled:opacity-50 calm:hover:translate-y-0",
-                      on ? "border-foreground/40 text-foreground" : "border-border text-muted-foreground hover:border-border-strong hover:text-foreground",
+                      "flex h-8 items-center rounded-full border px-3.5 text-[13px] transition-[border-color,color,background-color] duration-(--dur-3) disabled:pointer-events-none disabled:opacity-50",
+                      on ? "border-foreground/40 bg-card text-foreground" : "border-border text-muted-foreground hover:border-border-strong hover:bg-card hover:text-foreground",
                     )}
                   >
-                    <ProjectThumb templateId={p.templateId} framework={templates.find((t) => t.id === p.templateId)?.framework} size="sm" className="h-6 w-[38px] rounded-[6px]" />
                     {p.label}
                   </button>
                 </li>

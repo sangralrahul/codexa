@@ -34,7 +34,8 @@ export function GettingStarted({
   emailVerified?: boolean;
   /** Whether this server can deliver account emails (capabilities.email). */
   emailConfigured?: boolean;
-  layout?: "row" | "stack";
+  /** "strip": one quiet line (returning users): progress, the next step and dismiss. */
+  layout?: "row" | "stack" | "strip";
   className?: string;
 }) {
   const router = useRouter();
@@ -93,6 +94,47 @@ export function GettingStarted({
     setHidden(true);
     router.refresh();
   };
+
+  if (layout === "strip") {
+    const nextStep = steps.find((s) => s.id === next);
+    return (
+      <section aria-labelledby="checklist-title" className={cn("flex flex-wrap items-center gap-x-4 gap-y-2 rounded-[14px] border border-border bg-card/60 px-4 py-2.5", className)}>
+        <h2 id="checklist-title" className="text-[13px] font-medium">
+          {allDone ? "You're all set" : "Getting started"}
+        </h2>
+        <ol className="flex items-center gap-1.5" aria-label={`${done} of ${steps.length} steps done`}>
+          {steps.map((s) => (
+            <li key={s.id} title={s.title} className={cn("h-1.5 w-6 rounded-full", s.done ? "bg-success" : s.id === next ? "bg-foreground/60" : "bg-muted")}>
+              <span className="sr-only">
+                {s.title}: {s.done ? "done" : s.locked ? "locked" : "to do"}
+              </span>
+            </li>
+          ))}
+        </ol>
+        {nextStep ? (
+          <p className="min-w-0 flex-1 truncate text-[13px] text-muted-foreground">
+            Next: <span className="text-foreground">{nextStep.title}</span>
+            {nextStep.cta ? (
+              "href" in nextStep.cta ? (
+                <Link href={nextStep.cta.href} className="link-draw ml-2 inline-flex items-center gap-1 font-medium text-foreground">
+                  {nextStep.cta.label} <ArrowRight className="size-3" aria-hidden="true" />
+                </Link>
+              ) : (
+                <button type="button" onClick={nextStep.cta.onClick} className="link-draw ml-2 inline-flex items-center gap-1 font-medium text-foreground">
+                  {nextStep.cta.label} <ArrowRight className="size-3" aria-hidden="true" />
+                </button>
+              )
+            ) : null}
+          </p>
+        ) : (
+          <p className="min-w-0 flex-1 truncate text-[13px] text-muted-foreground">{deployLocked ? "Verify your email to publish." : "You built, ran and shipped a project."}</p>
+        )}
+        <button type="button" onClick={dismiss} className="ml-auto flex size-7 items-center justify-center rounded-[8px] text-muted-foreground transition-colors hover:bg-muted hover:text-foreground" aria-label="Hide getting started">
+          <X className="size-4" aria-hidden="true" />
+        </button>
+      </section>
+    );
+  }
 
   const row = layout === "row";
   return (

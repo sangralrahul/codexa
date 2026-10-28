@@ -27,6 +27,7 @@ const OVERVIEW = ":overview";
  * file has been looked at once. After a restore the open file gets the diff sweep (M9).
  */
 export function EditorArea({
+  mountEditor = true,
   state,
   canEdit,
   onQuickOpen,
@@ -35,6 +36,8 @@ export function EditorArea({
   onHandle,
   overview,
 }: {
+  /** False until code is first on screen: Monaco is only downloaded when it is needed. */
+  mountEditor?: boolean;
   state: EditorState;
   canEdit: boolean;
   onQuickOpen: () => void;
@@ -298,6 +301,8 @@ export function EditorArea({
               Retry
             </Button>
           </div>
+        ) : active && !mountEditor ? (
+          <div className="h-full" aria-hidden="true" />
         ) : active ? (
           <CodeEditor
             key="editor"
