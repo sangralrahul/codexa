@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Check, CircleAlert, Copy, ExternalLink, Globe, Loader2, Rocket, Settings2, Wand2 } from "lucide-react";
 import { emit } from "@/lib/client/events";
+import { api } from "@/lib/client/api";
 import { isCalm, useCalm } from "@/lib/client/motion";
 import { IN_PROGRESS, useDeployments, type ProviderInfo } from "@/lib/client/workspace/deployments";
 import { stripAnsi } from "@/lib/client/workspace/problems";
@@ -81,7 +82,7 @@ function flight(from: HTMLElement | null, to: HTMLElement | null, text: string) 
  * real "live". Failure shows the real error with "Fix with AI". History, rollback and the
  * custom domains, analytics and site settings live in the Publishing pane (publishing-sheet.tsx).
  */
-export function PublishPopover({ onManage, className, compact, open: openProp, onOpenChange }: { onManage: () => void; className?: string; compact?: boolean; open?: boolean; onOpenChange?: (o: boolean) => void }) {
+export function PublishPopover({ projectId, onManage, className, compact, open: openProp, onOpenChange }: { projectId: string; onManage: (tab?: string) => void; className?: string; compact?: boolean; open?: boolean; onOpenChange?: (o: boolean) => void }) {
   const d = useDeployments();
   const calm = useCalm();
   const [openState, setOpenState] = useState(false);
@@ -92,6 +93,26 @@ export function PublishPopover({ onManage, className, compact, open: openProp, o
   };
   const [provider, setProvider] = useState<ProviderInfo["id"]>("codexa");
   const [confirming, setConfirming] = useState(false);
+  // First publish: choose the address and, optionally, a custom domain before going live.
+  const [setup, setSetup] = useState<{ siteName: string; suffix: string; canManage: boolean } | null>(null);
+  const [siteName, setSiteName] = useState("");
+  const [domain, setDomain] = useState("");
+  const [setupError, setSetupError] = useState<string | null>(null);
+  const [preparing, setPreparing] = useState(false);
+  const base = `/api/v1/projects/${encodeURIComponent(projectId)}`;
+  const startConfirm = async () => {
+    setConfirming(true);
+    setSetupError(null);
+    if (live || provider !== "codexa" || setup) return;
+    try {
+      const r = await api<{ publishing: { siteName: string; host: string | null }; canManage: boolean }>(`${base}/publishing`);
+      const suffix = r.publishing.host ? r.publishing.host.slice(r.publishing.siteName.length) : "";
+      setSetup({ siteName: r.publishing.siteName, suffix, canManage: r.canManage });
+      setSiteName(r.publishing.siteName);
+    } catch {
+      // Optional step: publishing still works with the default address.
+    }
+  };
   const [copied, setCopied] = useState(false);
   const triggerRef = useRef<HTMLButtonElement>(null);
   const successRef = useRef<HTMLDivElement>(null);
@@ -142,8 +163,40 @@ export function PublishPopover({ onManage, className, compact, open: openProp, o
   };
 
   const publish = async () => {
+    const firstTime = !live && provider === "codexa" && setup;
+    const wantDomain = firstTime && setup.canManage ? domain.trim() : "";
+    if (firstTime && setup.canManage && siteName && siteName !== setup.siteName) {
+      setPreparing(true);
+      setSetupError(null);
+      try {
+        await api(`${base}/publishing`, { method: "PATCH", json: { siteName } });
+        await d.load();
+      } catch (err) {
+        setSetupError(err instanceof Error ? err.message : "Could not save the address");
+        setPreparing(false);
+        return;
+      }
+      setPreparing(false);
+    }
+    if (wantDomain) {
+      setPreparing(true);
+      try {
+        await api(`${base}/domains`, { method: "POST", json: { domain: wantDomain } });
+      } catch (err) {
+        setSetupError(err instanceof Error ? err.message : "Could not add the domain");
+        setPreparing(false);
+        return;
+      }
+      setPreparing(false);
+    }
     setConfirming(false);
-    await d.publish(provider);
+    const dep = await d.publish(provider);
+    // A new domain needs DNS records: show them right away.
+    if (wantDomain && dep) {
+      setDomain("");
+      setOpen(false);
+      onManage("domains");
+    }
   };
 
   const showStepper = Boolean(tracked) && (inProgress || tracked?.status === "failed" || tracked?.status === "live");
@@ -317,7 +370,7 @@ export function PublishPopover({ onManage, className, compact, open: openProp, o
                   >
                     <Wand2 className="size-3.5" aria-hidden="true" /> Fix with AI
                   </Button>
-                  <Button size="sm" variant="outline" appearance="app" className="h-7 px-2.5 text-xs" onClick={() => setConfirming(true)} disabled={!d.canDeploy}>
+                  <Button size="sm" variant="outline" appearance="app" className="h-7 px-2.5 text-xs" onClick={() => void startConfirm()} disabled={!d.canDeploy}>
                     Try again
                   </Button>
                 </div>
@@ -333,19 +386,60 @@ export function PublishPopover({ onManage, className, compact, open: openProp, o
           ) : confirming ? (
             <div className="ws-drop space-y-2.5">
               <p className="text-[12.5px] leading-relaxed text-muted-foreground">
-                Publishing creates a snapshot of the current files, builds it and makes the result publicly reachable{host && provider === "codexa" ? <> at <code className="font-mono text-foreground">{host}</code></> : null}. Anyone with the link can open it.
+                Publishing creates a snapshot of the current files, builds it and makes the result publicly reachable{host && provider === "codexa" && !(setup && !live) ? <> at <code className="font-mono text-foreground">{host}</code></> : null}. Anyone with the link can open it.
               </p>
+              {setup && !live && provider === "codexa" && setup.canManage ? (
+                <div className="space-y-2.5 rounded-xl border border-border bg-muted/40 p-3">
+                  <div>
+                    <label htmlFor="first-site-name" className="text-[12px] font-medium">
+                      Site address
+                    </label>
+                    <div className="mt-1 flex h-8 items-center overflow-hidden rounded-lg border border-input bg-background font-mono text-[12px] focus-within:ring-2 focus-within:ring-ring">
+                      <input
+                        id="first-site-name"
+                        value={siteName}
+                        onChange={(e) => setSiteName(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ""))}
+                        maxLength={63}
+                        spellCheck={false}
+                        autoComplete="off"
+                        className="h-full min-w-0 flex-1 bg-transparent px-2.5 outline-none"
+                      />
+                      {setup.suffix ? <span className="shrink-0 pr-2.5 text-muted-foreground">{setup.suffix}</span> : null}
+                    </div>
+                  </div>
+                  <div>
+                    <label htmlFor="first-domain" className="text-[12px] font-medium">
+                      Your own domain <span className="font-normal text-muted-foreground">(optional)</span>
+                    </label>
+                    <input
+                      id="first-domain"
+                      value={domain}
+                      onChange={(e) => setDomain(e.target.value)}
+                      placeholder="www.yourbrand.com"
+                      spellCheck={false}
+                      autoComplete="off"
+                      className="mt-1 h-8 w-full rounded-lg border border-input bg-background px-2.5 font-mono text-[12px] outline-none focus:ring-2 focus:ring-ring"
+                    />
+                    <p className="mt-1 text-[11px] text-muted-foreground">After publishing, Codexa shows the two DNS records to add and checks them for you.</p>
+                  </div>
+                  {setupError ? (
+                    <p className="text-[12px] text-danger" role="alert">
+                      {setupError}
+                    </p>
+                  ) : null}
+                </div>
+              ) : null}
               <div className="flex justify-end gap-2">
                 <Button size="sm" variant="ghost" appearance="app" onClick={() => setConfirming(false)}>
                   Cancel
                 </Button>
-                <Button size="sm" variant="primary" appearance="app" onClick={() => void publish()} loading={d.publishing}>
+                <Button size="sm" variant="primary" appearance="app" onClick={() => void publish()} loading={d.publishing || preparing}>
                   <Rocket className="size-3.5" aria-hidden="true" /> Publish now
                 </Button>
               </div>
             </div>
           ) : (
-            <Button className="w-full" size="md" variant="primary" appearance="app" disabled={!chosen?.available || inProgress || d.publishing || !d.data} onClick={() => setConfirming(true)}>
+            <Button className="w-full" size="md" variant="primary" appearance="app" disabled={!chosen?.available || inProgress || d.publishing || !d.data} onClick={() => void startConfirm()}>
               {inProgress ? <Loader2 className="size-4 animate-spin" aria-hidden="true" /> : <Rocket className="size-4" aria-hidden="true" />}
               {inProgress ? "Publishing…" : live ? "Publish new version" : "Publish"}
             </Button>

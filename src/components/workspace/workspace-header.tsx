@@ -87,7 +87,9 @@ export function WorkspaceHeader({
   isDesktop,
   publishOpen,
   onPublishOpenChange,
+  projectId,
 }: {
+  projectId: string;
   name: string;
   template?: { id: string; name: string; category: string } | null;
   recent: RecentProject[];
@@ -101,7 +103,7 @@ export function WorkspaceHeader({
   onDeviceChange: (d: Device) => void;
   onRun: () => void;
   openTool: (t: WorkspaceTool) => void;
-  onManageDeployments: () => void;
+  onManageDeployments: (tab?: string) => void;
   historyCount: number | null;
   onRevealAgent: () => void;
   isDesktop: boolean;
@@ -296,7 +298,7 @@ export function WorkspaceHeader({
           <Share2 className="size-3.5" aria-hidden="true" /> Share
         </button>
         {/* Publish keeps its label at every width: it is the primary action. */}
-        <PublishPopover onManage={onManageDeployments} className="ws-publish max-sm:px-3" open={publishOpen} onOpenChange={onPublishOpenChange} />
+        <PublishPopover projectId={projectId} onManage={onManageDeployments} className="ws-publish max-sm:px-3" open={publishOpen} onOpenChange={onPublishOpenChange} />
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <button
@@ -328,7 +330,7 @@ export function WorkspaceHeader({
               <DropdownMenuItem onSelect={() => openTool("share")}>
                 <Share2 /> Share
               </DropdownMenuItem>
-              <DropdownMenuItem onSelect={onManageDeployments}>
+              <DropdownMenuItem onSelect={() => onManageDeployments()}>
                 <Play /> Publishing settings
               </DropdownMenuItem>
             </div>

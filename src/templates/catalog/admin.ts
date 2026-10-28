@@ -59,8 +59,8 @@ import { MemberForm } from "./MemberForm";
 type SortKey = "name" | "email" | "role" | "createdAt";
 const PAGE_SIZE = 6;
 
-const roleTone: Record<Role, string> = { admin: "bg-violet-50 text-violet-700 ring-violet-200", editor: "bg-sky-50 text-sky-700 ring-sky-200", viewer: "bg-slate-50 text-slate-600 ring-slate-200" };
-const avatarTone = ["from-rose-400 to-orange-300", "from-sky-400 to-indigo-400", "from-emerald-400 to-teal-300", "from-violet-400 to-fuchsia-300", "from-amber-400 to-yellow-300"];
+const roleTone: Record<Role, string> = { admin: "bg-blue-50 text-blue-700 ring-blue-200", editor: "bg-sky-50 text-sky-700 ring-sky-200", viewer: "bg-slate-50 text-slate-600 ring-slate-200" };
+const avatarTone = ["from-rose-400 to-orange-300", "from-sky-400 to-blue-400", "from-emerald-400 to-teal-300", "from-blue-400 to-blue-300", "from-amber-400 to-yellow-300"];
 
 const nav = [
   { label: "Members", d: "M16 19v-1a4 4 0 00-4-4H8a4 4 0 00-4 4v1M10 10a3 3 0 100-6 3 3 0 000 6zM20 19v-1a3 3 0 00-2-2.8M16 4.2a3 3 0 010 5.6", current: true },

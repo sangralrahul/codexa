@@ -57,7 +57,7 @@ export default function App() {
       <header className="border-b border-slate-200/70 bg-white/70 backdrop-blur">
         <div className="mx-auto flex max-w-5xl flex-wrap items-center justify-between gap-3 px-4 py-3 sm:px-6">
           <h1 className="flex items-center gap-2.5 font-semibold tracking-tight">
-            <span className="grid h-8 w-8 place-items-center rounded-lg bg-indigo-600 text-white shadow-sm shadow-indigo-600/30">
+            <span className="grid h-8 w-8 place-items-center rounded-lg bg-teal-600 text-white shadow-sm shadow-teal-600/30">
               <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                 <path d="M5 12l5 5L20 7" />
               </svg>
@@ -85,7 +85,7 @@ export default function App() {
                 {done} of {tasks.length} done
               </p>
               <div className="mt-1.5 h-1.5 rounded-full bg-slate-200">
-                <div className="h-1.5 rounded-full bg-indigo-600 transition-all" style={{ width: (tasks.length ? (done / tasks.length) * 100 : 0) + "%" }} />
+                <div className="h-1.5 rounded-full bg-teal-600 transition-all" style={{ width: (tasks.length ? (done / tasks.length) * 100 : 0) + "%" }} />
               </div>
             </div>
           </div>
@@ -119,19 +119,19 @@ export function TodoList({ tasks, setTasks }: Props) {
 
   return (
     <div className="mx-auto max-w-xl">
-      <form onSubmit={add} className="flex gap-2 rounded-2xl border border-slate-200 bg-white p-2 shadow-sm focus-within:border-indigo-300">
+      <form onSubmit={add} className="flex gap-2 rounded-2xl border border-slate-200 bg-white p-2 shadow-sm focus-within:border-teal-300">
         <label className="sr-only" htmlFor="new-task">
           New task
         </label>
         <input id="new-task" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Add a task and press Enter" className="flex-1 bg-transparent px-2 text-sm outline-none" />
-        <button type="submit" className="rounded-xl bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700">
+        <button type="submit" className="rounded-xl bg-teal-600 px-4 py-2 text-sm font-medium text-white hover:bg-teal-700">
           Add
         </button>
       </form>
       <div className="mt-5 flex items-center justify-between px-1 text-sm text-slate-500">
         <span>{remaining} remaining</span>
         <label className="flex items-center gap-2">
-          <input type="checkbox" checked={showDone} onChange={(e) => setShowDone(e.target.checked)} className="accent-indigo-600" /> Show completed
+          <input type="checkbox" checked={showDone} onChange={(e) => setShowDone(e.target.checked)} className="accent-teal-600" /> Show completed
         </label>
       </div>
       <ul className="mt-3 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
@@ -142,7 +142,7 @@ export function TodoList({ tasks, setTasks }: Props) {
               checked={t.column === "done"}
               onChange={() => toggle(t.id)}
               aria-label={"Mark " + t.title + (t.column === "done" ? " as not done" : " as done")}
-              className="h-5 w-5 rounded-full accent-indigo-600"
+              className="h-5 w-5 rounded-full accent-teal-600"
             />
             <span className={"flex-1 text-sm " + (t.column === "done" ? "text-slate-400 line-through" : "")}>{t.title}</span>
             <span className={"rounded-full px-2 py-0.5 text-[11px] " + (t.column === "doing" ? "bg-amber-50 text-amber-700" : t.column === "done" ? "bg-emerald-50 text-emerald-700" : "bg-slate-100 text-slate-500")}>{COLUMN_LABEL[t.column]}</span>
@@ -192,7 +192,7 @@ export function Board({ tasks, setTasks }: Props) {
             <h2 id={"col-" + col} className="text-sm font-medium">
               {COLUMN_LABEL[col]} <span className="text-slate-400">{tasks.filter((t) => t.column === col).length}</span>
             </h2>
-            <button type="button" onClick={() => addTo(col)} className="rounded-md px-2 py-1 text-xs text-indigo-600 hover:bg-indigo-50">
+            <button type="button" onClick={() => addTo(col)} className="rounded-md px-2 py-1 text-xs text-teal-600 hover:bg-teal-50">
               + Add
             </button>
           </div>
@@ -249,7 +249,7 @@ export function Notes({ notes, setNotes }: Props) {
   return (
     <div className="grid gap-4 md:grid-cols-[240px_1fr]">
       <aside className="rounded-2xl border border-slate-200 bg-white p-2 shadow-sm">
-        <button type="button" onClick={create} className="w-full rounded-lg bg-indigo-600 px-3 py-2 text-sm font-medium text-white hover:bg-indigo-700">
+        <button type="button" onClick={create} className="w-full rounded-lg bg-teal-600 px-3 py-2 text-sm font-medium text-white hover:bg-teal-700">
           New note
         </button>
         <ul className="mt-2 space-y-1">

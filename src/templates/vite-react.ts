@@ -60,7 +60,7 @@ export default function App() {
         aria-hidden="true"
         className="pointer-events-none absolute inset-0 [background-image:linear-gradient(to_right,rgb(15_23_42/0.05)_1px,transparent_1px),linear-gradient(to_bottom,rgb(15_23_42/0.05)_1px,transparent_1px)] [background-size:48px_48px] [mask-image:radial-gradient(ellipse_at_50%_35%,black_25%,transparent_70%)]"
       />
-      <div aria-hidden="true" className="pointer-events-none absolute left-1/2 top-[-20rem] h-[38rem] w-[64rem] -translate-x-1/2 rounded-full bg-gradient-to-tr from-indigo-200 via-sky-100 to-rose-200 opacity-70 blur-3xl" />
+      <div aria-hidden="true" className="pointer-events-none absolute left-1/2 top-[-20rem] h-[38rem] w-[64rem] -translate-x-1/2 rounded-full bg-gradient-to-tr from-blue-200 via-sky-100 to-rose-200 opacity-70 blur-3xl" />
 
       <div className="relative mx-auto flex min-h-screen max-w-3xl flex-col items-center justify-center px-6 py-16 text-center">
         <span className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white/80 px-3 py-1 text-xs font-medium text-slate-600 shadow-sm backdrop-blur">
@@ -209,9 +209,9 @@ const nav = [
   { label: "Settings", icon: "M12 15a3 3 0 100-6 3 3 0 000 6zM19.4 15a1.7 1.7 0 00.3 1.8l.1.1a2 2 0 11-2.8 2.8l-.1-.1a1.7 1.7 0 00-1.8-.3 1.7 1.7 0 00-1 1.5V21a2 2 0 11-4 0v-.1a1.7 1.7 0 00-1.1-1.5 1.7 1.7 0 00-1.8.3l-.1.1a2 2 0 11-2.8-2.8l.1-.1a1.7 1.7 0 00.3-1.8 1.7 1.7 0 00-1.5-1H3a2 2 0 110-4h.1a1.7 1.7 0 001.5-1.1 1.7 1.7 0 00-.3-1.8l-.1-.1a2 2 0 112.8-2.8l.1.1a1.7 1.7 0 001.8.3H9a1.7 1.7 0 001-1.5V3a2 2 0 114 0v.1a1.7 1.7 0 001 1.5 1.7 1.7 0 001.8-.3l.1-.1a2 2 0 112.8 2.8l-.1.1a1.7 1.7 0 00-.3 1.8V9a1.7 1.7 0 001.5 1H21a2 2 0 110 4h-.1a1.7 1.7 0 00-1.5 1z" },
 ];
 
-const planTone: Record<Plan, string> = { Free: "bg-slate-100 text-slate-700", Pro: "bg-indigo-50 text-indigo-700", Team: "bg-violet-50 text-violet-700" };
+const planTone: Record<Plan, string> = { Free: "bg-slate-100 text-slate-700", Pro: "bg-blue-50 text-blue-700", Team: "bg-blue-50 text-blue-700" };
 const statusTone: Record<Status, string> = { active: "bg-emerald-500", trialing: "bg-amber-400", churned: "bg-rose-400" };
-const avatarTone = ["bg-indigo-100 text-indigo-700", "bg-emerald-100 text-emerald-700", "bg-amber-100 text-amber-800", "bg-rose-100 text-rose-700", "bg-sky-100 text-sky-700"];
+const avatarTone = ["bg-blue-100 text-blue-700", "bg-emerald-100 text-emerald-700", "bg-amber-100 text-amber-800", "bg-rose-100 text-rose-700", "bg-sky-100 text-sky-700"];
 
 const inr = (n: number) => "₹" + n.toLocaleString("en-IN");
 
@@ -241,7 +241,7 @@ export default function App() {
     <div className="min-h-screen bg-slate-50 text-slate-900 md:grid md:grid-cols-[232px_1fr]">
       <aside className="flex flex-col border-b border-slate-200 bg-white px-4 py-5 md:border-b-0 md:border-r">
         <div className="flex items-center gap-2.5 px-2">
-          <span className="grid h-8 w-8 place-items-center rounded-lg bg-gradient-to-br from-indigo-500 to-violet-500 text-sm font-bold text-white shadow-sm">A</span>
+          <span className="grid h-8 w-8 place-items-center rounded-lg bg-gradient-to-br from-blue-500 to-blue-500 text-sm font-bold text-white shadow-sm">A</span>
           <div className="leading-tight">
             <div className="text-sm font-semibold">Acme Analytics</div>
             <div className="text-xs text-slate-500">Production</div>
@@ -323,7 +323,7 @@ export default function App() {
                       <span className="text-slate-500">{count} customers</span>
                     </div>
                     <div className="mt-2 h-2 rounded-full bg-slate-100">
-                      <div className={"h-2 rounded-full " + (p === "Team" ? "bg-violet-500" : p === "Pro" ? "bg-indigo-500" : "bg-slate-300")} style={{ width: (count / rows.length) * 100 + "%" }} />
+                      <div className={"h-2 rounded-full " + (p === "Team" ? "bg-blue-500" : p === "Pro" ? "bg-blue-500" : "bg-slate-300")} style={{ width: (count / rows.length) * 100 + "%" }} />
                     </div>
                   </li>
                 );
@@ -338,7 +338,7 @@ export default function App() {
             <h2 id="customers-heading" className="font-medium">
               Customers <span className="ml-1 text-sm font-normal text-slate-400">{filtered.length}</span>
             </h2>
-            <input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Search customers…" className="w-56 rounded-lg border border-slate-200 bg-slate-50 px-3 py-1.5 text-sm outline-none focus:border-indigo-400 focus:bg-white" aria-label="Search customers" />
+            <input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Search customers…" className="w-56 rounded-lg border border-slate-200 bg-slate-50 px-3 py-1.5 text-sm outline-none focus:border-blue-400 focus:bg-white" aria-label="Search customers" />
           </div>
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
@@ -446,8 +446,8 @@ function ProductArt() {
   ];
   return (
     <div aria-hidden="true" className="relative mx-auto mt-16 max-w-5xl">
-      <div className="absolute -inset-x-10 -top-10 bottom-0 rounded-[3rem] bg-gradient-to-b from-indigo-200/60 via-violet-100/40 to-transparent blur-2xl" />
-      <div className="relative overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-2xl shadow-indigo-900/10">
+      <div className="absolute -inset-x-10 -top-10 bottom-0 rounded-[3rem] bg-gradient-to-b from-blue-200/60 via-blue-100/40 to-transparent blur-2xl" />
+      <div className="relative overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-2xl shadow-blue-900/10">
         <div className="flex items-center gap-2 border-b border-slate-100 bg-slate-50/80 px-4 py-3">
           <span className="h-2.5 w-2.5 rounded-full bg-rose-300" />
           <span className="h-2.5 w-2.5 rounded-full bg-amber-300" />
@@ -458,7 +458,7 @@ function ProductArt() {
           <div className="border-r border-slate-100 p-4 text-left text-xs">
             <div className="font-semibold text-slate-900">Acme</div>
             {["Releases", "Roadmap", "Checklists", "Changelog"].map((l, i) => (
-              <div key={l} className={"mt-2 rounded-md px-2 py-1.5 " + (i === 0 ? "bg-indigo-50 font-medium text-indigo-700" : "text-slate-500")}>
+              <div key={l} className={"mt-2 rounded-md px-2 py-1.5 " + (i === 0 ? "bg-blue-50 font-medium text-blue-700" : "text-slate-500")}>
                 {l}
               </div>
             ))}
@@ -483,7 +483,7 @@ function ProductArt() {
                       {card}
                       <div className="mt-2 flex items-center justify-between">
                         <span className="h-1.5 w-10 rounded-full bg-slate-100" />
-                        <span className="h-4 w-4 rounded-full bg-gradient-to-br from-indigo-300 to-violet-300" />
+                        <span className="h-4 w-4 rounded-full bg-gradient-to-br from-blue-300 to-blue-300" />
                       </div>
                     </div>
                   ))}
@@ -518,16 +518,16 @@ export default function App() {
       <section className="relative overflow-hidden px-6 pb-24 pt-20 text-center">
         <div aria-hidden="true" className="absolute inset-x-0 top-0 h-[32rem] bg-[radial-gradient(60%_60%_at_50%_0%,rgb(224_231_255),transparent_70%)]" />
         <div className="relative mx-auto max-w-3xl">
-          <a href="#features" className="inline-flex items-center gap-2 rounded-full border border-indigo-100 bg-white px-3 py-1 text-xs font-medium text-indigo-700 shadow-sm">
-            <span className="rounded-full bg-indigo-600 px-1.5 py-0.5 text-[10px] text-white">New</span>
+          <a href="#features" className="inline-flex items-center gap-2 rounded-full border border-blue-100 bg-white px-3 py-1 text-xs font-medium text-blue-700 shadow-sm">
+            <span className="rounded-full bg-blue-600 px-1.5 py-0.5 text-[10px] text-white">New</span>
             Launch checklists are here →
           </a>
           <h1 className="mt-6 text-5xl font-semibold tracking-tight sm:text-6xl">
-            Plan, ship and announce <span className="bg-gradient-to-r from-indigo-600 to-violet-500 bg-clip-text text-transparent">every release.</span>
+            Plan, ship and announce <span className="bg-gradient-to-r from-blue-600 to-blue-500 bg-clip-text text-transparent">every release.</span>
           </h1>
           <p className="mx-auto mt-5 max-w-xl text-balance text-lg leading-relaxed text-slate-600">Launchpad keeps your roadmap, changelog and launch checklist in one calm place. Replace this copy with your own value proposition.</p>
           <div className="mt-8 flex justify-center gap-3">
-            <a href="#pricing" className="rounded-xl bg-indigo-600 px-5 py-3 text-sm font-medium text-white shadow-lg shadow-indigo-600/20 hover:bg-indigo-700">Start free</a>
+            <a href="#pricing" className="rounded-xl bg-blue-600 px-5 py-3 text-sm font-medium text-white shadow-lg shadow-blue-600/20 hover:bg-blue-700">Start free</a>
             <a href="#features" className="rounded-xl border border-slate-200 bg-white px-5 py-3 text-sm font-medium shadow-sm hover:bg-slate-50">See how it works</a>
           </div>
         </div>
@@ -535,12 +535,12 @@ export default function App() {
       </section>
 
       <section id="features" className="mx-auto max-w-6xl px-6 py-24">
-        <p className="text-sm font-semibold text-indigo-600">Features</p>
+        <p className="text-sm font-semibold text-blue-600">Features</p>
         <h2 className="mt-2 max-w-xl text-3xl font-semibold tracking-tight">Everything a release needs, nothing it does not.</h2>
         <div className="mt-12 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
           {features.map((f) => (
             <div key={f.title} className="rounded-2xl border border-slate-200 p-6 transition hover:border-slate-300 hover:shadow-sm">
-              <span className="grid h-10 w-10 place-items-center rounded-xl bg-indigo-50 text-indigo-600">
+              <span className="grid h-10 w-10 place-items-center rounded-xl bg-blue-50 text-blue-600">
                 <Icon d={f.icon} />
               </span>
               <h3 className="mt-4 font-semibold">{f.title}</h3>
@@ -556,10 +556,10 @@ export default function App() {
           <p className="mt-3 text-center text-slate-600">Placeholder tiers. Connect a payment provider before charging anyone.</p>
           <div className="mt-12 grid gap-6 sm:grid-cols-3">
             {tiers.map((t) => (
-              <div key={t.name} className={"flex flex-col rounded-2xl border bg-white p-7 " + (t.highlight ? "border-indigo-600 shadow-xl shadow-indigo-600/10 ring-1 ring-indigo-600" : "border-slate-200")}>
+              <div key={t.name} className={"flex flex-col rounded-2xl border bg-white p-7 " + (t.highlight ? "border-blue-600 shadow-xl shadow-blue-600/10 ring-1 ring-blue-600" : "border-slate-200")}>
                 <div className="flex items-center justify-between">
                   <h3 className="font-semibold">{t.name}</h3>
-                  {t.highlight ? <span className="rounded-full bg-indigo-50 px-2 py-0.5 text-xs font-medium text-indigo-700">Popular</span> : null}
+                  {t.highlight ? <span className="rounded-full bg-blue-50 px-2 py-0.5 text-xs font-medium text-blue-700">Popular</span> : null}
                 </div>
                 <p className="mt-4">
                   <span className="text-4xl font-semibold tracking-tight">{t.price}</span> <span className="text-sm text-slate-500">{t.note}</span>
@@ -567,12 +567,12 @@ export default function App() {
                 <ul className="mt-6 flex-1 space-y-3 text-sm text-slate-600">
                   {t.items.map((i) => (
                     <li key={i} className="flex gap-2">
-                      <span className="text-indigo-600">✓</span>
+                      <span className="text-blue-600">✓</span>
                       {i}
                     </li>
                   ))}
                 </ul>
-                <a href="#" className={"mt-8 rounded-xl px-4 py-2.5 text-center text-sm font-medium " + (t.highlight ? "bg-indigo-600 text-white hover:bg-indigo-700" : "border border-slate-200 hover:bg-slate-50")}>
+                <a href="#" className={"mt-8 rounded-xl px-4 py-2.5 text-center text-sm font-medium " + (t.highlight ? "bg-blue-600 text-white hover:bg-blue-700" : "border border-slate-200 hover:bg-slate-50")}>
                   Choose {t.name}
                 </a>
               </div>

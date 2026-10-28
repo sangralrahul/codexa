@@ -32,10 +32,10 @@ export const profile = {
 };
 
 export const projects: Project[] = [
-  { title: "Inventory tracker", summary: "Barcode scanning and low-stock alerts for a small warehouse.", tags: ["React", "Node"], year: "2026", tone: "from-sky-400 to-indigo-500" },
+  { title: "Inventory tracker", summary: "Barcode scanning and low-stock alerts for a small warehouse.", tags: ["React", "Node"], year: "2026", tone: "from-sky-400 to-amber-500" },
   { title: "Clinic scheduler", summary: "Appointment booking with reminders and a staff calendar.", tags: ["TypeScript", "PostgreSQL"], year: "2025", tone: "from-emerald-400 to-teal-600" },
   { title: "Design tokens CLI", summary: "Generates CSS variables and Tailwind themes from a JSON source.", tags: ["Node", "Tooling"], year: "2025", tone: "from-amber-300 to-orange-500" },
-  { title: "Expense approvals", summary: "Two-step approvals with receipts and a monthly export.", tags: ["React", "PostgreSQL"], year: "2024", tone: "from-fuchsia-400 to-violet-600" },
+  { title: "Expense approvals", summary: "Two-step approvals with receipts and a monthly export.", tags: ["React", "PostgreSQL"], year: "2024", tone: "from-amber-400 to-amber-600" },
 ];
 
 export const skills = ["React", "TypeScript", "Node.js", "PostgreSQL", "Tailwind CSS", "Testing", "Accessibility"];
@@ -108,7 +108,7 @@ export default function App() {
           <aside className="rounded-3xl bg-stone-900 p-6 text-stone-300 shadow-2xl shadow-stone-900/20">
             <p className="font-mono text-xs text-stone-500">// now.ts</p>
             <pre className="mt-3 overflow-x-auto font-mono text-[13px] leading-relaxed">
-              <span className="text-violet-300">const</span> <span className="text-sky-300">now</span> = {"{"}
+              <span className="text-amber-300">const</span> <span className="text-sky-300">now</span> = {"{"}
               {"\\n"}  building: <span className="text-emerald-300">"tools for clinics"</span>,
               {"\\n"}  based: <span className="text-emerald-300">"{profile.location}"</span>,
               {"\\n"}  stack: [<span className="text-emerald-300">"React"</span>, <span className="text-emerald-300">"Postgres"</span>],

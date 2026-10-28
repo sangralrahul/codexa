@@ -108,7 +108,7 @@ export default function App() {
       <header className="border-b border-zinc-800/80 bg-zinc-950/80 px-4 py-3 backdrop-blur sm:px-6">
         <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-3">
           <div className="flex items-center gap-3">
-            <span className="grid h-8 w-8 place-items-center rounded-lg bg-gradient-to-br from-sky-400 to-indigo-500 text-sm font-bold text-zinc-950">O</span>
+            <span className="grid h-8 w-8 place-items-center rounded-lg bg-gradient-to-br from-sky-400 to-emerald-500 text-sm font-bold text-zinc-950">O</span>
             <h1 className="font-semibold tracking-tight">Operations</h1>
             <span className="rounded-md border border-zinc-800 bg-zinc-900 px-2 py-0.5 font-mono text-xs text-zinc-400">production</span>
           </div>

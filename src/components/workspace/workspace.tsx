@@ -221,6 +221,7 @@ function Shell({
   const [searchFocus, setSearchFocus] = useState(0);
   const [tool, setTool] = useState<WorkspaceTool | null>(null);
   const [deploySheet, setDeploySheet] = useState(false);
+  const [deployTab, setDeployTab] = useState("overview");
   const [publishOpen, setPublishOpen] = useState(false);
   const [changesVersion, setChangesVersion] = useState(0);
   const [cursor, setCursor] = useState<{ line: number; column: number } | null>(null);
@@ -658,7 +659,11 @@ function Shell({
           onDeviceChange={setDevice}
           onRun={run}
           openTool={openTool}
-          onManageDeployments={() => setDeploySheet(true)}
+          projectId={projectId}
+          onManageDeployments={(tab?: string) => {
+            setDeployTab(tab ?? "overview");
+            setDeploySheet(true);
+          }}
           historyCount={snapshots.count}
           onRevealAgent={() => revealAgent()}
           isDesktop={isDesktop}
@@ -846,7 +851,7 @@ function Shell({
           canEdit={canEdit}
         />
         <ActivityDrawer projectId={projectId} open={tool === "activity"} onOpenChange={(o) => !o && setTool(null)} />
-        <PublishingSheet projectId={projectId} open={deploySheet} onOpenChange={setDeploySheet} />
+        <PublishingSheet projectId={projectId} open={deploySheet} onOpenChange={setDeploySheet} initialTab={deployTab} />
         <Drawer open={tool === "github"} onOpenChange={(o) => !o && setTool(null)} title="GitHub" icon={<FolderGit2 aria-hidden="true" />} description="Push to and pull from a repository. The workspace stays usable while this is open." width={560} modal={false}>
           <div className="h-full min-h-[320px]">
             {tool === "github" ? (

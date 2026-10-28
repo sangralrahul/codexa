@@ -70,7 +70,7 @@ export function useCart() {
 /** Simple SVG product illustrations, so the catalog looks finished before you have photos. */
 const art: Record<string, { bg: string; draw: ReactNode }> = {
   p1: {
-    bg: "from-indigo-100 to-indigo-200",
+    bg: "from-amber-100 to-amber-200",
     draw: (
       <g>
         <path d="M58 92 C58 40 142 40 142 92" fill="none" stroke="#312e81" strokeWidth="9" strokeLinecap="round" />
@@ -126,12 +126,12 @@ const art: Record<string, { bg: string; draw: ReactNode }> = {
     ),
   },
   p6: {
-    bg: "from-violet-100 to-fuchsia-100",
+    bg: "from-amber-100 to-amber-100",
     draw: (
       <g>
-        <path d="M76 34 l24 12 l24 -12 l30 18 l-10 30 l-12 -6 v58 h-64 v-58 l-12 6 l-10 -30 z" fill="#7c3aed" />
-        <path d="M100 46 v88" stroke="#c4b5fd" strokeWidth="3" />
-        <path d="M88 34 q12 14 24 0" fill="none" stroke="#5b21b6" strokeWidth="5" strokeLinecap="round" />
+        <path d="M76 34 l24 12 l24 -12 l30 18 l-10 30 l-12 -6 v58 h-64 v-58 l-12 6 l-10 -30 z" fill="#1e40af" />
+        <path d="M100 46 v88" stroke="#93c5fd" strokeWidth="3" />
+        <path d="M88 34 q12 14 24 0" fill="none" stroke="#1e3a8a" strokeWidth="5" strokeLinecap="round" />
       </g>
     ),
   },

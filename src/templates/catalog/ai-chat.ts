@@ -66,7 +66,7 @@ const suggestions = [
 ];
 
 function Orb({ size = "h-10 w-10" }: { size?: string }) {
-  return <span aria-hidden="true" className={"inline-block rounded-full bg-[radial-gradient(circle_at_30%_30%,#c4b5fd,#7c3aed_55%,#312e81)] shadow-lg shadow-violet-500/30 " + size} />;
+  return <span aria-hidden="true" className={"inline-block rounded-full bg-[radial-gradient(circle_at_30%_30%,#6ee7b7,#059669_55%,#312e81)] shadow-lg shadow-emerald-500/30 " + size} />;
 }
 
 export default function App() {
@@ -120,7 +120,7 @@ export default function App() {
           <label className="block text-xs font-medium text-slate-600" htmlFor="endpoint">
             Backend URL
           </label>
-          <input id="endpoint" value={endpoint} onChange={(e) => setEndpoint(e.target.value)} placeholder="https://your-api.example/chat" className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs outline-none focus:border-violet-400" />
+          <input id="endpoint" value={endpoint} onChange={(e) => setEndpoint(e.target.value)} placeholder="https://your-api.example/chat" className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs outline-none focus:border-emerald-400" />
           <p className="text-[11px] leading-relaxed text-slate-500">Your server calls the AI provider. Never put provider keys in browser code.</p>
         </div>
       </aside>
@@ -159,7 +159,7 @@ export default function App() {
                           setInput(s.prompt);
                           inputRef.current?.focus();
                         }}
-                        className="w-full rounded-2xl border border-slate-200 bg-white p-4 text-left shadow-sm transition hover:border-violet-300 hover:shadow-md"
+                        className="w-full rounded-2xl border border-slate-200 bg-white p-4 text-left shadow-sm transition hover:border-emerald-300 hover:shadow-md"
                       >
                         <span className="block text-sm font-medium">{s.title}</span>
                         <span className="mt-1 block text-xs leading-relaxed text-slate-500">{s.prompt}</span>
@@ -172,7 +172,7 @@ export default function App() {
             {messages.map((m, i) => (
               <div key={i} className={"flex gap-3 " + (m.role === "user" ? "justify-end" : "justify-start")}>
                 {m.role === "assistant" ? <Orb size="mt-1 h-7 w-7 shrink-0" /> : null}
-                <div className={"max-w-[80%] whitespace-pre-wrap rounded-2xl px-4 py-2.5 text-sm leading-relaxed " + (m.role === "user" ? "bg-violet-600 text-white" : "bg-slate-100 text-slate-800")}>
+                <div className={"max-w-[80%] whitespace-pre-wrap rounded-2xl px-4 py-2.5 text-sm leading-relaxed " + (m.role === "user" ? "bg-emerald-600 text-white" : "bg-slate-100 text-slate-800")}>
                   <span className="sr-only">{m.role === "user" ? "You: " : "Assistant: "}</span>
                   {m.content}
                 </div>
@@ -180,7 +180,7 @@ export default function App() {
             ))}
             {pending ? (
               <p className="flex items-center gap-2 text-sm text-slate-500" aria-live="polite">
-                <span className="h-2 w-2 animate-pulse rounded-full bg-violet-500" /> Waiting for the backend…
+                <span className="h-2 w-2 animate-pulse rounded-full bg-emerald-500" /> Waiting for the backend…
               </p>
             ) : null}
             {error ? (
@@ -193,7 +193,7 @@ export default function App() {
         </main>
 
         <form onSubmit={submit} className="px-5 pb-5">
-          <div className="mx-auto max-w-3xl rounded-2xl border border-slate-200 bg-white p-2 shadow-lg shadow-slate-900/5 focus-within:border-violet-300">
+          <div className="mx-auto max-w-3xl rounded-2xl border border-slate-200 bg-white p-2 shadow-lg shadow-slate-900/5 focus-within:border-emerald-300">
             <label className="sr-only" htmlFor="chat-input">
               Message
             </label>
@@ -222,7 +222,7 @@ export default function App() {
                   Stop
                 </button>
               ) : (
-                <button type="submit" disabled={!configured || !input.trim()} className="rounded-xl bg-violet-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-violet-700 disabled:opacity-40">
+                <button type="submit" disabled={!configured || !input.trim()} className="rounded-xl bg-emerald-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-emerald-700 disabled:opacity-40">
                   Send
                 </button>
               )}

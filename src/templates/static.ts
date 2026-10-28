@@ -165,7 +165,7 @@ button:hover, .button:hover { filter: brightness(1.05); }
 .project small { color: var(--muted); font-size: 0.9rem; }
 .thumb { display: block; aspect-ratio: 4 / 3; border-radius: 14px; margin-bottom: 10px; border: 1px solid var(--line); }
 .t1 { background: linear-gradient(135deg, #fde68a, #f59e0b); }
-.t2 { background: linear-gradient(135deg, #bae6fd, #6366f1); }
+.t2 { background: linear-gradient(135deg, #bae6fd, #0284c7); }
 .t3 { background: linear-gradient(135deg, #bbf7d0, #0f766e); }
 .split { display: grid; grid-template-columns: 240px 1fr; gap: 24px; }
 .split p { margin: 0; color: var(--muted); font-size: 1.1rem; max-width: 40rem; }
@@ -286,7 +286,7 @@ article:hover { border-color: #3a3f49; transform: translateY(-2px); }
 .cover span:nth-child(1) { left: 14%; top: 22%; width: 52%; height: 64%; }
 .cover span:nth-child(2) { left: 58%; top: 34%; width: 30%; height: 42%; background: rgb(255 255 255 / 0.6); }
 .cover span:nth-child(3) { left: 20%; top: 32%; width: 26%; height: 6%; background: rgb(15 23 42 / 0.25); box-shadow: none; }
-.c1 { background: linear-gradient(135deg, #7c3aed, #db2777); }
+.c1 { background: linear-gradient(135deg, #334155, #0f766e); }
 .c2 { background: linear-gradient(135deg, #0ea5e9, #10b981); }
 .c3 { background: linear-gradient(135deg, #f59e0b, #ef4444); }
 article h3 { margin: 0 8px 6px; font-size: 1.05rem; }

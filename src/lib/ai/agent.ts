@@ -398,7 +398,7 @@ export async function executeRun(prepared: PreparedRun, handlers: { onEvent: (ev
     const context: ProjectContext = await loadProjectContext(project);
     const prompt = mode === "fix" && /^fix (this|the latest) error/i.test(prepared.prompt) && !context.lastError ? fixModeDefaultPrompt(null) : prepared.prompt;
     const system = buildSystemPrompt(mode, context);
-    const messages: ChatMessage[] = [{ role: "user", content: buildUserMessage(mode, prompt, context, prepared.history) }];
+    const messages: ChatMessage[] = [{ role: "user", content: buildUserMessage(mode, prompt, context, prepared.history, project.id) }];
 
     if (mode !== "ask") {
       await setStage("planning", "Asking the model for a short plan");
