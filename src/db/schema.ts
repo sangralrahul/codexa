@@ -322,12 +322,14 @@ export const conversations = sqliteTable(
 
 export type MessagePart =
   | { type: "text"; text: string }
-  | { type: "plan"; steps: string[] }
+  | { type: "plan"; steps: string[]; /** Plan mode: waiting for the user to approve before anything is built. */ approval?: "pending" }
   | { type: "tool_call"; id: string; name: string; input: unknown }
   | { type: "tool_result"; id: string; name: string; output: string; isError?: boolean }
   | { type: "file_change"; path: string; action: "create" | "update" | "delete"; summary?: string }
   | { type: "stage"; stage: string; detail?: string }
-  | { type: "error"; message: string };
+  | { type: "error"; message: string }
+  /** An image the user attached to the prompt; the bytes live in R2 under attachments/<projectId>/<file>. */
+  | { type: "image"; file: string; mediaType: string; name: string; width?: number; height?: number };
 
 export const messages = sqliteTable(
   "messages",

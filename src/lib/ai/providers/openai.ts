@@ -9,7 +9,12 @@ function toOpenAiMessages(system: string, messages: ChatMessage[]): OpenAI.Chat.
   const out: OpenAI.Chat.Completions.ChatCompletionMessageParam[] = [{ role: "system", content: system }];
   for (const m of messages) {
     if (m.role === "user") {
-      out.push({ role: "user", content: m.content });
+      out.push({
+        role: "user",
+        content: m.images?.length
+          ? [...m.images.map((img) => ({ type: "image_url" as const, image_url: { url: `data:${img.mediaType};base64,${img.data}` } })), { type: "text" as const, text: m.content }]
+          : m.content,
+      });
     } else if (m.role === "assistant") {
       out.push({
         role: "assistant",

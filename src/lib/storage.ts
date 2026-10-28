@@ -43,6 +43,9 @@ export async function getObject(key: string) {
   return requireBinding("STORAGE").get(key);
 }
 
+/** Images attached to AI prompts (one random file name each; served to project members only). */
+export const attachmentKey = (projectId: string, file: string) => `attachments/${projectId}/${file}`;
+
 /** Uploaded profile photos: one random file name per upload, so URLs can be cached forever. */
 export const avatarPrefix = (userId: string) => `avatars/${userId}/`;
 export const avatarKey = (userId: string, file: string) => `${avatarPrefix(userId)}${file}`;

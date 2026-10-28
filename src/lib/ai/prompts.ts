@@ -17,14 +17,16 @@ Be concise in prose: a short sentence before each tool call is enough.`;
 
 const ASK_RULES = `You are answering questions about the project. You have read-only tools (list_files, read_file, search_files, get_logs, run_command). Do not propose or describe file edits as if you made them. Answer in Markdown with short code snippets where useful, and cite file paths.`;
 
+const PLAN_RULES = `You are planning a change with the user before anything is built. Do not write code. Read the request and the project files you were given, then call propose_plan once with 4-8 steps written for the user: each step says what will be built or changed (pages, components, data, look), in plain language, not file-by-file implementation detail. Mention any assumption you made inside the relevant step.`;
+
 const FIX_RULES = `You are repairing a broken build or runtime error. Start from the error below, locate the cause with read_file/search_files, apply the smallest correct fix, then re-run "typecheck"/"build" if run_command is available. Call finish with what was wrong and what you changed.`;
 
 export function buildSystemPrompt(mode: AgentMode, ctx: ProjectContext): string {
   const parts = [
     `You are Codexa, an expert full-stack engineer working inside a user's project (${ctx.frameworkName}, framework id "${ctx.framework}"). You edit the project only through tools; file paths are relative to the project root.`,
     SAFETY,
-    mode === "ask" ? ASK_RULES : mode === "fix" ? FIX_RULES : BUILD_RULES,
-    ...(mode === "build" && hasUi(ctx.framework) ? [DESIGN_RULES] : []),
+    mode === "ask" ? ASK_RULES : mode === "fix" ? FIX_RULES : mode === "plan" ? PLAN_RULES : BUILD_RULES,
+    ...((mode === "build" || mode === "plan") && hasUi(ctx.framework) ? [DESIGN_RULES] : []),
     `PROJECT SETTINGS: ${JSON.stringify(ctx.settings)}`,
     `RUNTIME SANDBOX: ${ctx.runtime.available ? `available (status: ${ctx.runtime.status})` : "not available — run_command and get_logs will report that they cannot run; do not retry them"}.`,
   ];
@@ -34,7 +36,7 @@ export function buildSystemPrompt(mode: AgentMode, ctx: ProjectContext): string 
 export const PLAN_INSTRUCTION = `Before making any change, call the propose_plan tool exactly once with 3-8 short, concrete steps for this request. Do not write code yet.`;
 
 /** The first user message: context + the actual request, clearly delimited as data. */
-export function buildUserMessage(mode: AgentMode, prompt: string, ctx: ProjectContext, history: { role: string; content: string }[], seed = ""): string {
+export function buildUserMessage(mode: AgentMode, prompt: string, ctx: ProjectContext, history: { role: string; content: string }[], seed = "", approvedPlan?: string[]): string {
   const sections: string[] = [];
   sections.push(`<project_files count="${ctx.fileCount}">\n${ctx.tree}\n</project_files>`);
   for (const ex of ctx.excerpts) sections.push(`<file path="${ex.path}">\n${ex.content}\n</file>`);
@@ -47,9 +49,12 @@ export function buildUserMessage(mode: AgentMode, prompt: string, ctx: ProjectCo
   sections.push(`<user_request>\n${prompt}\n</user_request>`);
   // The first build request of a conversation gets a concrete design direction for its subject
   // (none when the user already described the look).
-  const direction = mode === "build" && history.length === 0 && hasUi(ctx.framework) ? designDirection(prompt, seed) : null;
+  // A plan approved in plan mode counts as the first build turn (its conversation holds only the plan).
+  const firstBuild = history.length === 0 || (approvedPlan !== undefined && history.length <= 2);
+  const direction = (mode === "build" || mode === "plan") && firstBuild && hasUi(ctx.framework) ? designDirection(prompt, seed) : null;
   if (direction) sections.push(`<design_direction>\n${direction.text}\n</design_direction>`);
-  if (mode !== "ask") sections.push(PLAN_INSTRUCTION);
+  if (approvedPlan?.length) sections.push(`<approved_plan>\n${approvedPlan.map((s, i) => `${i + 1}. ${s}`).join("\n")}\n</approved_plan>\n\nThe user reviewed and approved this plan. Implement it now with the tools (it is already recorded, so do not call propose_plan). Call finish when you are done.`);
+  else if (mode !== "ask") sections.push(PLAN_INSTRUCTION);
   return sections.join("\n\n");
 }
 

@@ -12,6 +12,7 @@ import {
   FilePlus2,
   FileSearch,
   FolderTree,
+  Hammer,
   Info,
   Loader2,
   Search,
@@ -29,6 +30,7 @@ import { summarizeToolInput } from "@/lib/ai/tools/schemas";
 import { RAIL, railIndex } from "@/lib/client/workspace/agent";
 import { formatElapsed, useNow } from "@/lib/client/workspace/runtime";
 import { LogoMark } from "@/components/logo";
+import { Button } from "@/components/ui/button";
 import { AiMarkdown } from "./markdown";
 import type { FileChangeStat, MessagePart, RunStatus, RunValidation } from "./types";
 
@@ -59,10 +61,10 @@ type FilePart = Extract<MessagePart, { type: "file_change" }>;
    --------------------------------------------------------------------------- */
 
 /** Plan steps as a numbered checklist. Steps are ticked only once the run has really succeeded. */
-export function PlanPart({ steps, done }: { steps: string[]; done: boolean }) {
+export function PlanPart({ steps, done, pending }: { steps: string[]; done: boolean; pending?: boolean }) {
   return (
     <section className="space-y-2" aria-label="Plan">
-      <h3 className="text-[13px] font-semibold text-foreground">Plan</h3>
+      <h3 className="text-[13px] font-semibold text-foreground">{pending ? "Proposed plan" : "Plan"}</h3>
       <ol className="space-y-1.5">
         {steps.map((step, i) => (
           <li key={i} className="flex items-start gap-2.5 text-[14px] leading-snug">
@@ -426,6 +428,10 @@ export type RunCardMeta = {
   runError?: string | null;
   stats?: FileChangeStat[];
   onFix?: (v: RunValidation) => void;
+  /** Plan mode: build the proposed plan (shown only on the latest finished plan). */
+  onApprovePlan?: (steps: string[]) => void;
+  /** Plan mode: ask for changes to the plan instead. */
+  onRevisePlan?: () => void;
 };
 
 /**
@@ -443,12 +449,16 @@ export function AssistantParts({ parts, status, streaming, meta = {} }: { parts:
   const results = new Map<string, ToolResultPart>();
   const files: FilePart[] = [];
   let plan: string[] | null = null;
+  let planPending = false;
   for (const p of parts) {
     if (p.type === "stage") stages.push(p);
     else if (p.type === "tool_call") calls.push(p);
     else if (p.type === "tool_result") results.set(p.id, p);
     else if (p.type === "file_change") files.push(p);
-    else if (p.type === "plan") plan = p.steps;
+    else if (p.type === "plan") {
+      plan = p.steps;
+      planPending = p.approval === "pending";
+    }
   }
   const isRun = stages.length > 0 || calls.length > 0 || files.length > 0 || plan !== null || running;
   const last = stages[stages.length - 1];
@@ -490,7 +500,19 @@ export function AssistantParts({ parts, status, streaming, meta = {} }: { parts:
             <RunTimer startedAt={meta.startedAt} finishedAt={meta.finishedAt} running={running} className="mt-0.5 shrink-0" />
           </div>
           <StageRail stages={stages} status={status} running={running} />
-          {plan ? <PlanPart steps={plan} done={done} /> : null}
+          {plan ? <PlanPart steps={plan} done={done && !planPending} pending={planPending} /> : null}
+          {plan && planPending && done && meta.onApprovePlan ? (
+            <div className="flex flex-wrap items-center gap-2 border-t border-border pt-3">
+              <Button size="sm" appearance="app" onClick={() => meta.onApprovePlan?.(plan ?? [])}>
+                <Hammer className="size-3.5" aria-hidden="true" /> Approve and build
+              </Button>
+              {meta.onRevisePlan ? (
+                <Button size="sm" variant="outline" appearance="app" onClick={meta.onRevisePlan}>
+                  Change the plan
+                </Button>
+              ) : null}
+            </div>
+          ) : null}
           <WritingFiles files={files} running={running} stats={meta.stats} />
           <ActionsSummary calls={calls} results={results} running={running} />
           {validation ? <ChecksBlock validation={validation} onFix={meta.onFix} /> : null}

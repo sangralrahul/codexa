@@ -9,7 +9,12 @@ function toAnthropicMessages(messages: ChatMessage[]): Anthropic.MessageParam[] 
   const out: Anthropic.MessageParam[] = [];
   for (const m of messages) {
     if (m.role === "user") {
-      out.push({ role: "user", content: m.content });
+      out.push({
+        role: "user",
+        content: m.images?.length
+          ? [...m.images.map((img): Anthropic.ImageBlockParam => ({ type: "image", source: { type: "base64", media_type: img.mediaType, data: img.data } })), { type: "text", text: m.content }]
+          : m.content,
+      });
     } else if (m.role === "assistant") {
       const content: Anthropic.ContentBlockParam[] = [];
       if (m.text) content.push({ type: "text", text: m.text });

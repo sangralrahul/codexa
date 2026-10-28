@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Check, ChevronDown, CornerDownLeft, Globe, Link2, Lock, Undo2, X } from "lucide-react";
+import { Check, ChevronDown, CornerDownLeft, Globe, ImagePlus, Link2, Loader2, Lock, Sparkles, Undo2, X } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -24,6 +24,8 @@ import { clampIdea, readPendingIdea, type IdeaSource } from "@/lib/client/pendin
 import { usePlatformMod } from "@/lib/client/platform";
 import type { ProjectVisibility } from "@/lib/client/workspace/types";
 import { cn } from "@/lib/utils";
+import { api } from "@/lib/client/api";
+import { addImages, dataUrlOf, IMAGE_ACCEPT, imageFilesFrom, MAX_PROMPT_IMAGES, stashInitialImages, type PromptImage } from "@/lib/client/attachments";
 import { createFromPrompt, describeCreateError, PROMPT_MAX, type CreateError } from "./create-from-prompt";
 import { VISIBILITY_HINTS, VISIBILITY_LABELS } from "./format";
 
@@ -180,6 +182,34 @@ export function PromptBox({
   const [carried, setCarried] = useState<string | null>(initialPrompt ? SOURCE_LABEL.home : null);
   const [focused, setFocused] = useState(false);
   const launch = useLaunch({ title: "Building from your prompt" });
+  const fileRef = useRef<HTMLInputElement>(null);
+  const [images, setImages] = useState<PromptImage[]>([]);
+  const [enhancing, setEnhancing] = useState(false);
+  const [preEnhance, setPreEnhance] = useState<string | null>(null);
+  const [notice, setNotice] = useState<string | null>(null);
+  const attach = async (files: File[]) => {
+    if (!files.length) return;
+    const res = await addImages(images, files);
+    setImages(res.images);
+    setNotice(res.error);
+  };
+  const enhance = async () => {
+    const text = prompt.trim();
+    if (text.length < 3 || enhancing) return;
+    stopTyping();
+    setEnhancing(true);
+    setNotice(null);
+    try {
+      const res = await api<{ prompt: string }>("/api/v1/ai/enhance", { method: "POST", json: { prompt: text.slice(0, 2000) } });
+      setPreEnhance(prompt);
+      setPrompt(res.prompt.slice(0, PROMPT_MAX));
+      areaRef.current?.focus({ preventScroll: true });
+    } catch (err) {
+      setNotice(err instanceof Error ? err.message : "Could not enhance the prompt.");
+    } finally {
+      setEnhancing(false);
+    }
+  };
   const enabled = Boolean(wsId);
   const placeholder = useTypedPlaceholder(!prompt && enabled && !carried && !focused && !busy, areaRef);
   const template = templates.find((t) => t.id === templateId);
@@ -247,7 +277,7 @@ export function PromptBox({
 
   const submit = async () => {
     stopTyping();
-    const text = prompt.trim();
+    const text = prompt.trim() || (images.length ? "Build this from the attached image." : "");
     if (!text || !wsId || busy) return;
     setBusy(true);
     setError(null);
@@ -259,6 +289,7 @@ export function PromptBox({
         templateId,
         visibility,
       });
+      stashInitialImages(images);
       launch.update("create", "done");
       if (template && typeof template.fileCount === "number")
         launch.add({
@@ -327,6 +358,21 @@ export function PromptBox({
                 }}
                 onFocus={() => setFocused(true)}
                 onBlur={() => setFocused(false)}
+                onPaste={(e) => {
+                  const files = imageFilesFrom(e.clipboardData);
+                  if (!files.length) return;
+                  e.preventDefault();
+                  void attach(files);
+                }}
+                onDragOver={(e) => {
+                  if (Array.from(e.dataTransfer.types).includes("Files")) e.preventDefault();
+                }}
+                onDrop={(e) => {
+                  const files = imageFilesFrom(e.dataTransfer);
+                  if (!files.length) return;
+                  e.preventDefault();
+                  void attach(files);
+                }}
                 onKeyDown={(e) => {
                   if ((e.metaKey || e.ctrlKey) && e.key === "Enter") {
                     e.preventDefault();
@@ -341,8 +387,47 @@ export function PromptBox({
                 disabled={busy || !enabled}
                 className="block min-h-[120px] w-full resize-none bg-transparent px-4 pb-2 pt-4 text-base leading-relaxed placeholder:text-muted-foreground/70 focus:outline-none disabled:opacity-60 sm:px-5"
               />
+              {images.length ? (
+                <ul className="flex flex-wrap gap-2 px-4 pb-2 sm:px-5" aria-label="Attached images">
+                  {images.map((img) => (
+                    <li key={img.id} className="relative">
+                      {/* eslint-disable-next-line @next/next/no-img-element -- local data URL preview */}
+                      <img src={dataUrlOf(img)} alt={img.name} className="size-16 rounded-xl object-cover shadow-[0_0_0_1px_var(--border-strong)]" />
+                      <button type="button" onClick={() => setImages((list) => list.filter((i) => i.id !== img.id))} aria-label={`Remove ${img.name}`} className="absolute -right-1.5 -top-1.5 inline-flex size-5 items-center justify-center rounded-full bg-foreground text-background shadow-md hover:opacity-90">
+                        <X className="size-3" aria-hidden="true" />
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              ) : null}
+              {notice ? (
+                <p role="alert" className="px-4 pb-2 text-[12.5px] text-danger sm:px-5">
+                  {notice}
+                </p>
+              ) : null}
               <div className="flex flex-wrap items-center gap-2 px-3 pb-3 sm:flex-nowrap">
                 <div className="flex min-w-0 flex-1 items-center gap-1.5 overflow-x-auto [scrollbar-width:none]">
+                  <input ref={fileRef} type="file" accept={IMAGE_ACCEPT} multiple hidden onChange={(e) => {
+                    void attach(Array.from(e.target.files ?? []));
+                    e.target.value = "";
+                  }} />
+                  <button type="button" onClick={() => fileRef.current?.click()} disabled={!enabled || busy || images.length >= MAX_PROMPT_IMAGES} className={chip} aria-label="Attach a screenshot or design" title="Attach a screenshot, sketch or design. You can also paste or drop images.">
+                    <ImagePlus className="size-3.5" aria-hidden="true" />
+                    <span className="hidden sm:inline">Image</span>
+                  </button>
+                  {aiConfigured ? (
+                    preEnhance !== null && !enhancing ? (
+                      <button type="button" onClick={() => { setPrompt(preEnhance); setPreEnhance(null); }} className={chip} title="Put your original text back">
+                        <Undo2 className="size-3.5" aria-hidden="true" />
+                        <span>Undo</span>
+                      </button>
+                    ) : (
+                      <button type="button" onClick={() => void enhance()} disabled={!enabled || busy || enhancing || prompt.trim().length < 3} className={chip} title="Turn your idea into a detailed brief before building">
+                        {enhancing ? <Loader2 className="size-3.5 animate-spin" aria-hidden="true" /> : <Sparkles className="size-3.5" aria-hidden="true" />}
+                        <span>{enhancing ? "Enhancing…" : "Enhance"}</span>
+                      </button>
+                    )
+                  ) : null}
                   {templates.length ? (
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild disabled={!enabled}>
@@ -444,7 +529,7 @@ export function PromptBox({
                     variant="ember"
                     size="sm"
                     spark
-                    disabled={!prompt.trim() || !enabled || busy}
+                    disabled={(!prompt.trim() && !images.length) || !enabled || busy || enhancing}
                     aria-keyshortcuts="Control+Enter Meta+Enter"
                     aria-busy={busy || undefined}
                     className="composer-build h-9 gap-2 px-3.5 sm:px-4"

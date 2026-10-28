@@ -17,8 +17,11 @@ export type ToolCall = { id: string; name: string; input: unknown };
 
 export type ToolResult = { toolCallId: string; name: string; output: string; isError?: boolean };
 
+/** An image sent to the model with a user message (base64, no data: prefix). */
+export type ImageInput = { mediaType: "image/jpeg" | "image/png" | "image/webp" | "image/gif"; data: string };
+
 export type ChatMessage =
-  | { role: "user"; content: string }
+  | { role: "user"; content: string; images?: ImageInput[] }
   | { role: "assistant"; text: string; toolCalls: ToolCall[] }
   | { role: "tool"; results: ToolResult[] };
 

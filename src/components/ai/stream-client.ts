@@ -4,7 +4,9 @@ import { ClientApiError, type ApiErrorShape } from "@/lib/client/api";
 import { SseParser } from "@/lib/ai/sse";
 import type { AgentMode, SseEvent } from "./types";
 
-export type GenerateBody = { prompt: string; mode: AgentMode; conversationId?: string | null };
+export type GenerateBody = { prompt: string; mode: AgentMode; conversationId?: string | null; approvedPlan?: string[];
+  images?: { name: string; mediaType: string; data: string; width?: number; height?: number }[];
+};
 
 /**
  * POST /generate and feed every SSE event to `onEvent` until the stream ends.

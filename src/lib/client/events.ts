@@ -2,7 +2,7 @@
 
 /** Lightweight cross-panel event bus for the workspace (same-tab). */
 export type CodexaEvents = {
-  "codexa:files-changed": { paths: string[]; source?: "editor" | "ai" | "runtime" | "snapshot" | "github" };
+  "codexa:files-changed": { paths: string[]; source?: "editor" | "ai" | "runtime" | "snapshot" | "github" | "visual" };
   "codexa:open-file": { path: string; line?: number };
   "codexa:runtime-status": { status: "starting" | "running" | "stopped" | "error" | "unavailable"; previewUrl?: string | null; error?: string | null };
   "codexa:run-command": { command: "start" | "stop" | "restart" | "install" | "build" };
@@ -12,7 +12,7 @@ export type CodexaEvents = {
   /** Emitted by panels that want the chat to ask something (e.g. explain a SQL error). */
   "codexa:ai-ask": { text: string };
   /** Send a prompt to the agent as is (the mobile mini composer on the Preview tab). Queued if a run is active. */
-  "codexa:ai-send": { text: string; mode?: "build" | "ask" | "fix" };
+  "codexa:ai-send": { text: string; mode?: "build" | "ask" | "fix" | "plan" };
   /** Workspace-level requests to the agent column (palette, header). */
   "codexa:agent-command": { command: "new-chat" | "focus" };
   /** A snapshot restore or run revert replaced files (the editor plays the diff wipe on the open file). */

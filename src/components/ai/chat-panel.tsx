@@ -34,7 +34,8 @@ import { RAIL, railIndex, useAgent } from "@/lib/client/workspace/agent";
 import { relativeTime } from "@/components/projects/format";
 import { cn } from "@/lib/utils";
 import { Alert, Button, Popover, PopoverContent, PopoverTrigger, Skeleton, Spinner, Tooltip, TooltipProvider } from "@/components/ui";
-import { Composer, FIX_DEFAULT_PROMPT, splitContext, withContext, type ComposerContext } from "./composer";
+import { Composer, FIX_DEFAULT_PROMPT, IMAGE_DEFAULT_PROMPT, splitContext, withContext, type ComposerContext } from "./composer";
+import { attachmentUrl, dataUrlOf, takeInitialImages, type PromptImage } from "@/lib/client/attachments";
 import { AssistantParts, stageLabel } from "./message-parts";
 import { RunFooter, useRunDetails } from "./review-changes";
 import { streamGenerate } from "./stream-client";
@@ -118,7 +119,11 @@ export function ChatPanel({
   const stick = React.useRef(true);
   const textareaRef = React.useRef<HTMLTextAreaElement>(null);
   const initialPromptRef = React.useRef<string | null>(null);
+  const initialImagesRef = React.useRef<PromptImage[]>([]);
   const autoSentRef = React.useRef(false);
+  const [images, setImages] = React.useState<PromptImage[]>([]);
+  const [enhancing, setEnhancing] = React.useState(false);
+  const [preEnhance, setPreEnhance] = React.useState<string | null>(null);
 
   const announce = React.useCallback((text: string) => {
     if (!text || text === lastAnnounced.current) return;
@@ -179,7 +184,9 @@ export function ChatPanel({
     queueMicrotask(() => {
       if (cancelled) return;
       initialPromptRef.current = takeInitialPrompt(projectId);
+      initialImagesRef.current = initialPromptRef.current ? takeInitialImages() : [];
       if (initialPromptRef.current) setDraft(initialPromptRef.current);
+      if (initialImagesRef.current.length) setImages(initialImagesRef.current);
       void loadStatus();
       void loadConversations().then((list) => {
         if (!cancelled && !initialConversationId && !initialPromptRef.current && list[0]) setActiveId(list[0].id);
@@ -230,8 +237,9 @@ export function ChatPanel({
   }, []);
 
   const send = React.useCallback(
-    async (promptIn: string, sendMode: AgentMode, restoreDraft?: string) => {
-      const prompt = promptIn.trim() || (sendMode === "fix" ? FIX_DEFAULT_PROMPT : "");
+    async (promptIn: string, sendMode: AgentMode, restoreDraft?: string, extra: { images?: PromptImage[]; approvedPlan?: string[] } = {}) => {
+      const sentImages = sendMode === "ask" ? [] : (extra.images ?? []);
+      const prompt = promptIn.trim() || (sendMode === "fix" ? FIX_DEFAULT_PROMPT : sentImages.length ? IMAGE_DEFAULT_PROMPT : "");
       if (!prompt) return;
       if (running) {
         setQueued({ prompt, mode: sendMode });
@@ -239,6 +247,8 @@ export function ChatPanel({
       }
       setSendError(null);
       setDraft("");
+      setImages([]);
+      setPreEnhance(null);
       stick.current = true;
       const abort = new AbortController();
       setRunning({ runId: null, abort });
@@ -248,7 +258,7 @@ export function ChatPanel({
       const iso = new Date(now).toISOString();
       setMessages((prev) => [
         ...prev,
-        { id: userTemp, role: "user", content: prompt, parts: [{ type: "text", text: prompt }], createdAt: iso },
+        { id: userTemp, role: "user", content: prompt, parts: [{ type: "text", text: prompt }], createdAt: iso, localImages: sentImages.map(dataUrlOf) },
         {
           id: asstTemp,
           role: "assistant",
@@ -311,7 +321,7 @@ export function ChatPanel({
             break;
           case "plan":
             textOpen = false;
-            pushPart({ type: "plan", steps: ev.data.steps });
+            pushPart({ type: "plan", steps: ev.data.steps, approval: ev.data.approval });
             break;
           case "usage":
             updateStreaming(asstTemp, (m) => ({ ...m, run: m.run ? { ...m.run, tokensIn: ev.data.inputTokens, tokensOut: ev.data.outputTokens } : m.run }));
@@ -349,7 +359,17 @@ export function ChatPanel({
       };
 
       try {
-        await streamGenerate(projectId, { prompt, mode: sendMode, conversationId: activeId }, { signal: abort.signal, onEvent });
+        await streamGenerate(
+          projectId,
+          {
+            prompt,
+            mode: sendMode,
+            conversationId: activeId,
+            approvedPlan: extra.approvedPlan,
+            images: sentImages.length ? sentImages.map(({ name, mediaType, data, width, height }) => ({ name, mediaType, data, width, height })) : undefined,
+          },
+          { signal: abort.signal, onEvent },
+        );
         if (!finalStatus) {
           updateStreaming(asstTemp, (m) => ({ ...m, streaming: false, parts: [...m.parts, { type: "error", message: "The connection closed before the run finished. Reload the conversation to see its final state." }], run: m.run ? { ...m.run, status: "failed" } : m.run }));
           report.done("failed", null, []);
@@ -359,6 +379,7 @@ export function ChatPanel({
         // Pre-stream JSON errors: remove the optimistic messages and show a state the user can act on.
         setMessages((prev) => prev.filter((m) => m.id !== userTemp && m.id !== asstTemp));
         setDraft(restoreDraft ?? promptIn);
+        if (sentImages.length) setImages(sentImages);
         report.done(abort.signal.aborted ? "cancelled" : "failed", null, []);
         if (err instanceof ClientApiError) {
           const kind: SendError["kind"] = err.code === "ai_not_configured" ? "not_configured" : err.code === "quota_exceeded" ? "quota" : err.code === "rate_limited" ? "rate_limited" : "generic";
@@ -430,8 +451,36 @@ export function ChatPanel({
   React.useEffect(() => {
     if (autoSentRef.current || !status || !initialPromptRef.current) return;
     autoSentRef.current = true;
-    if (status.configured) void send(initialPromptRef.current, "build");
+    if (status.configured) void send(initialPromptRef.current, "build", undefined, { images: initialImagesRef.current });
   }, [status, send]);
+
+  const enhance = React.useCallback(async () => {
+    const text = draft.trim();
+    if (text.length < 3 || enhancing) return;
+    setEnhancing(true);
+    setSendError(null);
+    try {
+      const res = await api<{ prompt: string }>("/api/v1/ai/enhance", { method: "POST", json: { prompt: text.slice(0, 2000), projectId } });
+      setPreEnhance(draft);
+      setDraft(res.prompt);
+      announce("Prompt enhanced. Review it, then send.");
+      textareaRef.current?.focus();
+    } catch (err) {
+      setSendError({ kind: err instanceof ClientApiError && err.code === "quota_exceeded" ? "quota" : "generic", message: err instanceof Error ? err.message : "Could not enhance the prompt.", prompt: draft, mode });
+    } finally {
+      setEnhancing(false);
+    }
+  }, [draft, enhancing, projectId, announce, mode]);
+
+  const approvePlan = React.useCallback(
+    (assistantId: string, steps: string[]) => {
+      const i = messages.findIndex((m) => m.id === assistantId);
+      const userPrompt = [...messages.slice(0, i)].reverse().find((m) => m.role === "user")?.content ?? "Build the approved plan.";
+      setMode("build");
+      void send(userPrompt, "build", undefined, { approvedPlan: steps });
+    },
+    [messages, send],
+  );
 
   const cancel = React.useCallback(async () => {
     if (!running) return;
@@ -551,7 +600,7 @@ export function ChatPanel({
           {messages.map((m) => (
             <li key={m.id}>
               {m.role === "user" ? (
-                <UserMessage content={m.content} fresh={m.id.startsWith("tmp-")} />
+                <UserMessage projectId={projectId} message={m} fresh={m.id.startsWith("tmp-")} />
               ) : (
                 <AssistantMessage
                   projectId={projectId}
@@ -560,6 +609,12 @@ export function ChatPanel({
                   latest={m.id === latestAssistantId}
                   onReverted={() => activeId && void loadMessages(activeId)}
                   onFix={onFix}
+                  onApprovePlan={canEdit && !running ? (steps) => approvePlan(m.id, steps) : undefined}
+                  onRevisePlan={() => {
+                    setMode("plan");
+                    setDraft("Change the plan: ");
+                    textareaRef.current?.focus();
+                  }}
                   onNextStep={(text) => {
                     setMode("build");
                     setDraft(text);
@@ -583,7 +638,19 @@ export function ChatPanel({
         onChange={setDraft}
         mode={mode}
         onModeChange={setMode}
-        onSend={() => void send(withContext(draft, context, activeFile, lastError, mode), mode, draft)}
+        onSend={() => void send(withContext(draft, context, activeFile, lastError, mode), mode, draft, { images })}
+        images={images}
+        onImagesChange={setImages}
+        onEnhance={() => void enhance()}
+        enhancing={enhancing}
+        onUndoEnhance={
+          preEnhance !== null
+            ? () => {
+                setDraft(preEnhance);
+                setPreEnhance(null);
+              }
+            : undefined
+        }
         onCancel={() => void cancel()}
         running={Boolean(running)}
         disabled={notConfigured || !status}
@@ -684,10 +751,25 @@ function ConversationMenu({ conversations, activeId, disabled, onPick, onNew, ti
   );
 }
 
-function UserMessage({ content, fresh }: { content: string; fresh: boolean }) {
-  const { text, file, error } = splitContext(content);
+function UserMessage({ projectId, message, fresh }: { projectId: string; message: MessageView; fresh: boolean }) {
+  const { text, file, error } = splitContext(message.content);
+  const pics = message.localImages?.length
+    ? message.localImages.map((src, i) => ({ src, alt: `Attached image ${i + 1}` }))
+    : message.parts.flatMap((p) => (p.type === "image" ? [{ src: attachmentUrl(projectId, p.file), alt: p.name }] : []));
   return (
     <div className={cn("flex flex-col items-end gap-1.5", fresh && "ws-msg-user")}>
+      {pics.length ? (
+        <ul className="flex max-w-[88%] flex-wrap justify-end gap-1.5" aria-label="Attached images">
+          {pics.map((p, i) => (
+            <li key={i}>
+              <a href={p.src} target="_blank" rel="noopener noreferrer" className="block">
+                {/* eslint-disable-next-line @next/next/no-img-element -- private attachment served by the API */}
+                <img src={p.src} alt={p.alt} loading="lazy" className="h-20 max-w-40 rounded-xl object-cover shadow-[0_0_0_1px_var(--border-strong)]" />
+              </a>
+            </li>
+          ))}
+        </ul>
+      ) : null}
       <div className="max-w-[88%] whitespace-pre-wrap break-words rounded-2xl rounded-br-md bg-muted px-3.5 py-2.5 text-[15px] leading-[1.6] shadow-[inset_0_0_0_1px_var(--border)]">
         <span className="sr-only">You: </span>
         {text}
@@ -719,6 +801,8 @@ function AssistantMessage({
   latest,
   onReverted,
   onFix,
+  onApprovePlan,
+  onRevisePlan,
   onNextStep,
 }: {
   projectId: string;
@@ -727,6 +811,8 @@ function AssistantMessage({
   latest: boolean;
   onReverted: () => void;
   onFix: (v: RunValidation) => void;
+  onApprovePlan?: (steps: string[]) => void;
+  onRevisePlan?: () => void;
   onNextStep: (text: string) => void;
 }) {
   const run = message.run;
@@ -746,7 +832,7 @@ function AssistantMessage({
           parts={message.parts}
           status={status}
           streaming={message.streaming}
-          meta={{ startedAt, finishedAt, live, validation: message.validation, runError: run?.error, stats: details?.stats, onFix }}
+          meta={{ startedAt, finishedAt, live, validation: message.validation, runError: run?.error, stats: details?.stats, onFix, onApprovePlan: latest ? onApprovePlan : undefined, onRevisePlan: latest ? onRevisePlan : undefined }}
         />
       ) : message.content ? (
         <p className="whitespace-pre-wrap text-[15px] leading-[1.65]">{message.content}</p>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import {
   Bot,
   Check,
@@ -13,8 +13,13 @@ import {
   History,
   Loader2,
   Lock,
+  Monitor,
   MonitorOff,
+  MousePointerClick,
   MoreHorizontal,
+  QrCode as QrIcon,
+  Smartphone,
+  Tablet,
   Package,
   Play,
   RefreshCw,
@@ -36,9 +41,13 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/misc";
 import { Switch } from "@/components/ui/switch";
 import { Tooltip } from "@/components/ui/tooltip";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { QrCode } from "@/components/ui/qr-code";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuRadioGroup, DropdownMenuRadioItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown";
 import { cn } from "@/lib/utils";
 import { toolButton } from "./panel-tabs";
+import { VisualEditHint, VisualEditPanel, type InspectedElement } from "./visual-edit";
+import { filesApi } from "@/lib/client/workspace/api";
 
 /**
  * The preview: the workspace card that holds it is the browser window (toolbar + viewport, one
@@ -49,10 +58,10 @@ import { toolButton } from "./panel-tabs";
  * the sandbox attribute is exactly the documented one.
  */
 export type Device = "desktop" | "tablet" | "mobile";
-export const DEVICES: Record<Device, { width: number | null; label: string }> = {
-  desktop: { width: null, label: "Desktop (full width)" },
-  tablet: { width: 820, label: "Tablet (820px)" },
-  mobile: { width: 390, label: "Mobile (390px)" },
+export const DEVICES: Record<Device, { width: number | null; label: string; Icon: typeof Monitor }> = {
+  desktop: { width: null, label: "Desktop (full width)", Icon: Monitor },
+  tablet: { width: 820, label: "Tablet (820px)", Icon: Tablet },
+  mobile: { width: 390, label: "Mobile (390px)", Icon: Smartphone },
 };
 
 const SANDBOX = "allow-scripts allow-forms allow-same-origin allow-popups allow-modals allow-downloads";
@@ -67,11 +76,13 @@ function splitUrl(url: string) {
 }
 
 export function PreviewPanel({
+  projectId,
   device = "desktop",
   onDeviceChange,
   canEdit,
   showOperatorDetails,
 }: {
+  projectId: string;
   device?: Device;
   onDeviceChange?: (d: Device) => void;
   canEdit: boolean;
@@ -90,11 +101,58 @@ export function PreviewPanel({
   const viewportRef = useRef<HTMLDivElement>(null);
   const loadedOnce = useRef(false);
 
+  // ---- Visual edit: the inspector script in the preview reports clicks back to us.
+  const [inspectable, setInspectable] = useState(false);
+  const [inspecting, setInspecting] = useState(false);
+  const [picked, setPicked] = useState<InspectedElement | null>(null);
+  const [tailwind, setTailwind] = useState<boolean | null>(null);
+  const previewOrigin = previewUrl ? splitUrl(previewUrl).origin : null;
+  const toFrame = useCallback(
+    (msg: Record<string, unknown>) => {
+      const win = frameRef.current?.contentWindow;
+      if (win && previewOrigin) win.postMessage({ source: "codexa-editor", ...msg }, previewOrigin);
+    },
+    [previewOrigin],
+  );
+  // A reloaded page (navigation, HMR full reload) has a fresh inspector: turn it back on.
+  const inspectingRef = useRef(false);
+  useEffect(() => {
+    inspectingRef.current = inspecting;
+  }, [inspecting]);
+  useEffect(() => {
+    const onMessage = (e: MessageEvent) => {
+      if (e.source !== frameRef.current?.contentWindow || e.data?.source !== "codexa-inspector") return;
+      const d = e.data as { type: string; element?: InspectedElement };
+      if (d.type === "available") {
+        setInspectable(true);
+        if (inspectingRef.current) (e.source as Window).postMessage({ source: "codexa-editor", type: "inspect", on: true }, e.origin);
+      }
+      else if (d.type === "select" && d.element) setPicked(d.element);
+      else if (d.type === "deselect" || d.type === "escape") setPicked(null);
+    };
+    window.addEventListener("message", onMessage);
+    return () => window.removeEventListener("message", onMessage);
+  }, []);
+  const toggleInspect = (on: boolean) => {
+    setInspecting(on);
+    if (!on) setPicked(null);
+    toFrame({ type: "inspect", on });
+    if (on && tailwind === null) {
+      filesApi
+        .read(projectId, "package.json")
+        .then((f) => setTailwind(/"tailwindcss"/.test(f.content)))
+        .catch(() => setTailwind(false));
+    }
+  };
+
   // A new preview URL resets the address bar.
   const [urlSeen, setUrlSeen] = useState(previewUrl);
   if (urlSeen !== previewUrl) {
     setUrlSeen(previewUrl);
     setPath(null);
+    setInspectable(false);
+    setInspecting(false);
+    setPicked(null);
     setDraftPath(previewUrl ? splitUrl(previewUrl).path || "/" : "/");
   }
   useEffect(() => {
@@ -139,7 +197,7 @@ export function PreviewPanel({
   const framed = device !== "desktop";
 
   return (
-    <section className="flex h-full min-h-0 flex-col" aria-label="Preview">
+    <section className="@container/preview flex h-full min-h-0 flex-col" aria-label="Preview">
       <div className="relative flex min-h-0 flex-1 flex-col overflow-hidden bg-card">
         {/* Browser toolbar */}
         <div className="flex h-10 shrink-0 items-center gap-1 border-b border-border bg-surface/80 px-1.5">
@@ -189,6 +247,60 @@ export function PreviewPanel({
               </span>
             )}
           </form>
+          {onDeviceChange ? (
+            <div role="radiogroup" aria-label="Preview size" className="hidden shrink-0 items-center rounded-full bg-muted p-0.5 shadow-[inset_0_0_0_1px_var(--border)] @[520px]/preview:flex">
+              {(Object.keys(DEVICES) as Device[]).map((d) => {
+                const { Icon, label } = DEVICES[d];
+                return (
+                  <Tooltip key={d} content={label}>
+                    <button
+                      type="button"
+                      role="radio"
+                      aria-checked={device === d}
+                      aria-label={label}
+                      onClick={() => onDeviceChange(d)}
+                      className={cn("inline-flex size-6 items-center justify-center rounded-full transition-colors focus-visible:outline-2 focus-visible:outline-ring", device === d ? "bg-card text-foreground shadow-[var(--shadow-sm),inset_0_0_0_1px_var(--border)]" : "text-muted-foreground hover:text-foreground")}
+                    >
+                      <Icon className="size-3.5" aria-hidden="true" />
+                    </button>
+                  </Tooltip>
+                );
+              })}
+            </div>
+          ) : null}
+          {canEdit ? (
+            <Tooltip content={inspectable ? (inspecting ? "Stop editing" : "Visual edit: click an element to change it") : "Visual edit is available once the preview is running"}>
+              <button
+                type="button"
+                aria-pressed={inspecting}
+                aria-label="Visual edit"
+                disabled={!inspectable || status !== "running"}
+                onClick={() => toggleInspect(!inspecting)}
+                className={cn(toolButton, "h-7 w-auto gap-1 px-2 text-[12px] font-medium", inspecting && "bg-signal/12 text-foreground shadow-[inset_0_0_0_1px_color-mix(in_oklab,var(--signal)_45%,transparent)]")}
+              >
+                <MousePointerClick className="size-3.5" aria-hidden="true" />
+                <span className="hidden @[600px]/preview:inline">Edit</span>
+              </button>
+            </Tooltip>
+          ) : null}
+          <Popover>
+            <Tooltip content="Open on your phone">
+              <PopoverTrigger asChild>
+                <button type="button" aria-label="Open the preview on your phone" disabled={!src || status !== "running"} className={cn(toolButton, "size-7")}>
+                  <QrIcon className="size-3.5" aria-hidden="true" />
+                </button>
+              </PopoverTrigger>
+            </Tooltip>
+            <PopoverContent align="end" className="w-64 p-4 text-center">
+              {src ? (
+                <>
+                  <p className="text-sm font-semibold">Open on your phone</p>
+                  <QrCode value={src} size={176} label="QR code for the preview address" className="mx-auto mt-3 p-1.5 shadow-[0_0_0_1px_var(--border)]" />
+                  <p className="mt-3 text-[12px] leading-relaxed text-muted-foreground">Scan with your phone camera. The link works while this preview is running, and anyone with it can view the preview.</p>
+                </>
+              ) : null}
+            </PopoverContent>
+          </Popover>
           <Tooltip content="Open in a new tab">
             {src ? (
               <a href={src} target="_blank" rel="noopener noreferrer" aria-label="Open preview in a new tab" className={cn(toolButton, "size-7")}>
@@ -278,6 +390,20 @@ export function PreviewPanel({
             </div>
           ) : null}
 
+          {inspecting && status === "running" && !picked ? <VisualEditHint onExit={() => toggleInspect(false)} /> : null}
+          {inspecting && picked ? (
+            <VisualEditPanel
+              key={`${picked.path}|${picked.classes}|${picked.text}`}
+              projectId={projectId}
+              element={picked}
+              tailwind={tailwind ?? false}
+              send={toFrame}
+              onClose={() => {
+                toFrame({ type: "deselect" });
+                setPicked(null);
+              }}
+            />
+          ) : null}
           <div
             className={cn("ws-frame relative mx-auto h-full", framed && (device === "mobile" ? "rounded-[44px] bg-code-bg p-3 shadow-xl ring-1 ring-border-strong" : "rounded-[26px] bg-code-bg p-2.5 shadow-xl ring-1 ring-border-strong"))}
             style={{ width: width ? width + (device === "mobile" ? 24 : 20) : "100%", maxWidth: "100%", height: framed ? "min(100%, 900px)" : "100%" }}
@@ -310,6 +436,7 @@ export function PreviewPanel({
                       }
                     }
                     loadedOnce.current = true;
+                    setPicked(null);
                   }}
                   className="block size-full border-0 bg-white"
                 />

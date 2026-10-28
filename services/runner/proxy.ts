@@ -15,6 +15,7 @@ import type { RunnerConfig } from "./config";
 import { routeHost } from "./lib/hosts";
 import type { SessionManager, Session } from "./sessions";
 import type { DeploymentManager } from "./deployments";
+import { INSPECTOR_JS, INSPECTOR_PATH, injectInspector } from "./inspector";
 
 const MIME: Record<string, string> = {
   ".html": "text/html; charset=utf-8",
@@ -64,7 +65,29 @@ function page(title: string, body: string, status = 404, extraHead = ""): { stat
 
 export function createProxyServer(cfg: RunnerConfig, sessions: SessionManager, deployments: DeploymentManager, opts: { appUrl?: string } = {}) {
   const proxy = httpProxy.createProxyServer({ ws: true, xfwd: true, changeOrigin: false, proxyTimeout: 60_000 });
-  proxy.on("error", (err, _req, res) => {
+  // Page loads go through a second proxy that buffers HTML to add the visual-edit inspector tag.
+  const htmlProxy = httpProxy.createProxyServer({ xfwd: true, changeOrigin: false, proxyTimeout: 60_000, selfHandleResponse: true });
+  htmlProxy.on("proxyRes", (proxyRes, _req, res) => {
+    const type = String(proxyRes.headers["content-type"] ?? "");
+    const encoding = proxyRes.headers["content-encoding"];
+    if (!type.includes("text/html") || (encoding && encoding !== "identity")) {
+      res.writeHead(proxyRes.statusCode ?? 200, proxyRes.headers);
+      proxyRes.pipe(res);
+      return;
+    }
+    const chunks: Buffer[] = [];
+    proxyRes.on("data", (c: Buffer) => chunks.push(c));
+    proxyRes.on("end", () => {
+      const body = injectInspector(Buffer.concat(chunks).toString("utf8"));
+      const headers = { ...proxyRes.headers };
+      delete headers["etag"];
+      delete headers["transfer-encoding"];
+      headers["content-length"] = String(Buffer.byteLength(body));
+      res.writeHead(proxyRes.statusCode ?? 200, headers);
+      res.end(body);
+    });
+  });
+  const onProxyError = (err: Error, _req: http.IncomingMessage, res: http.ServerResponse | Duplex) => {
     if (res && "writeHead" in res && typeof res.writeHead === "function" && !res.headersSent) {
       const p = page("Preview unavailable", `<p>The dev server did not answer: <code>${escapeHtml(err.message)}</code>.</p><p>Check the Logs panel and restart the preview.</p>`, 502);
       res.writeHead(p.status, { "content-type": "text/html; charset=utf-8", "cache-control": "no-store" });
@@ -72,7 +95,9 @@ export function createProxyServer(cfg: RunnerConfig, sessions: SessionManager, d
     } else if (res && "destroy" in res) {
       (res as Duplex).destroy();
     }
-  });
+  };
+  proxy.on("error", onProxyError);
+  htmlProxy.on("error", onProxyError);
 
   const frameAncestors = `frame-ancestors 'self' ${opts.appUrl ?? "http://localhost:3000"}`;
   const securityHeaders = (res: http.ServerResponse, kind: "preview" | "site") => {
@@ -108,6 +133,17 @@ export function createProxyServer(cfg: RunnerConfig, sessions: SessionManager, d
         return sendPage(res, page("Preview stopped", `<p>${escapeHtml(session.error ?? "The dev server is not running.")}</p><p>Restart it from the Preview panel.</p>`, 503));
       }
       securityHeaders(res, "preview");
+      const urlPath = (req.url ?? "/").split("?")[0];
+      if (urlPath === INSPECTOR_PATH) {
+        res.writeHead(200, { "content-type": "text/javascript; charset=utf-8", "cache-control": "no-store" });
+        res.end(INSPECTOR_JS);
+        return;
+      }
+      if (req.method === "GET" && String(req.headers.accept ?? "").includes("text/html")) {
+        req.headers["accept-encoding"] = "identity";
+        htmlProxy.web(req, res, { target: `http://127.0.0.1:${session.port}` });
+        return;
+      }
       proxy.web(req, res, { target: `http://127.0.0.1:${session.port}` });
       return;
     }

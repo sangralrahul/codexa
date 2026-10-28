@@ -2,7 +2,7 @@ import type { MessagePart } from "@/db/schema";
 
 export type { MessagePart };
 
-export type AgentMode = "build" | "ask" | "fix";
+export type AgentMode = "build" | "ask" | "fix" | "plan";
 
 export type RunStatus = "queued" | "running" | "succeeded" | "failed" | "cancelled";
 
@@ -52,6 +52,8 @@ export type MessageView = {
   validation?: RunValidation;
   /** Client clock when this run started streaming (for the live elapsed timer). */
   startedAt?: number;
+  /** Data URLs of images attached to an optimistic (not yet persisted) user message. */
+  localImages?: string[];
 };
 
 export type FileChangeStat = { path: string; action: "create" | "update" | "delete"; added: number; removed: number };
@@ -64,7 +66,7 @@ export type SseEventData = {
   tool_call: { id: string; name: string; input: unknown; summary: string };
   tool_result: { id: string; name: string; output: string; isError?: boolean };
   file_change: { path: string; action: "create" | "update" | "delete"; summary?: string };
-  plan: { steps: string[] };
+  plan: { steps: string[]; approval?: "pending" };
   usage: { inputTokens: number; outputTokens: number };
   error: { message: string; code?: string; retryable?: boolean };
   done: {

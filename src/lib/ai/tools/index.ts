@@ -7,7 +7,7 @@ import { LIMITS, truncateMiddle, truncateTail } from "./truncate";
 import { READ_TOOLS, WRITE_TOOLS, toolDefinition, validateToolInput, type ToolInput, type ToolName } from "./schemas";
 import type { ToolDefinition } from "../provider";
 
-export type AgentMode = "build" | "ask" | "fix";
+export type AgentMode = "build" | "ask" | "fix" | "plan";
 
 export type FileChange = { path: string; action: "create" | "update" | "delete"; summary?: string };
 
@@ -30,7 +30,7 @@ export type ToolContext = {
 export function toolNamesForMode(mode: AgentMode, phase: "plan" | "work"): ToolName[] {
   if (phase === "plan") return ["propose_plan"];
   const base: ToolName[] = [...READ_TOOLS, "run_command"];
-  if (mode === "ask") return base;
+  if (mode === "ask" || mode === "plan") return base;
   return [...base, ...WRITE_TOOLS, "finish"];
 }
 

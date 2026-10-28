@@ -15,7 +15,22 @@ export const maxDuration = 300;
 const bodySchema = z.object({
   prompt: z.string().min(1).max(8000),
   conversationId: z.string().min(1).max(64).optional().nullable(),
-  mode: z.enum(["build", "ask", "fix"]).optional(),
+  mode: z.enum(["build", "ask", "fix", "plan"]).optional(),
+  /** Steps approved in plan mode (build runs only). */
+  approvedPlan: z.array(z.string().trim().min(1).max(600)).min(1).max(12).optional(),
+  /** Screenshots or designs attached to the prompt (base64, downscaled in the browser). */
+  images: z
+    .array(
+      z.object({
+        name: z.string().max(200),
+        mediaType: z.enum(["image/jpeg", "image/png", "image/webp", "image/gif"]),
+        data: z.string().min(16).max(3_000_000, "An attached image is too large (max about 2 MB).").regex(/^[A-Za-z0-9+/=]+$/, "Invalid image data"),
+        width: z.number().int().positive().max(10_000).optional(),
+        height: z.number().int().positive().max(10_000).optional(),
+      }),
+    )
+    .max(4, "Attach at most 4 images")
+    .optional(),
 });
 
 const KEEPALIVE_MS = 15_000;
@@ -33,7 +48,7 @@ export const POST = handler<Ctx>(async (req, ctx) => {
   await enforceRateLimit(`ai:generate:user:${user.id}`, 20, 60_000);
   const body = await parseBody(req, bodySchema);
 
-  const prepared = await prepareRun({ project, workspaceId: workspace.id, userId: user.id, prompt: body.prompt, mode: body.mode, conversationId: body.conversationId ?? null });
+  const prepared = await prepareRun({ project, workspaceId: workspace.id, userId: user.id, prompt: body.prompt, mode: body.mode, conversationId: body.conversationId ?? null, approvedPlan: body.approvedPlan, images: body.images });
 
   const encoder = new TextEncoder();
   let keepalive: NodeJS.Timeout | null = null;

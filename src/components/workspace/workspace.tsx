@@ -634,7 +634,7 @@ function Shell({
     <ChatPanel projectId={projectId} projectName={project.name} templateCategory={template?.category ?? null} framework={project.framework} canEdit={canEdit} showOperatorDetails={isAdmin} />
   );
 
-  const preview = <PreviewPanel device={isDesktop ? device : "desktop"} onDeviceChange={isDesktop ? setDevice : undefined} canEdit={canEdit} showOperatorDetails={isAdmin} />;
+  const preview = <PreviewPanel projectId={projectId} device={isDesktop ? device : "desktop"} onDeviceChange={isDesktop ? setDevice : undefined} canEdit={canEdit} showOperatorDetails={isAdmin} />;
 
   const dockEl = <Dock open={isDesktop ? dock.open : true} collapsible={isDesktop} onOpenChange={(o) => setDockOpen(o)} tab={dock.tab} onTabChange={(t) => setDock((d) => ({ ...d, tab: t }))} problems={problems} />;
 
@@ -655,8 +655,6 @@ function Shell({
           saveStatus={state.status}
           view={view}
           onViewChange={setView}
-          device={device}
-          onDeviceChange={setDevice}
           onRun={run}
           openTool={openTool}
           projectId={projectId}

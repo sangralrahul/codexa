@@ -20,9 +20,7 @@ import {
   RotateCw,
   Settings,
   Share2,
-  Smartphone,
   Square,
-  Tablet,
   Wrench,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -41,7 +39,6 @@ import { TemplatePreview } from "@/components/templates/template-preview";
 import { PresenceAvatars } from "./presence";
 import { PublishPopover } from "./publish-popover";
 import { stageLabel } from "@/components/ai/message-parts";
-import type { Device } from "./preview-panel";
 
 export type WorkspaceTool = "history" | "share" | "settings" | "deploy" | "github" | "database" | "activity";
 export type RuntimeStatus = CodexaEvents["codexa:runtime-status"]["status"] | "unknown";
@@ -60,8 +57,7 @@ export type RecentProject = { id: string; name: string; templateId: string | nul
 
 /**
  * The 52px workspace header. Left: logo, project switcher, the save pill. Centre: the canvas
- * view, plus device toggles in the Preview view (in Split they live in the preview's own menu,
- * next to the frame they size). Right: the agent status (real elapsed time), Run (a state machine
+ * view (device sizes live in the preview's own toolbar, next to the frame they size). Right: the agent status (real elapsed time), Run (a state machine
  * bound to the real runtime status), presence (only when connected), History, Share, Publish
  * and a labelled Tools menu.
  * Phones keep the row to what fits: the name (no thumbnail), the save dot, a labelled Publish,
@@ -77,8 +73,6 @@ export function WorkspaceHeader({
   saveStatus,
   view,
   onViewChange,
-  device,
-  onDeviceChange,
   onRun,
   openTool,
   onManageDeployments,
@@ -99,8 +93,6 @@ export function WorkspaceHeader({
   saveStatus: SaveStatus;
   view: CanvasView;
   onViewChange: (v: CanvasView) => void;
-  device: Device;
-  onDeviceChange: (d: Device) => void;
   onRun: () => void;
   openTool: (t: WorkspaceTool) => void;
   onManageDeployments: (tab?: string) => void;
@@ -257,11 +249,6 @@ export function WorkspaceHeader({
       {isDesktop ? (
         <div className="hidden items-center justify-center gap-1.5 xl:flex">
           <ViewSwitch view={view} onViewChange={onViewChange} />
-          {view === "preview" ? (
-            <div className="hidden min-[1360px]:block">
-              <DeviceSwitch device={device} onDeviceChange={onDeviceChange} />
-            </div>
-          ) : null}
         </div>
       ) : null}
 
@@ -403,22 +390,6 @@ function ViewSwitch({ view, onViewChange, compact }: { view: CanvasView; onViewC
         { value: "preview", label: compact ? <span className="sr-only">Preview</span> : "Preview", icon: <Monitor />, title: "Preview only" },
         { value: "split", label: compact ? <span className="sr-only">Split</span> : "Split", icon: <Columns2 />, title: "Code and preview" },
         { value: "code", label: compact ? <span className="sr-only">Code</span> : "Code", icon: <Code2 />, title: "Code only" },
-      ]}
-    />
-  );
-}
-
-function DeviceSwitch({ device, onDeviceChange }: { device: Device; onDeviceChange: (d: Device) => void }) {
-  return (
-    <Segmented<Device>
-      aria-label="Preview device"
-      size="sm"
-      value={device}
-      onValueChange={onDeviceChange}
-      options={[
-        { value: "desktop", label: <span className="sr-only">Desktop</span>, icon: <Monitor />, title: "Desktop (full width)" },
-        { value: "tablet", label: <span className="sr-only">Tablet</span>, icon: <Tablet />, title: "Tablet (820px)" },
-        { value: "mobile", label: <span className="sr-only">Mobile</span>, icon: <Smartphone />, title: "Mobile (390px)" },
       ]}
     />
   );

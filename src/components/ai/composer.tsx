@@ -1,18 +1,21 @@
 "use client";
 
 import * as React from "react";
-import { ArrowUp, AtSign, FlaskConical, Hammer, MessageCircleQuestion, OctagonAlert, Square, Wrench, X } from "lucide-react";
+import { ArrowUp, AtSign, FlaskConical, Hammer, ImagePlus, ListChecks, Loader2, MessageCircleQuestion, OctagonAlert, Sparkles, Square, Undo2, Wrench, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useCalm } from "@/lib/client/motion";
+import { addImages, dataUrlOf, IMAGE_ACCEPT, imageFilesFrom, MAX_PROMPT_IMAGES, type PromptImage } from "@/lib/client/attachments";
 import type { AgentMode } from "./types";
 
 const MODES: { id: AgentMode; label: string; hint: string; Icon: typeof Hammer }[] = [
   { id: "build", label: "Build", hint: "Plans, edits files and checks the result", Icon: Hammer },
+  { id: "plan", label: "Plan", hint: "Proposes a plan for you to approve; nothing changes until you do", Icon: ListChecks },
   { id: "ask", label: "Ask", hint: "Answers questions without changing files", Icon: MessageCircleQuestion },
   { id: "fix", label: "Fix", hint: "Repairs the latest build or runtime error", Icon: Wrench },
 ];
 
 export const FIX_DEFAULT_PROMPT = "Fix the latest build or runtime error in this project.";
+export const IMAGE_DEFAULT_PROMPT = "Build this from the attached image.";
 export const COMPOSER_MAX = 8000;
 const COUNTER_FROM = 7000;
 
@@ -58,6 +61,11 @@ export function Composer({
   progress,
   queued,
   onClearQueued,
+  images,
+  onImagesChange,
+  onEnhance,
+  enhancing,
+  onUndoEnhance,
 }: {
   value: string;
   onChange: (v: string) => void;
@@ -80,9 +88,28 @@ export function Composer({
   /** A request waiting for the current run to finish. */
   queued?: string | null;
   onClearQueued?: () => void;
+  /** Attached images (screenshots, designs); the attach button shows when onImagesChange is set. */
+  images?: PromptImage[];
+  onImagesChange?: (images: PromptImage[]) => void;
+  /** Rewrite the draft into a detailed brief; the button shows when set. */
+  onEnhance?: () => void;
+  enhancing?: boolean;
+  /** Set right after an enhance: puts the original text back. */
+  onUndoEnhance?: () => void;
 }) {
   const calm = useCalm();
-  const canSend = !disabled && !running && (value.trim().length > 0 || mode === "fix");
+  const fileRef = React.useRef<HTMLInputElement>(null);
+  const [dragging, setDragging] = React.useState(false);
+  const [attachError, setAttachError] = React.useState<string | null>(null);
+  const imgs = images ?? [];
+  const canAttach = Boolean(onImagesChange) && mode !== "ask";
+  const attach = async (files: File[]) => {
+    if (!onImagesChange || !files.length) return;
+    const { images: next, error } = await addImages(imgs, files);
+    onImagesChange(next);
+    setAttachError(error);
+  };
+  const canSend = !disabled && !running && !enhancing && (value.trim().length > 0 || mode === "fix" || (canAttach && imgs.length > 0));
   const onKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === "Enter" && !e.shiftKey && !e.nativeEvent.isComposing) {
       e.preventDefault();
@@ -100,7 +127,11 @@ export function Composer({
         ? lastError
           ? "Optional: add details. Leave empty to fix the latest error."
           : "Describe the error to fix (no recent run error was recorded)."
-        : "Describe what to build or change…";
+        : mode === "plan"
+          ? "Describe what you want. Codexa proposes a plan first…"
+          : canAttach
+            ? "Describe what to build or change, or paste a screenshot…"
+            : "Describe what to build or change…";
   const current = MODES.find((m) => m.id === mode) ?? MODES[0];
   const ctx = context ?? { activeFile: false, error: false };
   const showErrorChip = Boolean(lastError) && mode !== "fix";
@@ -112,6 +143,20 @@ export function Composer({
       onSubmit={(e) => {
         e.preventDefault();
         if (canSend) onSend();
+      }}
+      onDragOver={(e) => {
+        if (!canAttach || running || disabled || !Array.from(e.dataTransfer.types).includes("Files")) return;
+        e.preventDefault();
+        setDragging(true);
+      }}
+      onDragLeave={(e) => {
+        if (!e.currentTarget.contains(e.relatedTarget as Node | null)) setDragging(false);
+      }}
+      onDrop={(e) => {
+        if (!canAttach || running || disabled) return;
+        e.preventDefault();
+        setDragging(false);
+        void attach(imageFilesFrom(e.dataTransfer));
       }}
     >
       {mode === "fix" && lastError ? (
@@ -138,7 +183,7 @@ export function Composer({
         </div>
       ) : null}
 
-      <div className="ws-composer comet-border" data-active={running && !calm ? "" : undefined}>
+      <div className={cn("ws-composer comet-border", dragging && "rounded-2xl outline-2 outline-offset-2 outline-dashed outline-ring")} data-active={running && !calm ? "" : undefined}>
         <div className={cn("comet-border__inner", (disabled || running) && "bg-surface")}>
           {(activeFile || showErrorChip) && onContextChange && !(disabled && disabledReason) ? (
             <div className="flex flex-wrap items-center gap-1.5 px-3 pt-2.5" aria-label="Context sent with the message">
@@ -174,6 +219,25 @@ export function Composer({
               ) : null}
             </div>
           ) : null}
+          {canAttach && imgs.length ? (
+            <ul className="flex flex-wrap gap-2 px-3 pt-3" aria-label="Attached images">
+              {imgs.map((img) => (
+                <li key={img.id} className="group relative">
+                  {/* eslint-disable-next-line @next/next/no-img-element -- local data URL preview */}
+                  <img src={dataUrlOf(img)} alt={img.name} className="size-14 rounded-lg object-cover shadow-[0_0_0_1px_var(--border-strong)]" />
+                  <button
+                    type="button"
+                    onClick={() => onImagesChange?.(imgs.filter((i) => i.id !== img.id))}
+                    aria-label={`Remove ${img.name}`}
+                    disabled={running}
+                    className="absolute -right-1.5 -top-1.5 inline-flex size-5 items-center justify-center rounded-full bg-foreground text-background shadow-md hover:opacity-90"
+                  >
+                    <X className="size-3" aria-hidden="true" />
+                  </button>
+                </li>
+              ))}
+            </ul>
+          ) : null}
           <label htmlFor="ai-composer" className="sr-only">
             Message to the AI
           </label>
@@ -183,6 +247,13 @@ export function Composer({
             value={value}
             onChange={(e) => onChange(e.target.value)}
             onKeyDown={onKeyDown}
+            onPaste={(e) => {
+              if (!canAttach) return;
+              const files = imageFilesFrom(e.clipboardData);
+              if (!files.length) return;
+              e.preventDefault();
+              void attach(files);
+            }}
             placeholder={placeholder}
             disabled={disabled || running}
             rows={3}
@@ -226,6 +297,43 @@ export function Composer({
                 );
               })}
             </div>
+            {canAttach ? (
+              <>
+                <input ref={fileRef} type="file" accept={IMAGE_ACCEPT} multiple hidden onChange={(e) => {
+                  void attach(Array.from(e.target.files ?? []));
+                  e.target.value = "";
+                }} />
+                <button
+                  type="button"
+                  onClick={() => fileRef.current?.click()}
+                  disabled={running || disabled || imgs.length >= MAX_PROMPT_IMAGES}
+                  aria-label="Attach images"
+                  title={`Attach a screenshot, sketch or design (up to ${MAX_PROMPT_IMAGES}). You can also paste or drop images.`}
+                  className="inline-flex size-8 shrink-0 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:outline-2 focus-visible:outline-ring disabled:pointer-events-none disabled:opacity-40"
+                >
+                  <ImagePlus className="size-4" aria-hidden="true" />
+                </button>
+              </>
+            ) : null}
+            {onEnhance && (mode === "build" || mode === "plan") ? (
+              onUndoEnhance && !enhancing ? (
+                <button type="button" onClick={onUndoEnhance} disabled={running} title="Put your original text back" className="inline-flex h-8 shrink-0 items-center gap-1 rounded-lg px-2 text-[12px] font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:outline-2 focus-visible:outline-ring">
+                  <Undo2 className="size-3.5" aria-hidden="true" /> Undo
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  onClick={onEnhance}
+                  disabled={running || disabled || enhancing || value.trim().length < 3}
+                  title="Turn your idea into a detailed brief before sending"
+                  className="inline-flex h-8 shrink-0 items-center gap-1 rounded-lg px-2 text-[12px] font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:outline-2 focus-visible:outline-ring disabled:pointer-events-none disabled:opacity-40"
+                >
+                  {enhancing ? <Loader2 className="size-3.5 animate-spin" aria-hidden="true" /> : <Sparkles className="size-3.5" aria-hidden="true" />}
+                  <span className="hidden @[420px]:inline">{enhancing ? "Enhancing…" : "Enhance"}</span>
+                  <span className="sr-only @[420px]:hidden">Enhance prompt</span>
+                </button>
+              )
+            ) : null}
             <div className="min-w-0 flex-1 truncate text-[11.5px] text-muted-foreground">
               {model?.mock ? (
                 <span className="ws-warn-ink inline-flex items-center gap-1 rounded-md bg-warning/12 px-1.5 py-0.5 font-medium" title="AI_MOCK=1 is set; responses are scripted and only available outside production.">
@@ -275,6 +383,14 @@ export function Composer({
           </div>
         </div>
       </div>
+      {attachError ? (
+        <p role="alert" className="mt-1.5 flex items-center gap-1.5 px-1 text-[12px] text-danger">
+          {attachError}
+          <button type="button" onClick={() => setAttachError(null)} aria-label="Dismiss" className="rounded p-0.5 hover:bg-muted">
+            <X className="size-3" aria-hidden="true" />
+          </button>
+        </p>
+      ) : null}
       <p id="ai-composer-hint" className={cn("mt-1.5 flex items-center gap-1.5 truncate px-1 text-[11.5px] text-muted-foreground", blocked && "sr-only")}>
         {blocked ? (
           disabledReason
