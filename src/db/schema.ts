@@ -212,6 +212,8 @@ export type ProjectSettings = {
   githubLastTreeSha?: string;
   githubLastCommitSha?: string;
   githubLastSyncAt?: string;
+  /** Codexa Cloud (built-in database + user login) is turned on for this project's app. */
+  cloudEnabled?: boolean;
   /** Project knowledge: rules and facts the AI follows on every request in this project (owner-written). */
   knowledge?: string;
   /** Publishing: the chosen site name (the <name> in <name>.<DEPLOY_HOST>); default is <workspace>-<project>. */
@@ -450,6 +452,111 @@ export const siteVisits = sqliteTable(
     views: integer("views").notNull().default(0),
   },
   (t) => [primaryKey({ columns: [t.projectId, t.day] })],
+);
+
+// ---------------------------------------------------------------------------
+// Codexa Cloud: the built-in database and user accounts of apps people build
+// (end users of a generated app, not Codexa users)
+// ---------------------------------------------------------------------------
+export const appUsers = sqliteTable(
+  "app_users",
+  {
+    id: id(),
+    projectId: text("project_id")
+      .notNull()
+      .references(() => projects.id, { onDelete: "cascade" }),
+    email: text("email").notNull(),
+    name: text("name").notNull().default(""),
+    passwordHash: text("password_hash").notNull(),
+    createdAt: createdAt(),
+    lastSignInAt: ts("last_sign_in_at"),
+  },
+  (t) => [uniqueIndex("app_users_project_email_idx").on(t.projectId, t.email)],
+);
+
+export const appSessions = sqliteTable(
+  "app_sessions",
+  {
+    id: id(),
+    projectId: text("project_id")
+      .notNull()
+      .references(() => projects.id, { onDelete: "cascade" }),
+    appUserId: text("app_user_id")
+      .notNull()
+      .references(() => appUsers.id, { onDelete: "cascade" }),
+    tokenHash: text("token_hash").notNull(),
+    expiresAt: ts("expires_at").notNull(),
+    createdAt: createdAt(),
+  },
+  (t) => [uniqueIndex("app_sessions_token_idx").on(t.tokenHash)],
+);
+
+export const appCollections = sqliteTable(
+  "app_collections",
+  {
+    projectId: text("project_id")
+      .notNull()
+      .references(() => projects.id, { onDelete: "cascade" }),
+    name: text("name").notNull(),
+    /** private: each signed-in user sees their own records · public_read: anyone reads, signed-in users write their own · public: anyone reads and writes */
+    access: text("access").notNull().default("private"),
+    createdAt: createdAt(),
+  },
+  (t) => [primaryKey({ columns: [t.projectId, t.name] })],
+);
+
+export const appRecords = sqliteTable(
+  "app_records",
+  {
+    id: id(),
+    projectId: text("project_id")
+      .notNull()
+      .references(() => projects.id, { onDelete: "cascade" }),
+    collection: text("collection").notNull(),
+    ownerId: text("owner_id"),
+    data: text("data", { mode: "json" }).$type<Record<string, unknown>>().notNull(),
+    createdAt: createdAt(),
+    updatedAt: ts("updated_at").notNull().$defaultFn(() => new Date()),
+  },
+  (t) => [index("app_records_collection_idx").on(t.projectId, t.collection, t.createdAt)],
+);
+
+// ---------------------------------------------------------------------------
+// Client feedback: review links and comments pinned to elements of the app
+// ---------------------------------------------------------------------------
+export const feedbackLinks = sqliteTable(
+  "feedback_links",
+  {
+    id: id(),
+    projectId: text("project_id")
+      .notNull()
+      .references(() => projects.id, { onDelete: "cascade" }),
+    tokenHash: text("token_hash").notNull(),
+    createdBy: text("created_by").references(() => users.id, { onDelete: "set null" }),
+    revokedAt: ts("revoked_at"),
+    createdAt: createdAt(),
+  },
+  (t) => [uniqueIndex("feedback_links_token_idx").on(t.tokenHash)],
+);
+
+export const feedbackComments = sqliteTable(
+  "feedback_comments",
+  {
+    id: id(),
+    projectId: text("project_id")
+      .notNull()
+      .references(() => projects.id, { onDelete: "cascade" }),
+    linkId: text("link_id").references(() => feedbackLinks.id, { onDelete: "set null" }),
+    authorName: text("author_name").notNull(),
+    body: text("body").notNull(),
+    pagePath: text("page_path").notNull().default("/"),
+    /** The element the comment is pinned to: { path, tag, text, html } from the inspector. */
+    element: text("element", { mode: "json" }).$type<Record<string, unknown> | null>(),
+    status: text("status").notNull().default("open"), // open | resolved
+    createdAt: createdAt(),
+    resolvedAt: ts("resolved_at"),
+  },
+  (t) => [index("feedback_comments_project_idx").on(t.projectId, t.createdAt)],
 );
 
 // ---------------------------------------------------------------------------

@@ -10,6 +10,7 @@ export type ProjectSettings = {
   outputDir?: string;
   port?: number;
   nodeVersion?: string;
+  cloudEnabled?: boolean;
   /** Rules and facts the AI follows on every request in this project. */
   knowledge?: string;
 };

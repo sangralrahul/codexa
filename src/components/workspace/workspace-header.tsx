@@ -21,7 +21,7 @@ import {
   Settings,
   Share2,
   Square,
-  Wrench,
+  Wrench, Cloud, MessageSquareText,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { SaveStatus } from "@/lib/client/workspace/use-editor-state";
@@ -40,7 +40,7 @@ import { PresenceAvatars } from "./presence";
 import { PublishPopover } from "./publish-popover";
 import { stageLabel } from "@/components/ai/message-parts";
 
-export type WorkspaceTool = "history" | "share" | "settings" | "deploy" | "github" | "database" | "activity";
+export type WorkspaceTool = "history" | "share" | "settings" | "deploy" | "github" | "database" | "activity" | "cloud" | "feedback";
 export type RuntimeStatus = CodexaEvents["codexa:runtime-status"]["status"] | "unknown";
 export type CanvasView = "preview" | "split" | "code";
 
@@ -48,7 +48,9 @@ const STATUS_LABEL: Record<SaveStatus, string> = { saved: "Saved", saving: "Savi
 
 const TOOLS: { id: WorkspaceTool; label: string; hint: string; Icon: typeof History }[] = [
   { id: "github", label: "GitHub", hint: "Push and pull a repository", Icon: FolderGit2 },
-  { id: "database", label: "Database", hint: "Browse and query a connection", Icon: Database },
+  { id: "cloud", label: "Cloud", hint: "Built-in database and user login", Icon: Cloud },
+  { id: "feedback", label: "Feedback", hint: "Review link and client comments", Icon: MessageSquareText },
+  { id: "database", label: "SQL connection", hint: "Query an external database", Icon: Database },
   { id: "settings", label: "Settings", hint: "AI knowledge, commands, environment", Icon: Settings },
   { id: "activity", label: "Activity", hint: "Who changed what", Icon: Activity },
 ];

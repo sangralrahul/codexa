@@ -26,7 +26,7 @@ import {
   Hash,
   Database,
   RotateCw,
-  TriangleAlert,
+  TriangleAlert, Cloud, MessageSquareText,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { logger } from "@/lib/logger";
@@ -50,6 +50,8 @@ import { Segmented } from "@/components/ui/segmented";
 import { Tooltip } from "@/components/ui/tooltip";
 import { GlideIndicator, useGlide } from "@/components/motion/glide";
 import { PreviewPanel, type Device } from "./preview-panel";
+import { CloudPanel } from "./cloud-panel";
+import { FeedbackPanel } from "./feedback-panel";
 import { Dock, type DockTab } from "./dock";
 import { GithubPanel } from "./github-panel";
 import { DatabasePanel } from "./database-panel";
@@ -859,6 +861,24 @@ function Shell({
             {tool === "github" ? (
               <PanelBoundary name="GitHub">
                 <GithubPanel projectId={projectId} />
+              </PanelBoundary>
+            ) : null}
+          </div>
+        </Drawer>
+        <Drawer open={tool === "cloud"} onOpenChange={(o) => !o && setTool(null)} title="Cloud" icon={<Cloud aria-hidden="true" />} description="A built-in database and user sign-up for this app. No setup, no keys." width={760} modal={false}>
+          <div className="h-full min-h-[320px]">
+            {tool === "cloud" ? (
+              <PanelBoundary name="cloud">
+                <CloudPanel projectId={projectId} canEdit={canEdit} />
+              </PanelBoundary>
+            ) : null}
+          </div>
+        </Drawer>
+        <Drawer open={tool === "feedback"} onOpenChange={(o) => !o && setTool(null)} title="Feedback" icon={<MessageSquareText aria-hidden="true" />} description="Share a review link. Clients click on the app to leave comments; fix them with AI." width={560} modal={false}>
+          <div className="h-full min-h-[320px]">
+            {tool === "feedback" ? (
+              <PanelBoundary name="feedback">
+                <FeedbackPanel projectId={projectId} canEdit={canEdit} />
               </PanelBoundary>
             ) : null}
           </div>
