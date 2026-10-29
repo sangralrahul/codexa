@@ -30,8 +30,11 @@ jobs:
 
       - run: npm ci
 
+      - name: Typecheck the app's screens
+        run: npm run typecheck
+
       - name: Build installer (x64)
-        run: npx electron-builder --win nsis --x64 --publish never
+        run: npm run dist:win
 
       - name: Smoke test (silent install, files and uninstaller present, app launches)
         shell: pwsh

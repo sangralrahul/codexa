@@ -1,19 +1,33 @@
 {
   "name": "codexa-desktop",
   "productName": "Codexa",
-  "version": "1.2.0",
-  "description": "Codexa for Windows: turn ideas into working software.",
+  "version": "2.0.0",
+  "description": "Codexa for Windows: a native app for building software with AI.",
   "author": "Codexa",
   "homepage": "https://codexa.creditvault.tech",
   "private": true,
   "main": "main.js",
   "scripts": {
+    "dev": "vite build --mode development && electron .",
+    "build": "vite build",
+    "typecheck": "tsc --noEmit -p renderer/tsconfig.json",
     "start": "electron .",
-    "dist:win": "electron-builder --win nsis --x64 --publish never"
+    "dist:win": "vite build && electron-builder --win nsis --x64 --publish never"
   },
   "devDependencies": {
     "electron": "38.2.0",
-    "electron-builder": "26.0.12"
+    "electron-builder": "26.0.12",
+    "@tailwindcss/vite": "4.3.3",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "@vitejs/plugin-react": "6.1.2",
+    "lucide-react": "1.61.0",
+    "monaco-editor": "0.57.0",
+    "react": "19.3.0",
+    "react-dom": "19.3.0",
+    "tailwindcss": "4.3.3",
+    "typescript": "5.9.3",
+    "vite": "8.3.5"
   },
   "build": {
     "appId": "tech.creditvault.codexa",
@@ -25,8 +39,8 @@
     },
     "files": [
       "main.js",
-      "offline.html",
-      "splash.html",
+      "preload.js",
+      "dist-renderer/**/*",
       "build/icon.png"
     ],
     "win": {

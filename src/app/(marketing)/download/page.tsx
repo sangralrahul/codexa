@@ -10,11 +10,11 @@ import { cn } from "@/lib/utils";
 export const metadata = routeMetadata("/download");
 
 const FEATURES = [
-  { icon: AppWindow, title: "Its own window", body: "Codexa opens in its own window with a taskbar icon, a Start menu entry and a desktop shortcut, away from your browser tabs." },
-  { icon: Globe, title: "The same Codexa", body: "Your account, projects and settings are the ones you use on the web. Sign in once and pick up where you left off." },
-  { icon: ExternalLink, title: "Links open in your browser", body: "GitHub, payments, docs and app previews open in your default browser, so the app window stays on Codexa." },
-  { icon: WifiOff, title: "Clear when offline", body: "Without a connection you get an offline screen that retries on its own, instead of an error page." },
-  { icon: RotateCcw, title: "Updates itself", body: "New versions download in the background and install when you restart. Size, position and maximised state are remembered too." },
+  { icon: AppWindow, title: "A native app", body: "Its own screens built for Windows: a home with the composer, projects, templates, settings and a Ctrl+K command palette. It doesn't load the website." },
+  { icon: Globe, title: "The same account", body: "Sign in with email, Google or GitHub. Your projects, chats and settings are the same ones you see on the web." },
+  { icon: ExternalLink, title: "Chat, code, preview, publish", body: "Talk to the AI, edit files in a built-in code editor (Ctrl+S saves), watch the live preview and publish, all in one window." },
+  { icon: WifiOff, title: "Clear when offline", body: "Without a connection the app tells you so and keeps your place; AI runs, previews and publishing need Codexa's servers." },
+  { icon: RotateCcw, title: "Updates itself", body: "New versions download in the background and install when you restart. Size, position, theme and layout are remembered." },
   { icon: MousePointerClick, title: "One click to remove", body: "Uninstall from Windows Settings → Apps like any other app. Nothing else is left on your computer." },
 ];
 
@@ -36,7 +36,7 @@ export default function DownloadPage() {
         kicker="Desktop app"
         headline="Codexa for Windows."
         highlight="for Windows."
-        lede="Build from a sentence in its own window. The desktop app is the full Codexa workspace, with a Start menu entry, a taskbar icon and links that open in your browser."
+        lede="A native Windows app for building with AI: describe an app, chat with the agent, edit code, watch the live preview and publish, all in one window."
         visual={
           <figure className="e3 relative mx-auto flex aspect-[16/10] w-full max-w-[640px] flex-col overflow-hidden rounded-[22px]">
             <div className="flex items-center gap-2 border-b border-border px-4 py-3">
@@ -120,8 +120,8 @@ export default function DownloadPage() {
           <div className="e1 flex gap-3 rounded-[18px] p-5 text-sm">
             <MonitorDown className="mt-0.5 size-4 shrink-0 text-signal-ink" aria-hidden="true" />
             <p className="leading-relaxed text-muted-foreground">
-              <span className="font-medium text-foreground">Needs an internet connection.</span> The app is a window onto Codexa&apos;s servers: projects, AI runs, previews and
-              deployments all happen there, as on the web. Not on Windows?{" "}
+              <span className="font-medium text-foreground">Needs an internet connection.</span> The app&apos;s screens run on your computer; projects, AI runs, previews and
+              deployments happen on Codexa&apos;s servers, as on the web. Not on Windows?{" "}
               <Link href="/signup" className="link-draw text-foreground">
                 Use Codexa in your browser
               </Link>
