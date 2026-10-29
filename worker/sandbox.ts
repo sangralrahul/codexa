@@ -6,6 +6,13 @@ const PREVIEW_PORT = 4100;
 const STARTUP_TIMEOUT_MS = 90_000;
 const IDLE_STOP_MS = 30 * 60_000;
 
+/** A small page the editor can show inside its preview frame (Cloudflare's own error pages refuse to be framed). */
+export function previewProblem(status: number, title: string, detail: string): Response {
+  const esc = (t: string) => t.replace(/[&<>"']/g, (c) => `&#${c.charCodeAt(0)};`);
+  const html = `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${esc(title)}</title><style>body{font-family:system-ui,sans-serif;margin:0;min-height:100vh;display:grid;place-items:center;background:#0b0d12;color:#e6e8ee}main{max-width:32rem;padding:2rem;text-align:center}h1{font-size:1.15rem;margin:0 0 .5rem}p{color:#9aa3b2;line-height:1.55;margin:0 0 1.25rem}button{font:inherit;padding:.55rem 1rem;border-radius:8px;border:1px solid #2a2f3a;background:#151922;color:#e6e8ee;cursor:pointer}</style></head><body><main><h1>${esc(title)}</h1><p>${esc(detail)}</p><button onclick="location.reload()">Reload</button></main></body></html>`;
+  return new Response(html, { status, headers: { "content-type": "text/html; charset=utf-8", "cache-control": "no-store" } });
+}
+
 const json = (status: number, body: unknown) => new Response(JSON.stringify(body), { status, headers: { "content-type": "application/json" } });
 
 /**
@@ -101,8 +108,21 @@ export class ProjectSandbox extends DurableObject<Env> {
     }
     // Preview traffic: only while the container runs (the app starts it).
     if (!container?.running) {
-      return new Response("This preview is not running. Start it again from the Codexa workspace.", { status: 404, headers: { "content-type": "text/plain; charset=utf-8" } });
+      return previewProblem(404, "This preview is not running", "Start it again with Run in the Codexa workspace.");
     }
-    return container.getTcpPort(PREVIEW_PORT).fetch(request);
+    // The preview proxy can be briefly unreachable (container just started or restarting): retry
+    // for a few seconds. A WebSocket upgrade or a request with a body is tried once.
+    const retryable = !request.body && request.headers.get("upgrade")?.toLowerCase() !== "websocket";
+    let lastError = "";
+    for (let attempt = 0; attempt < (retryable ? 6 : 1); attempt++) {
+      if (attempt) await new Promise((r) => setTimeout(r, 800));
+      try {
+        return await container.getTcpPort(PREVIEW_PORT).fetch(retryable ? request.clone() : request);
+      } catch (err) {
+        lastError = err instanceof Error ? err.message : String(err);
+      }
+    }
+    console.error(`[preview] project container did not answer on port ${PREVIEW_PORT}: ${lastError}`);
+    return previewProblem(502, "The preview server isn't answering yet", `The project's container is running but its preview did not respond (${lastError}). Wait a few seconds and reload, or press Stop and Run again.`);
   }
 }

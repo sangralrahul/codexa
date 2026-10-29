@@ -14,6 +14,8 @@ import openNext from "../.open-next/worker.js";
 import { hmac, hostOnly, labelUnder, timingSafeEqualStr, type Env } from "./env";
 import { isCustomDomain, serveSite } from "./sites";
 
+import { previewProblem } from "./sandbox";
+
 export { ProjectSandbox } from "./sandbox";
 export { PresenceRoom } from "./presence";
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment -- the file only exists after a build, so @ts-expect-error would fail before it
@@ -67,9 +69,16 @@ const worker = {
 
     const previewToken = labelUnder(host, hostOnly(env.PREVIEW_HOST));
     if (previewToken) {
-      const projectId = await projectForPreview(env, previewToken);
-      if (!projectId) return new Response("This preview is not running. Start it again from the Codexa workspace.", { status: 404, headers: { "content-type": "text/plain; charset=utf-8" } });
-      return env.SANDBOX.get(env.SANDBOX.idFromName(projectId)).fetch(request as never) as unknown as Response;
+      // Never let a preview request crash the Worker: Cloudflare's error page can't be shown inside the editor.
+      try {
+        const projectId = await projectForPreview(env, previewToken);
+        if (!projectId) return previewProblem(404, "This preview is not running", "Start it again with Run in the Codexa workspace.");
+        return (await env.SANDBOX.get(env.SANDBOX.idFromName(projectId)).fetch(request as never)) as unknown as Response;
+      } catch (err) {
+        const message = err instanceof Error ? err.message : String(err);
+        console.error(`[preview] ${previewToken}: ${message}`);
+        return previewProblem(502, "The preview couldn't be reached", `${message}. Reload in a few seconds, or press Stop and Run again in the workspace.`);
+      }
     }
 
     const siteSlug = labelUnder(host, hostOnly(env.DEPLOY_HOST));
