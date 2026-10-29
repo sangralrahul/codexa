@@ -92,6 +92,25 @@ export function sanitizeEnv(env: unknown): Record<string, string> {
   return out;
 }
 
+/**
+ * Projects created before secure live reload pinned Vite's HMR socket to "ws", which an https
+ * preview page may not open (mixed content). Their vite.config gets the protocol from
+ * CODEXA_PREVIEW_PROTOCOL instead, in the sandbox copy only; the saved project is unchanged.
+ */
+const LEGACY_HMR = 'protocol: "ws" }';
+const SECURE_HMR = 'protocol: process.env.CODEXA_PREVIEW_PROTOCOL === "https" ? "wss" : "ws" }';
+export function secureHmr(files: FileMap): FileMap {
+  let out = files;
+  for (const name of ["vite.config.ts", "vite.config.js", "vite.config.mjs"]) {
+    const text = files[name];
+    if (typeof text === "string" && text.includes("CODEXA_PREVIEW_HOST") && text.includes(LEGACY_HMR)) {
+      if (out === files) out = { ...files };
+      out[name] = text.replace(LEGACY_HMR, SECURE_HMR);
+    }
+  }
+  return out;
+}
+
 export class SessionManager {
   private sessions = new Map<string, Session>();
   private byToken = new Map<string, Session>();
@@ -173,6 +192,7 @@ export class SessionManager {
       CODEXA_PREVIEW_HOST: hostLabel,
       CODEXA_PREVIEW_PORT: String(publicPort ?? (this.cfg.previewProtocol === "https" ? 443 : 80)),
       CODEXA_PREVIEW_URL: previewUrl,
+      CODEXA_PREVIEW_PROTOCOL: this.cfg.previewProtocol,
       STATIC_ROOT: SANDBOX_PATHS.project,
     };
     const session: Session = {
@@ -200,7 +220,7 @@ export class SessionManager {
     this.byToken.set(input.previewToken, session);
     try {
       await fs.mkdir(projectDir, { recursive: true, mode: 0o755 });
-      await materialize(projectDir, files, owner);
+      await materialize(projectDir, secureHmr(files), owner);
       logs.push("system", `Materialised ${Object.keys(files).length} files (${framework})`);
       if ((PREBUILT_FRAMEWORKS as readonly string[]).includes(framework)) {
         const linked = await linkBaseNodeModules(projectDir, this.cfg.baseDir, framework, owner);
@@ -263,7 +283,7 @@ export class SessionManager {
         }
       }
     }
-    const written = await materialize(s.spec.projectDir, files, owner);
+    const written = await materialize(s.spec.projectDir, secureHmr(files), owner);
     await deleteFiles(s.spec.projectDir, deletes);
     this.touch(s);
     if (written || deletes.length) s.logs.push("system", `Synced ${written} changed file(s)${deletes.length ? `, deleted ${deletes.length}` : ""}`);

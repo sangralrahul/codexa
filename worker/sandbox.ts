@@ -113,11 +113,21 @@ export class ProjectSandbox extends DurableObject<Env> {
     // The preview proxy can be briefly unreachable (container just started or restarting): retry
     // for a few seconds. A WebSocket upgrade or a request with a body is tried once.
     const retryable = !request.body && request.headers.get("upgrade")?.toLowerCase() !== "websocket";
+    // Containers only accept plain HTTP: keep the preview's host (the runner routes on it) and
+    // pass the visitor's scheme along in x-forwarded-proto.
+    const target = new URL(request.url);
+    const proto = target.protocol.replace(":", "");
+    target.protocol = "http:";
+    const forward = (req: Request) => {
+      const out = new Request(target.toString(), req);
+      out.headers.set("x-forwarded-proto", proto);
+      return out;
+    };
     let lastError = "";
     for (let attempt = 0; attempt < (retryable ? 6 : 1); attempt++) {
       if (attempt) await new Promise((r) => setTimeout(r, 800));
       try {
-        return await container.getTcpPort(PREVIEW_PORT).fetch(retryable ? request.clone() : request);
+        return await container.getTcpPort(PREVIEW_PORT).fetch(forward(retryable ? request.clone() : request));
       } catch (err) {
         lastError = err instanceof Error ? err.message : String(err);
       }

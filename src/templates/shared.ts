@@ -65,7 +65,7 @@ export default defineConfig({
     strictPort: true,
     allowedHosts: true,
     hmr: process.env.CODEXA_PREVIEW_HOST
-      ? { host: process.env.CODEXA_PREVIEW_HOST, clientPort: Number(process.env.CODEXA_PREVIEW_PORT) || 80, protocol: "ws" }
+      ? { host: process.env.CODEXA_PREVIEW_HOST, clientPort: Number(process.env.CODEXA_PREVIEW_PORT) || 80, protocol: process.env.CODEXA_PREVIEW_PROTOCOL === "https" ? "wss" : "ws" }
       : undefined,
   },
 });
