@@ -1,9 +1,9 @@
 import { cn } from "@/lib/utils";
 
-export const OB_STEPS = ["Idea", "Start", "Launch"] as const;
+export const OB_STEPS = ["About you", "Build", "Launch"] as const;
 
 /**
- * Labelled segmented progress "Idea · Start · Launch" (PLAN §5.5). The current step carries
+ * Labelled segmented progress "About you · Build · Launch" (PLAN §5.5). The current step carries
  * aria-current="step"; finished steps get a check. Segments fill with a 600ms transform.
  */
 export function OnboardingProgress({ current, className }: { current: number; className?: string }) {

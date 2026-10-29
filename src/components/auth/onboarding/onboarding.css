@@ -68,3 +68,6 @@
 [data-motion="reduced"] :is(.ob-step, .ob-rise > *, .ob-seg__check, .ob-goal[aria-pressed="true"], .ob-goal__check, .ob-shot-in, .ob-swap, .ob-chip) { animation: none; }
 [data-motion="reduced"] :is(.ob-seg__fill, .ob-goal) { transition: none; }
 [data-motion="reduced"] .ob-goal:active { scale: 1; }
+
+/* A soft light from above the heading (tokens only, both themes). */
+.ob-glow { background: radial-gradient(60% 70% at 50% 0%, color-mix(in oklab, var(--foreground) 6%, transparent), transparent 70%); }
