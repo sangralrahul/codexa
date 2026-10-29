@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { pageMetadata } from "@/lib/seo";
 import { requireUser } from "@/lib/auth/guards";
 import { getCurrentWorkspace } from "@/lib/services/current-workspace";
@@ -7,8 +6,7 @@ import { getTeam } from "@/lib/billing/team-service";
 import { capabilities } from "@/lib/env";
 import { PLANS } from "@/config/plans";
 import { PageHeader } from "@/components/app/app-shell";
-import { EmptyState } from "@/components/ui/misc";
-import { buttonClasses } from "@/components/ui/button";
+import { NoWorkspace } from "@/components/settings/no-workspace";
 import { MembersPanel } from "@/components/settings/members-panel";
 
 export const metadata = pageMetadata({ title: "Members", description: "Invite teammates, change roles and manage invitations.", path: "/settings/members", noindex: true });
@@ -17,12 +15,7 @@ export default async function MembersSettingsPage() {
   const user = await requireUser("/settings/members");
   const { current } = await getCurrentWorkspace(user);
   if (!current) {
-    return (
-      <div>
-        <PageHeader title="Members" />
-        <EmptyState title="No workspace selected" action={<Link href="/settings/workspaces/new" className={buttonClasses()}>Create workspace</Link>} />
-      </div>
-    );
+    return <NoWorkspace title="Members" what="its members and invitations" />;
   }
   const ws = current.workspace;
   const [team, plan] = await Promise.all([getTeam(ws.id), getEffectivePlan(ws)]);

@@ -63,10 +63,11 @@ export function UsageMeters({
         .map((group, gi) => (
           <div key={gi}>
             <p className="mb-2 text-xs font-medium text-foreground-dim">{gi === 0 ? "Metered this period" : "Capacity"}</p>
-            <ul className={cn("grid grid-cols-1 gap-px overflow-hidden rounded-[14px] border border-border bg-border sm:grid-cols-2", COLS[Math.min(group.length, 4)])}>
+            <ul className={cn("grid grid-cols-2 gap-px overflow-hidden rounded-[14px] border border-border bg-border", COLS[Math.min(group.length, 4)])}>
               {group.map((m) => (
-                <li key={m.key} className={cn("bg-card/95 p-4", group.length % 2 === 1 && "sm:last:col-span-2 xl:last:col-span-1", group.length === 1 && "sm:col-span-2")}>
-                  <UsageGauge metric={m} />
+                <li key={m.key} className={cn("min-w-0 bg-card/95 p-3.5 sm:p-4", group.length % 2 === 1 && "last:col-span-2 xl:last:col-span-1", group.length === 1 && "col-span-2")}>
+                  {/* Two tiles a row on phones: the ring sits above the numbers until there is room beside them. */}
+                  <UsageGauge metric={m} className="flex-col items-start gap-2.5 min-[30rem]:flex-row min-[30rem]:items-center min-[30rem]:gap-4" />
                 </li>
               ))}
             </ul>

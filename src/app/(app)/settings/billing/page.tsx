@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ArrowUpRight, BookOpen, LifeBuoy, Mail, Receipt, RotateCcw } from "lucide-react";
+import { ArrowUpRight, BookOpen, CreditCard, Gauge, LifeBuoy, Mail, Receipt, RotateCcw } from "lucide-react";
 import { pageMetadata } from "@/lib/seo";
 import { requireUser } from "@/lib/auth/guards";
 import { getCurrentWorkspace } from "@/lib/services/current-workspace";
@@ -9,9 +9,8 @@ import { getTeam } from "@/lib/billing/team-service";
 import { getBillingOverview } from "@/lib/billing/service";
 import { site } from "@/config/site";
 import { PageHeader } from "@/components/app/app-shell";
+import { NoWorkspace } from "@/components/settings/no-workspace";
 import { SettingsCard } from "@/components/settings/section";
-import { EmptyState } from "@/components/ui/misc";
-import { buttonClasses } from "@/components/ui/button";
 import { UsageMeters } from "@/components/settings/usage-meters";
 import { InvoicesTable, PlanHero, isPaidActive } from "@/components/settings/billing-panels";
 import { CheckoutResultBanner, PaymentsNotConfigured, PlanCards } from "@/components/settings/billing-actions";
@@ -23,12 +22,7 @@ export default async function BillingSettingsPage({ searchParams }: { searchPara
   const { current } = await getCurrentWorkspace(user);
   const { checkout } = await searchParams;
   if (!current) {
-    return (
-      <div>
-        <PageHeader title="Billing" />
-        <EmptyState title="No workspace selected" action={<Link href="/settings/workspaces/new" className={buttonClasses()}>Create workspace</Link>} />
-      </div>
-    );
+    return <NoWorkspace title="Billing" what="its plan and invoices" />;
   }
   const ws = current.workspace;
   const [overview, entitlements, projects, team] = await Promise.all([getBillingOverview(ws), getWorkspaceEntitlements(ws), countProjects(ws.id), getTeam(ws.id)]);
@@ -74,6 +68,7 @@ export default async function BillingSettingsPage({ searchParams }: { searchPara
 
       <SettingsCard
         id="usage"
+        icon={<Gauge />}
         title="Usage this period"
         description="Metered from real events. Limits are enforced when you generate, run or deploy."
         actions={
@@ -104,7 +99,7 @@ export default async function BillingSettingsPage({ searchParams }: { searchPara
                 {h.title}
                 <ArrowUpRight className="size-3.5 text-foreground-dim transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5" aria-hidden="true" />
               </span>
-              <span className="block truncate text-xs text-muted-foreground">{h.body}</span>
+              <span className="mt-0.5 block break-words text-xs leading-relaxed text-muted-foreground">{h.body}</span>
             </span>
           </a>
         ))}

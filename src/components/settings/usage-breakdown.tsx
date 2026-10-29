@@ -44,7 +44,7 @@ export function UsageBreakdown({ kind, rows }: { kind: "projects" | "members"; r
         <tbody>
           {rows.map((r, i) => (
             <tr key={r.id ?? `gone-${i}`} className={tableRow}>
-              <td className="max-w-0 py-2.5 pl-5 pr-3 sm:pl-6">
+              <td className="w-full max-w-0 py-2.5 pl-5 pr-3 sm:pl-6">
                 <div className="flex min-w-0 items-center gap-2.5">
                   {kind === "members" ? <Avatar name={r.name} src={r.avatarUrl} size="sm" /> : null}
                   <div className="min-w-0 flex-1">

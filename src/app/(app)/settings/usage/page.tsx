@@ -9,9 +9,8 @@ import { countProjects } from "@/lib/services/projects";
 import { getTeam } from "@/lib/billing/team-service";
 import { PLANS } from "@/config/plans";
 import { PageHeader } from "@/components/app/app-shell";
+import { NoWorkspace } from "@/components/settings/no-workspace";
 import { SettingsCard } from "@/components/settings/section";
-import { EmptyState } from "@/components/ui/misc";
-import { buttonClasses } from "@/components/ui/button";
 import { UsageMeters } from "@/components/settings/usage-meters";
 import { UsageHistogram } from "@/components/settings/usage-history";
 import { UsageBreakdown } from "@/components/settings/usage-breakdown";
@@ -23,12 +22,7 @@ export default async function UsageSettingsPage() {
   const user = await requireUser("/settings/usage");
   const { current } = await getCurrentWorkspace(user);
   if (!current) {
-    return (
-      <div>
-        <PageHeader title="Usage" />
-        <EmptyState title="No workspace selected" action={<Link href="/settings/workspaces/new" className={buttonClasses()}>Create workspace</Link>} />
-      </div>
-    );
+    return <NoWorkspace title="Usage" what="its usage" />;
   }
   const ws = current.workspace;
   const [entitlements, projects, team, history] = await Promise.all([getWorkspaceEntitlements(ws), countProjects(ws.id), getTeam(ws.id), getUsageHistory(user, ws.id)]);

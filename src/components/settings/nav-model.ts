@@ -3,15 +3,16 @@
  * index used by "Search settings". Every href here is an existing route plus a section anchor
  * that the page renders (see the `id` on each SettingsCard).
  */
-import { CreditCard, Gauge, LayoutGrid, type LucideIcon, Plug, Settings2, ShieldCheck, UserRound, Users } from "lucide-react";
+import { Building2, CreditCard, Gauge, LayoutGrid, type LucideIcon, Plug, Settings2, ShieldCheck, UserRound, Users } from "lucide-react";
 
-export type SettingsNavKey = "overview" | "profile" | "security" | "general" | "members" | "billing" | "usage" | "integrations";
+export type SettingsNavKey = "overview" | "profile" | "security" | "workspaces" | "general" | "members" | "billing" | "usage" | "integrations";
 export type SettingsNavItem = { href: string; label: string; exact?: boolean; key?: SettingsNavKey; icon?: LucideIcon; keywords?: string };
 
 export const ACCOUNT_NAV: SettingsNavItem[] = [
   { href: "/settings", label: "Overview", exact: true, key: "overview", icon: LayoutGrid, keywords: "home summary control centre" },
   { href: "/settings/profile", label: "Profile", key: "profile", icon: UserRound, keywords: "name photo avatar time zone language motion" },
   { href: "/settings/security", label: "Security", key: "security", icon: ShieldCheck, keywords: "password sessions devices export delete" },
+  { href: "/settings/workspaces", label: "Workspaces", key: "workspaces", icon: Building2, keywords: "all workspaces switch teams clients new" },
 ];
 
 export const WORKSPACE_NAV: SettingsNavItem[] = [
@@ -48,6 +49,7 @@ export const SETTINGS_SECTIONS: SettingsSection[] = [
   { href: "/settings/usage#breakdown", label: "Top projects and members", page: "Usage", keywords: "breakdown who what", workspace: true },
   { href: "/settings/integrations#connections", label: "Connected services", page: "Integrations", keywords: "database credentials test", workspace: true },
   { href: "/settings/integrations#available", label: "Add an integration", page: "Integrations", keywords: "stripe openai anthropic supabase postgres resend vercel", workspace: true },
+  { href: "/settings/workspaces#workspaces", label: "All workspaces", page: "Workspaces", keywords: "switch list teams clients role plan" },
   { href: "/settings/workspaces/new#new-workspace", label: "Create a workspace", page: "Workspaces", keywords: "new team client" },
 ];
 

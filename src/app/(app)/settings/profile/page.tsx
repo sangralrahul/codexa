@@ -36,14 +36,14 @@ export default async function ProfileSettingsPage() {
         workspaceName={current?.workspace.name ?? null}
         after={
           <SettingsCard id="appearance" icon={<Palette />} title="Appearance" description="Saved on this device. Both apply instantly." bodyClassName="divide-y divide-border/70 py-0">
-            <div className="flex flex-col gap-3 py-4 sm:flex-row sm:items-center sm:justify-between sm:gap-6">
+            <div className="flex flex-col items-start gap-3 py-4 sm:flex-row sm:items-center sm:justify-between sm:gap-6">
               <div className="min-w-0 sm:flex-1">
                 <p className="text-[13.5px] font-medium">Theme</p>
                 <p className="text-xs text-muted-foreground">Paper, ink, or follow your system.</p>
               </div>
               <ThemeToggle />
             </div>
-            <div className="flex flex-col gap-3 py-4 sm:flex-row sm:items-center sm:justify-between sm:gap-6">
+            <div className="flex flex-col items-start gap-3 py-4 sm:flex-row sm:items-center sm:justify-between sm:gap-6">
               <div className="min-w-0 sm:flex-1">
                 <p className="text-[13.5px] font-medium">Motion</p>
                 <p className="text-xs text-muted-foreground">Reduced shows final frames. Your system setting wins.</p>

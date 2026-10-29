@@ -234,8 +234,8 @@ export function SessionsList({ initial }: { initial: SessionItem[] }) {
           const { label, Icon } = describeAgent(s.userAgent);
           return (
             <li key={s.id} className="diff-row" data-collapsed={leaving.has(s.id) ? "" : undefined}>
-              <div className={cn(tableRow, "flex flex-wrap items-center justify-between gap-3 px-5 py-3 text-sm sm:px-6")}>
-                <div className="flex min-w-0 items-center gap-3">
+              <div className={cn(tableRow, "flex items-center justify-between gap-3 px-5 py-3 text-sm sm:px-6")}>
+                <div className="flex min-w-0 flex-1 items-center gap-3">
                   <span className={cn("relative flex size-9 shrink-0 items-center justify-center rounded-[10px]", s.current ? "bg-foreground text-background" : "icon-tile text-muted-foreground")}>
                     <Icon className="size-4" aria-hidden="true" />
                   </span>
@@ -263,7 +263,7 @@ export function SessionsList({ initial }: { initial: SessionItem[] }) {
                   </div>
                 </div>
                 {!s.current ? (
-                  <Button variant="outline" size="sm" onClick={() => revoke(s.id)} loading={busyId === s.id}>
+                  <Button variant="outline" size="sm" className="shrink-0" onClick={() => revoke(s.id)} loading={busyId === s.id}>
                     Sign out
                   </Button>
                 ) : null}

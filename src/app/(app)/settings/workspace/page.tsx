@@ -10,9 +10,8 @@ import { providerAvailability } from "@/lib/billing/service";
 import { listMembers } from "@/lib/services/workspaces";
 import { PLANS } from "@/config/plans";
 import { PageHeader } from "@/components/app/app-shell";
+import { NoWorkspace } from "@/components/settings/no-workspace";
 import { SettingsCard } from "@/components/settings/section";
-import { EmptyState } from "@/components/ui/misc";
-import { buttonClasses } from "@/components/ui/button";
 import { WorkspaceGeneralForm } from "@/components/settings/workspace-general-form";
 import { LeaveWorkspaceButton } from "@/components/settings/members-panel";
 
@@ -22,12 +21,7 @@ export default async function WorkspaceSettingsPage() {
   const user = await requireUser("/settings/workspace");
   const { current } = await getCurrentWorkspace(user);
   if (!current) {
-    return (
-      <div>
-        <PageHeader title="Workspace" />
-        <EmptyState title="No workspace selected" description="Create a workspace to manage its settings." action={<Link href="/settings/workspaces/new" className={buttonClasses()}>Create workspace</Link>} />
-      </div>
-    );
+    return <NoWorkspace title="Workspace" what="its name, URL and currency" />;
   }
   const ws = current.workspace;
   const [sub, plan, members] = await Promise.all([latestSubscription(ws.id), getEffectivePlan(ws), listMembers(ws.id)]);

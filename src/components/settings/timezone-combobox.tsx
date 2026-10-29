@@ -21,7 +21,9 @@ function describe(id: string, now: Date): Zone {
   const region = parts.length > 1 ? parts.slice(0, -1).join(" / ").replace(/_/g, " ") : "";
   try {
     const fp = new Intl.DateTimeFormat("en-US", { timeZone: id, hour: "numeric", minute: "2-digit", timeZoneName: "shortOffset" }).formatToParts(now);
-    const offset = fp.find((p) => p.type === "timeZoneName")?.value ?? "";
+    // ICU builds differ on zero offsets ("GMT" on the server, "GMT+0" in some browsers): normalise so SSR and hydration agree.
+    const raw = fp.find((p) => p.type === "timeZoneName")?.value ?? "";
+    const offset = raw === "GMT" || raw === "UTC" ? "GMT+0" : raw;
     const time = fp
       .filter((p) => p.type !== "timeZoneName")
       .map((p) => p.value)
@@ -197,7 +199,7 @@ export function TimezoneCombobox({
             {current.city}
             {current.region ? <span className="text-muted-foreground"> · {current.region}</span> : null}
           </span>
-          {current.offset ? <span className="hidden shrink-0 font-mono text-[11px] text-foreground-dim sm:inline">{current.offset}</span> : null}
+          {current.offset ? <span className="hidden shrink-0 font-mono text-[11px] text-foreground-dim sm:inline" suppressHydrationWarning>{current.offset}</span> : null}
           <ChevronDown className="size-4 shrink-0 text-muted-foreground transition-transform duration-200 group-data-[state=open]:rotate-180" aria-hidden="true" />
         </button>
       </PopoverTrigger>

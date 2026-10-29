@@ -4,7 +4,7 @@ import { pageMetadata } from "@/lib/seo";
 import { requireUser } from "@/lib/auth/guards";
 import { getCurrentWorkspace } from "@/lib/services/current-workspace";
 import { PageHeader } from "@/components/app/app-shell";
-import { EmptyState } from "@/components/ui/misc";
+import { NoWorkspace } from "@/components/settings/no-workspace";
 import { buttonClasses } from "@/components/ui/button";
 import { IntegrationsPanel } from "@/components/settings/integrations-panel";
 
@@ -14,12 +14,7 @@ export default async function IntegrationsSettingsPage() {
   const user = await requireUser("/settings/integrations");
   const { current } = await getCurrentWorkspace(user);
   if (!current) {
-    return (
-      <div>
-        <PageHeader title="Integrations" />
-        <EmptyState title="No workspace selected" action={<Link href="/settings/workspaces/new" className={buttonClasses()}>Create workspace</Link>} />
-      </div>
-    );
+    return <NoWorkspace title="Integrations" what="its connected services" />;
   }
   const role = current.role;
   return (
