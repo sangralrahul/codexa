@@ -13,8 +13,8 @@ export const PASSWORD_MIN = 8;
 const PASSWORD_MAX = 256;
 const RULES = [
   { id: "length", label: `${PASSWORD_MIN}+ characters`, test: (pw: string) => pw.length >= PASSWORD_MIN },
-  { id: "letter", label: "a letter", test: (pw: string) => /[a-zA-Z]/.test(pw) },
-  { id: "number", label: "a number", test: (pw: string) => /[0-9]/.test(pw) },
+  { id: "letter", label: "A letter", test: (pw: string) => /[a-zA-Z]/.test(pw) },
+  { id: "number", label: "A number", test: (pw: string) => /[0-9]/.test(pw) },
 ] as const;
 
 /** Same messages as the server, so a client-side check reads exactly like a server one. */
@@ -33,7 +33,7 @@ export const PasswordInput = React.forwardRef<HTMLInputElement, React.InputHTMLA
   const [shown, setShown] = React.useState(false);
   return (
     <div className="relative">
-      <Input ref={ref} {...props} type={shown ? "text" : "password"} maxLength={PASSWORD_MAX} className={cn("h-12 pr-12 text-[15px]", className)} />
+      <Input ref={ref} {...props} type={shown ? "text" : "password"} maxLength={PASSWORD_MAX} className={cn("h-11 pr-12 text-[15px]", className)} />
       <button
         type="button"
         onClick={() => setShown((v) => !v)}
@@ -51,9 +51,9 @@ export const PasswordInput = React.forwardRef<HTMLInputElement, React.InputHTMLA
 });
 
 /**
- * Live checklist under a new-password field, styled like the agent's type-check log, with a
- * 3-segment meter. Point the input's aria-describedby at `id`. Changes in the count are
- * announced politely (not every keystroke).
+ * Live checklist under a new-password field: three short rules in one row, each ticking when
+ * met. Point the input's aria-describedby at `id`. Changes in the count are announced politely
+ * (not every keystroke).
  */
 export function PasswordRules({ id, value, className }: { id: string; value: string; className?: string }) {
   const met = RULES.map((r) => r.test(value));
@@ -61,16 +61,9 @@ export function PasswordRules({ id, value, className }: { id: string; value: str
   const all = count === RULES.length;
   return (
     <div className={cn("mt-2.5", className)}>
-      <div aria-hidden="true" className="flex gap-1">
+      <ul id={id} className="flex flex-wrap gap-x-4 gap-y-1 text-xs leading-5">
         {RULES.map((r, i) => (
-          <span key={r.id} className="relative h-1 flex-1 overflow-hidden rounded-full bg-foreground/10">
-            <span data-on={i < count ? "" : undefined} className={cn("pw-meter__seg absolute inset-0 rounded-full", all ? "bg-success" : "bg-signal")} />
-          </span>
-        ))}
-      </div>
-      <ul id={id} className="mt-2.5 space-y-1 font-mono text-[11.5px] leading-[18px]">
-        {RULES.map((r, i) => (
-          <li key={r.id} data-met={met[i] ? "" : undefined} className={cn("pw-rule flex items-center gap-2 transition-colors duration-200", met[i] ? "text-foreground" : "text-muted-foreground")}>
+          <li key={r.id} data-met={met[i] ? "" : undefined} className={cn("pw-rule flex items-center gap-1.5 transition-colors duration-200", met[i] ? "text-foreground" : "text-muted-foreground")}>
             {met[i] ? (
               <svg viewBox="0 0 16 16" aria-hidden="true" className="pw-rule__icon check-draw size-3.5 shrink-0 text-success">
                 <circle cx="8" cy="8" r="7" fill="currentColor" fillOpacity="0.16" />
@@ -78,7 +71,7 @@ export function PasswordRules({ id, value, className }: { id: string; value: str
               </svg>
             ) : (
               <svg viewBox="0 0 16 16" aria-hidden="true" className="pw-rule__icon size-3.5 shrink-0 text-border-strong">
-                <circle cx="8" cy="8" r="6.25" fill="none" stroke="currentColor" strokeWidth="1.5" strokeDasharray="2.5 2.5" />
+                <circle cx="8" cy="8" r="6.25" fill="none" stroke="currentColor" strokeWidth="1.5" />
               </svg>
             )}
             <span>{r.label}</span>
@@ -97,7 +90,7 @@ export function PasswordRules({ id, value, className }: { id: string; value: str
 export function PasswordMatch({ id, password, confirm }: { id: string; password: string; confirm: string }) {
   const match = confirm.length > 0 && password === confirm;
   return (
-    <p id={id} aria-live="polite" className={cn("mt-2 flex min-h-[18px] items-center gap-1.5 font-mono text-[11.5px] transition-colors", match ? "text-success" : "text-muted-foreground")}>
+    <p id={id} aria-live="polite" className={cn("mt-2 flex min-h-5 items-center gap-1.5 text-xs transition-colors", match ? "text-success" : "text-muted-foreground")}>
       {confirm.length === 0 ? null : match ? (
         <>
           <svg viewBox="0 0 16 16" aria-hidden="true" className="check-draw size-3.5 shrink-0">

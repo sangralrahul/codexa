@@ -44,7 +44,7 @@ const DEFAULTS: Record<Variant, { title: string; description: string; primary: L
     secondary: { label: "Quickstart", href: "/docs/quickstart" },
   },
   links: {
-    title: "Start building with Codexa",
+    title: "Start building with Codexa.",
     description: "Free plan, no card required. Describe your idea and get a real project you can edit, run, and deploy.",
     primary: { label: "Start building", href: "/signup" },
     secondary: { label: "See pricing", href: "/pricing" },
@@ -92,11 +92,12 @@ export function CTABand({
   const p = primary ?? d.primary;
   const s = secondary === undefined ? d.secondary : secondary;
   return (
-    <section className={cn("px-4 py-20 sm:px-6 lg:px-8 lg:py-28", className)}>
+    <section className={cn("py-16 sm:py-20 lg:py-28", className)}>
+      <div className="container-x">
       <div
         data-reveal
         data-spotlight
-        className="dark relative isolate mx-auto max-w-6xl overflow-hidden rounded-[28px] border border-border-strong bg-background text-foreground shadow-xl"
+        className="dark relative isolate overflow-hidden rounded-[24px] border border-border-strong bg-background text-foreground shadow-xl sm:rounded-[28px]"
         style={{ "--cta-tint": TINT[tone] } as React.CSSProperties}
       >
         <Backdrop still className="opacity-70 [&_.backdrop__canvas]:[mask-image:linear-gradient(to_bottom,black,transparent_85%)]" />
@@ -156,6 +157,7 @@ export function CTABand({
           )}
         </div>
         <div aria-hidden="true" className="bg-noise pointer-events-none absolute inset-0" />
+      </div>
       </div>
     </section>
   );

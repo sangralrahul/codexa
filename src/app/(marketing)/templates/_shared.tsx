@@ -91,11 +91,9 @@ export async function PublicGalleryPage({
                 <StarterFan
                   starters={starters}
                   caption={
-                    <span className="inline-flex items-center gap-2">
-                      <Camera className="size-3.5 shrink-0 text-signal-ink" aria-hidden="true" />
-                      <span>
-                        <span className="font-medium text-foreground/85">Starter screenshots.</span> {HONESTY}
-                      </span>
+                    <span className="inline-flex max-w-[46ch] items-start gap-2 text-balance">
+                      <Camera className="mt-0.5 size-3.5 shrink-0 text-signal-ink" aria-hidden="true" />
+                      <span>{HONESTY}</span>
                     </span>
                   }
                 />
@@ -118,7 +116,7 @@ export async function PublicGalleryPage({
           Starter screenshots show each template as it ships. They are not output generated from a prompt; what you build will look like what you ask for.
         </p>
       </div>
-      <CTABand variant="prompt" title="Start from a template" description="Create a free account, pick a starter, and ask the AI agent to turn it into your app." secondary={{ label: "How it works", href: "/how-it-works" }} />
+      <CTABand variant="prompt" title="Start from a template." description="Create a free account, pick a starter, and ask the AI agent to turn it into your app." secondary={{ label: "How it works", href: "/how-it-works" }} />
     </div>
   );
 }

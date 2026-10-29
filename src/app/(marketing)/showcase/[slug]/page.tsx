@@ -177,7 +177,7 @@ export default async function ShowcaseEntryPage({ params }: { params: Params }) 
           </div>
         </article>
       </div>
-      <CTABand title="Build your own" description="Start from a template or a prompt, iterate with the AI agent, deploy, and submit it to the showcase." primary={{ label: "Start Building Free", href: "/signup" }} secondary={{ label: "Browse templates", href: "/templates" }} />
+      <CTABand title="Build your own." description="Start from a template or a prompt, iterate with the AI agent, deploy, and submit it to the showcase." primary={{ label: "Start building free", href: "/signup" }} secondary={{ label: "Browse templates", href: "/templates" }} />
     </>
   );
 }

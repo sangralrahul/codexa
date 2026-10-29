@@ -30,7 +30,7 @@ export function HomeHero({ signedIn, announcement }: { signedIn: boolean; announ
   );
 
   return (
-    <section aria-labelledby="home-title" className="relative isolate min-h-[calc(100svh-var(--header-h))] overflow-clip pb-28 pt-[6vh] sm:pb-36 sm:pt-[9vh]">
+    <section aria-labelledby="home-title" className="relative isolate overflow-clip pb-10 pt-[4vh] sm:pb-14 sm:pt-[9vh]">
       <HeroFloats />
       <div className="container-x relative pb-4 pt-6 text-center sm:pt-8 md:pb-3 lg:pt-5">
         <div className="scroll-fade">

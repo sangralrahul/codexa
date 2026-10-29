@@ -378,7 +378,7 @@ export default async function IntegrationDetailPage({ params }: { params: Params
       <CTABand
         title={planned ? "Build with what is available today" : `Connect ${i.name} to your workspace`}
         description="Create a free account, add the connections your project needs, and let the AI agent build against them."
-        primary={{ label: "Start Building Free", href: "/signup" }}
+        primary={{ label: "Start building free", href: "/signup" }}
         secondary={{ label: "All integrations", href: "/integrations" }}
       />
     </>

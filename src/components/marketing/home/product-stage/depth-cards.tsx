@@ -30,7 +30,7 @@ export function DepthCards({ frame, scenario }: { frame: StageFrame; scenario: S
   const snapshot = frame.cards.snapshot && frame.view === "code";
   const phoneSrc = templatePhoneShotSrc(scenario.id) ?? templateShotFor(scenario.id, 360);
   return (
-    <div aria-hidden="true" className="pointer-events-none absolute inset-0 hidden lg:block" style={{ "--edge": EDGE } as React.CSSProperties}>
+    <div aria-hidden="true" data-depth-cards className="pointer-events-none absolute inset-0 hidden lg:block" style={{ "--edge": EDGE } as React.CSSProperties}>
       <div
         className={cn(card, "right-[calc(var(--edge)*-1)] top-[132px] flex items-center gap-2.5 px-3 py-2", snapshot ? "scale-100 opacity-100" : "scale-95 opacity-0")}
         style={{ "--depth": 4 } as React.CSSProperties}

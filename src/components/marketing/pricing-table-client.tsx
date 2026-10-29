@@ -53,7 +53,8 @@ function Toggle<T extends string>({
   };
   return (
     <div className="inline-flex items-center gap-2.5">
-      <span id={id} className="text-label text-muted-foreground">
+      {/* Phones: the label is for screen readers only, so both toggles fit on one centred row. */}
+      <span id={id} className="text-label text-muted-foreground max-sm:sr-only">
         {label}
       </span>
       <div ref={group} role="radiogroup" aria-labelledby={id} onKeyDown={onKey} className="relative inline-flex rounded-full border border-border bg-surface/80 p-1 shadow-[inset_0_1px_0_var(--hairline)] backdrop-blur">
@@ -92,7 +93,7 @@ export function PricingToggles({
 }) {
   const save = maxAnnualSavingPercent(currency);
   return (
-    <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-3">
+    <div className="flex flex-wrap items-center justify-center gap-x-3 gap-y-3 sm:gap-x-6">
       <Toggle
         label="Billing"
         value={interval}

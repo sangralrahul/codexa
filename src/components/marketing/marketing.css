@@ -237,7 +237,9 @@
 .mk-wordmark__l {
   display: inline-block;
   color: transparent;
-  background-image: linear-gradient(180deg, color-mix(in oklab, var(--foreground) 30%, transparent), color-mix(in oklab, var(--glow) 22%, transparent) 70%, transparent);
+  /* Each letter carries its own gradient, so tall glyphs (the "d" ascender) start higher in it: keep the top
+     soft so the ascender does not read as a solid block next to the x-height letters. */
+  background-image: linear-gradient(180deg, color-mix(in oklab, var(--foreground) 16%, transparent) 0%, color-mix(in oklab, var(--foreground) 14%, transparent) 30%, color-mix(in oklab, var(--glow) 20%, transparent) 72%, transparent);
   -webkit-background-clip: text;
   background-clip: text;
   opacity: 1;

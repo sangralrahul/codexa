@@ -202,7 +202,7 @@ export function StepDeck() {
                   </div>
                   <span
                     aria-hidden="true"
-                    className="font-display text-[44px] font-bold leading-none tracking-[-0.04em] text-foreground/10 sm:text-[56px]"
+                    className="hidden font-display text-[56px] font-bold leading-none tracking-[-0.04em] text-foreground/10 sm:block"
                   >
                     {String(i + 1).padStart(2, "0")}
                   </span>

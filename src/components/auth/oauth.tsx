@@ -54,7 +54,7 @@ function LastUsed({ className }: { className?: string }) {
 }
 
 /**
- * GitHub first (PLAN §5.5): a full-width 48px outline link with the real GitHub mark.
+ * GitHub first (PLAN §5.5): a full-width 44px outline link with the real GitHub mark.
  * It stays an <a> (the e2e contract counts the buttons). Hidden by the caller when GitHub
  * sign-in is not configured.
  */
@@ -68,9 +68,9 @@ export function GitHubButton({ href, onNavigate }: { href: string; onNavigate?: 
         rememberAuthMethod("github");
         onNavigate?.();
       }}
-      className={cn(buttonClasses("outline", "lg", "group w-full text-[15px]"), "hover:-translate-y-px hover:shadow-md")}
+      className={buttonClasses("outline", "lg", "h-11 w-full text-[15px]")}
     >
-      <BrandMark id="github" className="size-[18px] transition-transform duration-300 ease-out group-hover:-rotate-6 group-hover:scale-110" />
+      <BrandMark id="github" className="size-[18px]" />
       Continue with GitHub
       {/* A tag sitting on the top border, so it never covers the label on a narrow phone. */}
       {last === "github" ? <LastUsed className="absolute -top-2.5 right-4 bg-background shadow-[inset_0_0_0_1px_var(--border-strong)]" /> : null}
@@ -78,17 +78,17 @@ export function GitHubButton({ href, onNavigate }: { href: string; onNavigate?: 
   );
 }
 
-/** "or continue with email" rule between OAuth and the form; carries the badge when email was last used. */
+/** "or" rule between OAuth and the form; carries the badge when email was last used. */
 export function OrDivider({ showLastUsed = true }: { showLastUsed?: boolean }) {
   const last = useLastAuthMethod();
   return (
     <div className="flex items-center gap-3 text-xs text-muted-foreground">
-      <span aria-hidden="true" className="h-px flex-1 bg-gradient-to-r from-transparent to-border" />
+      <span aria-hidden="true" className="h-px flex-1 bg-border" />
       <span className="inline-flex items-center gap-2">
         or continue with email
         {showLastUsed && last === "email" ? <LastUsed /> : null}
       </span>
-      <span aria-hidden="true" className="h-px flex-1 bg-gradient-to-l from-transparent to-border" />
+      <span aria-hidden="true" className="h-px flex-1 bg-border" />
     </div>
   );
 }

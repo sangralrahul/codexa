@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Hammer, Rocket, Send, Sparkles } from "lucide-react";
+import { Check, Hammer, Rocket, Send, Sparkles } from "lucide-react";
 import { Breadcrumbs } from "@/components/docs/breadcrumbs";
 import { HubHeader } from "@/components/docs/hub-header";
 import { TemplatePreview } from "@/components/templates";
@@ -171,15 +171,26 @@ export default async function ShowcasePage({ searchParams }: { searchParams: Sea
           )}
         </section>
 
-        <section id="submit" aria-labelledby="submit-heading" className="mt-16 grid scroll-mt-28 gap-8 rounded-[22px] border border-border bg-surface/60 p-6 sm:p-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.4fr)]">
+        <section id="submit" aria-labelledby="submit-heading" className="mt-16 grid scroll-mt-28 gap-8 rounded-[22px] border border-border bg-surface/60 p-6 sm:p-8 lg:grid-cols-2 lg:gap-12 lg:p-10">
           <div>
             <h2 id="submit-heading" className="text-display-4">
               Submit your project
             </h2>
-            <p className="mt-2 text-sm text-muted-foreground">
-              Anyone with the editor role on a project can submit it. Entries are reviewed by the Codexa team and published with a “Built with Codexa” badge. The page shows only what you write
-              here and, optionally, a live URL. If the project&apos;s visibility is public, signed-in users can also remix it (copy its files, never its secrets) into their own workspace.
+            <p className="mt-3 max-w-[52ch] text-pretty text-[15px] leading-relaxed text-muted-foreground">
+              Anyone with the editor role on a project can submit it. The Codexa team reviews every entry before it is published.
             </p>
+            <ul className="mt-5 space-y-2.5 text-sm leading-relaxed text-foreground/85">
+              {[
+                "Published entries carry a “Built with Codexa” badge.",
+                "The page shows only what you write here and, optionally, a live URL.",
+                "If the project’s visibility is public, signed-in users can remix it into their own workspace: its files are copied, never its secrets.",
+              ].map((line) => (
+                <li key={line} className="flex gap-2.5">
+                  <Check className="mt-1 size-3.5 shrink-0 text-signal-ink" aria-hidden="true" />
+                  <span>{line}</span>
+                </li>
+              ))}
+            </ul>
             {user && submissions.length ? (
               <div className="mt-6">
                 <h3 className="text-sm font-semibold">Your submissions</h3>
@@ -206,7 +217,7 @@ export default async function ShowcasePage({ searchParams }: { searchParams: Sea
             {user ? (
               <ShowcaseSubmitForm workspaceId={current?.workspace.id ?? null} workspaceName={current?.workspace.name ?? null} />
             ) : (
-              <div className="rounded-[16px] border border-dashed border-border-strong p-6 text-center">
+              <div className="flex h-full flex-col items-center justify-center rounded-[16px] border border-dashed border-border-strong p-6 text-center">
                 <p className="text-sm text-muted-foreground">Sign in to submit one of your projects.</p>
                 <div className="mt-4 flex flex-wrap justify-center gap-2">
                   <Link href="/login?next=/showcase" className={buttonClasses("primary", "md")}>
@@ -221,7 +232,7 @@ export default async function ShowcasePage({ searchParams }: { searchParams: Sea
           </div>
         </section>
       </div>
-      <CTABand title="Build something worth showing" description="Start from a template or a prompt, iterate with the AI agent, deploy, and submit it here." primary={{ label: "Start Building Free", href: "/signup" }} secondary={{ label: "Browse templates", href: "/templates" }} />
+      <CTABand title="Build something worth showing." description="Start from a template or a prompt, iterate with the AI agent, deploy, and submit it here." primary={{ label: "Start building free", href: "/signup" }} secondary={{ label: "Browse templates", href: "/templates" }} />
     </>
   );
 }

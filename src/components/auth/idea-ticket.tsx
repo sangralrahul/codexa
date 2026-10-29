@@ -8,7 +8,7 @@ import { cn } from "@/lib/utils";
 
 /**
  * The idea passport on sign-up (PLAN §4.1): the sentence typed on the homepage, quoted on a
- * comet-border ticket. Long ideas clamp to two lines and expand on click; "Edit" turns the
+ * quiet bordered ticket. Long ideas clamp to two lines and expand on click; "Edit" turns the
  * ticket into a textarea right here (no round trip to the homepage). Text only: the prompt
  * is rendered as a React text node, never as HTML.
  */
@@ -53,12 +53,12 @@ export function IdeaTicket({ text, onChange, templateName }: { text: string; onC
   };
 
   return (
-    <div suppressHydrationWarning className="comet-border idea-ticket rounded-[18px] shadow-md" data-active="">
-      <div className="comet-border__inner overflow-hidden rounded-[17px] px-3.5 pb-3.5 pt-3 sm:px-4">
+    <div className="idea-ticket rounded-2xl border border-border bg-muted/50">
+      <div className="px-3.5 pb-3.5 pt-3 sm:px-4">
         <div className="flex items-center justify-between gap-3">
-          <p className="text-label flex min-w-0 items-center gap-2 whitespace-nowrap text-signal-ink">
+          <p className="flex min-w-0 items-center gap-2 whitespace-nowrap text-xs font-medium text-muted-foreground">
             <span aria-hidden="true" className="size-1.5 rounded-full bg-signal" />
-            Your idea · carried over
+            Your idea, carried over
           </p>
           {editing ? (
             <button

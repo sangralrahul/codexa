@@ -132,7 +132,7 @@ export default async function IntegrationsPage({ searchParams }: { searchParams:
           </ReviewNote>
         </div>
       </div>
-      <CTABand title="Connect your stack" description="Create a free account, add a database or AI key to your workspace, and start building against real services." primary={{ label: "Start Building Free", href: "/signup" }} secondary={{ label: "Read the docs", href: "/docs/integrations" }} />
+      <CTABand title="Connect your stack." description="Create a free account, add a database or AI key to your workspace, and start building against real services." primary={{ label: "Start building free", href: "/signup" }} secondary={{ label: "Read the docs", href: "/docs/integrations" }} />
     </>
   );
 }

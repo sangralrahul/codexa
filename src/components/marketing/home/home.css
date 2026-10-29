@@ -5,6 +5,19 @@
    and the global reduced-motion backstop in globals.css still applies.
    ========================================================================== */
 
+/* ---------- Hero H1 ---------- */
+
+/* The cycling word sits in an inline grid. .mark-select sets line-height: 0, which collapses each
+   word's grid row to 0px in calm mode (the line mask then clips the word away) and clips the
+   descenders of "app." in full motion. Give the words a real line box and share the baseline. */
+#home-title .word-cycle { vertical-align: baseline; }
+#home-title .word-cycle__word { line-height: 1; }
+/* The mark spans two elements ("running" + the cycling word); the caret belongs after the last glyph only. */
+#home-title .mark-select:not(.word-cycle__word)::after { display: none; }
+/* Until the client measures the slot (no inline width yet), the grid would size to the widest word and the
+   server-rendered line would sit off-centre; only the first word takes part in layout until then. */
+#home-title .word-cycle:not([style]) .word-cycle__word[data-state="out"] { display: none; }
+
 /* ---------- Stage ---------- */
 
 /* Finished frames (poster, calm, paused, scrolled back): entrance animations jump to their end. */
@@ -378,6 +391,10 @@
 }
 [data-motion="reduced"] .deck-card { position: relative !important; top: auto !important; transform: none !important; margin-bottom: 1.5rem !important; }
 [data-motion="reduced"] .deck-card::after { display: none; }
+
+/* Inside a deck card the stage has no page gutter to float into (the card clips its overflow), so the
+   depth cards (snapshot, type-check, phone) tuck just inside the window instead of being cut at its edge. */
+.deck-card [data-depth-cards] { --edge: -14px !important; }
 
 /* Dark: the composer halo is a faint white sheen, not a colour ring. */
 .dark .hero-halo { opacity: 0.28; filter: blur(14px); }

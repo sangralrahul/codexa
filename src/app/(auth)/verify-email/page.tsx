@@ -8,7 +8,7 @@ export const metadata = authMetadata("/verify-email");
 export default async function VerifyEmailPage({ searchParams }: { searchParams: Promise<{ token?: string }> }) {
   const { token } = await searchParams;
   return (
-    <AuthCard title="Verify your email." highlight="email." description="Confirming your address unlocks deployments.">
+    <AuthCard title="Verify your email" description="Confirming your address unlocks deployments.">
       <VerifyEmail token={token ?? null} emailConfigured={capabilities.email} />
     </AuthCard>
   );

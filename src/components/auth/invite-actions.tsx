@@ -62,7 +62,7 @@ export function InviteAccept({ token, workspaceName }: { token: string; workspac
   return (
     <div className="flex flex-col gap-3">
       {error ? <Alert variant="danger">{error}</Alert> : null}
-      <Button type="button" size="lg" className="w-full text-[15px]" onClick={accept} state={phase} loadingLabel="Joining…" successLabel={`Opening ${workspaceName}…`}>
+      <Button type="button" size="lg" className="h-11 w-full text-[15px]" onClick={accept} state={phase} loadingLabel="Joining…" successLabel={`Opening ${workspaceName}…`}>
         Join {workspaceName}
       </Button>
     </div>
@@ -85,7 +85,7 @@ export function SwitchAccount({ next, email }: { next: string; email: string }) 
   }
 
   return (
-    <Button type="button" variant="outline" size="lg" className="w-full text-[15px]" onClick={go} loading={busy}>
+    <Button type="button" variant="outline" size="lg" className="h-11 w-full text-[15px]" onClick={go} loading={busy}>
       {busy ? null : <LogOut className="size-4" aria-hidden="true" />}
       Sign out and switch account
     </Button>

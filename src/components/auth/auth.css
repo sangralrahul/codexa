@@ -3,132 +3,38 @@
    src/app/(auth)/layout.tsx. Plain CSS on the design tokens from globals.css
    (no hex, no Tailwind at-rules). Calm = OS reduced motion OR
    <html data-motion="reduced">: both are handled at the end of the file.
-   PLAN §5.5: warm and quick, 280ms entrances staggered 40ms.
    ========================================================================== */
 
-/* ---------- Entrance: heading → OAuth → each field, 40ms apart ---------- */
+/* ---------- Entrance: one short rise, heading → fields, 30ms apart ---------- */
 @keyframes auth-rise {
-  from { opacity: 0; transform: translateY(8px); }
+  from { opacity: 0; transform: translateY(4px); }
 }
-.auth-rise > * { animation: auth-rise 280ms var(--ease-out) calc(var(--rise-base, 0ms) + var(--rise-i, 0) * 40ms) backwards; }
+.auth-rise > * { animation: auth-rise 240ms var(--ease-out) calc(var(--rise-base, 0ms) + var(--rise-i, 0) * 30ms) backwards; }
 .auth-rise > :nth-child(2) { --rise-i: 1; }
 .auth-rise > :nth-child(3) { --rise-i: 2; }
 .auth-rise > :nth-child(4) { --rise-i: 3; }
 .auth-rise > :nth-child(5) { --rise-i: 4; }
-.auth-rise > :nth-child(6) { --rise-i: 5; }
-.auth-rise > :nth-child(7) { --rise-i: 6; }
-.auth-rise > :nth-child(8) { --rise-i: 7; }
-.auth-rise > :nth-child(n + 9) { --rise-i: 8; }
+.auth-rise > :nth-child(n + 6) { --rise-i: 5; }
 /* A block that staggers its own children does not rise as a whole as well. */
 .auth-rise > :has(> .auth-rise) { animation: none; }
 
-/* The display-2 face, sized to the 408px form column (two lines at most for every auth heading). */
-@media (width >= 64rem) {
-  .auth-title { font-size: clamp(2.75rem, 1.2rem + 2.6vw, 3.5rem); }
-}
-
-/* ---------- Form column ---------- */
-/* A soft signal light that follows the pointer (MotionEffects writes --mx/--my on [data-spotlight]). */
-.auth-glow {
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  background: radial-gradient(560px circle at var(--mx, 50%) var(--my, 30%), color-mix(in oklab, var(--glow) 7%, transparent), transparent 70%);
-  opacity: 0.6;
-  transition: opacity var(--dur-5) var(--ease-out);
-}
-[data-spotlight]:hover > .auth-glow { opacity: 1; }
-
-/* Phones and tablets: the form sits on a glass card over the still wash. Large screens: no card. */
-.auth-card {
-  position: relative;
-  border-radius: 24px;
-  border: 1px solid var(--border);
-  background: var(--glass);
-  backdrop-filter: blur(16px) saturate(140%);
-  -webkit-backdrop-filter: blur(16px) saturate(140%);
-  box-shadow: inset 0 1px 0 var(--hairline), var(--shadow-lg);
-  padding: 1.5rem;
-}
+/* ---------- Form frame ---------- */
+/* Phones: the form sits straight on the page. Tablets: a calm card. Large screens: no card (the panel sits beside it). */
 @media (width >= 40rem) {
-  .auth-card { padding: 2rem; }
+  .auth-card {
+    border-radius: 20px;
+    border: 1px solid var(--border);
+    background: var(--card);
+    box-shadow: var(--shadow-sm), 0 12px 32px -20px color-mix(in oklab, var(--foreground) 22%, transparent);
+    padding: 2.25rem;
+  }
 }
 @media (width >= 64rem) {
-  .auth-card { border: 0; background: none; backdrop-filter: none; -webkit-backdrop-filter: none; box-shadow: none; padding: 0; border-radius: 0; }
+  .auth-card { border: 0; background: none; box-shadow: none; padding: 0; border-radius: 0; }
 }
 
-/* ---------- The inset dark panel and the Build replay ---------- */
-.auth-panel {
-  box-shadow: 0 0 0 1px var(--border), var(--shadow-stage);
-}
-/* Tablet band: the panel's light as a still CSS glow from the top edge (the live canvas is large-screen only). */
-.auth-band-glow {
-  pointer-events: none;
-  background:
-    radial-gradient(55% 85% at 28% -10%, color-mix(in oklab, var(--silk-1) 26%, transparent), transparent 70%),
-    radial-gradient(45% 75% at 82% -10%, color-mix(in oklab, var(--glow) 18%, transparent), transparent 70%);
-}
-
-/* The horizon lights the frame from behind; a little brighter than a page wash. */
-.auth-panel .horizon { --silk-opacity: 0.95; }
-
-.replay-plane {
-  transform: perspective(1600px) rotateY(-8deg) rotateX(4deg);
-  transform-origin: 60% 50%;
-  transition: transform 900ms var(--ease-out);
-}
-.replay-stage:hover .replay-plane { transform: perspective(1600px) rotateY(-4deg) rotateX(2deg); }
-
-/* A soft reflection pooled under the tilted frame (gradient, no filter). */
-.replay-reflection {
-  position: absolute;
-  left: 8%;
-  right: 4%;
-  bottom: -14%;
-  height: 22%;
-  border-radius: 50%;
-  background: radial-gradient(closest-side, color-mix(in oklab, var(--glow) 22%, transparent), color-mix(in oklab, var(--silk-1) 10%, transparent) 55%, transparent);
-  pointer-events: none;
-}
-
-/* The app that just finished crossfades out to the empty blueprint while the next prompt types,
-   so the picture never disagrees with the example named under it. */
-@keyframes replay-out { from { opacity: 1; transform: none; } }
-.replay-under { opacity: 0; transform: scale(0.985); animation: replay-out 900ms var(--ease-out) 120ms both; }
-
-/* The preview's loading bar (top edge of the browser body): creeps forward per tool call, then completes and fades. */
-.replay-load { transform-origin: 0 50%; opacity: 0.9; transition: transform 420ms var(--ease-out), opacity var(--dur-4) var(--ease-out) 260ms; }
-.replay-load[data-done] { opacity: 0; }
-/* While it builds, the frame's reload arrow turns as a loading spinner (lucide's class on BrowserFrame's icon). */
-@keyframes replay-spin { to { rotate: 360deg; } }
-.replay-stage [data-loading] .lucide-rotate-cw { color: var(--foreground); animation: replay-spin 900ms linear infinite; }
-
-/* Story progress: the current segment fills over one item (9s); paused with the replay. */
-@keyframes replay-fill { from { transform: scaleX(0); } to { transform: scaleX(1); } }
-.replay-seg__fill { transform-origin: 0 50%; transform: scaleX(0); }
-.replay-seg[data-state="done"] .replay-seg__fill { transform: scaleX(1); }
-.replay-seg[data-state="current"] .replay-seg__fill { animation: replay-fill var(--replay-ms, 6000ms) linear var(--replay-delay, 0ms) both; }
-.replay-seg[data-paused] .replay-seg__fill { animation-play-state: paused; }
-
-/* Paused (or scrolled away): the endless loops in the depiction hold still (spinners, pulses, carets).
-   One-shot entrances (wipe, row rise) still finish, so a story dot picked while paused lands on a whole frame. */
-.replay-stage[data-paused] :is(.step-row__spin, .logo-mark__ring, .logo-mark__caret, .lucide-rotate-cw),
-.replay-stage[data-paused] .live-dot::after,
-.replay-stage[data-paused] .caret::after { animation-play-state: paused; }
-
-/* Prompt bar send button lights once the sentence is typed. */
-.replay-send { transition: background-color var(--dur-3), color var(--dur-3), scale var(--dur-3) var(--ease-snap); }
-.replay-send[data-ready] { scale: 1.06; }
-
-/* ---------- Mobile template strip ---------- */
-.auth-strip { --marquee-duration: 36s; }
-/* Calm: the three real tiles stand still in one even row (instead of wrapping 2 + 1). */
-@media (prefers-reduced-motion: reduce) {
-  .marquee.auth-strip .marquee__track { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); width: 100%; padding-inline: 1rem; }
-  .marquee.auth-strip .auth-strip__tile { width: auto; }
-}
-[data-motion="reduced"] .marquee.auth-strip .marquee__track { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); width: 100%; padding-inline: 1rem; }
-[data-motion="reduced"] .marquee.auth-strip .auth-strip__tile { width: auto; }
+/* ---------- Side panel ---------- */
+.auth-shot { box-shadow: var(--shadow-lg); }
 
 /* ---------- Idea ticket ---------- */
 .idea-ticket { view-transition-name: idea; }
@@ -137,43 +43,14 @@
 
 /* ---------- Password checklist ---------- */
 .pw-rule__icon { transition: color var(--dur-3); }
-.pw-rule[data-met] .pw-rule__icon { animation: check-pop 260ms var(--ease-snap); }
-.pw-meter__seg { transform-origin: 0 50%; transform: scaleX(0); transition: transform var(--dur-4) var(--ease-out), background-color var(--dur-3); }
-.pw-meter__seg[data-on] { transform: scaleX(1); }
-
-/* ---------- Invite: the workspace monogram pulses once ---------- */
-.invite-mark { position: relative; display: inline-flex; }
-.invite-mark::after {
-  content: "";
-  position: absolute;
-  inset: -4px;
-  border-radius: 16px;
-  border: 1.5px solid var(--signal);
-  opacity: 0;
-  animation: invite-pulse 1400ms var(--ease-out) 320ms both;
-  pointer-events: none;
-}
-@keyframes invite-pulse {
-  0% { opacity: 0.9; transform: scale(0.92); }
-  100% { opacity: 0; transform: scale(1.35); }
-}
 
 /* ---------- Forgot password: the mail tile ---------- */
-.mail-tile__badge { animation: check-pop 320ms var(--ease-snap) 200ms both, auth-rise 280ms var(--ease-out) 200ms backwards; }
+.mail-tile__badge { animation: check-pop 320ms var(--ease-snap) 200ms both; }
 
-/* ---------- Calm: final frames, no tilt, no pulse ---------- */
+/* ---------- Calm: final frames ---------- */
 @media (prefers-reduced-motion: reduce) {
-  .auth-rise > *, .mail-tile__badge, .pw-rule[data-met] .pw-rule__icon, .replay-under, .replay-stage [data-loading] .lucide-rotate-cw { animation: none; }
-  .replay-load { transition: none; }
-  .replay-plane, .replay-stage:hover .replay-plane { transform: none; transition: none; }
-  .replay-seg[data-state="current"] .replay-seg__fill { animation: none; transform: scaleX(1); }
-  .invite-mark::after { display: none; }
-  .auth-glow { transition: none; }
-  .pw-meter__seg { transition: none; }
+  .auth-rise > *, .mail-tile__badge { animation: none; }
+  .pw-rule__icon { transition: none; }
 }
-[data-motion="reduced"] :is(.auth-rise > *, .mail-tile__badge, .pw-rule[data-met] .pw-rule__icon, .replay-under, .replay-stage [data-loading] .lucide-rotate-cw) { animation: none; }
-[data-motion="reduced"] .replay-load { transition: none; }
-[data-motion="reduced"] :is(.replay-plane, .replay-stage:hover .replay-plane) { transform: none; transition: none; }
-[data-motion="reduced"] .replay-seg[data-state="current"] .replay-seg__fill { animation: none; transform: scaleX(1); }
-[data-motion="reduced"] .invite-mark::after { display: none; }
-[data-motion="reduced"] :is(.auth-glow, .pw-meter__seg) { transition: none; }
+[data-motion="reduced"] :is(.auth-rise > *, .mail-tile__badge) { animation: none; }
+[data-motion="reduced"] .pw-rule__icon { transition: none; }

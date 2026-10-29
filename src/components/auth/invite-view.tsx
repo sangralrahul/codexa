@@ -41,12 +41,12 @@ export function InviteView({ token, preview, user, now }: { token: string; previ
 
   if (!preview) {
     return (
-      <AuthCard title="Invitation not found." highlight="not found." description="This link is invalid or was revoked. Ask the workspace owner to send a new invitation.">
+      <AuthCard title="Invitation not found" description="This link is invalid or was revoked. Ask the workspace owner to send a new invitation.">
         <div className="flex flex-col gap-3">
-          <Link href="/dashboard" className={buttonClasses("primary", "lg", "w-full text-[15px]")}>
+          <Link href="/dashboard" className={buttonClasses("primary", "lg", "h-11 w-full text-[15px]")}>
             Go to dashboard
           </Link>
-          <Link href="/login" className={buttonClasses("ghost", "lg", "w-full text-[15px]")}>
+          <Link href="/login" className={buttonClasses("ghost", "lg", "h-11 w-full text-[15px]")}>
             Sign in
           </Link>
         </div>
@@ -61,12 +61,9 @@ export function InviteView({ token, preview, user, now }: { token: string; previ
   return (
     <AuthCard
       title={`Join ${ws.name}`}
-      highlight={ws.name}
       eyebrow={
         <div className="flex items-center gap-3.5">
-          <span className="invite-mark">
-            <Avatar name={ws.name} seed={ws.id} shape="square" size="xl" />
-          </span>
+          <Avatar name={ws.name} seed={ws.id} shape="square" size="xl" />
           <div className="min-w-0">
             <p className="text-label text-muted-foreground">Workspace invitation</p>
             <p className="mt-1.5 truncate text-sm text-foreground">{preview.inviterName ? `From ${preview.inviterName}` : "You were invited"}</p>
@@ -109,10 +106,10 @@ export function InviteView({ token, preview, user, now }: { token: string; previ
           </Alert>
         ) : !user ? (
           <div className="flex flex-col gap-3">
-            <Link href={withAuthParams("/signup", { next, email: preview.email })} className={buttonClasses("primary", "lg", "w-full text-[15px]")}>
+            <Link href={withAuthParams("/signup", { next, email: preview.email })} className={buttonClasses("primary", "lg", "h-11 w-full text-[15px]")}>
               Create an account to join
             </Link>
-            <Link href={withAuthParams("/login", { next, email: preview.email })} className={buttonClasses("outline", "lg", "w-full text-[15px]")}>
+            <Link href={withAuthParams("/login", { next, email: preview.email })} className={buttonClasses("outline", "lg", "h-11 w-full text-[15px]")}>
               I already have an account
             </Link>
             <p className="text-center text-xs text-muted-foreground">Sign in with {preview.email} to accept.</p>

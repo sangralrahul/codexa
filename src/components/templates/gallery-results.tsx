@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { SearchX } from "lucide-react";
+import { ChevronDown, SearchX } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { FEATURED_LEAD } from "./gallery-search";
@@ -16,11 +16,19 @@ import { useGallery } from "./gallery-state";
  * and the grid is two columns of compact tiles (name and meta; the tile opens the preview, where
  * "Use template" lives), so the gallery stays a few screens long instead of eighteen.
  */
+/** Tiles shown before "Show all": six rows of four on desktop, a few phone screens of two-up tiles. */
+const PAGE = 24;
+
 export function GalleryResults({ tiles, featured, caption = true, className }: { tiles: Record<string, React.ReactNode>; featured: Record<string, React.ReactNode>; caption?: boolean; className?: string }) {
   const { results, showFeatured, reset, state } = useGallery();
   const lead = FEATURED_LEAD.filter((id) => featured[id]);
   const featuredRow = showFeatured && lead.length === FEATURED_LEAD.length;
   const grid = featuredRow ? results.filter((t) => !lead.includes(t.id as (typeof FEATURED_LEAD)[number])) : results;
+  // The full list is one click away; a new search or filter starts collapsed again.
+  const filterKey = JSON.stringify(state);
+  const [expanded, setExpanded] = React.useState<string | null>(null);
+  const showAll = expanded === filterKey || grid.length <= PAGE + 4;
+  const visible = showAll ? grid : grid.slice(0, PAGE);
 
   return (
     <div className={cn("mt-6 space-y-14", className)}>
@@ -63,10 +71,21 @@ export function GalleryResults({ tiles, featured, caption = true, className }: {
             )}
             aria-label="Templates"
           >
-            {grid.map((t) => (
+            {visible.map((t) => (
               <React.Fragment key={t.id}>{tiles[t.id]}</React.Fragment>
             ))}
           </ul>
+          {showAll ? null : (
+            <div className="mt-10 flex flex-col items-center gap-3 border-t border-border pt-8 text-center">
+              <p className="text-sm text-muted-foreground">
+                Showing {visible.length} of {grid.length} templates
+              </p>
+              <Button type="button" variant="outline" onClick={() => setExpanded(filterKey)}>
+                Show all {grid.length} templates
+                <ChevronDown className="size-4" aria-hidden="true" />
+              </Button>
+            </div>
+          )}
         </section>
       ) : (
         <div className="rounded-[22px] border border-dashed border-border-strong px-6 py-12 text-center">

@@ -29,8 +29,7 @@ export default async function SignupPage({ searchParams }: { searchParams: Searc
 
   return (
     <AuthCard
-      title={idea ? "Let's build this." : "Start building."}
-      highlight={idea ? "this." : "building."}
+      title={idea ? "Create an account to build this" : "Create your account"}
       description={freePlanLine()}
     >
       <SignupForm githubEnabled={capabilities.github} next={next ? safeNext(next, "") || undefined : undefined} email={email} idea={idea} />

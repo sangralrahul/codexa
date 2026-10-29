@@ -154,7 +154,7 @@ export function SignupForm({
       ) : null}
       <div className="empty:hidden">{error ? <Alert variant="danger">{error}</Alert> : null}</div>
       <Field label="Name" htmlFor="name" optional>
-        <Input id="name" name="name" autoComplete="name" placeholder="Your name" maxLength={100} className="h-12 text-[15px]" />
+        <Input id="name" name="name" autoComplete="name" placeholder="Your name" maxLength={100} className="h-11 text-[15px]" />
       </Field>
       <div>
         <Field label="Email" htmlFor="email" error={fields.email}>
@@ -170,7 +170,7 @@ export function SignupForm({
             onChange={() => {
               if (fields.email) setFields(({ email: _gone, ...rest }) => rest);
             }}
-            className="h-12 text-[15px]"
+            className="h-11 text-[15px]"
           />
         </Field>
         {emailTaken ? (
@@ -198,7 +198,7 @@ export function SignupForm({
         </Field>
         <PasswordRules id="password-rules" value={password} />
       </div>
-      <Button type="submit" size="lg" className="w-full text-[15px]" state={phase} loadingLabel="Creating account…" successLabel={arrivalLabel(target)}>
+      <Button type="submit" size="lg" className="h-11 w-full text-[15px]" state={phase} loadingLabel="Creating account…" successLabel={arrivalLabel(target)}>
         Create account
       </Button>
       <SwitchLine>
@@ -306,7 +306,7 @@ export function LoginForm({
             if (fields.email) setFields(({ email: _gone, ...rest }) => rest);
           }}
           autoFocus={!email}
-          className="h-12 text-[15px]"
+          className="h-11 text-[15px]"
         />
       </Field>
       <Field
@@ -330,7 +330,7 @@ export function LoginForm({
           }}
         />
       </Field>
-      <Button type="submit" size="lg" className="w-full text-[15px]" state={phase} loadingLabel="Signing in…" successLabel={arrivalLabel(target)}>
+      <Button type="submit" size="lg" className="h-11 w-full text-[15px]" state={phase} loadingLabel="Signing in…" successLabel={arrivalLabel(target)}>
         Sign in
       </Button>
       <SwitchLine>
@@ -442,7 +442,7 @@ export function ForgotPasswordForm({ emailConfigured, email: initialEmail }: { e
         <div className="empty:hidden">{error ? <Alert variant="danger">{error}</Alert> : null}</div>
         <div className="flex flex-col gap-3">
           {emailConfigured ? (
-            <Button type="button" variant="outline" size="lg" className="w-full text-[15px]" onClick={resend} disabled={left > 0 || resending} loading={resending}>
+            <Button type="button" variant="outline" size="lg" className="h-11 w-full text-[15px]" onClick={resend} disabled={left > 0 || resending} loading={resending}>
               {resending ? null : <RotateCw className="size-4" aria-hidden="true" />}
               {left > 0 ? (
                 <span className="inline-flex items-baseline gap-1">
@@ -492,7 +492,7 @@ export function ForgotPasswordForm({ emailConfigured, email: initialEmail }: { e
             setEmail(e.target.value);
             if (fieldError) setFieldError(null);
           }}
-          className="h-12 text-[15px]"
+          className="h-11 text-[15px]"
         />
       </Field>
       {emailConfigured ? null : (
@@ -500,7 +500,7 @@ export function ForgotPasswordForm({ emailConfigured, email: initialEmail }: { e
           Email delivery isn&apos;t configured on this deployment, so reset links are not sent. Ask the workspace operator.
         </Alert>
       )}
-      <Button type="submit" size="lg" className="w-full text-[15px]" state={phase} loadingLabel="Sending…">
+      <Button type="submit" size="lg" className="h-11 w-full text-[15px]" state={phase} loadingLabel="Sending…">
         Send reset link
       </Button>
       <BackToSignIn />
@@ -611,7 +611,7 @@ export function ResetPasswordForm({ token }: { token: string }) {
         </Field>
         {fields.confirm ? null : <PasswordMatch id="confirm-match" password={password} confirm={confirm} />}
       </div>
-      <Button type="submit" size="lg" className="w-full text-[15px]" state={phase} loadingLabel="Updating…" successLabel="Password updated">
+      <Button type="submit" size="lg" className="h-11 w-full text-[15px]" state={phase} loadingLabel="Updating…" successLabel="Password updated">
         Update password
       </Button>
       <BackToSignIn />
@@ -670,7 +670,7 @@ export function VerifyEmail({ token, emailConfigured }: { token: string | null; 
         <Alert variant="success" title="Email verified">
           Your email address is confirmed. Deployments are unlocked.
         </Alert>
-        <Link href="/dashboard" className={buttonClasses("primary", "lg", "w-full text-[15px]")}>
+        <Link href="/dashboard" className={buttonClasses("primary", "lg", "h-11 w-full text-[15px]")}>
           Continue to dashboard
           <ArrowRight className="size-4" aria-hidden="true" />
         </Link>
@@ -690,8 +690,8 @@ export function VerifyEmail({ token, emailConfigured }: { token: string | null; 
 function VerifyActions({ emailConfigured }: { emailConfigured: boolean }) {
   return (
     <div className="flex flex-col gap-3">
-      {emailConfigured ? <ResendVerificationButton size="lg" emailConfigured className="w-full text-[15px]" /> : null}
-      <Link href="/dashboard" className={buttonClasses(emailConfigured ? "ghost" : "primary", "lg", "w-full text-[15px]")}>
+      {emailConfigured ? <ResendVerificationButton size="lg" emailConfigured className="h-11 w-full text-[15px]" /> : null}
+      <Link href="/dashboard" className={buttonClasses(emailConfigured ? "ghost" : "primary", "lg", "h-11 w-full text-[15px]")}>
         Go to dashboard
       </Link>
       <p className="text-center text-xs text-muted-foreground">
