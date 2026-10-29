@@ -21,6 +21,10 @@ jobs:
         run: |
           for url in "https://codexa.creditvault.tech/login" "https://zzzzzzzzzzzzzzzzzzzzzzzz-preview.creditvault.tech/" "https://${TOKEN}-preview.creditvault.tech/"; do
             echo "=================== $url"
-            curl -sS -m 60 -D - -H "accept: text/html" "$url" -o body.txt || true
-            sed -e 's/<style>.*<\/style>//' body.txt | head -c 1500; echo
+            curl -sS -m 60 -D headers.txt -H "accept: text/html" "$url" -o body.txt 2> err.txt || true
+            out="$(cat err.txt headers.txt; sed -e 's/<style>.*<\/style>//' body.txt | head -c 1200)"
+            echo "$out"
+            # Also as an annotation, so the result is readable from the API.
+            out="${out//'%'/'%25'}"; out="${out//$'\r'/}"; out="${out//$'\n'/'%0A'}"
+            echo "::notice title=$url::$out"
           done
