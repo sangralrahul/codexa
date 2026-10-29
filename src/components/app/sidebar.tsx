@@ -7,6 +7,7 @@ import { Tooltip as RT } from "radix-ui";
 import {
   ArrowUpRight,
   BookOpen,
+  Compass,
   Copy,
   CreditCard,
   ExternalLink,
@@ -20,6 +21,7 @@ import {
   Plus,
   Settings,
   Shield,
+  UserPlus,
   Users,
   X,
 } from "lucide-react";
@@ -48,14 +50,17 @@ const MAIN: NavItem[] = [
   { href: "/dashboard", label: "Home", icon: Home, exact: true, keys: ["G", "H"] },
   { href: "/projects", label: "Projects", icon: FolderKanban, keys: ["G", "P"] },
   { href: "/dashboard/templates", label: "Templates", icon: LayoutTemplate, keys: ["G", "T"] },
+  { href: "/showcase", label: "Community", icon: Compass },
   { href: "/dashboard/shared", label: "Shared with me", icon: Users },
   { href: "/dashboard/github", label: "GitHub", icon: FolderGit2 },
 ];
-const UTILITY = [
+/** Workspace administration, labelled so it is one click away (Settings covers the remaining tabs). */
+const WORKSPACE: (NavItem & { except?: string[] })[] = [
+  { href: "/settings/members", label: "Members", icon: UserPlus },
   { href: "/settings/billing", label: "Usage & billing", icon: CreditCard },
-  { href: "/settings", label: "Settings", icon: Settings, except: "/settings/billing" },
-  { href: "/docs", label: "Documentation", icon: BookOpen, external: true },
+  { href: "/settings", label: "Settings", icon: Settings, keys: ["G", "S"], except: ["/settings/members", "/settings/billing"] },
 ];
+const UTILITY = [{ href: "/docs", label: "Documentation", icon: BookOpen, external: true }];
 
 const tipClass =
   "cx-pop cx-pop--quick z-50 flex max-w-xs items-center gap-2 rounded-lg border border-border-strong bg-card px-2.5 py-1.5 text-xs font-medium text-card-foreground shadow-lg";
@@ -239,8 +244,8 @@ export function AppSidebar({
   const pathname = usePathname();
   const navRef = useRef<HTMLElement>(null);
   const glide = useGlide(navRef, { selector: '[data-nav-row][aria-current="page"]', itemSelector: "[data-nav-row]", axis: "y", hover: true });
-  const isActive = (href: string, exact?: boolean, except?: string) =>
-    !(except && (pathname === except || pathname.startsWith(except + "/"))) && (exact ? pathname === href : pathname === href || pathname.startsWith(href + "/"));
+  const isActive = (href: string, exact?: boolean, except?: string | string[]) =>
+    ![except ?? []].flat().some((x) => pathname === x || pathname.startsWith(x + "/")) && (exact ? pathname === href : pathname === href || pathname.startsWith(href + "/"));
   const limited = usage && usage.projectLimit > 0;
   const nav: NavItem[] = isStaff ? [...MAIN, { href: "/admin", label: "Admin", icon: Shield }] : MAIN;
 
@@ -311,6 +316,15 @@ export function AppSidebar({
           ))}
         </ul>
 
+        <GroupLabel collapsed={collapsed}>Workspace</GroupLabel>
+        <ul className="space-y-px">
+          {WORKSPACE.map((it) => (
+            <li key={it.href}>
+              <NavRow item={it} collapsed={collapsed} onNavigate={onNavigate} current={isActive(it.href, it.exact, it.except)} />
+            </li>
+          ))}
+        </ul>
+
         <GroupLabel collapsed={collapsed}>Recent</GroupLabel>
         {recent.length ? (
           <ul className="space-y-px">
@@ -342,7 +356,7 @@ export function AppSidebar({
 
         <div className={cn("flex gap-1", collapsed ? "flex-col items-center" : "items-center")}>
           {UTILITY.map((u) => {
-            const current = !u.external && isActive(u.href, false, u.except);
+            const current = false;
             return (
               <RailTip key={u.href} show side={collapsed ? "right" : "top"} content={<>{u.label}{u.external ? <ArrowUpRight className="size-3 text-muted-foreground" aria-hidden="true" /> : null}</>}>
                 <Link

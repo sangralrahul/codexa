@@ -1,5 +1,6 @@
 import Link from "next/link";
-import { ArrowRight, FolderGit2, Plus } from "lucide-react";
+import { ArrowRight, Compass, FolderGit2, LayoutTemplate, Plus, UserPlus } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
 import { AppPage } from "@/components/app/app-shell";
 import { TemplateTile, UseTemplateButton, type TemplateCardData } from "@/components/templates";
 import { PromptBox } from "./prompt-box";
@@ -8,6 +9,39 @@ import { GettingStarted, type ChecklistMilestones } from "./getting-started";
 import { DashboardTabs } from "./dashboard-tabs";
 
 const tileGrid = "grid grid-cols-[minmax(0,1fr)] gap-4 sm:grid-cols-2 lg:grid-cols-3 min-[85rem]:grid-cols-4";
+/** One-click entries to the places people otherwise hunt for (all real routes). */
+function QuickActions({ canCreate, templateCount }: { canCreate: boolean; templateCount: number }) {
+  const items: { href: string; icon: LucideIcon; title: string; detail: string }[] = [
+    { href: "/dashboard/templates", icon: LayoutTemplate, title: "Start from a template", detail: `${templateCount} working starters` },
+    ...(canCreate ? [{ href: "/import-project", icon: FolderGit2, title: "Import from GitHub", detail: "Bring a repository" }] : []),
+    { href: "/showcase", icon: Compass, title: "Community", detail: "Remix public apps" },
+    { href: "/settings/members", icon: UserPlus, title: "Invite your team", detail: "Build together" },
+  ];
+  return (
+    <nav aria-label="Quick actions">
+      <ul className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
+        {items.map(({ href, icon: Icon, title, detail }) => (
+          <li key={href}>
+            <Link
+              href={href}
+              className="group/qa flex h-full items-center gap-3 rounded-[14px] border border-border bg-card px-4 py-3.5 shadow-[inset_0_1px_0_var(--hairline)] transition-[border-color,background-color] duration-(--dur-2) hover:border-border-strong hover:bg-surface focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+            >
+              <span className="flex size-9 shrink-0 items-center justify-center rounded-[10px] border border-border bg-surface text-foreground">
+                <Icon className="size-4" aria-hidden="true" />
+              </span>
+              <span className="min-w-0 flex-1">
+                <span className="block truncate text-[13.5px] font-medium text-foreground">{title}</span>
+                <span className="block truncate text-[12.5px] text-muted-foreground">{detail}</span>
+              </span>
+              <ArrowRight className="size-4 shrink-0 text-muted-foreground opacity-0 transition-[opacity,translate] duration-(--dur-2) group-hover/qa:translate-x-0.5 group-hover/qa:opacity-100 calm:transition-none" aria-hidden="true" />
+            </Link>
+          </li>
+        ))}
+      </ul>
+    </nav>
+  );
+}
+
 const quietLink = "link-draw inline-flex items-center gap-1 text-[13px] text-muted-foreground hover:text-foreground";
 
 /**
@@ -15,7 +49,8 @@ const quietLink = "link-draw inline-flex items-center gap-1 text-[13px] text-mut
  * every value from the database and the plan/template config):
  * (a) one centred question and the composer: describe an app, press Build, and the new project
  *     opens on chat + live preview while the agent works;
- * (b) the first-run checklist (only until it is done and dismissed);
+ * (b) quick actions (templates, GitHub import, community, team) and the first-run checklist
+ *     (only until every step is done);
  * (c) "Recent projects" and "Templates" as tabs: cards with screenshots, a "new project" tile,
  *     and starters that create a project in one click.
  */
@@ -107,7 +142,7 @@ export function DashboardCockpit({
     <>
       {/* (a) The question and the composer. */}
       <div className="dash-home">
-        <AppPage className="pb-4 pt-[min(8vh,4.5rem)]">
+        <AppPage className="pb-2 pt-[min(7vh,4rem)] lg:pb-2 lg:pt-[min(7vh,4rem)]">
           <section aria-labelledby="dash-title" className="mx-auto max-w-3xl">
             <h1 id="dash-title" className="text-center text-[28px] font-semibold leading-[1.1] tracking-[-0.03em] text-balance sm:text-[34px]">
               What should we build, {firstName}?
@@ -120,7 +155,9 @@ export function DashboardCockpit({
         </AppPage>
       </div>
 
-      <AppPage className="space-y-6 pb-16 pt-0">
+      <AppPage className="space-y-8 pb-16 pt-6 lg:pb-16 lg:pt-8">
+        <QuickActions canCreate={canCreate} templateCount={templateCount} />
+
         {/* (b) First-run checklist. */}
         {showChecklist ? (
           <GettingStarted milestones={milestones} canCreate={canCreate} emailVerified={emailVerified} emailConfigured={emailConfigured} resumeHref={projects[0] ? `/projects/${projects[0].id}` : undefined} layout={firstRun ? "row" : "strip"} />

@@ -106,7 +106,8 @@ export default async function DashboardPage({ searchParams }: { searchParams: Se
   const firstName = (user.name || user.email.split("@")[0]).split(/\s+/)[0];
 
   const m = milestones;
-  const showChecklist = canCreate && !(checklistDismissed && m.project && m.preview && m.deploy);
+  // Shown until every step is done (or dismissed); a finished checklist is noise.
+  const showChecklist = canCreate && !checklistDismissed && !(m.project && m.preview && m.deploy);
   const cards: TemplateCardData[] = TEMPLATES.map(summarizeTemplate);
   const cardById = new Map(cards.map((c) => [c.id, c]));
   // Templates tab: the first-run starters first, then the rest of the featured order (eight tiles).

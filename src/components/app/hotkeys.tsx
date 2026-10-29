@@ -9,7 +9,7 @@ import { openCommandMenu } from "./events";
 export { SHORTCUTS_EVENT, openShortcuts } from "./events";
 
 /** Navigation chords (G then a letter). */
-export const GO_TO = { h: "/dashboard", p: "/projects", t: "/dashboard/templates" } as const;
+export const GO_TO = { h: "/dashboard", p: "/projects", t: "/dashboard/templates", s: "/settings" } as const;
 
 type Shortcut = { keys: string[]; label: string; mod?: boolean; then?: boolean };
 export const SHORTCUT_GROUPS: { title: string; items: Shortcut[] }[] = [
@@ -29,6 +29,7 @@ export const SHORTCUT_GROUPS: { title: string; items: Shortcut[] }[] = [
       { keys: ["G", "H"], then: true, label: "Home" },
       { keys: ["G", "P"], then: true, label: "Projects" },
       { keys: ["G", "T"], then: true, label: "Templates" },
+      { keys: ["G", "S"], then: true, label: "Settings" },
     ],
   },
   {

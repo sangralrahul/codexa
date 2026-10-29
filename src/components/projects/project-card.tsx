@@ -41,7 +41,7 @@ function Visibility({ v }: { v: ProjectListItem["visibility"] }) {
 
 /**
  * Project card. Grid: an edge-to-edge 16:10 picture (the screenshot of the template the project
- * started from, captioned "Template preview" so it is never presented as the user's app), the
+ * started from, captioned "Starter image" so it is never presented as the user's app), the
  * name, a real description, status pills from DB rows, and a footer with framework, visibility
  * and "Edited 2h ago" (absolute time on hover). Hover or focus lifts it 2px, slowly pans the
  * picture and slides up a quick-action bar (always visible on touch).
@@ -121,8 +121,8 @@ export function ProjectCard({ project, layout = "grid", showWorkspace, priority 
           className="h-full rounded-none border-0 shadow-none"
         />
         {needsTemplateCaption(project.templateId) ? (
-          <span className="pointer-events-none absolute right-2.5 top-2.5 z-[1] inline-flex h-5 items-center rounded-full bg-background/80 px-2 text-[10.5px] font-medium text-muted-foreground shadow-[inset_0_0_0_1px_var(--border)] backdrop-blur-md">
-            Template preview
+          <span className="pointer-events-none absolute left-2.5 top-2.5 z-[1] inline-flex h-[18px] items-center rounded-md bg-background/70 px-1.5 text-[10px] font-medium text-muted-foreground backdrop-blur-md transition-opacity duration-(--dur-2) group-hover/card:opacity-0 group-focus-within/card:opacity-0">
+            Starter image
           </span>
         ) : null}
         <div className="proj-card__actions absolute inset-x-2.5 bottom-2.5 z-[3] flex items-center justify-end gap-1.5">
@@ -150,13 +150,13 @@ export function ProjectCard({ project, layout = "grid", showWorkspace, priority 
         {project.description ? <p className="mt-1 line-clamp-1 text-[13px] text-muted-foreground">{project.description}</p> : null}
         <StatusPills status={status} className="mt-3" />
         <div className="mt-auto flex items-center gap-2.5 pt-4 text-meta text-muted-foreground">
-          <span className="truncate">{frameworkLabel(project.framework)}</span>
+          <span className="shrink-0">{frameworkLabel(project.framework)}</span>
           <span aria-hidden="true" className="text-border-strong">
             ·
           </span>
           <Visibility v={project.visibility} />
           {showWorkspace ? <span className="truncate text-foreground-dim">{project.workspaceName}</span> : null}
-          <time dateTime={when} title={absoluteTime(when)} className="relative z-[2] ml-auto shrink-0" suppressHydrationWarning>
+          <time dateTime={when} title={absoluteTime(when)} className="relative z-[2] ml-auto min-w-0 truncate" suppressHydrationWarning>
             {touch.label}
           </time>
         </div>
