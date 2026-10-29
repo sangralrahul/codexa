@@ -1,4 +1,5 @@
 import "server-only";
+import { cache } from "react";
 import { and, eq, gte, sql } from "drizzle-orm";
 import { db } from "@/db";
 import { subscriptions, usageEvents, workspaces, type Plan, type Workspace } from "@/db/schema";
@@ -89,9 +90,9 @@ export async function recordUsage(input: {
   });
 }
 
-export async function getWorkspaceEntitlements(workspace: Workspace) {
-  const plan = await getEffectivePlan(workspace);
-  const { used, periodStart: ps } = await getUsageSummary(workspace.id);
+/** Plan, limits and this period's usage. Cached per request (the layout and the page both need it). */
+export const getWorkspaceEntitlements = cache(async function getWorkspaceEntitlements(workspace: Workspace) {
+  const [plan, { used, periodStart: ps }] = await Promise.all([getEffectivePlan(workspace), getUsageSummary(workspace.id)]);
   const limits = PLANS[plan].limits;
   return {
     plan,
@@ -105,4 +106,4 @@ export async function getWorkspaceEntitlements(workspace: Workspace) {
       deployment: isUnlimited(limits.deploymentsPerMonth) ? -1 : Math.max(0, limits.deploymentsPerMonth - used.deployment),
     },
   };
-}
+});

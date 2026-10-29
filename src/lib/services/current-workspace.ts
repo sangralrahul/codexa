@@ -1,12 +1,16 @@
 import "server-only";
+import { cache } from "react";
 import { cookies } from "next/headers";
 import { getDefaultWorkspace, listUserWorkspaces } from "./workspaces";
 import type { User } from "@/db/schema";
 
 export const WORKSPACE_COOKIE = "codexa_workspace";
 
-/** Resolve the user's current workspace (cookie-selected or default). */
-export async function getCurrentWorkspace(user: User) {
+/**
+ * Resolve the user's current workspace (cookie-selected or default). Cached per request, so the
+ * app layout and the page share one lookup.
+ */
+export const getCurrentWorkspace = cache(async function getCurrentWorkspace(user: User) {
   const all = await listUserWorkspaces(user.id);
   const store = await cookies();
   const selected = store.get(WORKSPACE_COOKIE)?.value;
@@ -17,4 +21,4 @@ export async function getCurrentWorkspace(user: User) {
     return { current: def, all };
   }
   return { current, all };
-}
+});

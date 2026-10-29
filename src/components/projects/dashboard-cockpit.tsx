@@ -7,7 +7,7 @@ import { ProjectCard, type ProjectCardItem } from "./project-card";
 import { GettingStarted, type ChecklistMilestones } from "./getting-started";
 import { DashboardTabs } from "./dashboard-tabs";
 
-const tileGrid = "grid grid-cols-[minmax(0,1fr)] gap-5 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4";
+const tileGrid = "grid grid-cols-[minmax(0,1fr)] gap-4 sm:grid-cols-2 lg:grid-cols-3 min-[85rem]:grid-cols-4";
 const quietLink = "link-draw inline-flex items-center gap-1 text-[13px] text-muted-foreground hover:text-foreground";
 
 /**
@@ -107,20 +107,20 @@ export function DashboardCockpit({
     <>
       {/* (a) The question and the composer. */}
       <div className="dash-home">
-        <AppPage className="pb-10 pt-[min(12vh,7rem)]">
+        <AppPage className="pb-4 pt-[min(8vh,4.5rem)]">
           <section aria-labelledby="dash-title" className="mx-auto max-w-3xl">
-            <h1 id="dash-title" className="text-center text-[30px] font-semibold leading-[1.1] tracking-[-0.03em] text-balance sm:text-[40px]">
+            <h1 id="dash-title" className="text-center text-[28px] font-semibold leading-[1.1] tracking-[-0.03em] text-balance sm:text-[34px]">
               What should we build, {firstName}?
             </h1>
             <p className="mx-auto mt-3 max-w-xl text-center text-[15px] text-muted-foreground">Describe it in a sentence. Codexa builds it and runs a live preview.</p>
-            <div className="mt-8">
+            <div className="mt-6">
               <PromptBox {...composer} />
             </div>
           </section>
         </AppPage>
       </div>
 
-      <AppPage className="space-y-8 pb-16 pt-2">
+      <AppPage className="space-y-6 pb-16 pt-0">
         {/* (b) First-run checklist. */}
         {showChecklist ? (
           <GettingStarted milestones={milestones} canCreate={canCreate} emailVerified={emailVerified} emailConfigured={emailConfigured} resumeHref={projects[0] ? `/projects/${projects[0].id}` : undefined} layout={firstRun ? "row" : "strip"} />

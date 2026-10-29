@@ -3,7 +3,7 @@ import { requireUser } from "@/lib/auth/guards";
 import { getCurrentWorkspace } from "@/lib/services/current-workspace";
 import { roleAtLeast } from "@/lib/services/access";
 import { listProjects } from "@/lib/services/projects";
-import { getDashboardOverview, getProjectStatuses } from "@/lib/services/dashboard";
+import { getMilestones, getProjectStatuses } from "@/lib/services/dashboard";
 import { serializeProject } from "@/app/api/v1/projects/_lib/serialize";
 import type { ProjectCardItem } from "@/components/projects/project-card";
 import { getWorkspaceEntitlements } from "@/lib/services/usage";
@@ -30,8 +30,9 @@ export default async function DashboardPage({ searchParams }: { searchParams: Se
   const sp = await searchParams;
   const { current, all } = await getCurrentWorkspace(user);
   const workspaceIds = all.map((w) => w.workspace.id);
-  const [overview, entitlements, rows] = await Promise.all([
-    getDashboardOverview(workspaceIds, { recent: 4, activity: 0 }),
+  // Only the checklist milestones are needed here (cheap), not the full overview.
+  const [milestones, entitlements, rows] = await Promise.all([
+    getMilestones(workspaceIds),
     current ? getWorkspaceEntitlements(current.workspace) : null,
     current ? listProjects(current.workspace.id) : Promise.resolve([]),
   ]);
@@ -104,7 +105,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: Se
 
   const firstName = (user.name || user.email.split("@")[0]).split(/\s+/)[0];
 
-  const m = overview.milestones;
+  const m = milestones;
   const showChecklist = canCreate && !(checklistDismissed && m.project && m.preview && m.deploy);
   const cards: TemplateCardData[] = TEMPLATES.map(summarizeTemplate);
   const cardById = new Map(cards.map((c) => [c.id, c]));
