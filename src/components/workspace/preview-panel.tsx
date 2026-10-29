@@ -532,18 +532,15 @@ function FrameState({ canEdit, showOperatorDetails }: { canEdit: boolean; showOp
     );
   }
 
-  // Behind the card: a dotted canvas with a faint signal horizon and a still wireframe (never a
-  // picture of an app, so nothing to mislabel), read as "an app behind glass" in both themes. The
-  // card sits in the upper third; a soft scrim keeps it legible without hiding the frame.
+  // Behind the card: a quiet dotted canvas only (a fake wireframe read as a broken page). The card
+  // sits in the upper third.
   return (
     <div className="absolute inset-0 overflow-auto">
       <div className="absolute inset-0 overflow-hidden" aria-hidden="true">
         <div className="absolute inset-0 bg-[radial-gradient(color-mix(in_oklab,var(--foreground)_9%,transparent)_1px,transparent_1.5px)] [background-size:16px_16px]" />
-        <div className="absolute inset-0 bg-[radial-gradient(70%_55%_at_100%_100%,color-mix(in_oklab,var(--glow)_4%,transparent),transparent)]" />
-        <SkeletonApp />
-        <div className="absolute inset-0 bg-[radial-gradient(70%_60%_at_50%_32%,color-mix(in_oklab,var(--card)_20%,transparent),transparent)]" />
+
       </div>
-      <div className="relative z-[1] flex min-h-full flex-col items-center justify-start p-5 pt-[14%]">{card}</div>
+      <div className="relative z-[1] flex min-h-full flex-col items-center justify-start p-5 pt-[12%]">{card}</div>
     </div>
   );
 }

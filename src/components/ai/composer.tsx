@@ -1,8 +1,9 @@
 "use client";
 
 import * as React from "react";
-import { ArrowUp, AtSign, FlaskConical, Hammer, ImagePlus, ListChecks, Loader2, MessageCircleQuestion, OctagonAlert, Sparkles, Square, Undo2, Wrench, X } from "lucide-react";
+import { ArrowUp, AtSign, Check, ChevronDown, FlaskConical, Hammer, ImagePlus, ListChecks, Loader2, MessageCircleQuestion, OctagonAlert, Sparkles, Square, Undo2, Wrench, X } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuRadioGroup, DropdownMenuRadioItem, DropdownMenuTrigger } from "@/components/ui/dropdown";
 import { useCalm } from "@/lib/client/motion";
 import { addImages, dataUrlOf, IMAGE_ACCEPT, imageFilesFrom, MAX_PROMPT_IMAGES, type PromptImage } from "@/lib/client/attachments";
 import type { AgentMode } from "./types";
@@ -262,41 +263,35 @@ export function Composer({
             aria-describedby="ai-composer-hint"
           />
           <div className="flex items-center gap-2 px-2 pb-2">
-            <div role="radiogroup" aria-label="Mode" aria-describedby="ai-composer-hint" className="flex shrink-0 items-center rounded-[10px] bg-muted p-0.5 shadow-[inset_0_0_0_1px_var(--border)]">
-              {MODES.map(({ id, label, hint, Icon }) => {
-                const checked = mode === id;
-                return (
-                  <button
-                    key={id}
-                    type="button"
-                    role="radio"
-                    aria-checked={checked}
-                    aria-label={label}
-                    title={`${label}: ${hint}`}
-                    disabled={running || disabled}
-                    data-no-ripple
-                    onClick={() => onModeChange(id)}
-                    onKeyDown={(e) => {
-                      const step = e.key === "ArrowRight" || e.key === "ArrowDown" ? 1 : e.key === "ArrowLeft" || e.key === "ArrowUp" ? -1 : 0;
-                      if (!step) return;
-                      e.preventDefault();
-                      const i = MODES.findIndex((m) => m.id === mode);
-                      const next = MODES[(i + step + MODES.length) % MODES.length];
-                      onModeChange(next.id);
-                      (e.currentTarget.parentElement?.querySelector(`[aria-label="${next.label}"]`) as HTMLElement | null)?.focus();
-                    }}
-                    tabIndex={checked ? 0 : -1}
-                    className={cn(
-                      "inline-flex h-7 items-center gap-1 rounded-[8px] px-2 text-[12px] font-medium transition-[background-color,color,box-shadow] duration-200 focus-visible:outline-2 focus-visible:outline-ring disabled:opacity-60",
-                      checked ? "bg-card text-foreground shadow-[var(--shadow-sm),inset_0_0_0_1px_var(--border)]" : "text-muted-foreground hover:text-foreground",
-                    )}
-                  >
-                    <Icon className="size-3.5" aria-hidden="true" />
-                    <span className={cn(!checked && "sr-only")}>{label}</span>
-                  </button>
-                );
-              })}
-            </div>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild disabled={running || disabled}>
+                <button
+                  type="button"
+                  aria-label={`Mode: ${current.label}. Change mode`}
+                  aria-describedby="ai-composer-hint"
+                  data-no-ripple
+                  className="inline-flex h-8 shrink-0 items-center gap-1.5 rounded-lg bg-muted px-2.5 text-[12.5px] font-medium shadow-[inset_0_0_0_1px_var(--border)] transition-colors hover:bg-muted/70 focus-visible:outline-2 focus-visible:outline-ring disabled:opacity-60"
+                >
+                  <current.Icon className="size-3.5" aria-hidden="true" />
+                  {current.label}
+                  <ChevronDown className="size-3 text-muted-foreground" aria-hidden="true" />
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="start" side="top" className="w-72">
+                <DropdownMenuRadioGroup value={mode} onValueChange={(v) => onModeChange(v as AgentMode)}>
+                  {MODES.map(({ id, label, hint, Icon }) => (
+                    <DropdownMenuRadioItem key={id} value={id} className="items-start gap-2.5 py-2 pl-2 [&>span:first-child]:hidden">
+                      <Icon className="mt-0.5 size-4 shrink-0" aria-hidden="true" />
+                      <span className="min-w-0 flex-1">
+                        <span className="block text-[13px] text-foreground">{label}</span>
+                        <span className="block text-[11.5px] leading-snug text-muted-foreground">{hint}</span>
+                      </span>
+                      {id === mode ? <Check className="mt-0.5 size-4 shrink-0" aria-hidden="true" /> : null}
+                    </DropdownMenuRadioItem>
+                  ))}
+                </DropdownMenuRadioGroup>
+              </DropdownMenuContent>
+            </DropdownMenu>
             {canAttach ? (
               <>
                 <input ref={fileRef} type="file" accept={IMAGE_ACCEPT} multiple hidden onChange={(e) => {

@@ -15,7 +15,7 @@ describe("ChatPanel (SSR smoke)", () => {
     expect(html).toContain("Checking AI configuration");
     expect(html).toContain('aria-label="AI assistant"');
     expect(html).toContain('id="ai-composer"');
-    expect(html).toContain('role="radiogroup"');
+    expect(html).toMatch(/aria-label="Mode: [A-Za-z]+. Change mode"/);
     expect(html).not.toContain("Mock AI");
   });
 
