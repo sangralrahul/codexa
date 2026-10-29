@@ -1,5 +1,5 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
-import { projectsApi, workspacesApi, type Project, type Role, type Workspace } from "../lib/api";
+import { accountApi, projectsApi, workspacesApi, type Project, type Role, type Usage, type Workspace } from "../lib/api";
 
 export type Route =
   | { name: "home" }
@@ -20,6 +20,7 @@ type Ctx = {
   role: Role | null;
   setWorkspaceId: (id: string) => void;
   projects: Project[] | null;
+  usage: Usage | null;
   refreshProjects: () => Promise<void>;
   signOut: () => Promise<void>;
   appUrl: string;
@@ -42,6 +43,7 @@ export function AppProvider({ user: initialUser, appUrl, version, onSignedOut, c
   const [workspaces, setWorkspaces] = useState<{ workspace: Workspace; role: Role }[]>([]);
   const [workspaceId, setWorkspaceIdState] = useState<string | null>(() => localStorage.getItem(WS_KEY));
   const [projects, setProjects] = useState<Project[] | null>(null);
+  const [usage, setUsage] = useState<Usage | null>(null);
 
   useEffect(() => {
     workspacesApi
@@ -58,6 +60,10 @@ export function AppProvider({ user: initialUser, appUrl, version, onSignedOut, c
       const r = await projectsApi.list(current.workspace.id);
       const touched = (p: Project) => new Date(p.lastOpenedAt ?? p.updatedAt).getTime();
       setProjects([...r.projects].sort((a, b) => touched(b) - touched(a)));
+      accountApi
+        .usage(current.workspace.id)
+        .then(setUsage)
+        .catch(() => setUsage(null));
     } catch {
       setProjects([]);
     }
@@ -85,6 +91,7 @@ export function AppProvider({ user: initialUser, appUrl, version, onSignedOut, c
         setProjects(null);
       },
       projects,
+      usage,
       refreshProjects,
       signOut: async () => {
         await window.codexa.logout();
@@ -93,7 +100,7 @@ export function AppProvider({ user: initialUser, appUrl, version, onSignedOut, c
       appUrl,
       version,
     }),
-    [user, stack, workspaces, current, projects, refreshProjects, onSignedOut, appUrl, version],
+    [user, stack, workspaces, current, projects, usage, refreshProjects, onSignedOut, appUrl, version],
   );
 
   return <AppCtx.Provider value={value}>{children}</AppCtx.Provider>;

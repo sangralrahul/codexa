@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { ArrowLeft, ChevronsUpDown, FolderKanban, Home, LayoutTemplate, LogOut, Monitor, Moon, Plus, Search, Settings, Sun, ExternalLink } from "lucide-react";
+import { ArrowLeft, ArrowUpRight, BookOpen, ChevronsUpDown, Compass, FolderKanban, Home, LayoutTemplate, LogOut, Monitor, Moon, Plus, Search, Settings, Sparkles, Sun, ExternalLink } from "lucide-react";
 import { cn } from "../lib/util";
 import { Avatar, Kbd, Logo, Menu, MenuItem, MenuSeparator } from "../ui";
 import { useApp, type Route } from "./state";
@@ -95,7 +95,7 @@ function TitleBar({ onSearch }: { onSearch: () => void }) {
 
 function Sidebar() {
   const app = useApp();
-  const { route, go, projects, workspace, workspaces, setWorkspaceId, user } = app;
+  const { route, go, projects, workspace, workspaces, setWorkspaceId, user, usage } = app;
   const [theme, setTheme] = useState<ThemeMode>(getThemeMode());
   const recent = (projects ?? []).slice(0, 6);
   const pickTheme = (m: ThemeMode) => {
@@ -186,6 +186,23 @@ function Sidebar() {
           })}
         </ul>
 
+        <ul className="mt-0.5 space-y-0.5">
+          {(
+            [
+              ["/showcase", "Community", Compass],
+              ["/docs", "Help & docs", BookOpen],
+            ] as const
+          ).map(([path, label, Icon]) => (
+            <li key={path}>
+              <button type="button" onClick={() => void window.codexa.openWeb(path)} className="group flex h-8 w-full items-center gap-2.5 rounded-lg px-2.5 text-[13.5px] text-muted transition-colors hover:bg-surface hover:text-fg">
+                <Icon className="size-4" />
+                <span className="flex-1 text-left">{label}</span>
+                <ArrowUpRight className="size-3.5 text-dim opacity-0 transition-opacity group-hover:opacity-100" />
+              </button>
+            </li>
+          ))}
+        </ul>
+
         <p className="mb-1 mt-6 px-2.5 text-[11.5px] font-medium text-dim">Recent</p>
         {recent.length ? (
           <ul className="space-y-0.5">
@@ -203,6 +220,7 @@ function Sidebar() {
         )}
       </nav>
 
+      {usage && usage.limits.projects > 0 ? <UsageCard usage={usage} /> : null}
       <div className="space-y-0.5 border-t border-border p-3">
         <button
           type="button"
@@ -263,3 +281,41 @@ function Sidebar() {
   );
 }
 
+
+function UsageCard({ usage }: { usage: NonNullable<ReturnType<typeof useApp>["usage"]> }) {
+  const rows = [
+    { label: "Projects", used: usage.counts.projects, limit: usage.limits.projects },
+    { label: "AI requests", used: usage.used.ai_request ?? 0, limit: usage.limits.aiRequestsPerMonth },
+  ].filter((r) => r.limit > 0 && r.limit < 1e9);
+  const paid = usage.plan !== "free";
+  return (
+    <div className="mx-3 mb-3 rounded-xl border border-border bg-card p-3 card-edge">
+      <div className="flex items-center justify-between">
+        <span className="text-[12px] font-semibold capitalize">{usage.plan} plan</span>
+        {paid ? null : (
+          <button type="button" onClick={() => void window.codexa.openWeb("/settings/billing")} className="inline-flex items-center gap-1 text-[12px] font-semibold text-accent hover:underline">
+            <Sparkles className="size-3" /> Upgrade
+          </button>
+        )}
+      </div>
+      <div className="mt-2.5 space-y-2.5">
+        {rows.map((r) => {
+          const pct = Math.min(100, (r.used / r.limit) * 100);
+          return (
+            <div key={r.label}>
+              <div className="flex justify-between text-[11.5px] text-muted">
+                <span>{r.label}</span>
+                <span className="tabular-nums">
+                  {r.used.toLocaleString()} / {r.limit.toLocaleString()}
+                </span>
+              </div>
+              <div className="mt-1 h-1 overflow-hidden rounded-full bg-surface">
+                <div className={cn("h-full rounded-full", pct > 90 ? "bg-danger" : pct > 70 ? "bg-warning" : "bg-accent")} style={{ width: `${Math.max(pct, 2)}%` }} />
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}

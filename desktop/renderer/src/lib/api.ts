@@ -78,7 +78,7 @@ export type MessagePart =
   | { type: "image"; file: string; mediaType: string; name: string };
 export type Message = { id: string; role: "user" | "assistant" | "system"; content: string; parts: MessagePart[]; createdAt: string };
 export type AiStatus = { configured: boolean; provider?: string; model?: string; mock?: boolean };
-export type Usage = { plan: string; limits: { projects: number; aiRequests: number }; usage?: Record<string, number> };
+export type Usage = { plan: string; limits: Record<string, number>; used: Record<string, number>; counts: { projects: number; members: number } };
 
 // ---------------------------------------------------------------------------------------------
 // Calls
@@ -120,6 +120,25 @@ export const deployApi = {
   get: (id: string, did: string) => api<{ deployment: Deployment }>(`/api/v1/projects/${enc(id)}/deployments/${enc(did)}`),
 };
 
+export type LogLine = { ts: string; stream: "stdout" | "stderr" | "system"; line: string };
+export type Snapshot = { id: string; name: string; kind: string; message: string | null; createdAt: string; fileCount: number };
+
+export const historyApi = {
+  list: (id: string) => api<{ snapshots: Snapshot[] }>(`/api/v1/projects/${enc(id)}/snapshots`),
+  create: (id: string, name: string) => api<unknown>(`/api/v1/projects/${enc(id)}/snapshots`, { method: "POST", body: { name } }),
+  restore: (id: string, sid: string) => api<{ restored: { id: string; name: string }; paths: string[] }>(`/api/v1/projects/${enc(id)}/snapshots/${enc(sid)}/restore`, { method: "POST", body: {} }),
+};
+
+export const logsApi = {
+  tail: (id: string, n = 300) => api<{ lines: LogLine[]; status: string }>(`/api/v1/projects/${enc(id)}/runtime/logs?tail=${n}`),
+};
+
+export const settingsApi = {
+  get: (id: string) => api<{ project: Project & { settings: { knowledge?: string } } }>(`/api/v1/projects/${enc(id)}`),
+  save: (id: string, patch: { name?: string; description?: string; visibility?: Project["visibility"]; settings?: { knowledge?: string } }) =>
+    api<{ project: Project }>(`/api/v1/projects/${enc(id)}`, { method: "PATCH", body: patch }),
+};
+
 export const aiApi = {
   status: (id: string) => api<AiStatus>(`/api/v1/projects/${enc(id)}/ai/status`),
   conversations: (id: string) => api<{ conversations: Conversation[] }>(`/api/v1/projects/${enc(id)}/ai/conversations`),
@@ -130,7 +149,7 @@ export const aiApi = {
 export const accountApi = {
   profile: (name: string) => api<unknown>("/api/v1/account/profile", { method: "PATCH", body: { name } }),
   onboarding: (input: { timezone?: string; completed?: boolean }) => api<unknown>("/api/v1/account/onboarding", { method: "PATCH", body: input }),
-  usage: (workspaceId: string) => api<Record<string, unknown>>(`/api/v1/workspaces/${enc(workspaceId)}/usage`),
+  usage: (workspaceId: string) => api<Usage>(`/api/v1/workspaces/${enc(workspaceId)}/usage`),
 };
 
 // ---------------------------------------------------------------------------------------------
