@@ -1,7 +1,7 @@
 // Codexa for Windows: a desktop window around https://codexa.creditvault.tech.
 // The app runs no generated code locally; everything happens on Codexa's servers, exactly as in a
 // browser. Links to other sites open in the default browser, and an offline page offers a retry.
-const { app, BrowserWindow, Menu, shell, nativeTheme, session, dialog } = require("electron");
+const { app, BrowserWindow, Menu, shell, nativeTheme, session, dialog, Notification } = require("electron");
 const path = require("node:path");
 const fs = require("node:fs");
 
@@ -35,6 +35,9 @@ function saveState(win) {
   }
 }
 
+const OFFLINE_FILE = path.join(__dirname, "offline.html");
+const WEB_PREFERENCES = { contextIsolation: true, nodeIntegration: false, sandbox: true, spellcheck: true };
+
 let mainWindow = null;
 let splash = null;
 
@@ -63,6 +66,87 @@ function revealMain() {
   if (splash) splash.close();
 }
 
+/**
+ * Codexa pages stay in the app; other sites open in the default browser. Pop-up windows (review
+ * links, "open in new window") get the same rules. Only the bundled offline page may load from
+ * disk, so an image dropped outside an upload area never replaces Codexa in the window.
+ */
+function guardNavigation(wc) {
+  wc.setWindowOpenHandler(({ url }) => {
+    if (isAppUrl(url)) {
+      return {
+        action: "allow",
+        overrideBrowserWindowOptions: {
+          autoHideMenuBar: true,
+          backgroundColor: nativeTheme.shouldUseDarkColors ? "#0a0a0a" : "#fbfaf7",
+          icon: path.join(__dirname, "build", "icon.png"),
+          webPreferences: WEB_PREFERENCES,
+        },
+      };
+    }
+    if (/^https?:/i.test(url)) shell.openExternal(url);
+    return { action: "deny" };
+  });
+  wc.on("did-create-window", (child) => guardNavigation(child.webContents));
+  wc.on("will-navigate", (event, url) => {
+    if (isAppUrl(url) || isOfflinePage(url)) return;
+    event.preventDefault();
+    if (/^https?:/i.test(url)) shell.openExternal(url);
+  });
+}
+
+function isOfflinePage(url) {
+  try {
+    const u = new URL(url);
+    if (u.protocol !== "file:") return false;
+    const same = (a, b) => (process.platform === "win32" ? a.toLowerCase() === b.toLowerCase() : a === b);
+    return same(path.normalize(decodeURIComponent(u.pathname).replace(/^\/(?=[A-Za-z]:)/, "")), path.normalize(OFFLINE_FILE));
+  } catch {
+    return false;
+  }
+}
+
+/** Unused name in the Downloads folder: "app.zip", then "app (1).zip", "app (2).zip"… */
+function downloadPath(filename) {
+  const dir = app.getPath("downloads");
+  const ext = path.extname(filename);
+  const base = path.basename(filename, ext) || "download";
+  let target = path.join(dir, base + ext);
+  for (let i = 1; fs.existsSync(target); i++) target = path.join(dir, `${base} (${i})${ext}`);
+  return target;
+}
+
+/**
+ * Downloads (Download ZIP, exported files) go straight to the Downloads folder with progress on the
+ * taskbar icon, then a notification that opens the file's folder when clicked.
+ */
+function setupDownloads() {
+  session.defaultSession.on("will-download", (_event, item) => {
+    const target = downloadPath(item.getFilename());
+    item.setSavePath(target);
+    item.on("updated", () => {
+      const total = item.getTotalBytes();
+      if (total > 0) mainWindow?.setProgressBar(item.getReceivedBytes() / total);
+      else mainWindow?.setProgressBar(2); // indeterminate
+    });
+    item.once("done", (_e, state) => {
+      mainWindow?.setProgressBar(-1);
+      if (state !== "completed") {
+        if (state === "interrupted") dialog.showMessageBox(mainWindow ?? undefined, { type: "warning", title: "Download failed", message: `${path.basename(target)} could not be downloaded.`, detail: "Check your connection and try again." });
+        return;
+      }
+      const reveal = () => shell.showItemInFolder(target);
+      if (Notification.isSupported()) {
+        const note = new Notification({ title: "Download complete", body: `${path.basename(target)} is in your Downloads folder. Click to show it.` });
+        note.on("click", reveal);
+        note.show();
+      } else {
+        reveal();
+      }
+    });
+  });
+}
+
 function createWindow() {
   const state = loadState();
   const dark = nativeTheme.shouldUseDarkColors;
@@ -79,12 +163,7 @@ function createWindow() {
     backgroundColor: dark ? "#0a0a0a" : "#fbfaf7",
     autoHideMenuBar: true,
     show: false,
-    webPreferences: {
-      contextIsolation: true,
-      nodeIntegration: false,
-      sandbox: true,
-      spellcheck: true,
-    },
+    webPreferences: WEB_PREFERENCES,
   });
   if (state.maximized) mainWindow.maximize();
 
@@ -93,21 +172,11 @@ function createWindow() {
   setTimeout(revealMain, 12000);
   mainWindow.on("close", () => saveState(mainWindow));
 
-  const wc = mainWindow.webContents;
-  wc.setWindowOpenHandler(({ url }) => {
-    if (isAppUrl(url)) return { action: "allow" };
-    if (/^https?:/i.test(url)) shell.openExternal(url);
-    return { action: "deny" };
-  });
-  wc.on("will-navigate", (event, url) => {
-    if (isAppUrl(url) || url.startsWith("file:")) return;
-    event.preventDefault();
-    if (/^https?:/i.test(url)) shell.openExternal(url);
-  });
+  guardNavigation(mainWindow.webContents);
   // No connection (or the site is unreachable): show the offline page, which retries.
-  wc.on("did-fail-load", (_event, code, _desc, url, isMainFrame) => {
+  mainWindow.webContents.on("did-fail-load", (_event, code, _desc, url, isMainFrame) => {
     if (!isMainFrame || code === -3 /* aborted by a redirect or a new navigation */) return;
-    mainWindow.loadFile(path.join(__dirname, "offline.html"), { query: { url: url || APP_URL } });
+    mainWindow.loadFile(OFFLINE_FILE, { query: { url: url || APP_URL } });
   });
 
   mainWindow.loadURL(APP_URL);
@@ -151,6 +220,7 @@ function buildMenu() {
         { label: "Home", accelerator: "Alt+Home", click: () => mainWindow?.loadURL(APP_URL) },
         { label: "Dashboard", click: () => mainWindow?.loadURL(`${APP_URL}/dashboard`) },
         { type: "separator" },
+        { label: "Downloads folder", click: () => shell.openPath(app.getPath("downloads")) },
         { label: "Open in browser", click: () => shell.openExternal(mainWindow?.webContents.getURL() || APP_URL) },
         { type: "separator" },
         { role: "quit" },
@@ -205,6 +275,7 @@ if (!app.requestSingleInstanceLock()) {
     // Open the connection to Codexa while the window is still being created (faster first paint).
     session.defaultSession.preconnect({ url: APP_URL, numSockets: 4 });
     buildMenu();
+    setupDownloads();
     createWindow();
     setupAutoUpdates();
   });
