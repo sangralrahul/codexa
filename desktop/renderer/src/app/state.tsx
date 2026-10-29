@@ -64,6 +64,7 @@ export function AppProvider({ user: initialUser, appUrl, version, onSignedOut, c
   }, [current]);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- loads data from the API when the inputs change
     void refreshProjects();
   }, [refreshProjects]);
 

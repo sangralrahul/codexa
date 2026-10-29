@@ -149,7 +149,7 @@ const DEVICES: Device[] = ["desktop", "tablet", "mobile"];
 /** Below 1440 the agent column opens at its minimum so the canvas keeps room for real code. */
 const AGENT_PX = 340;
 const AGENT_WIDE_PX = 380;
-const EXPLORER_PX = 180;
+const EXPLORER_PX = 216;
 /** In split, the preview takes this share of the canvas left after the explorer. */
 const PREVIEW_SHARE = 0.4;
 const splitFor = (files: number): SplitLayout => {

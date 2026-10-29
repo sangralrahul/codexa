@@ -455,10 +455,17 @@ function MiddleTruncate({ id, name, className }: { id: string; name: string; cla
       setShown(middleEllipsis(name, el.clientWidth, font));
     };
     fit();
-    if (typeof ResizeObserver === "undefined") return;
+    // The canvas measures with whatever font is loaded now; measure again once the web font is in,
+    // or the first pass (fallback font) clips the extension ("c…exa." for "codexa.ts").
+    let alive = true;
+    void document.fonts?.ready.then(() => alive && fit());
+    if (typeof ResizeObserver === "undefined") return () => void (alive = false);
     const ro = new ResizeObserver(fit);
     ro.observe(el);
-    return () => ro.disconnect();
+    return () => {
+      alive = false;
+      ro.disconnect();
+    };
   }, [name, className]);
   if (shown === name) {
     return (
@@ -550,7 +557,7 @@ function Node({ node, depth, index, setSize, ctx }: { node: TreeNode; depth: num
                   tabIndex={-1}
                   onClick={(e) => e.stopPropagation()}
                   aria-label={`Actions for ${node.name}`}
-                  className="flex size-5 items-center justify-center rounded-md text-muted-foreground opacity-0 transition-opacity hover:bg-background hover:text-foreground group-hover:opacity-100 data-[state=open]:opacity-100"
+                  className="absolute right-1 top-1/2 flex size-5 -translate-y-1/2 items-center justify-center rounded-md bg-muted text-muted-foreground opacity-0 shadow-[-8px_0_8px_-2px_var(--muted)] transition-opacity hover:bg-background hover:text-foreground group-hover:opacity-100 data-[state=open]:opacity-100"
                 >
                   <MoreHorizontal className="size-3.5" aria-hidden="true" />
                 </button>

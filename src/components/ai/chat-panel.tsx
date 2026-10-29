@@ -770,7 +770,7 @@ function UserMessage({ projectId, message, fresh }: { projectId: string; message
           ))}
         </ul>
       ) : null}
-      <div className="max-w-[88%] whitespace-pre-wrap break-words rounded-2xl rounded-br-md bg-muted px-3.5 py-2.5 text-[15px] leading-[1.6] shadow-[inset_0_0_0_1px_var(--border)]">
+      <div className="max-w-[88%] whitespace-pre-wrap break-words rounded-2xl rounded-br-md bg-muted px-3.5 py-2 text-[14px] leading-[1.6] shadow-[inset_0_0_0_1px_var(--border)]">
         <span className="sr-only">You: </span>
         {text}
       </div>
@@ -835,7 +835,7 @@ function AssistantMessage({
           meta={{ startedAt, finishedAt, live, validation: message.validation, runError: run?.error, stats: details?.stats, onFix, onApprovePlan: latest ? onApprovePlan : undefined, onRevisePlan: latest ? onRevisePlan : undefined }}
         />
       ) : message.content ? (
-        <p className="whitespace-pre-wrap text-[15px] leading-[1.65]">{message.content}</p>
+        <p className="whitespace-pre-wrap text-[14px] leading-[1.65]">{message.content}</p>
       ) : null}
       {message.nextSteps?.length ? (
         <section className="space-y-1.5" aria-label="Next steps">
@@ -976,15 +976,13 @@ const SUGGESTION_ICONS: Record<SuggestionIcon, LucideIcon> = {
 function ChatWelcome({ projectName, category, framework, onPick }: { projectName?: string; category?: string | null; framework?: string | null; onPick: (text: string, mode: AgentMode) => void }) {
   const suggestions = suggestionsFor(category, framework);
   return (
-    <div className="mx-auto flex max-w-xl flex-col px-0.5 pt-6">
-      {projectName ? <p className="truncate font-mono text-[12px] text-muted-foreground">{projectName}</p> : null}
-      <h2 className="mt-1.5 font-display text-[24px] font-[680] leading-[1.15] tracking-[-0.025em] text-balance">
-        What should we <span className="text-dim">build</span> next?
-      </h2>
-      <p className="mt-2 text-[13.5px] leading-relaxed text-muted-foreground text-pretty">
+    <div className="mx-auto flex max-w-xl flex-col px-0.5 pt-4">
+      {projectName ? <p className="truncate text-[12px] font-medium text-muted-foreground">{projectName}</p> : null}
+      <h2 className="mt-1 font-display text-[22px] font-[650] leading-[1.2] tracking-[-0.02em] text-balance">What should we build next?</h2>
+      <p className="mt-2 text-[13px] leading-relaxed text-muted-foreground text-pretty">
         Describe a feature, ask about the code, or fix the latest error. The agent plans first, edits files through reviewable tools and saves a checkpoint before every change.
       </p>
-      <ul className="ws-suggest mt-5 grid grid-cols-1 gap-2 @[440px]:grid-cols-2" aria-label="Suggestions">
+      <ul className="ws-suggest mt-5 grid grid-cols-1 gap-1.5 @[440px]:grid-cols-2" aria-label="Suggestions">
         {suggestions.map((s) => {
           const Icon = SUGGESTION_ICONS[s.icon];
           return (
@@ -992,24 +990,24 @@ function ChatWelcome({ projectName, category, framework, onPick }: { projectName
               <button
                 type="button"
                 onClick={() => onPick(s.prompt, s.mode)}
-                className="group flex h-full w-full items-start gap-3 rounded-xl border border-border bg-card p-3 text-left shadow-[inset_0_1px_0_var(--hairline)] transition-[border-color,box-shadow,transform] duration-200 hover:-translate-y-px hover:border-border-strong hover:shadow-md focus-visible:outline-2 focus-visible:outline-ring calm:hover:translate-y-0"
+                className="group flex h-full w-full items-start gap-2.5 rounded-xl border border-border bg-card px-3 py-2.5 text-left transition-[border-color,background-color,box-shadow] duration-200 hover:border-border-strong hover:bg-muted/40 focus-visible:outline-2 focus-visible:outline-ring"
               >
-                <span className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-muted text-muted-foreground shadow-[inset_0_0_0_1px_var(--border)] transition-colors group-hover:text-signal">
-                  <Icon className="size-4" aria-hidden="true" />
+                <span className="mt-px flex size-7 shrink-0 items-center justify-center rounded-lg bg-muted text-muted-foreground shadow-[inset_0_0_0_1px_var(--border)] transition-colors group-hover:text-signal">
+                  <Icon className="size-3.5" aria-hidden="true" />
                 </span>
                 <span className="min-w-0">
-                  <span className="flex items-center gap-1.5 text-[13.5px] font-semibold">
+                  <span className="flex items-center gap-1.5 text-[13px] font-semibold">
                     {s.title}
                     {s.mode !== "build" ? <span className="rounded-md bg-muted px-1.5 py-px text-[10.5px] font-medium capitalize text-muted-foreground">{s.mode}</span> : null}
                   </span>
-                  <span className="mt-0.5 line-clamp-2 text-[12.5px] leading-snug text-muted-foreground">{s.prompt}</span>
+                  <span className="mt-0.5 line-clamp-2 text-[12px] leading-snug text-muted-foreground">{s.prompt}</span>
                 </span>
               </button>
             </li>
           );
         })}
       </ul>
-      <p className="mt-3 text-[11.5px] text-muted-foreground">Picking one only fills the composer. Nothing is sent until you press Enter.</p>
+      <p className="mt-3 text-[11.5px] leading-snug text-muted-foreground">Picking one only fills the composer. Nothing is sent until you press Enter.</p>
     </div>
   );
 }

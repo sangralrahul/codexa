@@ -74,8 +74,8 @@ const components: Components = {
   // Model headings sit inside a chat message: keep the page's single h1 and a sane outline
   // by rendering them a few levels down, at chat-sized type.
   h1: ({ node: _n, children }) => <h3 className="text-[16px] font-semibold tracking-tight">{children}</h3>,
-  h2: ({ node: _n, children }) => <h4 className="text-[15px] font-semibold">{children}</h4>,
-  h3: ({ node: _n, children }) => <h5 className="text-[15px] font-medium">{children}</h5>,
+  h2: ({ node: _n, children }) => <h4 className="text-[14.5px] font-semibold">{children}</h4>,
+  h3: ({ node: _n, children }) => <h5 className="text-[14px] font-semibold">{children}</h5>,
   h4: ({ node: _n, children }) => <h6 className="text-[14px] font-medium">{children}</h6>,
   h5: ({ node: _n, children }) => <h6 className="text-[14px] font-medium">{children}</h6>,
   h6: ({ node: _n, children }) => <h6 className="text-[14px] font-medium text-muted-foreground">{children}</h6>,
@@ -89,7 +89,7 @@ const components: Components = {
 /** Renders assistant text as Markdown (GFM). Content is untrusted: no raw HTML is rendered. */
 export function AiMarkdown({ text, className }: { text: string; className?: string }) {
   return (
-    <div className={cn("ai-markdown text-[15px] leading-[1.65] text-pretty [&>*+*]:mt-2.5 [&_li+li]:mt-1 [&_ol]:list-decimal [&_ol]:pl-5 [&_ul]:list-disc [&_ul]:pl-5 [&_li]:marker:text-muted-foreground [&_strong]:font-semibold [&_blockquote]:border-l-2 [&_blockquote]:border-border-strong [&_blockquote]:pl-3 [&_blockquote]:text-muted-foreground", className)}>
+    <div className={cn("ai-markdown text-[14px] leading-[1.65] text-pretty [&>*+*]:mt-2.5 [&_li+li]:mt-1 [&_ol]:list-decimal [&_ol]:pl-5 [&_ul]:list-disc [&_ul]:pl-5 [&_li]:marker:text-muted-foreground [&_strong]:font-semibold [&_blockquote]:border-l-2 [&_blockquote]:border-border-strong [&_blockquote]:pl-3 [&_blockquote]:text-muted-foreground", className)}>
       <ReactMarkdown remarkPlugins={[remarkGfm]} components={components} skipHtml>
         {text}
       </ReactMarkdown>

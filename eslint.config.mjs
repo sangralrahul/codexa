@@ -21,6 +21,7 @@ const eslintConfig = defineConfig([
     "containers/runner/dist/**",
     "desktop/node_modules/**",
     "desktop/dist/**",
+    "desktop/dist-renderer/**",
     // Template kit sources; type-checked and built per template by scripts/capture-template-shots.ts.
     "templates-src/**",
   ]),

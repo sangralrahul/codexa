@@ -41,6 +41,7 @@
     ".wrangler",
     "node_modules",
     "worker",
-    "templates-src"
+    "templates-src",
+    "desktop"
   ]
 }

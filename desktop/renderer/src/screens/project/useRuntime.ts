@@ -62,6 +62,7 @@ export function useRuntime(projectId: string): RuntimeView {
   }, [start, stop]);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- loads data from the API when the inputs change
     void refresh();
   }, [refresh]);
 

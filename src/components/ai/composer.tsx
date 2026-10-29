@@ -257,9 +257,9 @@ export function Composer({
             }}
             placeholder={placeholder}
             disabled={disabled || running}
-            rows={3}
+            rows={2}
             maxLength={COMPOSER_MAX}
-            className="block max-h-56 min-h-[96px] w-full resize-none bg-transparent px-3.5 pt-3 text-[15px] leading-relaxed outline-none [field-sizing:content] placeholder:text-muted-foreground/80 disabled:cursor-not-allowed disabled:placeholder:text-muted-foreground/70"
+            className="block max-h-56 min-h-[76px] w-full resize-none bg-transparent px-3.5 pt-3 text-[14px] leading-relaxed outline-none [field-sizing:content] placeholder:text-muted-foreground/80 disabled:cursor-not-allowed disabled:placeholder:text-muted-foreground/70"
             aria-describedby="ai-composer-hint"
           />
           <div className="flex items-center gap-2 px-2 pb-2">

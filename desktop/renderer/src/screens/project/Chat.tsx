@@ -122,6 +122,7 @@ export function Chat({ projectId, initialPrompt, onFilesChanged }: { projectId: 
   useEffect(() => {
     if (!initialPrompt || sentInitial.current || !status || messages === null) return;
     sentInitial.current = true;
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- sends the prompt the project was created with, once
     if (status.configured) send(initialPrompt, { mode: "build" });
     // eslint-disable-next-line react-hooks/set-state-in-effect -- keep the idea in the box when AI is off
     else setInput(initialPrompt);
@@ -161,7 +162,7 @@ export function Chat({ projectId, initialPrompt, onFilesChanged }: { projectId: 
       <div className="border-t border-border p-3">
         {notConfigured ? (
           <p className="mb-2 flex items-start gap-2 rounded-lg bg-warning/10 px-3 py-2 text-[12.5px] text-warning">
-            <TriangleAlert className="mt-0.5 size-3.5 shrink-0" /> AI isn't set up on this Codexa server yet, so chat can't run. Files, preview and publishing still work.
+            <TriangleAlert className="mt-0.5 size-3.5 shrink-0" /> AI isn&apos;t set up on this Codexa server yet, so chat can&apos;t run. Files, preview and publishing still work.
           </p>
         ) : null}
         <div className="rounded-xl border border-border bg-bg transition-colors focus-within:border-border-strong">

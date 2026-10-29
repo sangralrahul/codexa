@@ -540,17 +540,17 @@ function FrameState({ canEdit, showOperatorDetails }: { canEdit: boolean; showOp
         <div className="absolute inset-0 bg-[radial-gradient(color-mix(in_oklab,var(--foreground)_9%,transparent)_1px,transparent_1.5px)] [background-size:16px_16px]" />
 
       </div>
-      <div className="relative z-[1] flex min-h-full flex-col items-center justify-start p-5 pt-[12%]">{card}</div>
+      <div className="relative z-[1] flex min-h-full flex-col items-center justify-start p-5 pt-[10%]">{card}</div>
     </div>
   );
 }
 
 function StatusCard({ icon, title, description, tone, children }: { icon: React.ReactNode; title: string; description: string; tone?: "danger"; children?: React.ReactNode }) {
   return (
-    <div className="glass pop-in w-full max-w-md rounded-2xl border border-border-strong bg-card/85 p-5 text-center shadow-xl backdrop-blur-xl" role={tone === "danger" ? "alert" : undefined}>
-      <span className={cn("mx-auto flex size-11 items-center justify-center rounded-xl border border-border-strong bg-card shadow-md", tone === "danger" ? "text-danger" : "text-muted-foreground")}>{icon}</span>
-      <h2 className="mt-3.5 text-[15px] font-semibold tracking-tight">{title}</h2>
-      <p className="mx-auto mt-1 max-w-sm text-[13px] leading-relaxed text-muted-foreground">{description}</p>
+    <div className="pop-in w-full max-w-[420px] rounded-2xl border border-border bg-card px-6 py-6 text-center shadow-lg" role={tone === "danger" ? "alert" : undefined}>
+      <span className={cn("mx-auto flex size-10 items-center justify-center rounded-xl bg-muted shadow-[inset_0_0_0_1px_var(--border)]", tone === "danger" ? "bg-danger/10 text-danger" : "text-muted-foreground")}>{icon}</span>
+      <h2 className="mt-4 text-[15px] font-semibold tracking-tight text-balance">{title}</h2>
+      <p className="mx-auto mt-1.5 max-w-sm text-[13px] leading-relaxed text-muted-foreground text-pretty">{description}</p>
       {children}
     </div>
   );
@@ -590,11 +590,11 @@ function StillWorks() {
     ...(canPublish ? [{ label: "Publish", Icon: Rocket }] : []),
   ];
   return (
-    <div className="mt-4">
-      <p className="text-[11.5px] font-medium text-muted-foreground">What still works</p>
-      <ul className="mt-1.5 flex flex-wrap justify-center gap-1.5">
+    <div className="mt-5 border-t border-border pt-4">
+      <p className="text-[11px] font-medium uppercase tracking-[0.06em] text-muted-foreground">What still works</p>
+      <ul className="mt-2.5 flex flex-wrap justify-center gap-1.5">
         {items.map(({ label, Icon }) => (
-          <li key={label} className="inline-flex items-center gap-1.5 rounded-full border border-border bg-card px-2.5 py-1 text-[12px] font-medium">
+          <li key={label} className="inline-flex items-center gap-1.5 whitespace-nowrap rounded-full bg-muted px-2.5 py-1 text-[12px] font-medium text-foreground/85">
             <Icon className="size-3.5 text-success" aria-hidden="true" /> {label}
           </li>
         ))}
@@ -605,7 +605,7 @@ function StillWorks() {
 
 function OperatorDetails({ children }: { children: React.ReactNode }) {
   return (
-    <details className="group mt-5 w-full rounded-xl border border-border bg-card text-left text-xs">
+    <details className="group mt-4 w-full rounded-xl border border-border bg-card text-left text-xs">
       <summary className="flex cursor-pointer list-none items-center justify-between px-3 py-2 font-medium text-muted-foreground hover:text-foreground [&::-webkit-details-marker]:hidden">
         Details for the server operator
         <span className="transition-transform group-open:rotate-90" aria-hidden="true">

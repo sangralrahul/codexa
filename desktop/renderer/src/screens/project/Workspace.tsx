@@ -81,7 +81,7 @@ export function Workspace({ projectId, initialPrompt }: { projectId: string; ini
     return (
       <div className="flex h-full items-center justify-center">
         <div className="text-center">
-          <p className="text-[15px] font-semibold">This project couldn't be opened</p>
+          <p className="text-[15px] font-semibold">This project couldn&apos;t be opened</p>
           <p className="mt-1 text-[13px] text-muted">{error}</p>
         </div>
       </div>

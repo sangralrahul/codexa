@@ -60,6 +60,7 @@ export function CodeView({ projectId, filesVersion, readOnly }: { projectId: str
   }, [projectId]);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- loads data from the API when the inputs change
     void loadFiles();
   }, [loadFiles, filesVersion]);
 

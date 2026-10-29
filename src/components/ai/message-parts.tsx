@@ -485,7 +485,7 @@ export function AssistantParts({ parts, status, streaming, meta = {} }: { parts:
   return (
     <div className="space-y-3">
       {isRun ? (
-        <div className="space-y-3.5 rounded-2xl border border-border bg-card p-3.5 shadow-[inset_0_1px_0_var(--hairline),var(--shadow-sm)]">
+        <div className="space-y-3 rounded-2xl border border-border bg-card p-3 shadow-[inset_0_1px_0_var(--hairline)]">
           <div className="flex items-start gap-3">
             <span className="ws-orb mt-0.5 rounded-lg" data-running={running && !calm ? "" : undefined}>
               <LogoMark size={22} state={logoState} />
