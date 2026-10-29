@@ -1,6 +1,6 @@
 import { lazy, Suspense, useCallback, useEffect, useRef, useState } from "react";
 import { Code2, ExternalLink, MonitorPlay, Play, Rocket, Square } from "lucide-react";
-import { ApiError, projectsApi, type Project, type Role } from "../../lib/api";
+import { aiApi, ApiError, projectsApi, type AiStatus, type Project, type Role } from "../../lib/api";
 import { cn } from "../../lib/util";
 import { Badge, Button, Spinner, toast } from "../../ui";
 import { useApp } from "../../app/state";
@@ -15,7 +15,9 @@ const CodeView = lazy(() => import("./CodeView").then((m) => ({ default: m.CodeV
 const CHAT_KEY = "codexa:chat-width";
 
 export function Workspace({ projectId, initialPrompt }: { projectId: string; initialPrompt?: string }) {
-  const { refreshProjects } = useApp();
+  const { refreshProjects, go } = useApp();
+  const [workspaceName, setWorkspaceName] = useState<string>("");
+  const [ai, setAi] = useState<AiStatus | null>(null);
   const [project, setProject] = useState<Project | null>(null);
   const [role, setRole] = useState<Role | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -33,6 +35,7 @@ export function Workspace({ projectId, initialPrompt }: { projectId: string; ini
       .then((r) => {
         setProject(r.project);
         setRole(r.role);
+        setWorkspaceName(r.workspace.name);
         void refreshProjects();
       })
       .catch((e) => setError(e instanceof ApiError ? e.message : "Couldn't open the project"));
@@ -53,6 +56,13 @@ export function Workspace({ projectId, initialPrompt }: { projectId: string; ini
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, []);
+
+  useEffect(() => {
+    aiApi
+      .status(projectId)
+      .then(setAi)
+      .catch(() => setAi(null));
+  }, [projectId]);
 
   const onFilesChanged = useCallback(() => setFilesVersion((v) => v + 1), []);
 
@@ -102,9 +112,13 @@ export function Workspace({ projectId, initialPrompt }: { projectId: string; ini
   return (
     <div className="flex h-full flex-col">
       <header className="flex h-12 shrink-0 items-center gap-3 border-b border-border bg-card px-4">
-        <div className="min-w-0">
-          <h1 className="truncate text-[14px] font-semibold tracking-[-0.01em]">{project.name}</h1>
-        </div>
+        <nav aria-label="Breadcrumb" className="flex min-w-0 items-center gap-1.5 text-[13.5px]">
+          <button type="button" onClick={() => go({ name: "projects" })} className="max-w-[180px] truncate text-muted hover:text-fg">
+            {workspaceName || "Projects"}
+          </button>
+          <span className="text-dim">/</span>
+          <h1 className="truncate font-semibold tracking-[-0.01em]">{project.name}</h1>
+        </nav>
         {!canEdit ? <Badge>View only</Badge> : null}
 
         <div className="mx-auto flex rounded-lg border border-border bg-surface p-0.5" role="tablist" aria-label="View">
@@ -192,6 +206,19 @@ export function Workspace({ projectId, initialPrompt }: { projectId: string; ini
           ) : null}
         </section>
       </div>
+
+      <footer className="flex h-7 shrink-0 items-center gap-4 border-t border-border bg-sidebar px-3 text-[11.5px] text-muted">
+        <span className="flex items-center gap-1.5">
+          <span className={cn("size-1.5 rounded-full", running ? "bg-success" : starting ? "pulse bg-warning" : runtime.status === "error" ? "bg-danger" : "bg-dim")} />
+          {running ? "Preview running" : starting ? "Starting preview" : runtime.status === "error" ? "Preview stopped with an error" : runtime.status === "unavailable" ? "Previews unavailable" : "Preview stopped"}
+        </span>
+        <span className="flex items-center gap-1.5">
+          <span className={cn("size-1.5 rounded-full", ai?.configured ? "bg-success" : "bg-dim")} />
+          {ai ? (ai.configured ? `AI ready${ai.model ? ` · ${ai.model}` : ""}` : "AI not configured") : "Checking AI"}
+        </span>
+        <span className="ml-auto">{canEdit ? "Changes save to Codexa automatically" : "View only"}</span>
+        <span className="text-dim">Ctrl P preview · Ctrl E code · Ctrl K search</span>
+      </footer>
 
       <PublishDialog projectId={project.id} open={publishOpen} onClose={() => setPublishOpen(false)} canPublish={canEdit} />
     </div>

@@ -222,8 +222,18 @@ function registerIpc() {
   ipcMain.handle("api:request", (_e, req) => apiRequest(req ?? {}));
   ipcMain.on("api:stream-start", (e, req) => void apiStream(e.sender, req ?? {}));
   ipcMain.on("api:stream-cancel", (_e, id) => streams.get(id)?.abort());
-  ipcMain.handle("auth:login", async (_e, { email, password }) => apiRequest({ method: "POST", path: "/api/auth/login", body: { email, password } }));
-  ipcMain.handle("auth:browser", async (_e, page) => ((await browserAuth(page)) ? signedIn() : null));
+  // Write the new session cookie to disk right away, so a crash or forced quit doesn't sign the person out.
+  const persist = () => session.defaultSession.cookies.flushStore().catch(() => {});
+  ipcMain.handle("auth:login", async (_e, { email, password }) => {
+    const res = await apiRequest({ method: "POST", path: "/api/auth/login", body: { email, password } });
+    if (res.ok) await persist();
+    return res;
+  });
+  ipcMain.handle("auth:browser", async (_e, page) => {
+    if (!(await browserAuth(page))) return null;
+    await persist();
+    return signedIn();
+  });
   ipcMain.handle("auth:me", () => signedIn());
   ipcMain.handle("auth:logout", async () => {
     await apiRequest({ method: "POST", path: "/api/auth/logout" });

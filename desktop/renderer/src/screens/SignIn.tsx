@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { ArrowRight, Globe } from "lucide-react";
 import { Button, Field, Input, Logo } from "../ui";
+import { ProjectThumb } from "../components/ProjectThumb";
 
 /**
  * Native sign-in. Email and password go straight to the Codexa API; Google/GitHub sign-in and
@@ -78,23 +79,32 @@ export function SignIn({ onSignedIn }: { onSignedIn: (u: SessionUser) => void })
           </div>
         </div>
       </div>
-      <aside className="relative hidden w-[44%] max-w-[620px] overflow-hidden border-l border-border bg-sidebar lg:block">
-        <div className="absolute inset-0 flex flex-col justify-end p-12">
-          <div className="fade-in space-y-3">
+      <aside className="relative hidden w-[48%] max-w-[720px] flex-col justify-center overflow-hidden border-l border-border bg-sidebar px-14 lg:flex">
+        <div className="fade-in">
+          <p className="text-[12.5px] font-medium text-muted">Codexa for Windows</p>
+          <h2 className="mt-2 max-w-lg text-balance font-[family-name:var(--font-display)] text-[30px] font-semibold leading-[1.15] tracking-[-0.025em]">From a sentence to a running app.</h2>
+          <figure className="mt-8 overflow-hidden rounded-xl border border-border bg-card shadow-card">
+            <div className="flex h-8 items-center gap-1.5 border-b border-border px-3">
+              <span className="size-2.5 rounded-full bg-border-strong" />
+              <span className="size-2.5 rounded-full bg-border-strong" />
+              <span className="size-2.5 rounded-full bg-border-strong" />
+              <span className="ml-3 truncate font-mono text-[11px] text-dim">your-app.codexa preview</span>
+            </div>
+            <ProjectThumb templateId="vite-react-saas" name="SaaS" className="aspect-[16/10] w-full" />
+            <figcaption className="border-t border-border px-4 py-2.5 text-[12px] text-muted">The SaaS starter, one of 111 templates you can start from.</figcaption>
+          </figure>
+          <ul className="mt-8 grid grid-cols-3 gap-4">
             {[
-              ["Describe it", "Say what you want in a sentence. Codexa plans it and writes the code."],
-              ["See it run", "A live preview starts on Codexa's servers while you chat."],
-              ["Publish", "Put it on the web with one click, with a security and speed check first."],
-            ].map(([t, d], i) => (
-              <div key={t} className="flex gap-4 rounded-2xl border border-border bg-card p-4 shadow-sm">
-                <span className="flex size-7 shrink-0 items-center justify-center rounded-lg bg-surface text-[12px] font-semibold text-muted">{i + 1}</span>
-                <span>
-                  <span className="block text-[14px] font-semibold">{t}</span>
-                  <span className="mt-0.5 block text-[13px] leading-relaxed text-muted">{d}</span>
-                </span>
-              </div>
+              ["Describe it", "Codexa plans it and writes the code."],
+              ["See it run", "A live preview while you chat."],
+              ["Publish", "Checked for security and speed first."],
+            ].map(([t, d]) => (
+              <li key={t}>
+                <p className="text-[13.5px] font-semibold">{t}</p>
+                <p className="mt-1 text-[12.5px] leading-relaxed text-muted">{d}</p>
+              </li>
             ))}
-          </div>
+          </ul>
         </div>
       </aside>
     </div>

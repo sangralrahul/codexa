@@ -1,6 +1,8 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { ArrowRight, ArrowUp, BarChart3, Bot, Briefcase, Globe, LayoutTemplate, Rocket, ShoppingBag, Server } from "lucide-react";
 import { useApp } from "../app/state";
+import { templatesApi, type Template } from "../lib/api";
+import { ProjectThumb } from "../components/ProjectThumb";
 import { Button, EmptyState, Kbd, Spinner, Textarea } from "../ui";
 import { ProjectCard } from "../components/ProjectCard";
 import { createProject } from "../components/create";
@@ -21,6 +23,23 @@ export function HomeScreen() {
   const [template, setTemplate] = useState<string | undefined>();
   const [busy, setBusy] = useState(false);
   const first = (user.name || user.email).split(/[\s@]/)[0];
+  const [featured, setFeatured] = useState<Template[] | null>(null);
+  const [starting, setStarting] = useState<string | null>(null);
+
+  useEffect(() => {
+    const picks = ["vite-react-saas", "vite-react-dashboard", "vite-react-storefront", "vite-react-landing"];
+    templatesApi
+      .list()
+      .then((r) => setFeatured(picks.map((id) => r.templates.find((t) => t.id === id)).filter((t): t is Template => Boolean(t))))
+      .catch(() => setFeatured([]));
+  }, []);
+
+  const startFrom = async (t: Template) => {
+    setStarting(t.id);
+    const id = await createProject(workspace?.id, { templateId: t.id, name: t.name });
+    setStarting(null);
+    if (id) go({ name: "project", id });
+  };
 
   const build = async () => {
     const text = prompt.trim();
@@ -34,7 +53,7 @@ export function HomeScreen() {
   return (
     <div className="scroll h-full">
       <div className="mx-auto max-w-[1180px] px-10 pb-16">
-        <section className="mx-auto max-w-[760px] pt-[9vh]">
+        <section className="mx-auto max-w-[760px] pt-[7vh]">
           <h1 className="text-center font-[family-name:var(--font-display)] text-[34px] font-semibold leading-tight tracking-[-0.025em]">What should we build{first ? `, ${first}` : ""}?</h1>
           <p className="mt-2.5 text-center text-[15px] text-muted">Describe it in plain words. Codexa writes the code and runs a live preview.</p>
 
@@ -90,7 +109,46 @@ export function HomeScreen() {
           </ul>
         </section>
 
-        <section className="mt-16" aria-labelledby="recent">
+        {featured && featured.length ? (
+          <section className="mt-14" aria-labelledby="starters">
+            <div className="mb-4 flex items-end justify-between">
+              <div>
+                <h2 id="starters" className="text-[16px] font-semibold tracking-[-0.01em]">
+                  Start from a template
+                </h2>
+                <p className="mt-0.5 text-[13px] text-muted">Working apps you can run right away and change with AI.</p>
+              </div>
+              <button type="button" onClick={() => go({ name: "templates" })} className="inline-flex items-center gap-1 text-[13px] text-muted hover:text-fg">
+                All templates <ArrowRight className="size-3.5" />
+              </button>
+            </div>
+            <ul className="grid grid-cols-2 gap-4 xl:grid-cols-4">
+              {featured.map((t) => (
+                <li key={t.id}>
+                  <button
+                    type="button"
+                    onClick={() => void startFrom(t)}
+                    disabled={Boolean(starting)}
+                    className="group w-full overflow-hidden rounded-2xl border border-border bg-card text-left shadow-sm transition-[border-color,box-shadow,translate] duration-200 hover:-translate-y-0.5 hover:border-border-strong hover:shadow-card disabled:opacity-60"
+                  >
+                    <span className="block aspect-[16/10] overflow-hidden border-b border-border">
+                      <ProjectThumb templateId={t.id} name={t.name} big className="h-full w-full transition-transform duration-500 group-hover:scale-[1.02]" />
+                    </span>
+                    <span className="flex items-center gap-2 px-3.5 py-3">
+                      <span className="min-w-0 flex-1">
+                        <span className="block truncate text-[13.5px] font-semibold">{t.name}</span>
+                        <span className="block truncate text-[12px] text-muted">{t.frameworkName}</span>
+                      </span>
+                      {starting === t.id ? <Spinner /> : <ArrowRight className="size-4 shrink-0 text-dim opacity-0 transition-opacity group-hover:opacity-100" />}
+                    </span>
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </section>
+        ) : null}
+
+        <section className="mt-14" aria-labelledby="recent">
           <div className="mb-4 flex items-end justify-between">
             <h2 id="recent" className="text-[16px] font-semibold tracking-[-0.01em]">
               Recent projects
