@@ -1,3 +1,5 @@
+import Link from "next/link";
+import { FolderKanban, UserPlus } from "lucide-react";
 import { AppPage, PageHeader } from "@/components/app/app-shell";
 import { requireUser } from "@/lib/auth/guards";
 import { listUserWorkspaces } from "@/lib/services/workspaces";
@@ -7,6 +9,7 @@ import { ProjectsBrowser } from "@/components/projects/projects-browser";
 import { getProjectStatuses } from "@/lib/services/dashboard";
 import { toStatusDto } from "@/components/projects/status";
 import { templateCategory } from "@/components/projects/template-summaries";
+import { buttonClasses } from "@/components/ui/button";
 import type { ProjectCardItem } from "@/components/projects/project-card";
 
 export const metadata = { title: "Shared projects", robots: { index: false } };
@@ -35,11 +38,11 @@ export default async function SharedProjectsPage() {
   return (
     <AppPage>
       <PageHeader
-        title="Shared projects"
+        title="Shared with me"
         description={
           memberships.length
             ? `Projects from ${memberships.length} workspace${memberships.length === 1 ? "" : "s"} you were invited to (${memberships.map((m) => m.workspace.name).join(", ")}).`
-            : "Projects from workspaces other people invited you to."
+            : "Projects from workspaces other people invited you to. Your own workspaces are under Projects."
         }
       />
       <ProjectsBrowser
@@ -48,8 +51,18 @@ export default async function SharedProjectsPage() {
         emptyTitle="Nothing shared with you yet"
         emptyDescription={
           memberships.length
-            ? "The workspaces you were invited to have no projects yet."
-            : "When a workspace owner invites you (Settings → Members), their projects appear here. Share links you receive open directly from the link."
+            ? "The workspaces you were invited to have no projects yet. Projects their members create appear here."
+            : "When a workspace owner invites you, their projects appear here. To work with your own team, invite them to your workspace instead."
+        }
+        emptyAction={
+          <Link href="/settings/members" className={buttonClasses("primary", "md")}>
+            <UserPlus className="size-4" aria-hidden="true" /> Invite your team
+          </Link>
+        }
+        emptySecondaryAction={
+          <Link href="/projects" className={buttonClasses("outline", "md")}>
+            <FolderKanban className="size-4" aria-hidden="true" /> Your projects
+          </Link>
         }
       />
     </AppPage>

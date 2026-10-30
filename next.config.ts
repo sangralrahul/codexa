@@ -51,6 +51,10 @@ const nextConfig: NextConfig = {
     return [
       { source: "/get-started", destination: "/signup", permanent: false },
       { source: "/not-found", destination: "/404", permanent: false },
+      // Short aliases people type or remember from the sidebar labels; the real pages live under /dashboard and /new-project.
+      { source: "/projects/new", destination: "/new-project", permanent: false },
+      { source: "/shared", destination: "/dashboard/shared", permanent: false },
+      { source: "/github", destination: "/dashboard/github", permanent: false },
     ];
   },
 };

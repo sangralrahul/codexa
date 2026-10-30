@@ -18,27 +18,30 @@ export default async function DashboardGithubPage({ searchParams }: { searchPara
     <AppPage>
       <PageHeader
         title="GitHub repositories"
-        description={ready ? `Repositories available to @${account.username}. Import one to start a linked project.` : "Link your GitHub account to browse and import repositories."}
+        description={
+          ready
+            ? `Repositories available to @${account.username}. Import one to start a linked project.`
+            : capabilities.github
+              ? "Link your GitHub account to browse and import repositories."
+              : "Browse and import repositories once the server operator enables GitHub."
+        }
         actions={
-          <>
-            <Link href="/connect-github" className={buttonClasses("outline", "sm")}>
-              {account.linked ? "Manage link" : "Connect GitHub"}
-            </Link>
-            {ready ? (
-              <Link href="/import-project" className={buttonClasses("primary", "sm")}>
-                Import by name
+          // Only link to the connect page when connecting is actually possible.
+          capabilities.github || account.linked ? (
+            <>
+              <Link href="/connect-github" className={buttonClasses("outline", "sm")}>
+                {account.linked ? "Manage link" : "Connect GitHub"}
               </Link>
-            ) : null}
-          </>
+              {ready ? (
+                <Link href="/import-project" className={buttonClasses("primary", "sm")}>
+                  Import by name
+                </Link>
+              ) : null}
+            </>
+          ) : undefined
         }
       />
-      {ready ? (
-        <GithubRepoBrowser />
-      ) : (
-        <div className="max-w-2xl">
-          <GithubAccountCard configured={capabilities.github} account={account} next="/dashboard/github" errorCode={sp.error ?? null} />
-        </div>
-      )}
+      {ready ? <GithubRepoBrowser /> : <GithubAccountCard configured={capabilities.github} account={account} next="/dashboard/github" errorCode={sp.error ?? null} />}
     </AppPage>
   );
 }

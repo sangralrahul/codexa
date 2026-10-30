@@ -2,11 +2,11 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Lock, Unlink } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Alert } from "@/components/ui/misc";
+import Link from "next/link";
+import { LayoutTemplate, Unlink } from "lucide-react";
+import { Button, buttonClasses } from "@/components/ui/button";
+import { Alert, EmptyState } from "@/components/ui/misc";
 import { Dialog, DialogContent, DialogFooter } from "@/components/ui/dialog";
-import { Tooltip, TooltipProvider } from "@/components/ui/tooltip";
 import { BrandMark } from "@/components/brand/brand-mark";
 import { api } from "@/lib/client/api";
 
@@ -50,6 +50,49 @@ export function GithubAccountCard({ configured, account, next, errorCode }: { co
     }
   };
 
+  const operatorNote = (
+    <details className="group text-xs text-muted-foreground">
+      <summary className="cursor-pointer list-none font-medium text-foreground/80 hover:text-foreground [&::-webkit-details-marker]:hidden">
+        Details for the server operator <span aria-hidden="true" className="inline-block transition-transform group-open:rotate-90">›</span>
+      </summary>
+      <p className="mt-2 max-w-md leading-relaxed">
+        Set <code className="font-mono">GITHUB_CLIENT_ID</code> and <code className="font-mono">GITHUB_CLIENT_SECRET</code> (create an OAuth app at github.com/settings/developers with the callback URL{" "}
+        <code className="font-mono">&lt;APP_URL&gt;/api/auth/github/callback</code>) and restart the app.
+      </p>
+    </details>
+  );
+
+  // Not configured and nothing linked: one explicit "not configured" state with a real next step,
+  // instead of a notice stacked on a card whose only button is disabled.
+  if (!configured && !account.linked) {
+    return (
+      <div className="space-y-4">
+        {error ? (
+          <Alert variant="danger" title="GitHub error">
+            {error}
+          </Alert>
+        ) : null}
+        <EmptyState
+          variant="illustrated"
+          icon={<BrandMark id="github" className="size-[18px]" />}
+          title="GitHub is not configured on this server"
+          description="Linking a GitHub account, importing repositories and pushing commits are unavailable until the server operator enables it. You can still start projects from a template or a prompt."
+          action={
+            <Link href="/new-project?tab=template" className={buttonClasses("primary", "md")}>
+              <LayoutTemplate className="size-4" aria-hidden="true" /> Start from a template
+            </Link>
+          }
+          secondaryAction={
+            <Link href="/dashboard" className={buttonClasses("outline", "md")}>
+              Describe an app
+            </Link>
+          }
+        />
+        <div className="px-1">{operatorNote}</div>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-4">
       {error ? (
@@ -58,19 +101,10 @@ export function GithubAccountCard({ configured, account, next, errorCode }: { co
         </Alert>
       ) : null}
       {!configured ? (
-        <div role="status" className="rounded-[14px] border border-dashed border-border-strong bg-surface/50 p-4 text-sm">
-          <p className="font-medium">GitHub is not configured on this server</p>
-          <p className="mt-0.5 text-muted-foreground">Linking a GitHub account and importing repositories are unavailable until the server operator enables it.</p>
-          <details className="group mt-2 text-xs text-muted-foreground">
-            <summary className="cursor-pointer list-none font-medium text-foreground/80 hover:text-foreground [&::-webkit-details-marker]:hidden">
-              Details for the server operator <span aria-hidden="true" className="inline-block transition-transform group-open:rotate-90">›</span>
-            </summary>
-            <p className="mt-2 leading-relaxed">
-              Set <code className="font-mono">GITHUB_CLIENT_ID</code> and <code className="font-mono">GITHUB_CLIENT_SECRET</code> (create an OAuth app at github.com/settings/developers with the callback URL{" "}
-              <code className="font-mono">&lt;APP_URL&gt;/api/auth/github/callback</code>) and restart the app.
-            </p>
-          </details>
-        </div>
+        <Alert variant="warning" title="GitHub is not configured on this server" live={false}>
+          Importing and pushing are unavailable until the server operator enables it. Your linked account stays as it is.
+          <div className="mt-2">{operatorNote}</div>
+        </Alert>
       ) : null}
       <div className="flex flex-col gap-3 rounded-[16px] border border-border bg-card p-4 shadow-[inset_0_1px_0_var(--hairline)] sm:flex-row sm:items-center sm:justify-between">
         <div className="flex min-w-0 items-center gap-3">
@@ -107,18 +141,10 @@ export function GithubAccountCard({ configured, account, next, errorCode }: { co
                 <Unlink className="size-4" aria-hidden="true" /> Unlink
               </Button>
             </>
-          ) : configured ? (
+          ) : (
             <Button size="sm" asChild>
               <a href={startUrl}>Connect GitHub</a>
             </Button>
-          ) : (
-            <TooltipProvider delayDuration={200}>
-              <Tooltip content="GitHub is not configured on this server">
-                <Button size="sm" aria-disabled data-no-ripple="" className="cursor-not-allowed opacity-55" onClick={(e) => e.preventDefault()}>
-                  <Lock className="size-3.5" aria-hidden="true" /> Connect GitHub
-                </Button>
-              </Tooltip>
-            </TooltipProvider>
           )}
         </div>
       </div>

@@ -33,6 +33,8 @@ export function ProjectsBrowser({
   showWorkspace,
   emptyTitle,
   emptyDescription,
+  emptyAction,
+  emptySecondaryAction,
   title,
   canCreate = false,
 }: {
@@ -40,6 +42,9 @@ export function ProjectsBrowser({
   showWorkspace?: boolean;
   emptyTitle?: string;
   emptyDescription?: string;
+  /** Primary and secondary actions for a custom empty state (pages that pass `emptyTitle`). */
+  emptyAction?: React.ReactNode;
+  emptySecondaryAction?: React.ReactNode;
   /** Renders the page <h1> in the toolbar ("Projects 4"). */
   title?: string;
   /** Show New project and the ghost tile (editors and up). */
@@ -101,14 +106,18 @@ export function ProjectsBrowser({
           title={emptyTitle ?? "No projects yet"}
           description={emptyDescription ?? "Describe what you want to build, or start from one of the templates. Every project is real code you can read, edit and export."}
           action={
-            emptyTitle || !canCreate ? null : (
+            emptyTitle ? (
+              emptyAction ?? null
+            ) : !canCreate ? null : (
               <Link href="/dashboard" className={buttonClasses("primary", "md")}>
                 <Sparkles className="size-4" aria-hidden="true" /> Describe an app
               </Link>
             )
           }
           secondaryAction={
-            emptyTitle ? null : (
+            emptyTitle ? (
+              emptySecondaryAction ?? null
+            ) : (
               <Link href="/dashboard/templates" className={buttonClasses("outline", "md")}>
                 <LayoutTemplate className="size-4" aria-hidden="true" /> Browse templates
               </Link>

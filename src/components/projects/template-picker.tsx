@@ -1,10 +1,14 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Check, ChevronLeft, ChevronRight, Sparkles } from "lucide-react";
+import { Check, ChevronDown, ChevronLeft, ChevronRight, ChevronUp, Sparkles } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { withViewTransition } from "@/lib/client/view-transition";
+import { buttonClasses } from "@/components/ui/button";
 import { TemplatePreview } from "@/components/templates/template-preview";
+
+/** Tiles shown before "Show all": six rows of the 2-column grid, so the page stays scannable. */
+const INITIAL_TILES = 12;
 
 export type PickerTemplate = {
   id: string;
@@ -110,14 +114,36 @@ function CategoryRow({ value, onChange, options }: { value: string; onChange: (v
  */
 export function TemplatePicker({ templates, value, onChange, columns = 2 }: { templates: PickerTemplate[]; value: string; onChange: (id: string) => void; columns?: 2 | 3 }) {
   const [category, setCategory] = useState("all");
+  const [expanded, setExpanded] = useState(false);
   const gridRef = useRef<HTMLDivElement>(null);
   const categories = useMemo(() => {
     const counts = new Map<string, number>();
     for (const t of templates) counts.set(t.category, (counts.get(t.category) ?? 0) + 1);
     return [["all", templates.length] as [string, number], ...counts.entries()];
   }, [templates]);
-  const list = category === "all" ? templates : templates.filter((t) => t.category === category);
+  const all = category === "all" ? templates : templates.filter((t) => t.category === category);
+  const truncated = !expanded && all.length > INITIAL_TILES;
+  const list = useMemo(() => {
+    if (!truncated) return all;
+    const head = all.slice(0, INITIAL_TILES);
+    // The selected template (the default, ?template=, or a starter pick) always stays visible:
+    // when it sits past the fold it takes the last slot instead of vanishing behind "Show all".
+    const chosen = all.find((t) => t.id === value);
+    return chosen && !head.includes(chosen) ? [...head.slice(0, -1), chosen] : head;
+  }, [all, truncated, value]);
   const focusable = list.some((t) => t.id === value) ? value : list[0]?.id;
+
+  const changeCategory = (c: string) =>
+    withViewTransition(() => {
+      setCategory(c);
+      setExpanded(false);
+    });
+  const toggleExpanded = () => {
+    const open = !expanded;
+    setExpanded(open);
+    // Collapsing can hide the focused tile; keep focus on the grid so arrow keys still work.
+    if (!open) requestAnimationFrame(() => gridRef.current?.querySelector<HTMLElement>('[tabindex="0"]')?.focus({ preventScroll: true }));
+  };
 
   const onKey = (e: React.KeyboardEvent) => {
     const step = e.key === "ArrowRight" || e.key === "ArrowDown" ? 1 : e.key === "ArrowLeft" || e.key === "ArrowUp" ? -1 : 0;
@@ -132,7 +158,7 @@ export function TemplatePicker({ templates, value, onChange, columns = 2 }: { te
 
   return (
     <div>
-      <CategoryRow value={category} onChange={(c) => withViewTransition(() => setCategory(c))} options={categories} />
+      <CategoryRow value={category} onChange={changeCategory} options={categories} />
       <div ref={gridRef} role="radiogroup" aria-label="Template" onKeyDown={onKey} className={cn("mt-5 grid gap-x-5 gap-y-7 sm:grid-cols-2", columns === 3 && "xl:grid-cols-3")}>
         {list.map((t, i) => {
           const selected = t.id === value;
@@ -181,6 +207,24 @@ export function TemplatePicker({ templates, value, onChange, columns = 2 }: { te
           );
         })}
       </div>
+      {all.length > INITIAL_TILES ? (
+        <div className="mt-8 flex flex-col items-center gap-2 border-t border-border pt-6">
+          <p className="text-xs text-muted-foreground" aria-live="polite">
+            Showing {list.length} of {all.length} {category === "all" ? "templates" : (CATEGORY_NAMES[category] ?? category).toLowerCase()}
+          </p>
+          <button type="button" onClick={toggleExpanded} aria-expanded={!truncated} className={buttonClasses("outline", "md")}>
+            {truncated ? (
+              <>
+                Show all {all.length} <ChevronDown className="size-4" aria-hidden="true" />
+              </>
+            ) : (
+              <>
+                Show fewer <ChevronUp className="size-4" aria-hidden="true" />
+              </>
+            )}
+          </button>
+        </div>
+      ) : null}
     </div>
   );
 }
