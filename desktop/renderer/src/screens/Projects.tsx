@@ -17,7 +17,7 @@ export function ProjectsScreen() {
   const [q, setQ] = useState("");
   const [framework, setFramework] = useState("all");
   const [sort, setSort] = useState<Sort>(() => (localStorage.getItem("codexa:projects-sort") as Sort) ?? "recent");
-  const [view, setView] = useState<"grid" | "list">(() => (localStorage.getItem("codexa:projects-view") as "grid" | "list") ?? "grid");
+  const [view, setView] = useState<"grid" | "list">(() => (localStorage.getItem("codexa:projects-view") as "grid" | "list") ?? "list");
 
   const frameworks = useMemo(() => {
     const counts = new Map<string, number>();
@@ -47,19 +47,18 @@ export function ProjectsScreen() {
 
   return (
     <div className="scroll relative h-full">
-      <div aria-hidden="true" className="hero-glow pointer-events-none absolute inset-x-0 top-0 h-[260px] opacity-70" />
-      <div className="relative mx-auto max-w-[1180px] px-10 py-10">
+      <div className="relative mx-auto max-w-[1240px] px-8 py-7">
         <header className="flex items-end justify-between gap-4">
           <div>
-            <h1 className="font-[family-name:var(--font-display)] text-[28px] font-semibold tracking-[-0.025em]">Projects</h1>
-            <p className="mt-1 text-[13.5px] text-muted">{projects ? `${projects.length} project${projects.length === 1 ? "" : "s"} in ${workspace?.name ?? "this workspace"}` : "Loading…"}</p>
+            <h1 className="font-[family-name:var(--font-display)] text-[22px] font-semibold tracking-[-0.02em]">Projects</h1>
+            <p className="mt-0.5 text-[13px] text-muted">{projects ? `${projects.length} project${projects.length === 1 ? "" : "s"} in ${workspace?.name ?? "this workspace"}` : "Loading…"}</p>
           </div>
           <Button variant="accent" onClick={newProject}>
             <Plus /> New project
           </Button>
         </header>
 
-        <div className="card-edge mt-7 flex flex-wrap items-center gap-2 rounded-2xl border border-border bg-card p-2">
+        <div className="card-edge mt-5 flex flex-wrap items-center gap-2 rounded-xl border border-border bg-card p-1.5">
           <div className="relative w-72">
             <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-dim" />
             <Input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search projects" aria-label="Search projects" className="h-9 border-0 bg-surface pl-9 shadow-none" />
@@ -110,7 +109,7 @@ export function ProjectsScreen() {
           </div>
         </div>
 
-        <div className="mt-6">
+        <div className="mt-4">
           {projects === null ? (
             <div className="flex h-48 items-center justify-center">
               <Spinner />

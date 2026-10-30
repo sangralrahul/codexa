@@ -83,12 +83,18 @@ function PreviewState({ runtime }: { runtime: RuntimeView }) {
   }
   if (status === "unavailable") {
     return (
-      <Card
-        icon={<CloudOff />}
-        title="Previews aren't available right now"
-        body={error && error.length > 40 ? error : `The preview service isn't reachable${error ? ` (${error})` : ""}. Your files, chat and publishing still work.`}
-        action={<Button onClick={() => void runtime.refresh()}>Try again</Button>}
-      />
+      <div className="fade-in flex w-[420px] max-w-full items-center gap-3 rounded-xl border border-border bg-card px-4 py-3 shadow-card">
+        <CloudOff className="size-4 shrink-0 text-muted" />
+        <span className="min-w-0 flex-1">
+          <span className="block text-[13px] font-medium">Preview service unavailable</span>
+          <span className="block truncate text-[12px] text-muted" title={error ?? undefined}>
+            {error && error.length > 40 ? error : "Files, chat and publishing still work."}
+          </span>
+        </span>
+        <Button size="sm" variant="ghost" onClick={() => void runtime.refresh()}>
+          Retry
+        </Button>
+      </div>
     );
   }
   if (status === "error") {

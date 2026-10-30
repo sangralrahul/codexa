@@ -248,8 +248,8 @@ export function Chat({ projectId, initialPrompt, onFilesChanged }: { projectId: 
           </div>
         ) : null}
         {notConfigured ? (
-          <p className="mb-2 flex items-start gap-2 rounded-lg bg-warning/10 px-3 py-2 text-[12.5px] text-warning">
-            <TriangleAlert className="mt-0.5 size-3.5 shrink-0" /> AI isn&apos;t set up on this Codexa server yet, so chat can&apos;t run. Files, preview and publishing still work.
+          <p className="mb-2 flex items-center gap-2 rounded-md border border-border bg-surface/60 px-2.5 py-1.5 text-[12px] text-muted">
+            <span className="size-1.5 shrink-0 rounded-full bg-dim" /> AI isn&apos;t set up on this server yet. Files, preview and publishing still work.
           </p>
         ) : null}
         <div className="rounded-xl border border-border bg-bg transition-colors focus-within:border-border-strong">

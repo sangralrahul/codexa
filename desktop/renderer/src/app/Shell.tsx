@@ -71,7 +71,7 @@ function TitleBar({ onSearch }: { onSearch: () => void }) {
   const { route, back, canGoBack } = useApp();
   return (
     <header className="drag relative flex h-11 shrink-0 items-center border-b border-border bg-sidebar pl-3 pr-[150px]">
-      <div className="flex w-[228px] shrink-0 items-center gap-2 text-fg">
+      <div className="flex w-[212px] shrink-0 items-center gap-2 text-fg">
         <Logo size={18} />
         <span className="text-[13.5px] font-semibold tracking-[-0.01em]">Codexa</span>
         {route.name === "project" && canGoBack ? (
@@ -106,7 +106,7 @@ function Sidebar() {
   };
 
   return (
-    <aside className="flex w-[240px] shrink-0 flex-col border-r border-border bg-sidebar">
+    <aside className="flex w-[224px] shrink-0 flex-col border-r border-border bg-sidebar">
       <div className="px-3 pt-3">
         <Menu
           align="start"
@@ -206,7 +206,7 @@ function Sidebar() {
           ))}
         </ul>
 
-        <p className="mb-1 mt-6 px-2.5 text-[11.5px] font-medium text-dim">Recent</p>
+        <p className="mb-1 mt-5 px-2.5 text-[11px] font-semibold uppercase tracking-wider text-dim">Recent</p>
         {recent.length ? (
           <ul className="space-y-0.5">
             {recent.map((p) => (

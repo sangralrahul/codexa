@@ -17,8 +17,8 @@
   --dim: #8e95a1;
   --primary: #111318;
   --primary-fg: #ffffff;
-  --accent: #e84a0f;
-  --accent-soft: #fdeae2;
+  --accent: #2563eb;
+  --accent-soft: #e8effd;
   --success: #15803d;
   --warning: #b45309;
   --danger: #dc2626;
@@ -38,8 +38,8 @@
   --dim: #6b727e;
   --primary: #f1f2f4;
   --primary-fg: #0d0e11;
-  --accent: #ff6a33;
-  --accent-soft: #2b1711;
+  --accent: #3b82f6;
+  --accent-soft: #15213a;
   --success: #34d399;
   --warning: #f0b35b;
   --danger: #f26b62;
@@ -218,7 +218,7 @@ textarea,
   animation: drift-b 22s ease-in-out infinite;
 }
 .orb-c {
-  background: color-mix(in oklab, #f5c04a 34%, transparent);
+  background: color-mix(in oklab, #7c9cf0 30%, transparent);
   animation: drift-c 26s ease-in-out infinite;
 }
 .dark .orb {
