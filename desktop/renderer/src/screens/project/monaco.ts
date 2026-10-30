@@ -30,7 +30,7 @@ monaco.editor.defineTheme("codexa-dark", {
   base: "vs-dark",
   inherit: true,
   rules: [],
-  colors: { "editor.background": "#16181c", "editor.lineHighlightBackground": "#1c1f24", "editorGutter.background": "#16181c", "editorLineNumber.foreground": "#4b515b", "editorIndentGuide.background1": "#262a31" },
+  colors: { "editor.background": "#15151b", "editor.lineHighlightBackground": "#1c1c24", "editorGutter.background": "#15151b", "editorLineNumber.foreground": "#4e4f5c", "editorIndentGuide.background1": "#26262f" },
 });
 monaco.editor.defineTheme("codexa-light", {
   base: "vs",

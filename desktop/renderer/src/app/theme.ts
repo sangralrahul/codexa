@@ -1,7 +1,8 @@
 export type ThemeMode = "system" | "light" | "dark";
 const KEY = "codexa:theme";
 
-export const getThemeMode = (): ThemeMode => (localStorage.getItem(KEY) as ThemeMode | null) ?? "system";
+/** Dark is the default (an editor-first tool); people can switch to light or follow Windows in Settings. */
+export const getThemeMode = (): ThemeMode => (localStorage.getItem(KEY) as ThemeMode | null) ?? "dark";
 
 /** Applies the theme to the page and the native title bar buttons. */
 export async function applyTheme(mode: ThemeMode = getThemeMode()) {
