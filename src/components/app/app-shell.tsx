@@ -5,7 +5,7 @@ import { createPortal } from "react-dom";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Dialog as RD } from "radix-ui";
-import { Menu, Plus, Search, X } from "lucide-react";
+import { MailWarning, Menu, Plus, Search } from "lucide-react";
 import { AppSidebar, type SidebarProject, type SidebarUpsell, type SidebarUsage, type SidebarUser, type SidebarWorkspace } from "./sidebar";
 import { LogoMark } from "@/components/logo";
 import { Alert, Kbd } from "@/components/ui/misc";
@@ -148,7 +148,8 @@ export function AppShell({
     }
     dismissListeners.forEach((l) => l());
   };
-  const [bannerHidden, setBannerHidden] = useState(false);
+  const [noticeHidden, setNoticeHidden] = useState(false);
+  const showVerify = !emailVerified && !dismissed && !noticeHidden;
 
   const command = (
     <CommandMenu
@@ -176,7 +177,7 @@ export function AppShell({
 
   return (
     <ActionsSlot.Provider value={slot}>
-      <div className="flex min-h-dvh bg-background [--btn-radius:10px]">
+      <div className="flex min-h-dvh bg-background [--btn-radius:6px]">
         {command}
         <ShortcutsSheet open={shortcuts} onOpenChange={setShortcuts} />
         <aside
@@ -184,7 +185,7 @@ export function AppShell({
           data-collapsed={collapsed || undefined}
           className={cn(
             "sticky top-0 hidden h-dvh shrink-0 overflow-hidden border-r border-border bg-surface transition-[width] duration-[280ms] ease-out calm:transition-none lg:block",
-            collapsed ? "w-16" : "w-[248px]",
+            collapsed ? "w-14" : "w-[228px]",
           )}
         >
           <AppSidebar {...sidebarProps} collapsed={collapsed} onToggle={toggle} />
@@ -208,12 +209,12 @@ export function AppShell({
 
         <div className="relative isolate flex min-w-0 flex-1 flex-col">
           {/* Two columns below md (the centred ⌘K trigger is hidden there), so the actions stay at the right edge. */}
-          <header className="glass sticky top-0 z-40 grid h-[52px] grid-cols-[minmax(0,1fr)_auto] items-center gap-3 border-b border-border/70 px-3 sm:px-5 md:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)]">
+          <header className="sticky top-0 z-40 grid h-[52px] grid-cols-[minmax(0,1fr)_auto] items-center gap-3 border-b border-border bg-background/90 px-3 backdrop-blur-sm sm:px-5 md:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)]">
             <div className="flex min-w-0 items-center gap-1.5">
-              <button type="button" onClick={() => setDrawer(true)} className="-ml-1 flex size-9 items-center justify-center rounded-[10px] hover:bg-muted lg:hidden" aria-label="Open navigation">
+              <button type="button" onClick={() => setDrawer(true)} className="-ml-1 flex size-8 items-center justify-center rounded-md hover:bg-muted lg:hidden" aria-label="Open navigation">
                 <Menu className="size-5" aria-hidden="true" />
               </button>
-              <Link href="/dashboard" className="flex size-9 items-center justify-center rounded-[10px] lg:hidden" aria-label="Codexa home">
+              <Link href="/dashboard" className="flex size-8 items-center justify-center rounded-md lg:hidden" aria-label="Codexa home">
                 <LogoMark size={24} />
               </Link>
               {crumb ? (
@@ -239,7 +240,7 @@ export function AppShell({
               type="button"
               onClick={openCommandMenu}
               aria-keyshortcuts="Control+K Meta+K"
-              className="group/k hidden h-8 w-[min(360px,36vw)] items-center gap-2 rounded-[10px] border border-border bg-background/60 px-2.5 text-[13px] text-muted-foreground shadow-[inset_0_1px_0_var(--hairline)] transition-[border-color,color,background-color] hover:border-border-strong hover:bg-background hover:text-foreground md:flex"
+              className="group/k hidden h-8 w-[min(400px,40vw)] items-center gap-2 rounded-md border border-border bg-card px-2.5 text-[12.5px] text-muted-foreground transition-[border-color,color,background-color] hover:border-border-strong hover:text-foreground md:flex"
             >
               <Search className="size-3.5" aria-hidden="true" />
               <span className="flex-1 truncate text-left">Search or build anything…</span>
@@ -249,9 +250,21 @@ export function AppShell({
             </button>
 
             <div className="flex min-w-0 items-center justify-end gap-1.5">
-              <button type="button" onClick={openCommandMenu} aria-label="Search or jump to" className="flex size-9 items-center justify-center rounded-[10px] text-muted-foreground hover:bg-muted hover:text-foreground md:hidden">
+              <button type="button" onClick={openCommandMenu} aria-label="Search or jump to" className="flex size-8 items-center justify-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground md:hidden">
                 <Search className="size-4" aria-hidden="true" />
               </button>
+              {showVerify ? (
+                <VerifyChip
+                  email={user.email}
+                  emailConfigured={emailConfigured}
+                  devMailbox={devMailbox}
+                  dismissLabel={dismissLabel}
+                  onDismiss={() => {
+                    setNoticeHidden(true);
+                    dismissBanner();
+                  }}
+                />
+              ) : null}
               <div ref={setSlot} className="flex items-center gap-1.5 empty:hidden" />
               {canCreate && pathname !== "/new-project" ? (
                 <>
@@ -259,7 +272,7 @@ export function AppShell({
                   <Link
                     href="/new-project"
                     aria-label="New project"
-                    className="flex size-9 items-center justify-center rounded-[10px] border border-border-strong bg-card/60 text-foreground shadow-[inset_0_1px_0_var(--hairline)] transition-colors hover:bg-muted focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring sm:hidden"
+                    className="flex size-8 items-center justify-center rounded-md border border-border-strong bg-card text-foreground transition-colors hover:bg-muted focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring sm:hidden"
                   >
                     <Plus className="size-4" aria-hidden="true" />
                   </Link>
@@ -274,84 +287,7 @@ export function AppShell({
             </div>
           </header>
 
-          {!emailVerified && !dismissed && !bannerHidden ? (
-            <div className="relative z-30 flex h-9 items-center gap-x-2.5 border-b border-warning/25 bg-warning/[0.07] px-3 text-[13px] sm:px-5">
-              <span className="size-1.5 shrink-0 rounded-full bg-warning shadow-[0_0_0_3px_color-mix(in_oklab,var(--warning)_20%,transparent)]" aria-hidden="true" />
-              {/* Phone: one short line; the full explanation and the action live in the "Why?" popover. */}
-              <p className="min-w-0 flex-1 truncate font-medium sm:hidden">Email not verified</p>
-              <Popover>
-                <PopoverTrigger className="shrink-0 rounded-sm text-[13px] font-medium text-foreground underline decoration-border-strong underline-offset-4 transition-colors hover:decoration-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring sm:hidden">
-                  Why?
-                </PopoverTrigger>
-                <PopoverContent align="end" className="w-[min(18rem,calc(100vw-24px))] text-[13px] leading-relaxed">
-                  <p className="font-medium text-foreground">Verify your email to unlock deployments.</p>
-                  {emailConfigured ? (
-                    <>
-                      <p className="mt-1.5 text-muted-foreground">We sent a link to {user.email}. Didn&apos;t get it?</p>
-                      <ResendVerificationButton size="sm" emailConfigured className="mt-3 w-full" />
-                    </>
-                  ) : (
-                    <>
-                      <p className="mt-1.5 text-muted-foreground">
-                        Email delivery isn&apos;t configured on this server, so verification links aren&apos;t sent. Ask the operator. Your status is shown in{" "}
-                        <Link href="/settings/security" className="font-medium text-foreground underline decoration-border-strong underline-offset-4 hover:decoration-foreground">
-                          Settings › Security
-                        </Link>
-                        .
-                      </p>
-                      {devMailbox ? (
-                        <Link href="/dev/mailbox" className="mt-2 inline-block font-medium text-foreground underline decoration-border-strong underline-offset-4 hover:decoration-foreground">
-                          Open dev mailbox
-                        </Link>
-                      ) : null}
-                    </>
-                  )}
-                </PopoverContent>
-              </Popover>
-              {/* From 640px: the full line (truncated, never wrapped, so the bar stays 36px). */}
-              {emailConfigured ? (
-                <>
-                  <p className="hidden min-w-0 flex-1 truncate sm:block">
-                    <span className="font-medium">Verify your email</span>
-                    <span className="text-muted-foreground"> to unlock deployments.</span>
-                    <span className="hidden text-foreground-dim md:inline"> We sent a link to {user.email}.</span>
-                  </p>
-                  <ResendVerificationButton
-                    size="sm"
-                    className="hidden h-7 shrink-0 border-0 bg-transparent px-1.5 text-[13px] font-medium text-foreground underline decoration-border-strong underline-offset-4 shadow-none hover:bg-transparent hover:decoration-foreground sm:inline-flex"
-                  />
-                </>
-              ) : (
-                // No email provider on this server: nothing is delivered, so no "we sent a link" and no resend button.
-                <>
-                  <p className="hidden min-w-0 flex-1 truncate sm:block" title="Email delivery isn't configured on this server, so verification links aren't sent. Ask the operator.">
-                    <span className="font-medium">Verify your email</span>
-                    <span className="text-muted-foreground"> to unlock deployments. </span>
-                    <span className="text-muted-foreground">Email delivery isn&apos;t configured on this server, so verification links aren&apos;t sent. Ask the operator.</span>
-                  </p>
-                  <Link
-                    href={devMailbox ? "/dev/mailbox" : "/settings/security"}
-                    className="hidden shrink-0 text-[13px] font-medium text-foreground underline decoration-border-strong underline-offset-4 transition-colors hover:decoration-foreground sm:inline"
-                  >
-                    {devMailbox ? "Open dev mailbox" : "Settings › Security"}
-                  </Link>
-                </>
-              )}
-              <button
-                type="button"
-                onClick={() => {
-                  setBannerHidden(true);
-                  dismissBanner();
-                }}
-                aria-label={dismissLabel}
-                title={dismissLabel}
-                className="-mr-1 flex size-7 shrink-0 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-warning/10 hover:text-foreground"
-              >
-                <X className="size-3.5" aria-hidden="true" />
-              </button>
-            </div>
-          ) : null}
-          <main id="main" className="app-atmosphere flex-1">
+          <main id="main" className="flex-1">
             {children}
           </main>
         </div>
@@ -360,19 +296,66 @@ export function AppShell({
   );
 }
 
-/** Standard page width and padding for app pages (one width across the app: 1280px). */
-export function AppPage({ children, className, width = "default" }: { children: React.ReactNode; className?: string; width?: "default" | "narrow" | "wide" }) {
-  return <div className={cn("mx-auto w-full px-4 py-8 sm:px-6 lg:px-10 lg:py-10", width === "narrow" ? "max-w-3xl" : width === "wide" ? "max-w-[1440px]" : "max-w-[1280px]", className)}>{children}</div>;
+/**
+ * "Email not verified": a small neutral chip in the top bar (not a banner). It opens a popover with
+ * the real action: resend the link when this server can send email, otherwise where the status lives
+ * and, in development, the mailbox. Hiding it is remembered like the old banner was.
+ */
+function VerifyChip({ email, emailConfigured, devMailbox, dismissLabel, onDismiss }: { email: string; emailConfigured: boolean; devMailbox: boolean; dismissLabel: string; onDismiss: () => void }) {
+  return (
+    <Popover>
+      <PopoverTrigger
+        className="inline-flex h-7 items-center gap-1.5 rounded-md border border-border bg-card px-2 text-[12px] font-medium text-muted-foreground transition-colors hover:border-border-strong hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring data-[state=open]:text-foreground"
+        title="Email not verified"
+      >
+        <MailWarning className="size-3.5" aria-hidden="true" />
+        <span className="hidden sm:inline">Verify email</span>
+        <span className="sr-only sm:hidden">Email not verified</span>
+      </PopoverTrigger>
+      <PopoverContent align="end" className="w-[min(20rem,calc(100vw-24px))] text-[13px] leading-relaxed">
+        <p className="font-medium text-foreground">Verify your email to unlock deployments.</p>
+        {emailConfigured ? (
+          <>
+            <p className="mt-1 text-muted-foreground">We sent a link to {email}. Didn&apos;t get it?</p>
+            <ResendVerificationButton size="sm" emailConfigured className="mt-3 w-full" />
+          </>
+        ) : (
+          <>
+            <p className="mt-1 text-muted-foreground">
+              Email delivery isn&apos;t configured on this server, so verification links aren&apos;t sent. Your status is shown in{" "}
+              <Link href="/settings/security" className="font-medium text-foreground underline decoration-border-strong underline-offset-4 hover:decoration-foreground">
+                Settings › Security
+              </Link>
+              .
+            </p>
+            {devMailbox ? (
+              <Link href="/dev/mailbox" className="mt-2 inline-block font-medium text-foreground underline decoration-border-strong underline-offset-4 hover:decoration-foreground">
+                Open dev mailbox
+              </Link>
+            ) : null}
+          </>
+        )}
+        <button type="button" onClick={onDismiss} className="mt-3 block text-xs text-muted-foreground underline-offset-4 hover:text-foreground hover:underline">
+          {dismissLabel}
+        </button>
+      </PopoverContent>
+    </Popover>
+  );
 }
 
-/** App page heading: optional eyebrow, a 28px title (text-app-title), description and actions. */
+/** Standard page width and padding for app pages (one width across the app: 1280px). */
+export function AppPage({ children, className, width = "default" }: { children: React.ReactNode; className?: string; width?: "default" | "narrow" | "wide" }) {
+  return <div className={cn("mx-auto w-full px-4 py-5 sm:px-6 lg:px-8 lg:py-6", width === "narrow" ? "max-w-3xl" : width === "wide" ? "max-w-[1440px]" : "max-w-[1280px]", className)}>{children}</div>;
+}
+
+/** App page heading: optional eyebrow, a 22px title (text-app-title), description and actions. */
 export function PageHeader({ title, description, actions, eyebrow }: { title: string; description?: React.ReactNode; actions?: React.ReactNode; eyebrow?: React.ReactNode }) {
   return (
-    <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+    <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
       <div className="min-w-0">
-        {eyebrow ? <p className="mb-2 font-mono text-xs text-foreground-dim">{eyebrow}</p> : null}
+        {eyebrow ? <p className="mb-1 text-[11.5px] font-medium uppercase tracking-[0.06em] text-foreground-dim">{eyebrow}</p> : null}
         <h1 className="text-app-title text-balance">{title}</h1>
-        {description ? <p className="mt-2 max-w-2xl text-pretty text-sm text-muted-foreground">{description}</p> : null}
+        {description ? <p className="mt-1 max-w-2xl text-pretty text-[13px] text-muted-foreground">{description}</p> : null}
       </div>
       {actions ? <div className="flex shrink-0 flex-wrap items-center gap-2">{actions}</div> : null}
     </div>

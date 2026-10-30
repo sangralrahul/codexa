@@ -82,7 +82,7 @@ export function TemplateTile({
         data-spotlight-tile
         className={cn(
           "relative isolate overflow-hidden border bg-surface-2 shadow-[inset_0_1px_0_var(--hairline),var(--shadow-sm)] transition-[translate,border-color,box-shadow] duration-(--dur-4) ease-out",
-          lg ? "rounded-[18px]" : compact ? "rounded-[12px]" : "rounded-[16px]",
+          lg ? "rounded-lg" : compact ? "rounded-md" : "rounded-lg",
           "border-border group-hover/tile:border-border-strong group-hover/tile:shadow-lg",
           linked && "group-hover/tile:-translate-y-0.5 group-active/tile:translate-y-0 calm:group-hover/tile:translate-y-0",
           "group-has-[[data-tile-link]:focus-visible]/tile:outline-2 group-has-[[data-tile-link]:focus-visible]/tile:outline-offset-[3px] group-has-[[data-tile-link]:focus-visible]/tile:outline-ring",
@@ -102,7 +102,7 @@ export function TemplateTile({
             data-featured-label
             className="absolute bottom-3 left-3 z-[2] inline-flex h-6 items-center gap-1.5 rounded-full bg-background/85 px-2.5 font-mono text-[10px] font-medium uppercase tracking-[0.1em] text-foreground shadow-[inset_0_0_0_1px_var(--border),var(--shadow-sm)] backdrop-blur-md transition-opacity duration-(--dur-3) group-hover/tile:opacity-0 group-focus-within/tile:opacity-0 [@media(hover:none)]:opacity-100"
           >
-            <Sparkles className="size-3 text-signal-ink" aria-hidden="true" />
+            <Sparkles className="size-3 text-accent" aria-hidden="true" />
             Featured
           </span>
         ) : null}
@@ -126,7 +126,7 @@ export function TemplateTile({
               data-tile-link
               href={target}
               {...previewLinkProps}
-              className="outline-none after:absolute after:inset-0 after:z-[1] after:rounded-[18px] after:content-['']"
+              className="outline-none after:absolute after:inset-0 after:z-[1] after:rounded-lg after:content-['']"
             >
               {t.name}
             </Link>

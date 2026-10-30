@@ -66,7 +66,7 @@ export function GalleryResults({ tiles, featured, caption = true, className }: {
             className={cn(
               "grid grid-cols-2 gap-x-3 gap-y-6 sm:gap-x-5 sm:gap-y-9 lg:grid-cols-3 xl:grid-cols-4",
               // Phones: compact tiles (no description, no action row, smaller title and label).
-              "max-sm:[&_[data-tile-desc]]:hidden max-sm:[&_[data-tile-actions]]:hidden max-sm:[&_[data-featured-label]]:hidden max-sm:[&_h3]:text-[14px] max-sm:[&_[data-spotlight-tile]]:rounded-[12px]",
+              "max-sm:[&_[data-tile-desc]]:hidden max-sm:[&_[data-tile-actions]]:hidden max-sm:[&_[data-featured-label]]:hidden max-sm:[&_h3]:text-[14px] max-sm:[&_[data-spotlight-tile]]:rounded-md",
               featuredRow && "[&_[data-featured-label]]:hidden",
             )}
             aria-label="Templates"
@@ -88,8 +88,8 @@ export function GalleryResults({ tiles, featured, caption = true, className }: {
           )}
         </section>
       ) : (
-        <div className="rounded-[22px] border border-dashed border-border-strong px-6 py-12 text-center">
-          <span className="mx-auto mb-4 grid size-11 place-items-center rounded-xl border border-border bg-surface text-muted-foreground shadow-[inset_0_1px_0_var(--hairline)]">
+        <div className="rounded-lg border border-dashed border-border-strong px-6 py-12 text-center">
+          <span className="mx-auto mb-4 grid size-11 place-items-center rounded-lg border border-border bg-surface text-muted-foreground shadow-[inset_0_1px_0_var(--hairline)]">
             <SearchX className="size-5" aria-hidden="true" />
           </span>
           <h2 className="text-[15px] font-semibold tracking-tight">No templates match</h2>

@@ -66,7 +66,7 @@ export function StarterFan({ starters, caption, className }: { starters: FanStar
                   href={templatePreviewHref(t.id)}
                   aria-label={`Preview the ${t.name} starter`}
                   className={cn(
-                    "group/card block rounded-[14px] outline-none transition-[translate] duration-(--dur-4) ease-out",
+                    "group/card block rounded-md outline-none transition-[translate] duration-(--dur-4) ease-out",
                     "hover:-translate-y-2 focus-visible:-translate-y-2 calm:hover:translate-y-0 calm:focus-visible:translate-y-0",
                     "focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ring",
                   )}

@@ -27,40 +27,40 @@
    the redesign is kept; new ones are marked ★ in docs/DESIGN.md.
    -------------------------------------------------------------------------- */
 :root {
-  --background: #fbfaf7;
-  --foreground: #0c0d10;
-  --foreground-dim: #6b6e75;
-  --surface: #f5f4f0;
-  --surface-2: #eeede8;
-  --surface-3: #e6e4de;
+  --background: #f6f7f9;
+  --foreground: #0f172a;
+  --foreground-dim: #5f6b7c;
+  --surface: #f1f3f6;
+  --surface-2: #e9ecf1;
+  --surface-3: #dfe3ea;
   --card: #ffffff;
-  --card-foreground: #0c0d10;
-  --muted: #f2f1ec;
-  --muted-foreground: #5c5f66;
-  --border: #e7e5df;
-  --border-strong: #d2cfc7;
+  --card-foreground: #0f172a;
+  --muted: #f1f3f6;
+  --muted-foreground: #596475;
+  --border: #e2e6ec;
+  --border-strong: #c9d1dc;
   --input: #ffffff;
-  --ring: #e2512c;
-  --focus: #5d6069; /* neutral control focus — never red, so it can't read as an error */
-  --primary: #0c0d10;
-  --primary-hover: #2a2b30;
+  --ring: #2563eb;
+  --focus: #2563eb; /* control focus — blue, never red, so it can't read as an error */
+  --primary: #2563eb;
+  --primary-hover: #1d4ed8;
   --primary-foreground: #ffffff;
-  --signal: #f0512a;
+  --signal: #f0512a; /* brand-only: the Codexa ember (logo, marketing CTA). Not an app accent. */
   --signal-2: #f59e0b;
   --signal-ink: #c2410c;
-  --accent: #6d5cff;
+  --accent: #2563eb;
   --accent-foreground: #ffffff;
-  --success: #146c34; /* ≥4.5:1 as text on a /10–/15 success chip over paper, card and muted */
-  --warning: #974309;
-  --danger: #b91c1c;
+  --success: #15803d; /* ≥4.5:1 as text on a /10–/15 success chip over background, card and muted */
+  --warning: #a16207;
+  --danger: #dc2626;
   --danger-foreground: #ffffff;
-  --info: #1d4ed8;
+  --info: #2563eb;
   --code-bg: #0c0c0c;
   --code-fg: #e6e6e6;
   --code-border: #222222;
   --code-muted: #8a8a8a; /* 5.5:1 on --code-bg */
-  --selection: rgba(240, 81, 42, 0.18);
-  --selection-strong: color-mix(in oklab, var(--signal) 24%, transparent);
+  --selection: rgba(37, 99, 235, 0.16);
+  --selection-strong: color-mix(in oklab, var(--accent) 24%, transparent);
   /* Selection mark (.mark-select): gradient text ink. */
   --mark-ink-1: var(--signal-ink);
   --mark-ink-2: color-mix(in oklab, var(--signal) 70%, var(--signal-2));
@@ -69,19 +69,19 @@
   --mark-edge: color-mix(in oklab, var(--signal) 42%, transparent);
   /* Comet border head: the leading spark stays in the signal hues (amber on paper). */
   --comet-head: color-mix(in oklab, var(--signal-2) 70%, var(--signal));
-  --hairline: rgba(12, 13, 16, 0.07);
-  --grid-line: rgba(12, 13, 16, 0.05);
-  --glass: rgba(255, 255, 255, 0.74);
+  --hairline: rgba(15, 23, 42, 0.06);
+  --grid-line: rgba(15, 23, 42, 0.05);
+  --glass: rgba(255, 255, 255, 0.78);
   --ember-ink: #1a0b05;
-  --shadow-sm: 0 1px 2px rgba(12, 13, 16, 0.06);
-  --shadow-md: 0 4px 14px rgba(12, 13, 16, 0.08);
-  --shadow-lg: 0 1px 0 rgba(255, 255, 255, 0.9) inset, 0 18px 40px -16px rgba(12, 13, 16, 0.18), 0 4px 12px -4px rgba(12, 13, 16, 0.08);
-  --shadow-xl: 0 40px 80px -30px rgba(12, 13, 16, 0.25);
-  --shadow-stage: 0 1px 0 #ffffff inset, 0 60px 120px -50px rgba(12, 13, 16, 0.28), 0 30px 60px -30px color-mix(in oklab, var(--signal) 14%, transparent);
-  --radius: 0.75rem;
+  --shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.05);
+  --shadow-md: 0 4px 12px rgba(15, 23, 42, 0.07);
+  --shadow-lg: 0 1px 0 rgba(255, 255, 255, 0.9) inset, 0 16px 36px -16px rgba(15, 23, 42, 0.16), 0 4px 12px -4px rgba(15, 23, 42, 0.07);
+  --shadow-xl: 0 40px 80px -30px rgba(15, 23, 42, 0.22);
+  --shadow-stage: 0 1px 0 #ffffff inset, 0 60px 120px -50px rgba(15, 23, 42, 0.24), 0 30px 60px -30px color-mix(in oklab, var(--accent) 12%, transparent);
+  --radius: 0.5rem;
   /* Silk / Horizon light: cobalt, ember, amber. */
-  --silk-0: #fbfaf7;
-  --silk-1: #3d5ce0;
+  --silk-0: #f6f7f9;
+  --silk-1: #2563eb;
   --silk-2: #ff8a66;
   --silk-3: #ffc070;
   --silk-opacity: 0.85;
@@ -116,40 +116,40 @@
 }
 
 .dark {
-  --background: #0a0a0a;
-  --foreground: #ededed;
-  --foreground-dim: #858585;
-  --surface: #0f0f0f;
-  --surface-2: #141414;
-  --surface-3: #1a1a1a;
-  --card: #111111;
-  --card-foreground: #ededed;
-  --muted: #191919;
-  --muted-foreground: #a1a1a1;
-  --border: #232323;
-  --border-strong: #333333;
-  --input: #0d0d0d;
-  --ring: #ff6a45;
-  --focus: #a3a6ae;
-  --primary: #ededed;
-  --primary-hover: #d4d4d4;
-  --primary-foreground: #0a0a0a;
-  --signal: #ff5f3a;
+  --background: #0f1219;
+  --foreground: #e6e9ef;
+  --foreground-dim: #8d97a7;
+  --surface: #141823;
+  --surface-2: #1a1f2b;
+  --surface-3: #212736;
+  --card: #151a25;
+  --card-foreground: #e6e9ef;
+  --muted: #1b202c;
+  --muted-foreground: #9aa4b5;
+  --border: #262d3a;
+  --border-strong: #363f4f;
+  --input: #11151e;
+  --ring: #60a5fa;
+  --focus: #60a5fa;
+  --primary: #3b82f6;
+  --primary-hover: #2563eb;
+  --primary-foreground: #ffffff;
+  --signal: #ff5f3a; /* brand-only */
   --signal-2: #ffb23e;
   --signal-ink: #ff7a59;
-  --accent: #9a8cff;
+  --accent: #3b82f6;
   --accent-foreground: #ffffff;
-  --success: #22c55e;
-  --warning: #f5a524;
-  --danger: #f04848;
+  --success: #4ade80;
+  --warning: #fbbf24;
+  --danger: #f87171;
   --danger-foreground: #ffffff;
-  --info: #6ea8fe;
+  --info: #60a5fa;
   --code-bg: #0c0c0c;
   --code-fg: #e6e6e6;
   --code-border: #222222;
   --code-muted: #8a8a8a; /* 5.5:1 on --code-bg */
-  --selection: rgba(255, 95, 58, 0.26);
-  --selection-strong: color-mix(in oklab, var(--signal) 42%, transparent);
+  --selection: rgba(96, 165, 250, 0.28);
+  --selection-strong: color-mix(in oklab, var(--accent) 42%, transparent);
   /* Higher alpha than on paper so the band reads as lit orange, not brown, over near-black; the
      amber end is pulled toward the signal so it never turns olive. */
   /* Dark: the accent words shimmer in silver, not orange-to-amber (colour on black reads as generated). */
@@ -161,7 +161,7 @@
   --comet-head: rgba(255, 246, 236, 0.9);
   --hairline: rgba(255, 255, 255, 0.07);
   --grid-line: rgba(255, 255, 255, 0.045);
-  --glass: rgba(14, 14, 14, 0.7);
+  --glass: rgba(15, 18, 25, 0.72);
   --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4);
   --shadow-md: 0 4px 14px rgba(0, 0, 0, 0.45);
   --shadow-lg: 0 1px 0 rgba(255, 255, 255, 0.05) inset, 0 24px 48px -16px rgba(0, 0, 0, 0.7), 0 4px 12px -4px rgba(0, 0, 0, 0.5);
@@ -170,7 +170,7 @@
   /* Dark: every wash and glow is neutral light, never coloured haze. */
   --glow: rgba(255, 255, 255, 0.5);
   --glow-2: rgba(255, 255, 255, 0.32);
-  --silk-0: #0a0a0a;
+  --silk-0: #0f1219;
   --silk-1: rgba(255, 255, 255, 0.38);
   --silk-2: rgba(255, 255, 255, 0.3);
   --silk-3: rgba(255, 255, 255, 0.26);
@@ -498,11 +498,11 @@ body:has(main [data-tone="company"]) { --silk-1: #ff8a66; --silk-2: #ffc070; --s
   text-wrap: balance;
 }
 @utility text-app-title {
-  font-family: var(--font-display);
-  font-size: 1.75rem;
-  line-height: 1.15;
-  letter-spacing: -0.025em;
-  font-weight: 650;
+  font-family: var(--font-sans);
+  font-size: 1.375rem;
+  line-height: 1.2;
+  letter-spacing: -0.02em;
+  font-weight: 600;
   font-stretch: 100%;
 }
 /* Two-tone emphasis: the qualifier of a display heading (≥4.8:1 in both themes). */
@@ -1238,7 +1238,7 @@ img[data-developed], .develop { animation: develop 700ms var(--ease-out) backwar
   z-index: 0;
   pointer-events: none;
   opacity: 0;
-  border-radius: 0.5rem;
+  border-radius: 0.375rem;
   background: var(--card);
   box-shadow: var(--shadow-sm), inset 0 0 0 1px var(--border);
   transition: opacity var(--dur-2) var(--ease-out);
@@ -1246,7 +1246,7 @@ img[data-developed], .develop { animation: develop 700ms var(--ease-out) backwar
 }
 .glide-indicator[data-ready] { opacity: 1; }
 .glide-indicator[data-animate] { transition: opacity var(--dur-2) var(--ease-out), transform 380ms var(--ease-snap), width 380ms var(--ease-snap), height 380ms var(--ease-snap); }
-.glide-indicator--bar { top: auto; bottom: 0; height: 2px; border-radius: 2px; background: var(--signal); box-shadow: none; }
+.glide-indicator--bar { top: auto; bottom: 0; height: 2px; border-radius: 2px; background: var(--accent); box-shadow: none; }
 .glide-indicator { @variant calm { transition: none !important; } }
 
 /* Odometer (M16): digit columns roll; the sr-only copy holds the real value. */
@@ -1469,7 +1469,7 @@ img[data-developed], .develop { animation: develop 700ms var(--ease-out) backwar
 input:is([type="checkbox"], [type="radio"]):checked { animation: check-pop 260ms var(--ease-snap); }
 @keyframes check-pop { 40% { transform: scale(0.82); } }
 
-/* Side navigation: the current page gets a signal bar that grows in. */
+/* Side navigation: the current page gets an accent bar that grows in. */
 .nav-item { position: relative; }
 .nav-item[aria-current="page"]::before {
   content: "";
@@ -1478,7 +1478,7 @@ input:is([type="checkbox"], [type="radio"]):checked { animation: check-pop 260ms
   left: 0;
   width: 2px;
   border-radius: 2px;
-  background: var(--signal);
+  background: var(--accent);
   animation: nav-item-in 320ms var(--ease-snap) both;
 }
 @keyframes nav-item-in { from { transform: scaleY(0); } }

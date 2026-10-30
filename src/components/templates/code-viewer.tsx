@@ -128,7 +128,7 @@ export function CodeViewer({ path, code, className, bare = false, maxHeight }: {
 
   const name = path.split("/").pop() ?? path;
   return (
-    <figure className={cn("group/code min-w-0 overflow-hidden bg-code-bg text-code-fg", !bare && "rounded-[14px] border border-code-border", className)}>
+    <figure className={cn("group/code min-w-0 overflow-hidden bg-code-bg text-code-fg", !bare && "rounded-md border border-code-border", className)}>
       {!bare ? (
         <figcaption className="flex h-10 items-center justify-between gap-3 border-b border-code-border bg-white/[0.02] pl-3.5 pr-1.5">
           <span className="flex min-w-0 items-center gap-2 font-mono text-[12px]">

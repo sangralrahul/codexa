@@ -97,14 +97,14 @@ export function ConnectionsManager({ workspaceId, canManage, providerFilter }: {
           <Skeleton className="h-14 w-full" />
         </div>
       ) : visible.length ? (
-        <ul className="divide-y divide-border overflow-hidden rounded-[14px] border border-border bg-card shadow-[inset_0_1px_0_var(--hairline)]">
+        <ul className="divide-y divide-border overflow-hidden rounded-md border border-border bg-card shadow-[inset_0_1px_0_var(--hairline)]">
           {visible.map((c) => {
             const r = results[c.id];
             return (
               <li key={c.id} className="settings-row space-y-2 p-3">
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   <div className="flex min-w-0 items-start gap-3">
-                    <span aria-hidden="true" className="icon-tile mt-0.5 flex size-9 shrink-0 items-center justify-center rounded-[10px]">
+                    <span aria-hidden="true" className="icon-tile mt-0.5 flex size-9 shrink-0 items-center justify-center rounded-md">
                       <BrandMark id={c.provider} className="size-4" />
                     </span>
                     <div className="min-w-0">

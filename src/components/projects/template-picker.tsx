@@ -82,7 +82,7 @@ function CategoryRow({ value, onChange, options }: { value: string; onChange: (v
               aria-pressed={on}
               onClick={() => onChange(c)}
               className={cn(
-                "inline-flex h-8 shrink-0 items-center gap-1.5 rounded-[10px] border px-3 text-[13px] transition-[color,background-color,border-color] duration-(--dur-2)",
+                "inline-flex h-8 shrink-0 items-center gap-1.5 rounded-md border px-3 text-[13px] transition-[color,background-color,border-color] duration-(--dur-2)",
                 on ? "border-foreground bg-foreground text-background" : "border-border bg-card/60 text-muted-foreground hover:border-border-strong hover:text-foreground",
               )}
             >
@@ -178,7 +178,7 @@ export function TemplatePicker({ templates, value, onChange, columns = 2 }: { te
             >
               <span
                 className={cn(
-                  "relative block w-full overflow-hidden rounded-[16px] border bg-surface-2 shadow-[inset_0_1px_0_var(--hairline),var(--shadow-sm)] transition-[border-color,box-shadow,translate] duration-(--dur-3) ease-out",
+                  "relative block w-full overflow-hidden rounded-lg border bg-surface-2 shadow-[inset_0_1px_0_var(--hairline),var(--shadow-sm)] transition-[border-color,box-shadow,translate] duration-(--dur-3) ease-out",
                   "group-hover/tile:-translate-y-0.5 group-hover/tile:shadow-[var(--shadow-lg)] calm:group-hover/tile:translate-y-0",
                   "group-focus-visible/tile:outline-2 group-focus-visible/tile:outline-offset-[3px] group-focus-visible/tile:outline-ring",
                   selected ? "border-foreground/50 shadow-[0_0_0_1px_var(--foreground),var(--shadow-lg)]" : "border-border group-hover/tile:border-border-strong",
@@ -187,7 +187,7 @@ export function TemplatePicker({ templates, value, onChange, columns = 2 }: { te
                 <TemplatePreview id={t.id} category={t.category} sizes="(min-width: 1280px) 360px, (min-width: 640px) 40vw, 100vw" priority={i < 2} className="rounded-none border-0 shadow-none" />
                 {t.featured ? (
                   <span className="absolute bottom-2.5 left-2.5 inline-flex h-5 items-center gap-1 rounded-full bg-background/85 px-2 font-mono text-[9.5px] font-medium uppercase tracking-[0.1em] text-foreground shadow-[inset_0_0_0_1px_var(--border),var(--shadow-sm)] backdrop-blur-md">
-                    <Sparkles className="size-2.5 text-signal-ink" aria-hidden="true" /> Featured
+                    <Sparkles className="size-2.5 text-accent" aria-hidden="true" /> Featured
                   </span>
                 ) : null}
                 <span

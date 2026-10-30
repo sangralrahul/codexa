@@ -157,10 +157,10 @@ export function UnsavedDock({
         data-leaving={leaving ? "" : undefined}
         data-warn={warn ? "" : undefined}
         className={cn(
-          "unsaved-dock pointer-events-auto flex w-full max-w-[560px] items-center gap-3 rounded-[16px] border border-border-strong py-2 pl-4 pr-2 [--btn-radius:10px]",
+          "unsaved-dock pointer-events-auto flex w-full max-w-[560px] items-center gap-3 rounded-lg border border-border-strong py-2 pl-4 pr-2 [--btn-radius:10px]",
         )}
       >
-        <span aria-hidden="true" className={cn("size-2 shrink-0 rounded-full", saved && !dirty ? "bg-success" : warn ? "bg-warning" : "bg-signal")} />
+        <span aria-hidden="true" className={cn("size-2 shrink-0 rounded-full", saved && !dirty ? "bg-success" : warn ? "bg-warning" : "bg-accent")} />
         <p className="min-w-0 flex-1 text-[13px]" aria-live="polite">
           {saved && !dirty ? (
             <span className="font-medium">All changes saved</span>

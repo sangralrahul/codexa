@@ -68,7 +68,7 @@ export function SecurityStatus({
   }
   const four = checks.length === 4;
   return (
-    <section aria-label="Security status" className={cn("settings-card grid grid-cols-1 overflow-hidden rounded-[16px] sm:grid-cols-2", !four && "xl:grid-cols-3")}>
+    <section aria-label="Security status" className={cn("settings-card grid grid-cols-1 overflow-hidden rounded-lg sm:grid-cols-2", !four && "xl:grid-cols-3")}>
       {checks.map((c, i) => {
         const body = (
           <>

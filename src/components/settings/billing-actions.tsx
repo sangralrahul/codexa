@@ -84,7 +84,7 @@ export function CheckoutResultBanner({ result }: { result: string | null }) {
 export function PaymentsNotConfigured({ providers, className }: { providers: BillingOverview["providers"]; className?: string }) {
   if (providers.stripe || providers.razorpay) return null;
   return (
-    <div role="status" className={cn("rounded-[14px] border border-dashed border-border-strong bg-surface/50 p-4 text-sm", className)}>
+    <div role="status" className={cn("rounded-md border border-dashed border-border-strong bg-surface/50 p-4 text-sm", className)}>
       <div className="flex flex-wrap items-start gap-3">
         <span className="flex size-8 shrink-0 items-center justify-center rounded-[9px] icon-tile">
           <CreditCard className="size-4" aria-hidden="true" />
@@ -415,13 +415,13 @@ export function PlanCards({
             </Button>
           );
           return (
-            <li key={p} className={cn("plan-card relative flex flex-col rounded-[16px] border bg-card p-5 shadow-[inset_0_1px_0_var(--hairline)]", def.highlight ? "rim border-border-strong" : "border-border", isCurrent && "ring-1 ring-foreground/20")}>
+            <li key={p} className={cn("plan-card relative flex flex-col rounded-lg border bg-card p-5 shadow-[inset_0_1px_0_var(--hairline)]", def.highlight ? "rim border-border-strong" : "border-border", isCurrent && "ring-1 ring-foreground/20")}>
               <div className="flex items-center justify-between gap-2">
                 <h3 className="text-[15px] font-semibold tracking-[-0.01em]">{def.name}</h3>
                 {isCurrent ? (
                   <span className="rounded-full bg-foreground/[0.06] px-2 py-0.5 text-[11px] font-medium text-muted-foreground">Your plan</span>
                 ) : def.highlight ? (
-                  <span className="rounded-full bg-signal/12 px-2 py-0.5 text-[11px] font-medium text-signal-ink">Recommended</span>
+                  <span className="rounded-full bg-signal/12 px-2 py-0.5 text-[11px] font-medium text-accent">Recommended</span>
                 ) : null}
               </div>
               <p className="mt-1 text-[13px] text-muted-foreground">{def.tagline}</p>
@@ -459,7 +459,7 @@ export function PlanCards({
             </li>
           );
         })}
-        <li className="plan-card flex flex-col rounded-[16px] border border-dashed border-border-strong p-5">
+        <li className="plan-card flex flex-col rounded-lg border border-dashed border-border-strong p-5">
           <div className="flex items-center gap-2">
             <Building2 className="size-4 text-foreground-dim" aria-hidden="true" />
             <h3 className="text-[15px] font-semibold tracking-[-0.01em]">{PLANS.enterprise.name}</h3>

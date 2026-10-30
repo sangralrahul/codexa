@@ -413,7 +413,7 @@ export function OnboardingFlow({ user, workspaceId, templates, defaultTemplateId
               </h1>
               <p className="mx-auto mt-3 max-w-sm text-pretty text-center text-[15px] leading-relaxed text-muted-foreground">A few details so your workspace feels like yours. You can change them later in Settings.</p>
 
-              <div ref={nameRef} className="mt-9 rounded-2xl border border-border bg-card p-5 shadow-[inset_0_1px_0_var(--hairline),var(--shadow-md)] sm:p-6">
+              <div ref={nameRef} className="mt-9 rounded-lg border border-border bg-card p-5 shadow-[inset_0_1px_0_var(--hairline),var(--shadow-md)] sm:p-6">
                 <ProfileFields
                   name={name}
                   timezone={timezone}
@@ -446,8 +446,8 @@ export function OnboardingFlow({ user, workspaceId, templates, defaultTemplateId
                 <>
                   {ideaChip ? (
                     <div className="mt-8 flex justify-center">
-                      <span className="ob-chip inline-flex items-center gap-1.5 rounded-full bg-signal/12 py-1 pl-2.5 pr-1 text-xs font-medium text-signal-ink">
-                        <span aria-hidden="true" className="size-1.5 rounded-full bg-signal" />
+                      <span className="ob-chip inline-flex items-center gap-1.5 rounded-full bg-signal/12 py-1 pl-2.5 pr-1 text-xs font-medium text-accent">
+                        <span aria-hidden="true" className="size-1.5 rounded-full bg-accent" />
                         {ideaChip}
                         <button
                           type="button"
@@ -573,7 +573,7 @@ export function OnboardingFlow({ user, workspaceId, templates, defaultTemplateId
                     </div>
                   </div>
                   <TemplateChoice templates={ranked.list} suggested={ranked.suggested} value={template.id} onChange={setPickedTemplate} />
-                  <div className="sticky bottom-0 z-10 -mx-4 mt-6 flex items-center gap-3 border-t border-border bg-background/85 px-4 py-4 backdrop-blur-xl sm:mx-0 sm:rounded-2xl sm:border sm:px-5">
+                  <div className="sticky bottom-0 z-10 -mx-4 mt-6 flex items-center gap-3 border-t border-border bg-background/85 px-4 py-4 backdrop-blur-xl sm:mx-0 sm:rounded-lg sm:border sm:px-5">
                     <p className="min-w-0 flex-1 truncate text-sm text-muted-foreground">
                       <span className="font-medium text-foreground">{template.name}</span>
                       <span className="hidden sm:inline"> · {template.frameworkName}</span>

@@ -102,7 +102,7 @@ export function TemplatePreviewSheet({ details, actions }: { details: Record<str
             <div aria-hidden="true" className="bg-dots absolute inset-0 opacity-70" />
             {!hasShot && routes ? (
               // API-only starters have no screen: show their real route list (read from the source).
-              <RouteList routes={routes} variant="hero" command={d.devCommand} className="relative rounded-[14px] shadow-xl" />
+              <RouteList routes={routes} variant="hero" command={d.devCommand} className="relative rounded-md shadow-xl" />
             ) : !hasShot ? (
               <TemplatePreview id={t.id} category={t.category} className="relative shadow-xl" />
             ) : t.category === "mobile-first" ? (
@@ -158,7 +158,7 @@ export function TemplatePreviewSheet({ details, actions }: { details: Record<str
               <h3 id="sheet-files" className="mb-2 flex items-baseline justify-between text-[13px] font-semibold">
                 Files <span className="text-meta font-normal text-muted-foreground">{d.paths.length}</span>
               </h3>
-              <div className="rounded-xl border border-border bg-surface p-1.5">
+              <div className="rounded-lg border border-border bg-surface p-1.5">
                 <FileTree paths={d.paths} label={`${t.name} files`} />
               </div>
             </section>

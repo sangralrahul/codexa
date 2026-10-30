@@ -133,7 +133,7 @@ export function ShortcutsSheet({ open, onOpenChange }: { open: boolean; onOpenCh
               <h3 id={`sc-${g.title}`} className="text-[13px] font-semibold">
                 {g.title}
               </h3>
-              <ul className="mt-2 divide-y divide-border rounded-xl border border-border bg-surface/50">
+              <ul className="mt-2 divide-y divide-border rounded-lg border border-border bg-surface/50">
                 {g.items.map((s) => (
                   <li key={s.label} className="flex items-center justify-between gap-4 px-3 py-2.5 text-[13px]">
                     <span className="text-muted-foreground">{s.label}</span>

@@ -1,78 +1,136 @@
 import Link from "next/link";
-import { ArrowRight, Compass, FolderGit2, LayoutTemplate, Plus, UserPlus } from "lucide-react";
+import { ArrowRight, ChevronRight, Compass, FolderGit2, FolderKanban, LayoutTemplate, Plus, UserPlus, Zap } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { AppPage } from "@/components/app/app-shell";
-import { TemplateTile, UseTemplateButton, type TemplateCardData } from "@/components/templates";
+import { buttonClasses } from "@/components/ui/button";
+import { TemplateTile, type TemplateCardData } from "@/components/templates";
 import { PromptBox } from "./prompt-box";
 import { ProjectCard, type ProjectCardItem } from "./project-card";
 import { GettingStarted, type ChecklistMilestones } from "./getting-started";
-import { DashboardTabs } from "./dashboard-tabs";
+import { ActivityRiver, type RiverItem } from "./activity-river";
+import { DeploymentsCard, type DeploymentRow } from "./deployments-card";
+import { UsageCard } from "./usage-card";
+import { PanelCard } from "./panel-card";
 
-const tileGrid = "grid grid-cols-[minmax(0,1fr)] gap-4 sm:grid-cols-2 lg:grid-cols-3 min-[85rem]:grid-cols-4";
+const quietLink = "link-draw inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground";
+
 /** One-click entries to the places people otherwise hunt for (all real routes). */
 function QuickActions({ canCreate, templateCount }: { canCreate: boolean; templateCount: number }) {
   const items: { href: string; icon: LucideIcon; title: string; detail: string }[] = [
-    { href: "/dashboard/templates", icon: LayoutTemplate, title: "Start from a template", detail: `${templateCount} working starters` },
-    ...(canCreate ? [{ href: "/import-project", icon: FolderGit2, title: "Import from GitHub", detail: "Bring a repository" }] : []),
+    ...(canCreate ? [{ href: "/new-project", icon: Plus, title: "New project", detail: "From a prompt, a template or GitHub" }] : []),
+    { href: "/dashboard/templates", icon: LayoutTemplate, title: "Browse templates", detail: `${templateCount} working starters` },
+    ...(canCreate ? [{ href: "/import-project", icon: FolderGit2, title: "Import from GitHub", detail: "Bring an existing repository" }] : []),
     { href: "/showcase", icon: Compass, title: "Community", detail: "Remix public apps" },
-    { href: "/settings/members", icon: UserPlus, title: "Invite your team", detail: "Build together" },
+    { href: "/settings/members", icon: UserPlus, title: "Invite your team", detail: "Members and roles" },
   ];
   return (
-    <nav aria-label="Quick actions">
-      <ul className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
+    <PanelCard title="Quick actions" icon={Zap}>
+      <ul>
         {items.map(({ href, icon: Icon, title, detail }) => (
-          <li key={href}>
+          <li key={href} className="border-b border-border last:border-b-0">
             <Link
               href={href}
-              className="group/qa flex h-full items-center gap-3 rounded-[14px] border border-border bg-card px-4 py-3.5 shadow-[inset_0_1px_0_var(--hairline)] transition-[border-color,background-color] duration-(--dur-2) hover:border-border-strong hover:bg-surface focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+              className="group/qa flex items-center gap-2.5 px-3 py-2 transition-colors hover:bg-muted/60 focus-visible:bg-muted/60 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-ring"
             >
-              <span className="flex size-9 shrink-0 items-center justify-center rounded-[10px] border border-border bg-surface text-foreground">
-                <Icon className="size-4" aria-hidden="true" />
-              </span>
+              <Icon className="size-3.5 shrink-0 text-muted-foreground" aria-hidden="true" />
               <span className="min-w-0 flex-1">
-                <span className="block truncate text-[13.5px] font-medium text-foreground">{title}</span>
-                <span className="block truncate text-[12.5px] text-muted-foreground">{detail}</span>
+                <span className="block truncate text-[12.5px] font-medium text-foreground">{title}</span>
+                <span className="block truncate text-[11.5px] text-muted-foreground">{detail}</span>
               </span>
-              <ArrowRight className="size-4 shrink-0 text-muted-foreground opacity-0 transition-[opacity,translate] duration-(--dur-2) group-hover/qa:translate-x-0.5 group-hover/qa:opacity-100 calm:transition-none" aria-hidden="true" />
+              <ChevronRight className="size-3.5 shrink-0 text-foreground-dim transition-transform duration-(--dur-2) group-hover/qa:translate-x-0.5 calm:transition-none" aria-hidden="true" />
             </Link>
           </li>
         ))}
       </ul>
-    </nav>
+    </PanelCard>
   );
 }
 
-const quietLink = "link-draw inline-flex items-center gap-1 text-[13px] text-muted-foreground hover:text-foreground";
+const COLUMNS = "md:grid-cols-[minmax(0,2.2fr)_minmax(0,1.4fr)_minmax(0,1fr)_minmax(0,0.9fr)_minmax(0,1fr)_40px]";
+
+/** Recent projects as a compact table (the same rows as the projects list). Server component. */
+function RecentProjects({ projects, projectCount, canCreate }: { projects: ProjectCardItem[]; projectCount: number; canCreate: boolean }) {
+  return (
+    <section aria-labelledby="recent-title" className="overflow-hidden rounded-lg border border-border bg-card">
+      <header className="flex h-9 items-center gap-2 border-b border-border px-3">
+        <FolderKanban className="size-3.5 shrink-0 text-muted-foreground" aria-hidden="true" />
+        <h2 id="recent-title" className="text-[12.5px] font-semibold tracking-[-0.005em]">
+          Recent projects
+        </h2>
+        {projectCount > 0 ? <span className="text-meta text-foreground-dim">{projectCount}</span> : null}
+        <div className="ml-auto flex items-center gap-3">
+          <Link href="/projects" className={quietLink}>
+            All projects <ArrowRight className="size-3" aria-hidden="true" />
+          </Link>
+        </div>
+      </header>
+      {projects.length === 0 ? (
+        <div className="px-4 py-8 text-center">
+          <p className="text-[13px] font-medium">No projects yet</p>
+          <p className="mx-auto mt-1 max-w-md text-xs text-muted-foreground">Describe your first app above, or start from a template below.</p>
+          {canCreate ? (
+            <Link href="/import-project" className="mt-3 inline-flex items-center gap-1.5 text-xs font-medium text-foreground underline-offset-4 hover:underline">
+              <FolderGit2 className="size-3.5" aria-hidden="true" /> Or import a GitHub repository
+            </Link>
+          ) : null}
+        </div>
+      ) : (
+        <div role="table" aria-label="Recent projects" aria-rowcount={projects.length + 1}>
+          <div role="rowgroup" className="hidden border-b border-border bg-surface md:block">
+            <div role="row" className={`grid items-center gap-3 px-4 py-1.5 text-[11.5px] font-medium text-muted-foreground ${COLUMNS}`}>
+              <span role="columnheader">Name</span>
+              <span role="columnheader">Status</span>
+              <span role="columnheader">Framework</span>
+              <span role="columnheader">Visibility</span>
+              <span role="columnheader">Last edited</span>
+              <span role="columnheader">
+                <span className="sr-only">Actions</span>
+              </span>
+            </div>
+          </div>
+          <div role="rowgroup">
+            {projects.map((p) => (
+              <ProjectCard key={p.id} project={p} layout="list" />
+            ))}
+          </div>
+        </div>
+      )}
+    </section>
+  );
+}
 
 /**
- * The dashboard, built around how an AI app builder is used (presentation only; the page loads
- * every value from the database and the plan/template config):
- * (a) one centred question and the composer: describe an app, press Build, and the new project
- *     opens on chat + live preview while the agent works;
- * (b) quick actions (templates, GitHub import, community, team) and the first-run checklist
- *     (only until every step is done);
- * (c) "Recent projects" and "Templates" as tabs: cards with screenshots, a "new project" tile,
- *     and starters that create a project in one click.
+ * The dashboard: a compact greeting line, the composer, then a dense two-column body. Left: the
+ * recent projects table and a templates strip; right: usage meters, deployments, activity and
+ * quick actions. Presentation only; every value comes from the page's database reads and the
+ * plan/template config.
  */
 export function DashboardCockpit({
   firstName,
+  workspace,
   composer,
   projects,
   projectCount,
+  deployments,
+  activity,
+  entitlements,
   milestones,
   showChecklist,
   canCreate,
   emailVerified,
   emailConfigured,
-  createIn,
   templates,
   templateCount,
 }: {
   firstName: string;
+  workspace: { name: string; plan: string; role: string } | null;
   composer: React.ComponentProps<typeof PromptBox>;
   /** Most recently opened first. */
   projects: ProjectCardItem[];
   projectCount: number;
+  deployments: DeploymentRow[];
+  activity: RiverItem[];
+  entitlements: React.ComponentProps<typeof UsageCard>["entitlements"] | null;
   milestones: ChecklistMilestones;
   showChecklist: boolean;
   canCreate: boolean;
@@ -85,105 +143,68 @@ export function DashboardCockpit({
   templateCount: number;
 }) {
   const firstRun = projects.length === 0;
-
-  const newTile = canCreate ? (
-    <li className="min-w-0">
-      <Link
-        href="/new-project"
-        className="group/new flex h-full min-h-40 w-full flex-col items-center justify-center gap-3 rounded-[16px] border border-dashed border-border-strong text-center transition-[border-color,background-color] duration-(--dur-3) hover:border-foreground/30 hover:bg-surface focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
-      >
-        <span className="flex size-10 items-center justify-center rounded-full border border-border bg-card shadow-sm transition-transform duration-(--dur-3) group-hover/new:scale-105 calm:transition-none">
-          <Plus className="size-5" aria-hidden="true" />
-        </span>
-        <span>
-          <span className="block text-[14px] font-medium">New project</span>
-          <span className="mt-0.5 block text-[12.5px] text-muted-foreground">From a sentence, a template or GitHub</span>
-        </span>
-      </Link>
-    </li>
-  ) : null;
-
-  const templatesPanel = (
-    <ul className={tileGrid}>
-      {templates.map((t, i) => (
-        <TemplateTile
-          key={t.id}
-          template={t}
-          href={`/dashboard/templates?preview=${t.id}`}
-          priority={firstRun && i === 0}
-          action={<UseTemplateButton templateId={t.id} templateName={t.name} workspaceId={createIn} canCreate={canCreate} fileCount={t.fileCount} />}
-        />
-      ))}
-    </ul>
-  );
-
-  const projectsPanel = firstRun ? (
-    <div className="rounded-[18px] border border-dashed border-border-strong px-6 py-12 text-center">
-      <p className="text-[15px] font-medium">No projects yet</p>
-      <p className="mx-auto mt-1 max-w-md text-[13.5px] text-muted-foreground">Describe your first app above, or open the Templates tab and start from a working starter.</p>
-      {canCreate ? (
-        <Link href="/import-project" className="mt-5 inline-flex items-center gap-1.5 text-[13.5px] font-medium text-foreground underline-offset-4 hover:underline">
-          <FolderGit2 className="size-4" aria-hidden="true" /> Or import a GitHub repository
-        </Link>
-      ) : null}
-    </div>
-  ) : (
-    <ul className={tileGrid}>
-      {projects.map((p, i) => (
-        <li key={p.id} className="min-w-0">
-          <ProjectCard project={p} layout="grid" priority={i === 0} />
-        </li>
-      ))}
-      {newTile}
-    </ul>
-  );
+  const role = workspace ? workspace.role.charAt(0).toUpperCase() + workspace.role.slice(1) : "";
 
   return (
-    <>
-      {/* (a) The question and the composer. */}
-      <div className="dash-home">
-        <AppPage className="pb-2 pt-[min(7vh,4rem)] lg:pb-2 lg:pt-[min(7vh,4rem)]">
-          <section aria-labelledby="dash-title" className="mx-auto max-w-3xl">
-            <h1 id="dash-title" className="text-center text-[28px] font-semibold leading-[1.1] tracking-[-0.03em] text-balance sm:text-[34px]">
-              What should we build, {firstName}?
-            </h1>
-            <p className="mx-auto mt-3 max-w-xl text-center text-[15px] text-muted-foreground">Describe it in a sentence. Codexa builds it and runs a live preview.</p>
-            <div className="mt-6">
-              <PromptBox {...composer} />
-            </div>
-          </section>
-        </AppPage>
+    <AppPage width="wide" className="space-y-4 py-5 lg:py-5">
+      {/* Greeting line: who, where, and the two primary actions. */}
+      <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+        <div className="min-w-0">
+          <h1 className="text-[20px] font-semibold leading-tight tracking-[-0.02em]">Welcome back, {firstName}</h1>
+          {workspace ? (
+            <p className="mt-0.5 text-[12.5px] text-muted-foreground">
+              <span className="text-foreground">{workspace.name}</span> · {workspace.plan} plan · {role}
+              {projectCount > 0 ? <> · {projectCount} project{projectCount === 1 ? "" : "s"}</> : null}
+            </p>
+          ) : null}
+        </div>
+        {canCreate ? (
+          <div className="ml-auto flex items-center gap-2">
+            <Link href="/import-project" className={buttonClasses("outline", "sm", "h-8 px-3")}>
+              <FolderGit2 className="size-3.5" aria-hidden="true" /> Import
+            </Link>
+            <Link href="/new-project" className={buttonClasses("primary", "sm", "h-8 px-3")}>
+              <Plus className="size-3.5" aria-hidden="true" /> New project
+            </Link>
+          </div>
+        ) : null}
       </div>
 
-      <AppPage className="space-y-8 pb-16 pt-6 lg:pb-16 lg:pt-8">
-        <QuickActions canCreate={canCreate} templateCount={templateCount} />
+      <PromptBox {...composer} align="start" compact />
 
-        {/* (b) First-run checklist. */}
-        {showChecklist ? (
-          <GettingStarted milestones={milestones} canCreate={canCreate} emailVerified={emailVerified} emailConfigured={emailConfigured} resumeHref={projects[0] ? `/projects/${projects[0].id}` : undefined} layout={firstRun ? "row" : "strip"} />
-        ) : null}
+      {showChecklist ? (
+        <GettingStarted milestones={milestones} canCreate={canCreate} emailVerified={emailVerified} emailConfigured={emailConfigured} resumeHref={projects[0] ? `/projects/${projects[0].id}` : undefined} layout="strip" />
+      ) : null}
 
-        {/* (c) Projects and templates. */}
-        <section aria-label="Your projects and templates">
-          <DashboardTabs
-            projects={projectsPanel}
-            templates={templatesPanel}
-            projectCount={projectCount}
-            aside={
-              <div className="flex items-center gap-4">
-                {projectCount > projects.length ? (
-                  <Link href="/projects" className={quietLink}>
-                    All {projectCount} projects <ArrowRight className="size-3.5" aria-hidden="true" />
-                  </Link>
-                ) : null}
-                <Link href="/dashboard/templates" className={quietLink}>
-                  All {templateCount} templates <ArrowRight className="size-3.5" aria-hidden="true" />
-                </Link>
-              </div>
-            }
-          />
-        </section>
-      </AppPage>
-    </>
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-[minmax(0,1fr)_316px] xl:grid-cols-[minmax(0,1fr)_340px]">
+        <div className="min-w-0 space-y-4">
+          <RecentProjects projects={projects} projectCount={projectCount} canCreate={canCreate} />
+
+          <section aria-labelledby="templates-title">
+            <div className="mb-2 flex items-center gap-2">
+              <LayoutTemplate className="size-3.5 text-muted-foreground" aria-hidden="true" />
+              <h2 id="templates-title" className="text-[12.5px] font-semibold tracking-[-0.005em]">
+                Start from a template
+              </h2>
+              <Link href="/dashboard/templates" className={`${quietLink} ml-auto`}>
+                All {templateCount} templates <ArrowRight className="size-3" aria-hidden="true" />
+              </Link>
+            </div>
+            <ul className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+              {templates.map((t, i) => (
+                <TemplateTile key={t.id} template={t} variant="compact" href={`/dashboard/templates?preview=${t.id}`} priority={firstRun && i === 0} sizes="(min-width: 1024px) 240px, 50vw" />
+              ))}
+            </ul>
+          </section>
+        </div>
+
+        <div className="min-w-0 space-y-4">
+          {entitlements ? <UsageCard entitlements={entitlements} projectCount={projectCount} /> : null}
+          <DeploymentsCard rows={deployments} />
+          <ActivityRiver items={activity} />
+          <QuickActions canCreate={canCreate} templateCount={templateCount} />
+        </div>
+      </div>
+    </AppPage>
   );
 }

@@ -57,7 +57,7 @@ export function SettingsCard({
         <span
           aria-hidden="true"
           className={cn(
-            "mt-px flex size-9 shrink-0 items-center justify-center rounded-[10px] [&_svg]:size-[18px]",
+            "mt-px flex size-9 shrink-0 items-center justify-center rounded-md [&_svg]:size-[18px]",
             danger ? "bg-danger/10 text-danger shadow-[inset_0_0_0_1px_color-mix(in_oklab,var(--danger)_22%,transparent)]" : "icon-tile",
           )}
         >
@@ -80,7 +80,7 @@ export function SettingsCard({
       id={id}
       aria-labelledby={headingId}
       data-tone={danger ? "danger" : undefined}
-      className={cn("settings-card overflow-hidden rounded-[16px] text-card-foreground", className)}
+      className={cn("settings-card overflow-hidden rounded-lg text-card-foreground", className)}
     >
       {split ? (
         <div className="lg:grid lg:grid-cols-[minmax(0,1fr)_minmax(0,2fr)]">

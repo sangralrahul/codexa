@@ -25,7 +25,7 @@ export default async function ConnectGithubPage({ searchParams }: { searchParams
       <PageHeader title="Connect GitHub" description="Import repositories into Codexa and push your changes back. Codexa never force-pushes and never stores your token unencrypted." />
       <div className="space-y-8">
         <GithubAccountCard configured={capabilities.github} account={account} next={next} errorCode={sp.error ?? null} />
-        <section aria-labelledby="scopes-title" className="overflow-hidden rounded-xl border border-border bg-card">
+        <section aria-labelledby="scopes-title" className="overflow-hidden rounded-lg border border-border bg-card">
           <div className="px-5 pt-4">
             <h2 id="scopes-title" className="text-base font-semibold tracking-tight">
               Permissions requested

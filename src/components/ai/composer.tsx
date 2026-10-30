@@ -331,8 +331,8 @@ export function Composer({
             ) : null}
             <div className="min-w-0 flex-1 truncate text-[11.5px] text-muted-foreground">
               {model?.mock ? (
-                <span className="ws-warn-ink inline-flex items-center gap-1 rounded-md bg-warning/12 px-1.5 py-0.5 font-medium" title="AI_MOCK=1 is set; responses are scripted and only available outside production.">
-                  <FlaskConical className="size-3" aria-hidden="true" /> Mock AI<span className="hidden @[364px]:inline">&nbsp;(development only)</span>
+                <span className="inline-flex items-center gap-1 rounded-md bg-muted px-1.5 py-0.5 font-medium text-muted-foreground shadow-[inset_0_0_0_1px_var(--border)]" title="AI_MOCK=1 is set: responses are scripted. Development only.">
+                  <FlaskConical className="size-3" aria-hidden="true" /> Mock AI
                 </span>
               ) : model ? (
                 <span className="font-mono" title={`Provider: ${model.provider}`}>

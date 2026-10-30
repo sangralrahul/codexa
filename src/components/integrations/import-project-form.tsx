@@ -100,7 +100,7 @@ export function ImportProjectForm({
         </h2>
         <RepoList onSelect={select} selectedId={repo?.id ?? null} actionLabel="Select" />
       </section>
-      <form onSubmit={submit} className="h-fit overflow-hidden rounded-xl border border-border bg-card lg:sticky lg:top-20" aria-labelledby="import-settings">
+      <form onSubmit={submit} className="h-fit overflow-hidden rounded-lg border border-border bg-card lg:sticky lg:top-20" aria-labelledby="import-settings">
         <div className="border-b border-border px-5 py-4">
           <h2 id="import-settings" className="flex items-center gap-2.5 text-base font-semibold tracking-tight">
             <span className="flex size-5 items-center justify-center rounded-full bg-foreground text-[11px] font-semibold text-background">2</span>

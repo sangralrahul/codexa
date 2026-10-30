@@ -11,8 +11,8 @@ export default function Loading() {
         <Skeleton className="h-5 w-8 rounded-[5px]" />
         <Skeleton className="h-4 w-40" />
         <div className="ml-auto flex gap-2">
-          <Skeleton className="h-8 w-20 rounded-[10px]" />
-          <Skeleton className="h-8 w-24 rounded-[10px]" />
+          <Skeleton className="h-8 w-20 rounded-md" />
+          <Skeleton className="h-8 w-24 rounded-md" />
           <Skeleton className="size-8 rounded-full" />
         </div>
       </div>
@@ -28,12 +28,12 @@ export default function Loading() {
             <Skeleton className="h-6 w-4/5" />
             <div className="space-y-2 pt-2">
               {[0, 1, 2, 3].map((i) => (
-                <Skeleton key={i} className="h-14 w-full rounded-xl" />
+                <Skeleton key={i} className="h-14 w-full rounded-lg" />
               ))}
             </div>
           </div>
           <div className="p-3">
-            <Skeleton className="h-[120px] w-full rounded-2xl" />
+            <Skeleton className="h-[120px] w-full rounded-lg" />
           </div>
         </div>
         {/* Canvas */}
@@ -41,7 +41,7 @@ export default function Loading() {
           {/* Code card: explorer and editor joined by a hairline */}
           <div className="ws-card grid grid-cols-[192px_minmax(0,1fr)]">
             <div className="space-y-2 border-r border-border p-3">
-              <Skeleton className="mb-3 h-7 w-full rounded-[10px]" />
+              <Skeleton className="mb-3 h-7 w-full rounded-md" />
               {[70, 55, 80, 60, 75, 50, 65].map((w, i) => (
                 <Skeleton key={i} className="h-3.5" style={{ width: `${w}%`, marginLeft: i > 0 && i < 5 ? 14 : 0 }} />
               ))}
@@ -70,7 +70,7 @@ export default function Loading() {
       </div>
       {/* The one thing announced: the skeleton above is decorative. */}
       <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
-        <div className="ws-pill-in glass flex items-center gap-3 rounded-2xl border border-border-strong px-4 py-3 shadow-xl">
+        <div className="ws-pill-in glass flex items-center gap-3 rounded-lg border border-border-strong px-4 py-3 shadow-xl">
           <span className="ws-orb rounded-lg" data-running="" aria-hidden="true">
             <LogoMark size={26} state="running" />
           </span>

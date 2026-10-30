@@ -98,7 +98,7 @@ export function GettingStarted({
   if (layout === "strip") {
     const nextStep = steps.find((s) => s.id === next);
     return (
-      <section aria-labelledby="checklist-title" className={cn("flex flex-wrap items-center gap-x-4 gap-y-2 rounded-[14px] border border-border bg-card/60 px-4 py-2.5", className)}>
+      <section aria-labelledby="checklist-title" className={cn("flex flex-wrap items-center gap-x-4 gap-y-2 rounded-md border border-border bg-card/60 px-4 py-2.5", className)}>
         <h2 id="checklist-title" className="text-[13px] font-medium">
           {allDone ? "You're all set" : "Getting started"}
         </h2>
@@ -138,7 +138,7 @@ export function GettingStarted({
 
   const row = layout === "row";
   return (
-    <section aria-labelledby="checklist-title" className={cn("e1 relative overflow-hidden rounded-[18px]", row ? "p-5 sm:p-6" : "p-5", className)}>
+    <section aria-labelledby="checklist-title" className={cn("e1 relative overflow-hidden rounded-lg", row ? "p-5 sm:p-6" : "p-5", className)}>
       <div className="flex items-start justify-between gap-4">
         <div className="min-w-0">
           <h2 id="checklist-title" className="text-[15px] font-semibold tracking-[-0.01em]">
@@ -167,7 +167,7 @@ export function GettingStarted({
             <li
               key={s.id}
               className={cn(
-                "relative flex gap-3 rounded-[14px] border p-3.5 transition-colors",
+                "relative flex gap-3 rounded-md border p-3.5 transition-colors",
                 s.done ? "border-border bg-surface/50" : s.locked ? "border-border bg-muted/40" : isNext ? "border-border-strong bg-card shadow-[inset_0_1px_0_var(--hairline),var(--shadow-sm)]" : "border-dashed border-border bg-transparent",
               )}
             >

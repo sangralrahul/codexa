@@ -78,11 +78,11 @@ export function WorkspaceGeneralForm({
   const name = values.name.trim() || "Untitled workspace";
   return (
     <div className="settings-sub space-y-5">
-      <section aria-label="Workspace identity" className="settings-card relative overflow-hidden rounded-[18px] p-5 sm:p-6">
+      <section aria-label="Workspace identity" className="settings-card relative overflow-hidden rounded-lg p-5 sm:p-6">
         <div aria-hidden="true" className="bg-dots pointer-events-none absolute inset-y-0 right-0 w-1/2 opacity-60" />
         <div className="relative flex flex-col gap-4 sm:flex-row sm:items-center">
-          <span key={name.slice(0, 2)} className="mirror-swap self-start rounded-[14px] p-[3px] shadow-[0_0_0_1px_var(--border-strong)] sm:self-auto">
-            <Avatar name={name} seed={workspaceId} shape="square" size="xl" className="[&>span]:size-16 [&>span]:rounded-[12px] [&>span]:text-[22px]" />
+          <span key={name.slice(0, 2)} className="mirror-swap self-start rounded-md p-[3px] shadow-[0_0_0_1px_var(--border-strong)] sm:self-auto">
+            <Avatar name={name} seed={workspaceId} shape="square" size="xl" className="[&>span]:size-16 [&>span]:rounded-md [&>span]:text-[22px]" />
           </span>
           <div className="min-w-0 flex-1">
             <p className="text-balance text-[22px] font-semibold leading-tight tracking-[-0.02em] [overflow-wrap:anywhere]">{name}</p>

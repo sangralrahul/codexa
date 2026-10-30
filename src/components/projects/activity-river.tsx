@@ -21,9 +21,9 @@ import {
   Trash2,
   Undo2,
 } from "lucide-react";
-import { Avatar } from "@/components/ui/avatar";
 import { cn } from "@/lib/utils";
 import { absoluteTime, relativeTime } from "./format";
+import { PanelCard } from "./panel-card";
 
 /** One project_activity row (edits by the same person folded into `count`). Serializable. */
 export type RiverItem = {
@@ -41,13 +41,13 @@ export type RiverItem = {
   count: number;
 };
 
-type Verb = { icon: typeof Activity; verb: (n: number) => string; tone?: "success" | "danger" | "signal" | "info" };
+type Verb = { icon: typeof Activity; verb: (n: number) => string; tone?: "success" | "danger" | "accent" | "info" };
 const VERBS: Record<string, Verb> = {
   "project.created": { icon: Plus, verb: () => "created" },
   "project.updated": { icon: Pencil, verb: () => "updated" },
   "project.duplicated": { icon: Copy, verb: () => "duplicated" },
   "project.deleted": { icon: Trash2, verb: () => "deleted" },
-  "ai.run": { icon: Sparkles, verb: () => "ran the AI agent on", tone: "signal" },
+  "ai.run": { icon: Sparkles, verb: () => "ran the AI agent on", tone: "accent" },
   "ai.reverted": { icon: Undo2, verb: () => "reverted an AI run in" },
   "deployment.queued": { icon: Rocket, verb: () => "started a deploy of", tone: "info" },
   "deployment.live": { icon: Globe, verb: () => "deployed", tone: "success" },
@@ -73,52 +73,34 @@ const VERBS: Record<string, Verb> = {
   "database.query": { icon: Database, verb: () => "ran SQL in" },
 };
 
-const TONE = { success: "text-success", danger: "text-danger", signal: "text-signal", info: "text-info" } as const;
+const TONE = { success: "text-success", danger: "text-danger", accent: "text-accent", info: "text-info" } as const;
 
 /**
- * Activity river: the newest project_activity rows across the user's workspaces (who, what,
- * which project, when). The detail line is the stored message, verbatim. New rows slide in
- * on each load. Server-safe.
+ * Activity: the newest project_activity rows across the user's workspaces (who, what, which
+ * project, when), one compact line each. The detail line is the stored message, verbatim. Server-safe.
  */
 export function ActivityRiver({ items, className }: { items: RiverItem[]; className?: string }) {
   return (
-    <section aria-labelledby="activity-title" className={cn("e1 flex min-w-0 flex-col rounded-[18px]", className)}>
-      <div className="flex items-baseline justify-between gap-3 px-5 pt-5">
-        <h2 id="activity-title" className="text-[15px] font-semibold tracking-[-0.01em]">
-          Activity
-        </h2>
-        <p className="text-meta text-foreground-dim">Across your workspaces</p>
-      </div>
+    <PanelCard title="Recent activity" icon={Activity} aside={<span className="text-foreground-dim">All workspaces</span>} className={className}>
       {items.length === 0 ? (
-        <p className="m-5 flex flex-1 items-center justify-center rounded-[14px] border border-dashed border-border-strong px-4 py-8 text-center text-[13px] text-muted-foreground">
-          Edits, AI runs, previews and deploys from your projects show up here as they happen.
-        </p>
+        <p className="px-3 py-3 text-xs text-muted-foreground">Edits, AI runs, previews and deploys from your projects show up here as they happen.</p>
       ) : (
-        <ol className="river-in relative mt-3 px-2 pb-2">
-          {items.map((a, i) => {
+        <ol className="river-in divide-y divide-border">
+          {items.map((a) => {
             const v = VERBS[a.kind] ?? { icon: Activity, verb: () => "updated" };
             const Icon = v.icon;
             return (
-              <li key={a.id} className="group/act relative flex gap-3 rounded-[12px] px-3 py-2.5 transition-colors hover:bg-foreground/[0.03]">
-                {i < items.length - 1 ? <span aria-hidden="true" className="absolute bottom-[-6px] left-[27px] top-[38px] w-px bg-border" /> : null}
-                <span className="relative mt-0.5 shrink-0">
-                  <Avatar name={a.actorName} src={a.actorAvatarUrl} seed={a.actorSeed ?? a.actorName} size="sm" />
-                  <span className={cn("absolute -bottom-1 -right-1 flex size-4 items-center justify-center rounded-full bg-card shadow-[0_0_0_2px_var(--card),inset_0_0_0_1px_var(--border)]", v.tone ? TONE[v.tone] : "text-muted-foreground")}>
-                    <Icon className="size-2.5" strokeWidth={2.4} aria-hidden="true" />
-                  </span>
-                </span>
+              <li key={a.id} className="flex gap-2.5 px-3 py-2">
+                <Icon className={cn("mt-0.5 size-3.5 shrink-0", v.tone ? TONE[v.tone] : "text-muted-foreground")} aria-hidden="true" />
                 <div className="min-w-0 flex-1">
-                  <p className="text-[13px] leading-snug">
+                  <p className="truncate text-[12.5px] leading-snug" title={a.message}>
                     <span className="font-medium">{a.actorName}</span> <span className="text-muted-foreground">{v.verb(a.count)}</span>{" "}
                     <Link href={`/projects/${a.projectId}`} className="link-draw font-medium">
                       {a.projectName}
                     </Link>
                   </p>
-                  <p className="mt-0.5 truncate text-xs text-foreground-dim" title={a.message}>
-                    {a.message}
-                  </p>
                 </div>
-                <time dateTime={a.createdAt} title={absoluteTime(a.createdAt)} className="text-meta shrink-0 pt-0.5 text-muted-foreground">
+                <time dateTime={a.createdAt} title={absoluteTime(a.createdAt)} className="text-meta shrink-0 text-foreground-dim">
                   {relativeTime(a.createdAt)}
                 </time>
               </li>
@@ -126,14 +108,6 @@ export function ActivityRiver({ items, className }: { items: RiverItem[]; classN
           })}
         </ol>
       )}
-      {items.length ? (
-        <p className="text-meta mt-auto flex items-center justify-between gap-3 border-t border-border px-5 py-3 text-foreground-dim">
-          <span>Newest first · consecutive file edits are grouped</span>
-          <Link href="/projects" className="link-draw shrink-0 text-muted-foreground hover:text-foreground">
-            All projects
-          </Link>
-        </p>
-      ) : null}
-    </section>
+    </PanelCard>
   );
 }

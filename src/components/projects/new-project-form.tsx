@@ -168,7 +168,7 @@ export function NewProjectForm({
             {/* Below 1024px the Inspector follows the whole grid, so a docked bar keeps Create in reach while you browse. */}
             {selected ? (
               <div className="sticky bottom-[max(12px,env(safe-area-inset-bottom))] z-20 mt-8 lg:hidden">
-                <div className="flex items-center gap-3 rounded-[16px] border border-border-strong bg-card/90 p-2 pl-2.5 shadow-xl backdrop-blur-md">
+                <div className="flex items-center gap-3 rounded-lg border border-border-strong bg-card/90 p-2 pl-2.5 shadow-xl backdrop-blur-md">
                   <span key={selected.id} className="inspect-swap flex">
                     <ProjectThumb templateId={selected.id} framework={selected.framework} size="lg" />
                   </span>
@@ -192,8 +192,8 @@ export function NewProjectForm({
             ) : null}
           </section>
 
-          <aside aria-label="Project details" className="scrollbar-thin lg:sticky lg:top-[68px] lg:max-h-[calc(100dvh-84px)] lg:overflow-y-auto lg:rounded-[18px]">
-            <div className="e3 overflow-hidden rounded-[18px]">
+          <aside aria-label="Project details" className="scrollbar-thin lg:sticky lg:top-[68px] lg:max-h-[calc(100dvh-84px)] lg:overflow-y-auto lg:rounded-lg">
+            <div className="e3 overflow-hidden rounded-lg">
               {selected ? (
                 <div className="border-b border-border">
                   <div className="shot-pan relative">
@@ -290,7 +290,7 @@ export function NewProjectForm({
                         <label
                           key={value}
                           className={cn(
-                            "relative flex cursor-pointer flex-col items-start gap-2 rounded-[12px] border px-3 py-2.5 transition-[border-color,background-color,box-shadow] duration-(--dur-2) has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-ring",
+                            "relative flex cursor-pointer flex-col items-start gap-2 rounded-md border px-3 py-2.5 transition-[border-color,background-color,box-shadow] duration-(--dur-2) has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-ring",
                             on ? "border-foreground/40 bg-surface shadow-[inset_0_0_0_1px_var(--foreground)]" : "border-border hover:border-border-strong",
                           )}
                         >
@@ -382,7 +382,7 @@ function StarterRow({ templates, total, onPick, onBrowse }: { templates: PickerT
       <ul className="grid grid-cols-2 gap-x-4 gap-y-5 sm:grid-cols-4">
         {templates.map((t) => (
           <li key={t.id} className="group/st shot-pan relative min-w-0">
-            <div className="overflow-hidden rounded-[12px] border border-border bg-surface-2 shadow-[inset_0_1px_0_var(--hairline),var(--shadow-sm)] transition-[translate,border-color,box-shadow] duration-(--dur-3) ease-out group-hover/st:-translate-y-0.5 group-hover/st:border-border-strong group-hover/st:shadow-lg group-has-[button:focus-visible]/st:outline-2 group-has-[button:focus-visible]/st:outline-offset-[3px] group-has-[button:focus-visible]/st:outline-ring calm:transition-none calm:group-hover/st:translate-y-0">
+            <div className="overflow-hidden rounded-md border border-border bg-surface-2 shadow-[inset_0_1px_0_var(--hairline),var(--shadow-sm)] transition-[translate,border-color,box-shadow] duration-(--dur-3) ease-out group-hover/st:-translate-y-0.5 group-hover/st:border-border-strong group-hover/st:shadow-lg group-has-[button:focus-visible]/st:outline-2 group-has-[button:focus-visible]/st:outline-offset-[3px] group-has-[button:focus-visible]/st:outline-ring calm:transition-none calm:group-hover/st:translate-y-0">
               <TemplatePreview id={t.id} category={t.category} sizes="(min-width: 640px) 220px, 45vw" className="rounded-none border-0 shadow-none" />
             </div>
             <p className="mt-2.5 truncate px-0.5 text-[14px] font-semibold tracking-[-0.01em]">

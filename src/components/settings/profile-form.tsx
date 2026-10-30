@@ -67,7 +67,7 @@ function TeammateMirror({ name, email, avatarUrl, timezone, role, workspaceName 
   const display = name.trim() || email;
   const first = display.split(/\s+/)[0];
   return (
-    <aside aria-labelledby="mirror-title" className="settings-card settings-mirror rounded-[16px] p-5 [--card-i:2]">
+    <aside aria-labelledby="mirror-title" className="settings-card settings-mirror rounded-lg p-5 [--card-i:2]">
       {/* The chip gets its own line so the heading never wraps beside it in the narrow column. */}
       <span className="inline-flex items-center gap-1.5 whitespace-nowrap rounded-full bg-muted px-2 py-0.5 text-[11px] font-medium text-muted-foreground shadow-[inset_0_0_0_1px_var(--border)]">
         <span aria-hidden="true" className="size-1.5 rounded-full bg-success" /> Live preview
@@ -79,7 +79,7 @@ function TeammateMirror({ name, email, avatarUrl, timezone, role, workspaceName 
 
       <div className="mt-4 space-y-3" aria-hidden="true">
         {/* Member row */}
-        <div className="rounded-[12px] border border-border bg-background/60 p-3">
+        <div className="rounded-md border border-border bg-background/60 p-3">
           <p className="mb-2 font-mono text-[10.5px] text-foreground-dim">Members{workspaceName ? ` · ${workspaceName}` : ""}</p>
           <div className="flex items-center gap-2.5">
             <span key={avatarUrl || "m"} className="avatar-fade">
@@ -95,7 +95,7 @@ function TeammateMirror({ name, email, avatarUrl, timezone, role, workspaceName 
           </div>
         </div>
         {/* Comment header */}
-        <div className="rounded-[12px] border border-border bg-background/60 p-3">
+        <div className="rounded-md border border-border bg-background/60 p-3">
           <div className="flex items-center gap-2">
             <Avatar name={display} src={avatarUrl || null} size="sm" />
             <span className="min-w-0 truncate text-[12.5px] font-medium">{display}</span>
@@ -110,12 +110,12 @@ function TeammateMirror({ name, email, avatarUrl, timezone, role, workspaceName 
           </p>
         </div>
         {/* Presence cursor */}
-        <div className="relative h-[84px] overflow-hidden rounded-[12px] border border-border bg-[radial-gradient(color-mix(in_oklab,var(--foreground)_10%,transparent)_1px,transparent_1.4px)] bg-[length:16px_16px]">
+        <div className="relative h-[84px] overflow-hidden rounded-md border border-border bg-[radial-gradient(color-mix(in_oklab,var(--foreground)_10%,transparent)_1px,transparent_1.4px)] bg-[length:16px_16px]">
           <div className="presence-cursor absolute left-[38%] top-[22%]">
             <svg viewBox="0 0 16 16" className="size-4 text-signal drop-shadow-sm" fill="currentColor">
               <path d="M2 1.5 14 7.2l-5.3 1.5L6.4 14z" stroke="var(--background)" strokeWidth="1" strokeLinejoin="round" />
             </svg>
-            <span key={first} className="mirror-swap ml-3 mt-0.5 inline-flex items-center gap-1.5 rounded-full bg-signal py-0.5 pl-0.5 pr-2 text-[11px] font-medium text-white shadow-md">
+            <span key={first} className="mirror-swap ml-3 mt-0.5 inline-flex items-center gap-1.5 rounded-full bg-accent py-0.5 pl-0.5 pr-2 text-[11px] font-medium text-white shadow-md">
               <Avatar name={display} src={avatarUrl || null} size="xs" />
               {first}
             </span>
@@ -242,7 +242,7 @@ export function ProfileForm({
           }
         >
           <div
-            className={cn("avatar-drop flex flex-col gap-4 rounded-[14px] p-1 sm:flex-row sm:items-center", drag && "bg-signal/[0.04]")}
+            className={cn("avatar-drop flex flex-col gap-4 rounded-md p-1 sm:flex-row sm:items-center", drag && "bg-signal/[0.04]")}
             data-drag={drag ? "" : undefined}
             onDragEnter={(e) => {
               if (e.dataTransfer.types.includes("Files")) {

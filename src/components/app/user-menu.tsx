@@ -30,7 +30,7 @@ const LINKS = [
 ];
 
 const rowClass =
-  "flex w-full items-center gap-2.5 rounded-[10px] px-2 py-1.5 text-left text-[13px] text-foreground/90 outline-none transition-colors hover:bg-muted hover:text-foreground focus-visible:bg-muted [&>svg]:size-4 [&>svg]:shrink-0 [&>svg]:text-muted-foreground";
+  "flex w-full items-center gap-2.5 rounded-md px-2 py-1.5 text-left text-[13px] text-foreground/90 outline-none transition-colors hover:bg-muted hover:text-foreground focus-visible:bg-muted [&>svg]:size-4 [&>svg]:shrink-0 [&>svg]:text-muted-foreground";
 
 /**
  * Account menu (a popover so it can hold real controls): who you are, links, keyboard shortcuts,
@@ -63,7 +63,7 @@ export function UserMenu({ user, variant = "avatar", side, align }: { user: Menu
         {variant === "row" ? (
           <button
             type="button"
-            className="group flex w-full min-w-0 items-center gap-2.5 rounded-[10px] px-1.5 py-1.5 text-left transition-colors hover:bg-foreground/[0.06] data-[state=open]:bg-foreground/[0.06]"
+            className="group flex w-full min-w-0 items-center gap-2.5 rounded-md px-1.5 py-1.5 text-left transition-colors hover:bg-foreground/[0.06] data-[state=open]:bg-foreground/[0.06]"
           >
             {/* Named by its content ("Account menu: {name} {email}"), so the accessible name always
                 contains the visible text (WCAG 2.5.3); the avatar's initials are decorative. */}

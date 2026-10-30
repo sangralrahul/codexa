@@ -52,14 +52,14 @@ export function ProjectsBrowser({
 }) {
   const [query, setQuery] = useState("");
   const [sort, setSort] = useState<Sort>("recent");
-  const [layout, setLayout] = useState<Layout>("grid");
+  const [layout, setLayout] = useState<Layout>("list");
   const [vis, setVis] = useState<Vis>("all");
   const rowsRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    const saved = readLocal<Layout>(LAYOUT_KEY, "grid");
+    const saved = readLocal<Layout>(LAYOUT_KEY, "list");
     // eslint-disable-next-line react-hooks/set-state-in-effect -- one-time hydration from localStorage after mount (SSR-safe)
-    if (saved === "list") setLayout("list");
+    if (saved === "grid") setLayout("grid");
   }, []);
   const changeLayout = (l: Layout) => {
     withViewTransition(() => setLayout(l));
@@ -84,9 +84,9 @@ export function ProjectsBrowser({
   }, [projects, query, sort, vis]);
 
   const heading = title ? (
-    <h1 className="text-app-title flex items-baseline gap-2.5">
+    <h1 className="text-app-title flex items-baseline gap-2">
       {title}
-      <span className="text-dim font-sans text-xl font-medium tabular-nums tracking-normal">{projects.length}</span>
+      <span className="text-dim font-sans text-[15px] font-medium tabular-nums tracking-normal">{projects.length}</span>
     </h1>
   ) : null;
 
@@ -148,7 +148,7 @@ export function ProjectsBrowser({
 
   return (
     <div>
-      <div className="mb-6 flex flex-col gap-3 xl:flex-row xl:items-center">
+      <div className="mb-4 flex flex-col gap-3 xl:flex-row xl:items-center">
         {heading ? <div className="flex items-center justify-between gap-3 xl:mr-2">{heading}<span className="hidden lg:inline-flex xl:hidden">{newProject}</span></div> : null}
         <Segmented<Vis>
           aria-label="Visibility"
@@ -176,7 +176,7 @@ export function ProjectsBrowser({
               }}
               placeholder="Search projects"
               autoComplete="off"
-              className="h-8 w-full rounded-[10px] border border-border bg-input pl-9 pr-8 text-[13px] shadow-[inset_0_1px_0_var(--hairline)] transition-[border-color,box-shadow] placeholder:text-muted-foreground/80 hover:border-border-strong focus-visible:border-ring/70 focus-visible:shadow-[0_0_0_4px_color-mix(in_oklab,var(--signal)_16%,transparent)] focus-visible:outline-none"
+              className="h-8 w-full rounded-md border border-border bg-input pl-9 pr-8 text-[13px] shadow-[inset_0_1px_0_var(--hairline)] transition-[border-color,box-shadow] placeholder:text-muted-foreground/80 hover:border-border-strong focus-visible:border-ring/70 focus-visible:shadow-[0_0_0_3px_color-mix(in_oklab,var(--accent)_16%,transparent)] focus-visible:outline-none"
             />
             {query ? (
               <button type="button" onClick={() => setQuery("")} aria-label="Clear search" className="absolute right-1.5 top-1/2 flex size-5 -translate-y-1/2 items-center justify-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground">
@@ -189,7 +189,7 @@ export function ProjectsBrowser({
           <label htmlFor="projects-sort" className="sr-only">
             Sort by
           </label>
-          <SelectMenu id="projects-sort" size="sm" value={sort} onValueChange={(v) => withViewTransition(() => setSort(v as Sort))} options={SORTS} className="h-8 w-[156px] rounded-[10px]" />
+          <SelectMenu id="projects-sort" size="sm" value={sort} onValueChange={(v) => withViewTransition(() => setSort(v as Sort))} options={SORTS} className="h-8 w-[156px] rounded-md" />
           <Segmented<Layout>
             aria-label="Layout"
             size="sm"
@@ -211,14 +211,14 @@ export function ProjectsBrowser({
       </p>
 
       {filtered.length === 0 ? (
-        <div className="pop-in flex flex-col items-center gap-3 rounded-2xl border border-dashed border-border-strong px-6 py-12 text-center">
+        <div className="pop-in flex flex-col items-center gap-3 rounded-lg border border-dashed border-border-strong px-6 py-12 text-center">
           <p className="text-sm text-muted-foreground">{query.trim() ? `No projects match “${query.trim()}”.` : `No ${vis} projects.`}</p>
           <button type="button" onClick={clearFilters} className={buttonClasses("outline", "sm")}>
             Clear filters
           </button>
         </div>
       ) : layout === "grid" ? (
-        <ul className="grid grid-cols-[minmax(0,1fr)] gap-5 sm:grid-cols-2 xl:grid-cols-3">
+        <ul className="grid grid-cols-[minmax(0,1fr)] gap-4 sm:grid-cols-2 xl:grid-cols-3 min-[85rem]:grid-cols-4">
           {filtered.map((p, i) => (
             <li key={p.id}>
               <ProjectCard project={p} layout="grid" showWorkspace={showWorkspace} priority={i === 0} />
@@ -230,7 +230,7 @@ export function ProjectsBrowser({
               <Link
                 href="/new-project"
                 style={{ viewTransitionName: "proj-new" }}
-                className="group/ghost flex min-h-16 items-center gap-3 rounded-[16px] border border-dashed border-border-strong px-4 py-3 text-left transition-[border-color,background-color] duration-(--dur-3) hover:border-foreground/30 hover:bg-foreground/[0.02] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring sm:h-full sm:min-h-[280px] sm:flex-col sm:justify-center sm:p-6 sm:text-center"
+                className="group/ghost flex min-h-16 items-center gap-3 rounded-lg border border-dashed border-border-strong px-4 py-3 text-left transition-[border-color,background-color] duration-(--dur-3) hover:border-foreground/30 hover:bg-foreground/[0.02] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring sm:h-full sm:min-h-[240px] sm:flex-col sm:justify-center sm:p-6 sm:text-center"
               >
                 <span className="flex size-9 shrink-0 items-center justify-center rounded-full border border-border bg-card shadow-sm transition-transform duration-(--dur-3) ease-snap group-hover/ghost:rotate-90 group-hover/ghost:scale-105 calm:transition-none sm:size-11">
                   <Plus className="size-4 sm:size-5" aria-hidden="true" />
@@ -244,14 +244,14 @@ export function ProjectsBrowser({
           ) : null}
         </ul>
       ) : (
-        <div role="table" aria-label="Projects" aria-rowcount={filtered.length + 1} className="overflow-clip rounded-[16px] border border-border bg-card shadow-[inset_0_1px_0_var(--hairline),var(--shadow-sm)]">
-          <div role="rowgroup" className="glass sticky top-[52px] z-10 hidden border-b border-border md:block">
-            <div role="row" className="grid grid-cols-[minmax(0,2.2fr)_minmax(0,1.4fr)_minmax(0,1fr)_minmax(0,0.9fr)_minmax(0,1fr)_40px] items-center gap-3 px-4 py-2 text-xs font-medium text-muted-foreground">
+        <div role="table" aria-label="Projects" aria-rowcount={filtered.length + 1} className="overflow-clip rounded-lg border border-border bg-card">
+          <div role="rowgroup" className="sticky top-[52px] z-10 hidden border-b border-border bg-surface md:block">
+            <div role="row" className="grid grid-cols-[minmax(0,2.2fr)_minmax(0,1.4fr)_minmax(0,1fr)_minmax(0,0.9fr)_minmax(0,1fr)_40px] items-center gap-3 px-4 py-1.5 text-[11.5px] font-medium text-muted-foreground">
               <span role="columnheader">Name</span>
               <span role="columnheader">Status</span>
               <span role="columnheader">Framework</span>
               <span role="columnheader">Visibility</span>
-              <span role="columnheader">Last activity</span>
+              <span role="columnheader">Last edited</span>
               <span role="columnheader">
                 <span className="sr-only">Actions</span>
               </span>

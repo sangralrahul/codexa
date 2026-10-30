@@ -127,7 +127,7 @@ function useTypedPlaceholder(active: boolean, ref: React.RefObject<HTMLElement |
 }
 
 const chip =
-  "group/chip inline-flex h-8 min-w-0 shrink-0 items-center gap-2 rounded-[10px] border border-border bg-background/60 px-2 text-xs text-muted-foreground transition-[color,border-color,background-color] hover:border-border-strong hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-ring data-[state=open]:border-border-strong data-[state=open]:text-foreground disabled:pointer-events-none disabled:opacity-50";
+  "group/chip inline-flex h-8 min-w-0 shrink-0 items-center gap-2 rounded-md border border-border bg-background/60 px-2 text-xs text-muted-foreground transition-[color,border-color,background-color] hover:border-border-strong hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-ring data-[state=open]:border-border-strong data-[state=open]:text-foreground disabled:pointer-events-none disabled:opacity-50";
 
 /**
  * The dashboard composer: "What do you want to build?". A comet border lights while it is focused
@@ -151,6 +151,7 @@ export function PromptBox({
   initialTemplateId,
   atLimit = null,
   align = "center",
+  compact = false,
 }: {
   /** The editable workspace projects are created in (null: the user cannot create). */
   workspaceId: string | null;
@@ -165,8 +166,10 @@ export function PromptBox({
   /** The idea passport from `?prompt=` (already clamped on the server). */
   initialPrompt?: string;
   initialTemplateId?: string;
-  /** "center" (dashboard hero, max 768px) or "start": left-aligned, filling its container (the New project hub's column). */
+  /** "center" (max 768px) or "start": left-aligned, filling its container (the dashboard and the New project hub's column). */
   align?: "center" | "start";
+  /** Dashboard: a two-row box with a plain 1px border and a blue focus ring (no comet), smaller chips and presets. */
+  compact?: boolean;
 }) {
   const router = useRouter();
   const mod = usePlatformMod();
@@ -321,14 +324,23 @@ export function PromptBox({
             e.preventDefault();
             void submit();
           }}
-          className="rounded-[20px]"
+          className={compact ? "rounded-lg" : "rounded-[20px]"}
         >
-          <div data-composer data-onscreen-watch data-active={prompt.trim() ? "" : undefined} className="comet-border rounded-[20px] shadow-[var(--shadow-lg)]">
-            <div className="comet-border__inner overflow-hidden rounded-[19px] bg-card shadow-[inset_0_1px_0_var(--hairline)]">
+          <div
+            data-composer
+            data-onscreen-watch
+            data-active={prompt.trim() ? "" : undefined}
+            className={
+              compact
+                ? "rounded-lg border border-border bg-card shadow-sm transition-[border-color,box-shadow] duration-(--dur-2) focus-within:border-accent focus-within:shadow-[0_0_0_3px_color-mix(in_oklab,var(--accent)_16%,transparent)]"
+                : "comet-border rounded-[20px] shadow-[var(--shadow-lg)]"
+            }
+          >
+            <div className={compact ? "overflow-hidden rounded-[7px]" : "comet-border__inner overflow-hidden rounded-[19px] bg-card shadow-[inset_0_1px_0_var(--hairline)]"}>
               {carried ? (
                 <div className="flex items-center gap-2 px-4 pt-3.5 sm:px-5">
-                  <span className="chip-in inline-flex h-6 items-center gap-1.5 rounded-full bg-selection px-2.5 text-xs font-medium text-foreground shadow-[inset_0_0_0_1px_color-mix(in_oklab,var(--signal)_30%,transparent)]">
-                    <Undo2 className="size-3 -scale-x-100 text-signal-ink" aria-hidden="true" />
+                  <span className="chip-in inline-flex h-6 items-center gap-1.5 rounded-full bg-selection px-2.5 text-xs font-medium text-foreground shadow-[inset_0_0_0_1px_color-mix(in_oklab,var(--accent)_30%,transparent)]">
+                    <Undo2 className="size-3 -scale-x-100 text-accent" aria-hidden="true" />
                     Carried over from {carried}
                     <button
                       type="button"
@@ -348,7 +360,7 @@ export function PromptBox({
                 ref={areaRef}
                 id="idea-prompt"
                 data-hotkey-search
-                minRows={3}
+                minRows={compact ? 2 : 3}
                 maxRows={12}
                 value={prompt}
                 onChange={(e) => {
@@ -385,14 +397,17 @@ export function PromptBox({
                 aria-invalid={error ? true : undefined}
                 aria-errormessage={error ? "idea-error" : undefined}
                 disabled={busy || !enabled}
-                className="block min-h-[120px] w-full resize-none bg-transparent px-4 pb-2 pt-4 text-base leading-relaxed placeholder:text-muted-foreground/70 focus:outline-none disabled:opacity-60 sm:px-5"
+                className={cn(
+                  "block w-full resize-none bg-transparent leading-relaxed placeholder:text-muted-foreground/70 focus:outline-none disabled:opacity-60",
+                  compact ? "min-h-[64px] px-3.5 pb-1.5 pt-3 text-[14px]" : "min-h-[120px] px-4 pb-2 pt-4 text-base sm:px-5",
+                )}
               />
               {images.length ? (
                 <ul className="flex flex-wrap gap-2 px-4 pb-2 sm:px-5" aria-label="Attached images">
                   {images.map((img) => (
                     <li key={img.id} className="relative">
                       {/* eslint-disable-next-line @next/next/no-img-element -- local data URL preview */}
-                      <img src={dataUrlOf(img)} alt={img.name} className="size-16 rounded-xl object-cover shadow-[0_0_0_1px_var(--border-strong)]" />
+                      <img src={dataUrlOf(img)} alt={img.name} className="size-16 rounded-lg object-cover shadow-[0_0_0_1px_var(--border-strong)]" />
                       <button type="button" onClick={() => setImages((list) => list.filter((i) => i.id !== img.id))} aria-label={`Remove ${img.name}`} className="absolute -right-1.5 -top-1.5 inline-flex size-5 items-center justify-center rounded-full bg-foreground text-background shadow-md hover:opacity-90">
                         <X className="size-3" aria-hidden="true" />
                       </button>
@@ -405,7 +420,7 @@ export function PromptBox({
                   {notice}
                 </p>
               ) : null}
-              <div className="flex flex-wrap items-center gap-2 px-3 pb-3 sm:flex-nowrap">
+              <div className={cn("flex flex-wrap items-center gap-2 sm:flex-nowrap", compact ? "px-2 pb-2" : "px-3 pb-3")}>
                 <div className="flex min-w-0 flex-1 items-center gap-1.5 overflow-x-auto [scrollbar-width:none]">
                   <input ref={fileRef} type="file" accept={IMAGE_ACCEPT} multiple hidden onChange={(e) => {
                     void attach(Array.from(e.target.files ?? []));
@@ -526,13 +541,13 @@ export function PromptBox({
                   ) : null}
                   <Button
                     type="submit"
-                    variant="ember"
+                    variant="primary"
                     size="sm"
                     spark
                     disabled={(!prompt.trim() && !images.length) || !enabled || busy || enhancing}
                     aria-keyshortcuts="Control+Enter Meta+Enter"
                     aria-busy={busy || undefined}
-                    className="composer-build h-9 gap-2 px-3.5 sm:px-4"
+                    className={cn("composer-build gap-2", compact ? "h-8 px-3" : "h-9 px-3.5 sm:px-4")}
                   >
                     <span>Build</span>
                     <span data-spark-icon aria-hidden="true" className="hidden items-center gap-0.5 rounded-[6px] bg-current/12 px-1.5 py-0.5 text-[11px] font-semibold leading-none sm:inline-flex">
@@ -547,7 +562,7 @@ export function PromptBox({
         </form>
 
         {error ? (
-          <p id="idea-error" role="alert" className="pop-in mt-3 flex items-start gap-2 rounded-xl border border-danger/30 bg-danger/[0.06] px-3.5 py-2.5 text-sm text-foreground">
+          <p id="idea-error" role="alert" className="pop-in mt-3 flex items-start gap-2 rounded-lg border border-danger/30 bg-danger/[0.06] px-3.5 py-2.5 text-sm text-foreground">
             <span className="mt-1.5 size-1.5 shrink-0 rounded-full bg-danger" aria-hidden="true" />
             <span>
               {error.message}{" "}
@@ -573,35 +588,40 @@ export function PromptBox({
           </p>
         ) : null}
 
-        <p id="idea-hint" className={cn("mt-3 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-muted-foreground", start ? "justify-start text-left" : "justify-center text-center")}>
-          {!enabled ? (
-            "You need a workspace with edit access before creating projects."
-          ) : aiConfigured ? (
-            <>
-              <span className="inline-flex items-center gap-1.5">
-                <span className="size-1.5 rounded-full bg-success" aria-hidden="true" />
-                Agent ready
-              </span>
-              <span aria-hidden="true">·</span>
-              <span>Paste a screenshot to build from a design</span>
-            </>
-          ) : (
-            <>
-              <span className="inline-flex items-center gap-1.5">
-                <span className="size-1.5 rounded-full bg-warning" aria-hidden="true" />
-                AI is not configured on this server
-              </span>
-              <span aria-hidden="true">·</span>
-              <Link href="/docs/ai-agent" className="link-draw font-medium text-foreground">
-                How to set it up
-              </Link>
-            </>
-          )}
-        </p>
+        {/* The hint line: workspace access, or (only once the box is in use) that AI isn't configured here. */}
+        {!enabled ? (
+          <p id="idea-hint" className={cn("mt-2 text-xs text-muted-foreground", start ? "text-left" : "text-center")}>
+            You need a workspace with edit access before creating projects.
+          </p>
+        ) : aiConfigured ? (
+          <p id="idea-hint" className={cn("mt-2 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-muted-foreground", start ? "justify-start text-left" : "justify-center text-center", compact && "sr-only")}>
+            <span className="inline-flex items-center gap-1.5">
+              <span className="size-1.5 rounded-full bg-success" aria-hidden="true" />
+              Agent ready
+            </span>
+            <span aria-hidden="true">·</span>
+            <span>Paste a screenshot to build from a design</span>
+          </p>
+        ) : (
+          <p
+            id="idea-hint"
+            className={cn(
+              "mt-2 text-xs text-muted-foreground transition-opacity duration-(--dur-2)",
+              start ? "text-left" : "text-center",
+              // Quiet until the user actually reaches for the AI: focusing the box or typing.
+              focused || prompt.trim() ? "opacity-100" : "sr-only",
+            )}
+          >
+            AI isn&apos;t configured on this server, so your prompt will wait in the editor&apos;s chat.{" "}
+            <Link href="/docs/ai-agent" className="link-draw font-medium text-foreground">
+              How to set it up
+            </Link>
+          </p>
+        )}
       </div>
 
       {presets.length ? (
-        <div className={start ? "mt-5" : "mx-auto mt-5 max-w-4xl"}>
+        <div className={cn(start ? "" : "mx-auto max-w-4xl", compact ? "mt-2.5" : "mt-5")}>
           <p className="sr-only" id="presets-label">
             Quick starts
           </p>
@@ -624,7 +644,8 @@ export function PromptBox({
                     aria-pressed={on}
                     title={p.prompt}
                     className={cn(
-                      "flex h-8 items-center rounded-full border px-3.5 text-[13px] transition-[border-color,color,background-color] duration-(--dur-3) disabled:pointer-events-none disabled:opacity-50",
+                      "flex items-center rounded-full border transition-[border-color,color,background-color] duration-(--dur-3) disabled:pointer-events-none disabled:opacity-50",
+                      compact ? "h-7 px-2.5 text-xs" : "h-8 px-3.5 text-[13px]",
                       on ? "border-foreground/40 bg-card text-foreground" : "border-border text-muted-foreground hover:border-border-strong hover:bg-card hover:text-foreground",
                     )}
                   >

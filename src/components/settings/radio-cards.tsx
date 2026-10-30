@@ -78,7 +78,7 @@ export function RadioCards<T extends string>({
             data-no-ripple
             onClick={() => onValueChange(o.value)}
             className={cn(
-              "radio-card group relative flex items-start gap-3 rounded-[12px] border border-border bg-card/70 p-3.5 text-left outline-none hover:border-border-strong focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:border-border",
+              "radio-card group relative flex items-start gap-3 rounded-md border border-border bg-card/70 p-3.5 text-left outline-none hover:border-border-strong focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:border-border",
               checked && "bg-card",
             )}
           >

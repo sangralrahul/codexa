@@ -105,7 +105,7 @@ function Branch({ nodes, selected, hrefFor, depth, tone }: { nodes: Node[]; sele
                 aria-current={active ? "true" : undefined}
                 className={cn(
                   "relative flex h-7 items-center gap-1.5 rounded-md px-1.5 transition-colors duration-(--dur-2) focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-ring",
-                  "before:absolute before:-left-[7px] before:top-1.5 before:bottom-1.5 before:w-0.5 before:rounded-full before:bg-signal before:opacity-0 before:transition-opacity",
+                  "before:absolute before:-left-[7px] before:top-1.5 before:bottom-1.5 before:w-0.5 before:rounded-full before:bg-accent before:opacity-0 before:transition-opacity",
                   active && "before:opacity-100",
                   code
                     ? active

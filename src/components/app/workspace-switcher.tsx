@@ -95,7 +95,7 @@ export function WorkspaceSwitcher({
           // 2.5.3, axe label-content-name-mismatch).
           <button
             type="button"
-            className={cn("flex size-10 items-center justify-center rounded-[10px] transition-colors hover:bg-foreground/[0.06] data-[state=open]:bg-foreground/[0.06]", className)}
+            className={cn("flex size-10 items-center justify-center rounded-md transition-colors hover:bg-foreground/[0.06] data-[state=open]:bg-foreground/[0.06]", className)}
           >
             <WorkspaceAvatar workspace={current} size="sm" />
             <span className="sr-only">Current workspace: {current.name}. Switch workspace</span>
@@ -106,7 +106,7 @@ export function WorkspaceSwitcher({
             type="button"
             title={current.name}
             className={cn(
-              "group/ws flex h-10 min-w-0 items-center gap-1.5 rounded-[10px] pl-2 pr-1.5 text-left transition-colors hover:bg-foreground/[0.06] data-[state=open]:bg-foreground/[0.06]",
+              "group/ws flex h-10 min-w-0 items-center gap-1.5 rounded-md pl-2 pr-1.5 text-left transition-colors hover:bg-foreground/[0.06] data-[state=open]:bg-foreground/[0.06]",
               className,
             )}
           >
@@ -164,7 +164,7 @@ export function WorkspaceSwitcher({
                     onNavigate?.();
                     if (!active) switchTo(w.id, router);
                   }}
-                  className="flex w-full items-center gap-2.5 rounded-[10px] px-2 py-1.5 text-left outline-none transition-colors hover:bg-muted focus-visible:bg-muted"
+                  className="flex w-full items-center gap-2.5 rounded-md px-2 py-1.5 text-left outline-none transition-colors hover:bg-muted focus-visible:bg-muted"
                 >
                   <WorkspaceAvatar workspace={w} size="md" />
                   <span className="min-w-0 flex-1">
@@ -193,7 +193,7 @@ export function WorkspaceSwitcher({
                 setOpen(false);
                 onNavigate?.();
               }}
-              className="flex items-center gap-2.5 rounded-[10px] px-2 py-1.5 text-[13px] text-muted-foreground outline-none transition-colors hover:bg-muted hover:text-foreground focus-visible:bg-muted focus-visible:text-foreground"
+              className="flex items-center gap-2.5 rounded-md px-2 py-1.5 text-[13px] text-muted-foreground outline-none transition-colors hover:bg-muted hover:text-foreground focus-visible:bg-muted focus-visible:text-foreground"
             >
               <a.icon className="size-4" aria-hidden="true" />
               {a.label}

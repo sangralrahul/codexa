@@ -105,12 +105,12 @@ function NavRow({ item, current, collapsed, onNavigate, trailing }: { item: NavI
         aria-current={current ? "page" : undefined}
         aria-label={collapsed ? item.label : undefined}
         className={cn(
-          "nav-item group/row relative z-[1] flex h-9 items-center gap-3 rounded-[10px] px-3 text-[13.5px] outline-none transition-colors duration-(--dur-2)",
+          "nav-item group/row relative z-[1] flex h-8 items-center gap-2.5 rounded-md px-2.5 text-[13px] outline-none transition-colors duration-(--dur-2)",
           "focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-ring",
           current ? "font-medium text-foreground" : "text-muted-foreground hover:text-foreground",
         )}
       >
-        <Icon className={cn("size-4 shrink-0 transition-colors", current ? "text-foreground" : "text-muted-foreground group-hover/row:text-foreground")} aria-hidden="true" />
+        <Icon className={cn("size-4 shrink-0 transition-colors", current ? "text-accent" : "text-muted-foreground group-hover/row:text-foreground")} aria-hidden="true" />
         <span className={cn("min-w-0 flex-1 truncate whitespace-nowrap", fade(collapsed))}>{item.label}</span>
         <span className={cn("flex shrink-0 items-center", fade(collapsed))}>
           {item.keys ? <KeyHint keys={item.keys} className="opacity-0 transition-opacity duration-(--dur-2) group-hover/row:opacity-100 group-focus-visible/row:opacity-100 [@media(hover:none)]:hidden" /> : null}
@@ -132,7 +132,7 @@ function RecentRow({ project: p, collapsed, onNavigate }: { project: SidebarProj
     }
   };
   return (
-    <li data-nav-row className="group/rec relative z-[1] flex h-9 items-center rounded-[10px]">
+    <li data-nav-row className="group/rec relative z-[1] flex h-8 items-center rounded-md">
       <RailTip
         show={collapsed}
         content={
@@ -149,7 +149,7 @@ function RecentRow({ project: p, collapsed, onNavigate }: { project: SidebarProj
           href={href}
           onClick={onNavigate}
           aria-label={collapsed ? `${p.name}${p.running ? ", preview running" : ""}` : undefined}
-          className="flex h-full min-w-0 flex-1 items-center gap-3 rounded-[10px] pl-[10px] pr-2 text-[13px] text-muted-foreground outline-none transition-colors hover:text-foreground focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-ring"
+          className="flex h-full min-w-0 flex-1 items-center gap-2.5 rounded-md pl-[9px] pr-2 text-[12.5px] text-muted-foreground outline-none transition-colors hover:text-foreground focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-ring"
         >
           <span title={p.templateName ? `Template preview · ${p.templateName}` : undefined} className="relative flex">
             <ProjectThumb templateId={p.templateId} framework={p.framework} size="xs" />
@@ -198,17 +198,17 @@ function RecentRow({ project: p, collapsed, onNavigate }: { project: SidebarProj
 
 function GroupLabel({ children, collapsed }: { children: React.ReactNode; collapsed: boolean }) {
   return (
-    <div className="relative mb-1 mt-5 flex h-4 items-center px-3">
-      <span aria-hidden={collapsed} className={cn("text-[11.5px] font-medium text-foreground-dim", fade(collapsed))}>
+    <div className="relative mb-1 mt-4 flex h-4 items-center px-2.5">
+      <span aria-hidden={collapsed} className={cn("text-[11px] font-medium uppercase tracking-[0.06em] text-foreground-dim", fade(collapsed))}>
         {children}
       </span>
-      <span aria-hidden="true" className={cn("absolute inset-x-3 top-1/2 h-px bg-border transition-opacity duration-(--dur-2)", collapsed ? "opacity-100" : "opacity-0")} />
+      <span aria-hidden="true" className={cn("absolute inset-x-2.5 top-1/2 h-px bg-border transition-opacity duration-(--dur-2)", collapsed ? "opacity-100" : "opacity-0")} />
     </div>
   );
 }
 
 /**
- * The app sidebar (248px, collapsing to a 64px rail; the parent animates the width).
+ * The app sidebar (228px, collapsing to a 56px rail; the parent animates the width).
  * The DOM is the same in both states so labels fade instead of re-mounting; collapsed rows
  * get tooltips with their shortcut. One pill glides between the hovered and the current row,
  * and the current row keeps its signal bar.
@@ -252,17 +252,17 @@ export function AppSidebar({
   return (
     <div className="relative flex h-full flex-col">
       {/* Header: logo mark + the workspace switcher (name over plan and role). */}
-      <div className="relative flex h-[52px] shrink-0 items-center gap-0.5 px-3">
+      <div className="relative flex h-[52px] shrink-0 items-center gap-0.5 border-b border-border px-2.5">
         {collapsed && onToggle ? (
           <RailTip show content={<>Expand sidebar <KeyHint keys={["["]} /></>}>
-            <button type="button" onClick={onToggle} aria-label="Expand sidebar" className="group/logo relative flex size-10 shrink-0 items-center justify-center rounded-[10px] transition-colors hover:bg-foreground/[0.06]">
-              <LogoMark size={24} className="transition-opacity duration-(--dur-2) group-hover/logo:opacity-0 group-focus-visible/logo:opacity-0" />
+            <button type="button" onClick={onToggle} aria-label="Expand sidebar" className="group/logo relative flex size-9 shrink-0 items-center justify-center rounded-md transition-colors hover:bg-foreground/[0.06]">
+              <LogoMark size={22} className="transition-opacity duration-(--dur-2) group-hover/logo:opacity-0 group-focus-visible/logo:opacity-0" />
               <PanelLeftOpen className="absolute size-4 text-muted-foreground opacity-0 transition-opacity duration-(--dur-2) group-hover/logo:opacity-100 group-focus-visible/logo:opacity-100" aria-hidden="true" />
             </button>
           </RailTip>
         ) : (
-          <Link href="/dashboard" onClick={onNavigate} aria-label="Codexa home" className="flex size-10 shrink-0 items-center justify-center rounded-[10px] transition-opacity hover:opacity-80">
-            <LogoMark size={24} />
+          <Link href="/dashboard" onClick={onNavigate} aria-label="Codexa home" className="flex size-9 shrink-0 items-center justify-center rounded-md transition-opacity hover:opacity-80">
+            <LogoMark size={22} />
           </Link>
         )}
         {/* The logo mark is the brand; the switcher beside it gets the rest of the row for the workspace name. */}
@@ -278,19 +278,19 @@ export function AppSidebar({
 
       {/* Collapsed rail: the workspace switcher as an avatar. */}
       {collapsed ? (
-        <div className="flex justify-center px-3 pb-1">
+        <div className="flex justify-center px-2.5 pb-1 pt-2">
           <WorkspaceSwitcher workspaces={workspaces} currentId={currentId} variant="avatar" />
         </div>
       ) : null}
 
       {canCreate ? (
-        <div className="relative px-3 pb-1 pt-1">
+        <div className="relative px-2.5 pb-1 pt-2.5">
           <RailTip show={collapsed} content={<>New project <KeyHint keys={["N"]} /></>}>
             <Link
               href="/new-project"
               onClick={onNavigate}
               aria-label={collapsed ? "New project" : undefined}
-              className="group/new flex h-8 items-center gap-2 overflow-hidden rounded-[10px] border border-border-strong bg-card px-[11px] text-[13px] font-medium shadow-[inset_0_1px_0_var(--hairline),var(--shadow-sm)] transition-[border-color,box-shadow,background-color] hover:border-foreground/25 hover:bg-surface focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+              className="group/new flex h-8 items-center gap-2 overflow-hidden rounded-md border border-border-strong bg-card px-[9px] text-[12.5px] font-medium shadow-sm transition-[border-color,box-shadow,background-color] hover:border-foreground/25 hover:bg-surface focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
             >
               <Plus className="size-4 shrink-0 transition-transform duration-(--dur-3) ease-snap group-hover/new:rotate-90 calm:transition-none" aria-hidden="true" />
               <span className={cn("flex-1 truncate whitespace-nowrap", fade(collapsed))}>New project</span>
@@ -300,8 +300,8 @@ export function AppSidebar({
         </div>
       ) : null}
 
-      <nav ref={navRef} aria-label="Workspace" className="scrollbar-thin relative min-h-0 flex-1 overflow-y-auto overflow-x-hidden px-3 pb-3 pt-2">
-        <GlideIndicator ref={glide} className="inset-x-3 rounded-[10px] bg-foreground/[0.06] shadow-[inset_0_0_0_1px_color-mix(in_oklab,var(--foreground)_6%,transparent)]" />
+      <nav ref={navRef} aria-label="Workspace" className="scrollbar-thin relative min-h-0 flex-1 overflow-y-auto overflow-x-hidden px-2.5 pb-3 pt-1.5">
+        <GlideIndicator ref={glide} className="inset-x-2.5 rounded-md bg-foreground/[0.05] shadow-none" />
         <ul className="space-y-px">
           {nav.map((it) => (
             <li key={it.href}>
@@ -310,7 +310,7 @@ export function AppSidebar({
                 collapsed={collapsed}
                 onNavigate={onNavigate}
                 current={it.href === "/admin" ? pathname.startsWith("/admin") : isActive(it.href, it.exact)}
-                trailing={it.href === "/projects" && usage ? <span className="text-meta text-foreground-dim">{usage.projects}</span> : null}
+                trailing={it.href === "/projects" && usage ? <span className="text-meta tabular-nums text-foreground-dim">{usage.projects}</span> : null}
               />
             </li>
           ))}
@@ -333,20 +333,20 @@ export function AppSidebar({
             ))}
           </ul>
         ) : (
-          <p className={cn("px-3 py-1 text-xs text-foreground-dim", fade(collapsed))}>Projects you open appear here.</p>
+          <p className={cn("px-2.5 py-1 text-xs text-foreground-dim", fade(collapsed))}>Projects you open appear here.</p>
         )}
       </nav>
 
-      <div className="relative shrink-0 space-y-2 border-t border-border/70 px-3 pb-[max(12px,env(safe-area-inset-bottom))] pt-3">
+      <div className="relative shrink-0 space-y-2 border-t border-border px-2.5 pb-[max(10px,env(safe-area-inset-bottom))] pt-2.5">
         {limited && !collapsed ? (
-          <div className="rounded-xl border border-border bg-card/70 p-3 shadow-[inset_0_1px_0_var(--hairline)]">
+          <div className="rounded-md border border-border bg-card p-2.5">
             <Meter size="sm" label="Projects" value={usage.projects} max={usage.projectLimit} format={(n) => String(n)} />
             {upsell ? (
               <div className="mt-2.5 flex items-end justify-between gap-2">
                 <p className="min-w-0 text-[11.5px] leading-snug text-muted-foreground">
                   {upsell.plan}: {upsell.points.slice(0, 2).join(" · ")}
                 </p>
-                <Link href="/settings/billing" onClick={onNavigate} className="link-draw shrink-0 text-[12px] font-semibold text-signal-ink">
+                <Link href="/settings/billing" onClick={onNavigate} className="link-draw shrink-0 text-[12px] font-semibold text-accent">
                   Upgrade
                 </Link>
               </div>
@@ -365,7 +365,7 @@ export function AppSidebar({
                   aria-label={u.label}
                   aria-current={current ? "page" : undefined}
                   className={cn(
-                    "flex size-9 items-center justify-center rounded-[10px] transition-colors hover:bg-foreground/[0.06] hover:text-foreground focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-ring",
+                    "flex size-8 items-center justify-center rounded-md transition-colors hover:bg-foreground/[0.06] hover:text-foreground focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-ring",
                     current ? "bg-foreground/[0.06] text-foreground" : "text-muted-foreground",
                   )}
                 >
@@ -382,7 +382,7 @@ export function AppSidebar({
                 aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
                 aria-expanded={!collapsed}
                 className={cn(
-                  "flex size-9 items-center justify-center rounded-[10px] text-muted-foreground transition-colors hover:bg-foreground/[0.06] hover:text-foreground focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-ring",
+                  "flex size-8 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-foreground/[0.06] hover:text-foreground focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-ring",
                   !collapsed && "ml-auto",
                 )}
               >

@@ -17,8 +17,8 @@ export default async function SettingsLayout({ children }: { children: React.Rea
   const meta = await getSettingsNavMeta(user, current?.workspace.id ?? null, await getCurrentSessionId()).catch(() => null);
   return (
     <TooltipProvider delayDuration={300}>
-      <div className="settings-shell mx-auto w-full max-w-[1280px] px-4 pb-24 pt-5 sm:px-6 lg:px-10 lg:pb-16 lg:pt-10">
-        <div className="flex flex-col gap-7 lg:flex-row lg:gap-12">
+      <div className="settings-shell mx-auto w-full max-w-[1280px] px-4 pb-24 pt-5 sm:px-6 lg:px-8 lg:pb-16 lg:pt-6">
+        <div className="flex flex-col gap-6 lg:flex-row lg:gap-10">
           <SettingsNav
             workspaceName={current?.workspace.name ?? null}
             meta={meta ? { plan: meta.plan?.name ?? null, seats: meta.seats, integrations: meta.integrations, otherSessions: meta.otherSessions } : undefined}

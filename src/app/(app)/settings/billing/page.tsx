@@ -90,7 +90,7 @@ export default async function BillingSettingsPage({ searchParams }: { searchPara
           { href: "/refund-policy", icon: RotateCcw, title: "Refund policy", body: "What is refundable, and how." },
           { href: `mailto:${site.company.supportEmail}?subject=${encodeURIComponent(`Billing question · ${ws.name}`)}`, icon: Mail, title: "Email support", body: site.company.supportEmail },
         ].map((h) => (
-          <a key={h.title} href={h.href} className="group flex items-start gap-3 rounded-[14px] border border-border bg-card/70 p-4 outline-none transition-colors hover:border-border-strong hover:bg-card focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring">
+          <a key={h.title} href={h.href} className="group flex items-start gap-3 rounded-md border border-border bg-card/70 p-4 outline-none transition-colors hover:border-border-strong hover:bg-card focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring">
             <span className="icon-tile flex size-8 shrink-0 items-center justify-center rounded-[9px]">
               <h.icon className="size-4" aria-hidden="true" />
             </span>

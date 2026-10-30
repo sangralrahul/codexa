@@ -111,7 +111,7 @@ export function GalleryFilters({ categories, frameworks, stickyClassName, classN
         ref={barRef}
         data-stuck={stuck ? "" : undefined}
         className={cn(
-          "z-30 -mx-2 rounded-[18px] border border-transparent p-2 transition-[background-color,border-color,box-shadow] duration-(--dur-4) ease-out md:sticky",
+          "z-30 -mx-2 rounded-lg border border-transparent p-2 transition-[background-color,border-color,box-shadow] duration-(--dur-4) ease-out md:sticky",
           dockScrim
             ? "data-[stuck]:border-border data-[stuck]:bg-card/70 data-[stuck]:shadow-sm"
             : "data-[stuck]:border-border data-[stuck]:bg-[var(--glass)] data-[stuck]:shadow-lg data-[stuck]:backdrop-blur-xl data-[stuck]:backdrop-saturate-150",

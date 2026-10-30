@@ -311,7 +311,7 @@ export function MembersPanel({ workspaceId, currentUserId, role, members: initia
           bodyClassName={invites.length === 0 ? "pt-2" : undefined}
         >
           {invites.length === 0 ? (
-            <p className="flex items-center gap-2.5 rounded-[12px] border border-dashed border-border-strong px-4 py-3.5 text-[13px] text-muted-foreground">
+            <p className="flex items-center gap-2.5 rounded-md border border-dashed border-border-strong px-4 py-3.5 text-[13px] text-muted-foreground">
               <Mail className="size-4 shrink-0 text-foreground-dim" aria-hidden="true" />
               No pending invitations. People you invite appear here until they accept.
             </p>
@@ -368,7 +368,7 @@ export function MembersPanel({ workspaceId, currentUserId, role, members: initia
                   : `${confirm.member.name || confirm.member.email} will immediately lose access to this workspace.`
             }
           >
-            <div className="flex items-center gap-3 rounded-[12px] border border-border bg-surface/60 p-3">
+            <div className="flex items-center gap-3 rounded-md border border-border bg-surface/60 p-3">
               <Avatar name={confirm.member.name || confirm.member.email} src={confirm.member.avatarUrl} size="md" />
               <div className="min-w-0">
                 <p className="truncate text-sm font-medium">{confirm.member.name || confirm.member.email}</p>
@@ -486,7 +486,7 @@ function SeatsFullCard({ plan, limit, pending }: { plan?: Plan; limit: number; p
       title="No seats left on your plan"
       description={`Every seat${plan ? ` on the ${PLANS[plan].name} plan` : ""} is taken (${limit} of ${limit}, pending invitations included).`}
     >
-      <div className="flex flex-col gap-4 rounded-[14px] border border-border bg-surface/50 p-4 sm:flex-row sm:items-center">
+      <div className="flex flex-col gap-4 rounded-md border border-border bg-surface/50 p-4 sm:flex-row sm:items-center">
         <div className="min-w-0 flex-1">
           <p className="text-[13.5px] font-medium">{next ? `${next.name} has ${next.seats < 0 ? "unlimited" : next.seats} seats` : "Need more seats?"}</p>
           <p className="mt-0.5 text-xs text-muted-foreground">
@@ -503,9 +503,9 @@ function SeatsFullCard({ plan, limit, pending }: { plan?: Plan; limit: number; p
 
 function RolesMatrix() {
   return (
-    <details id="roles" className="settings-card group overflow-hidden rounded-[16px] [&_summary::-webkit-details-marker]:hidden">
+    <details id="roles" className="settings-card group overflow-hidden rounded-lg [&_summary::-webkit-details-marker]:hidden">
       <summary className="flex cursor-pointer list-none items-center gap-3.5 px-5 py-4 outline-none transition-colors hover:bg-muted/30 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-ring sm:px-6">
-        <span aria-hidden="true" className="icon-tile flex size-9 shrink-0 items-center justify-center rounded-[10px] [&_svg]:size-[18px]">
+        <span aria-hidden="true" className="icon-tile flex size-9 shrink-0 items-center justify-center rounded-md [&_svg]:size-[18px]">
           <ShieldCheck />
         </span>
         <span className="min-w-0 flex-1">

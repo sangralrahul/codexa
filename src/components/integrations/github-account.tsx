@@ -106,9 +106,9 @@ export function GithubAccountCard({ configured, account, next, errorCode }: { co
           <div className="mt-2">{operatorNote}</div>
         </Alert>
       ) : null}
-      <div className="flex flex-col gap-3 rounded-[16px] border border-border bg-card p-4 shadow-[inset_0_1px_0_var(--hairline)] sm:flex-row sm:items-center sm:justify-between">
+      <div className="flex flex-col gap-3 rounded-lg border border-border bg-card p-4 shadow-[inset_0_1px_0_var(--hairline)] sm:flex-row sm:items-center sm:justify-between">
         <div className="flex min-w-0 items-center gap-3">
-          <span className="icon-tile relative flex size-11 shrink-0 items-center justify-center rounded-[12px]">
+          <span className="icon-tile relative flex size-11 shrink-0 items-center justify-center rounded-md">
             <BrandMark id="github" className="size-5" />
             {account.linked ? <span aria-hidden="true" className="absolute -bottom-0.5 -right-0.5 size-2.5 rounded-full bg-success ring-2 ring-card" /> : null}
           </span>

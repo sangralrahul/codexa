@@ -135,7 +135,7 @@ export function RepoList({
         <EmptyState icon={<FolderGit2 className="size-6" aria-hidden="true" />} title={q ? "No repositories match" : "No repositories found"} description={q ? "Try a different search." : "Your GitHub account has no repositories you can access yet."} />
       ) : null}
       {repos.length ? (
-        <ul className="divide-y divide-border overflow-hidden rounded-xl border border-border bg-card" aria-label="Repositories">
+        <ul className="divide-y divide-border overflow-hidden rounded-lg border border-border bg-card" aria-label="Repositories">
           {repos.map((r) => {
             const selected = selectedId === r.id;
             return (

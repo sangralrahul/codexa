@@ -192,7 +192,7 @@ export function TimezoneCombobox({
           aria-describedby={describedBy}
           aria-invalid={invalid || undefined}
           disabled={disabled}
-          className={cn(controlClasses, "group flex h-10 items-center gap-2.5 px-3 text-left data-[state=open]:border-ring/70 data-[state=open]:shadow-[0_0_0_4px_color-mix(in_oklab,var(--signal)_14%,transparent)]")}
+          className={cn(controlClasses, "group flex h-10 items-center gap-2.5 px-3 text-left data-[state=open]:border-ring/70 data-[state=open]:shadow-[0_0_0_4px_color-mix(in_oklab,var(--accent)_14%,transparent)]")}
         >
           <Globe2 className="size-4 shrink-0 text-muted-foreground" aria-hidden="true" />
           <span className="min-w-0 flex-1 truncate">
@@ -268,7 +268,7 @@ export function TimezoneCombobox({
                       i === active && "bg-muted",
                     )}
                   >
-                    {isBrowser ? <LocateFixed className="size-4 shrink-0 text-signal-ink" aria-hidden="true" /> : <span aria-hidden="true" className="w-4 shrink-0" />}
+                    {isBrowser ? <LocateFixed className="size-4 shrink-0 text-accent" aria-hidden="true" /> : <span aria-hidden="true" className="w-4 shrink-0" />}
                     <span className="min-w-0 flex-1">
                       <span className="block truncate font-medium leading-4">{isBrowser ? "Use browser time zone" : z.city}</span>
                       <span className="mt-0.5 block truncate text-xs leading-4 text-muted-foreground">{isBrowser ? z.id.replace(/_/g, " ") : z.region || "—"}</span>

@@ -173,8 +173,8 @@ export function IntegrationsPanel({ workspaceId, canManage, canTest }: { workspa
       >
         {state.kind === "loading" ? (
           <div className="space-y-2" aria-busy="true" aria-label="Loading connections">
-            <Skeleton className="h-14 w-full rounded-[12px]" />
-            <Skeleton className="h-14 w-full rounded-[12px]" />
+            <Skeleton className="h-14 w-full rounded-md" />
+            <Skeleton className="h-14 w-full rounded-md" />
           </div>
         ) : state.kind === "unavailable" ? (
           <Alert variant="warning" title="Not available">
@@ -193,7 +193,7 @@ export function IntegrationsPanel({ workspaceId, canManage, canTest }: { workspa
             {state.message}
           </Alert>
         ) : connections.length === 0 ? (
-          <div className="flex flex-col items-start gap-4 rounded-[14px] border border-dashed border-border-strong p-5 sm:flex-row sm:items-center">
+          <div className="flex flex-col items-start gap-4 rounded-md border border-dashed border-border-strong p-5 sm:flex-row sm:items-center">
             <div className="flex gap-1.5" aria-hidden="true">
               {["postgres", "anthropic", "stripe"].map((id) => (
                 <BrandTile key={id} id={id} className="size-9 opacity-80" />
@@ -305,7 +305,7 @@ export function IntegrationsPanel({ workspaceId, canManage, canTest }: { workspa
                 </Button>
               );
               return (
-                <li key={i.id} className="int-tile glow-card flex flex-col rounded-[14px] border border-border p-4">
+                <li key={i.id} className="int-tile glow-card flex flex-col rounded-md border border-border p-4">
                   <div className="relative z-[2] flex items-start gap-3">
                     <BrandTile id={i.id} />
                     <div className="min-w-0 flex-1">
@@ -333,7 +333,7 @@ export function IntegrationsPanel({ workspaceId, canManage, canTest }: { workspa
             })}
           </ul>
         ) : (
-          <p className="rounded-[14px] border border-dashed border-border-strong px-4 py-8 text-center text-[13px] text-muted-foreground">
+          <p className="rounded-md border border-dashed border-border-strong px-4 py-8 text-center text-[13px] text-muted-foreground">
             No integration matches “{query}”{category !== "all" ? " in this category" : ""}.{" "}
             <button
               type="button"
@@ -371,7 +371,7 @@ export function IntegrationsPanel({ workspaceId, canManage, canTest }: { workspa
       <Dialog open={removing !== null} onOpenChange={(o) => (!o ? setRemoving(null) : null)}>
         {removing ? (
           <DialogContent title={`Remove ${removing.name}?`} description="The stored credentials are deleted. Projects using this connection will lose access.">
-            <div className="flex items-center gap-3 rounded-[12px] border border-border bg-surface/60 p-3">
+            <div className="flex items-center gap-3 rounded-md border border-border bg-surface/60 p-3">
               <BrandTile id={removing.provider} className="size-9" />
               <div className="min-w-0">
                 <p className="truncate text-sm font-medium">{removing.name}</p>

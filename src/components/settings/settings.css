@@ -7,7 +7,7 @@
    ========================================================================== */
 
 /* ---------- Layout ---------- */
-.settings-shell { --settings-nav-w: 236px; }
+.settings-shell { --settings-nav-w: 220px; }
 /* Deep links (#timezone, #invite, #ws-currency …) land below the sticky app bar, not under it. */
 .settings-shell [id] { scroll-margin-top: 96px; }
 
@@ -57,14 +57,14 @@
   border-radius: inherit;
   pointer-events: none;
   opacity: 0;
-  box-shadow: inset 0 0 0 1.5px color-mix(in oklab, var(--signal) 70%, transparent), inset 0 0 28px color-mix(in oklab, var(--signal) 12%, transparent);
+  box-shadow: inset 0 0 0 1.5px color-mix(in oklab, var(--accent) 70%, transparent), inset 0 0 28px color-mix(in oklab, var(--accent) 12%, transparent);
 }
 .settings-card[data-flash]::after { animation: settings-flash 1400ms var(--ease-out); }
 @keyframes settings-flash { 0% { opacity: 0; } 14% { opacity: 1; } 100% { opacity: 0; } }
 
 /* Rows: a 2px signal accent slides in on hover / keyboard focus (box-shadow so it works on <tr> too). */
-.settings-row { box-shadow: inset 0 0 0 0 var(--signal); transition: background-color var(--dur-2) var(--ease-out), box-shadow var(--dur-3) var(--ease-snap); }
-.settings-row:is(:hover, :focus-within) { box-shadow: inset 2px 0 0 0 var(--signal); }
+.settings-row { box-shadow: inset 0 0 0 0 var(--accent); transition: background-color var(--dur-2) var(--ease-out), box-shadow var(--dur-3) var(--ease-snap); }
+.settings-row:is(:hover, :focus-within) { box-shadow: inset 2px 0 0 0 var(--accent); }
 
 /* ---------- Navigation ---------- */
 .settings-nav-pill { left: 0; right: 0; width: auto !important; border-radius: 10px; background: var(--card); box-shadow: inset 0 0 0 1px var(--border), var(--shadow-sm); }
@@ -148,13 +148,13 @@
 .seat-in { animation: seat-in var(--dur-4) var(--ease-spring) backwards; animation-delay: calc(var(--i, 0) * 40ms); }
 @keyframes seat-in { from { opacity: 0; transform: scale(0.6); } }
 .seat--pending { animation: seat-in var(--dur-4) var(--ease-spring) backwards, seat-pulse 2.4s var(--ease-in-out) infinite; animation-delay: calc(var(--i, 0) * 40ms), calc(var(--i, 0) * 40ms + 420ms); }
-@keyframes seat-pulse { 50% { border-color: color-mix(in oklab, var(--signal) 55%, var(--border-strong)); background-color: color-mix(in oklab, var(--signal) 7%, transparent); } }
+@keyframes seat-pulse { 50% { border-color: color-mix(in oklab, var(--accent) 55%, var(--border-strong)); background-color: color-mix(in oklab, var(--accent) 7%, transparent); } }
 button.seat:is(:hover, :focus-visible) { transform: translateY(-2px); border-color: var(--foreground-dim); }
 
 /* Invite chips */
 .chip-in { animation: chip-pop var(--dur-3) var(--ease-snap) backwards; }
 @keyframes chip-pop { from { opacity: 0; transform: scale(0.85); } }
-.chip-field:focus-within { border-color: color-mix(in oklab, var(--ring) 70%, transparent); box-shadow: 0 0 0 4px color-mix(in oklab, var(--signal) 16%, transparent); }
+.chip-field:focus-within { border-color: color-mix(in oklab, var(--ring) 70%, transparent); box-shadow: 0 0 0 4px color-mix(in oklab, var(--accent) 16%, transparent); }
 
 /* Rows: new rows sweep a signal highlight once; removed rows collapse (diff-row from globals). */
 .row-sweep { position: relative; overflow: hidden; }
@@ -184,8 +184,8 @@ button.seat:is(:hover, :focus-visible) { transform: translateY(-2px); border-col
 .unsaved-dock[data-warn] { border-color: color-mix(in oklab, var(--warning) 55%, var(--border-strong)); }
 .field-flash :is(input, textarea, button[role="combobox"], [role="radiogroup"]) { animation: field-flash 1200ms var(--ease-out); }
 @keyframes field-flash {
-  0%, 25% { box-shadow: 0 0 0 4px color-mix(in oklab, var(--signal) 26%, transparent); border-color: color-mix(in oklab, var(--signal) 70%, transparent); }
-  100% { box-shadow: 0 0 0 0 color-mix(in oklab, var(--signal) 0%, transparent); }
+  0%, 25% { box-shadow: 0 0 0 4px color-mix(in oklab, var(--accent) 26%, transparent); border-color: color-mix(in oklab, var(--accent) 70%, transparent); }
+  100% { box-shadow: 0 0 0 0 color-mix(in oklab, var(--accent) 0%, transparent); }
 }
 
 /* Radio cards */
@@ -197,7 +197,7 @@ button.seat:is(:hover, :focus-visible) { transform: translateY(-2px); border-col
 
 /* ---------- Profile ---------- */
 @media (min-width: 80rem) { .settings-card.settings-mirror { position: sticky; top: 76px; } }
-.avatar-drop[data-drag] { outline: 2px dashed color-mix(in oklab, var(--signal) 80%, transparent); outline-offset: 4px; }
+.avatar-drop[data-drag] { outline: 2px dashed color-mix(in oklab, var(--accent) 80%, transparent); outline-offset: 4px; }
 .avatar-drop[data-drag] .avatar-drop__veil { opacity: 1; }
 .avatar-fade img { animation: avatar-in 520ms var(--ease-out) backwards; }
 @keyframes avatar-in { from { opacity: 0; transform: scale(1.06); filter: blur(4px); } }
@@ -223,7 +223,7 @@ button.seat:is(:hover, :focus-visible) { transform: translateY(-2px); border-col
 
 /* New-workspace steps */
 .ws-step[data-state="done"] .ws-step__dot { background: var(--foreground); color: var(--background); border-color: var(--foreground); }
-.ws-step[data-state="active"] .ws-step__dot { border-color: var(--signal); color: var(--signal-ink); box-shadow: 0 0 0 4px color-mix(in oklab, var(--signal) 14%, transparent); }
+.ws-step[data-state="active"] .ws-step__dot { border-color: var(--accent); color: var(--accent); box-shadow: 0 0 0 4px color-mix(in oklab, var(--accent) 14%, transparent); }
 .ws-step__line { transform-origin: 0 50%; transition: transform 420ms var(--ease-out); }
 .ws-step[data-state="done"] .ws-step__line { transform: scaleX(1); }
 

@@ -13,7 +13,7 @@ export function UsageBreakdown({ kind, rows }: { kind: "projects" | "members"; r
   if (!rows.length) {
     return (
       <div className="flex flex-col items-center px-6 pb-8 pt-4 text-center">
-        <span className="icon-tile flex size-9 items-center justify-center rounded-[10px]">
+        <span className="icon-tile flex size-9 items-center justify-center rounded-md">
           <Icon className="size-4" aria-hidden="true" />
         </span>
         <p className="mt-3 text-sm font-medium">{kind === "projects" ? "No project activity yet this period" : "No one has used metered features yet"}</p>

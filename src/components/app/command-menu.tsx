@@ -579,7 +579,7 @@ export function CommandMenu({
           <RD.Content
             id={DIALOG_ID}
             aria-describedby={undefined}
-            className="cx-dialog e2 fixed left-1/2 top-[12vh] z-[91] flex max-h-[76vh] w-[min(660px,calc(100vw-24px))] -translate-x-1/2 flex-col overflow-hidden rounded-[18px] shadow-xl"
+            className="cx-dialog e2 fixed left-1/2 top-[12vh] z-[91] flex max-h-[76vh] w-[min(660px,calc(100vw-24px))] -translate-x-1/2 flex-col overflow-hidden rounded-lg shadow-xl"
             onKeyDown={onKeyDown}
           >
             <RD.Title className="sr-only">Command menu</RD.Title>
@@ -638,7 +638,7 @@ export function CommandMenu({
                           onMouseMove={() => i !== active && setActive(i)}
                           onClick={() => it.run()}
                           className={cn(
-                            "relative z-[1] flex cursor-pointer items-center gap-3 rounded-[10px] px-3 py-2 text-sm transition-colors duration-(--dur-1)",
+                            "relative z-[1] flex cursor-pointer items-center gap-3 rounded-md px-3 py-2 text-sm transition-colors duration-(--dur-1)",
                             on ? "text-foreground" : "text-foreground/85",
                             it.tone === "build" && "py-2.5",
                           )}
@@ -728,7 +728,7 @@ function ResultsViewport({ active, children }: { active: number; children: React
       <div ref={listRef} id="command-list" role="listbox" aria-label="Results" className="scrollbar-thin relative max-h-[min(56vh,480px)] overflow-y-auto overscroll-contain px-2 pb-2">
         <GlideIndicator
           ref={glide}
-          className="inset-x-2 rounded-[10px] bg-foreground/[0.07] shadow-none before:absolute before:inset-y-2.5 before:left-0 before:w-0.5 before:rounded-full before:bg-signal before:content-['']"
+          className="inset-x-2 rounded-md bg-foreground/[0.07] shadow-none before:absolute before:inset-y-2.5 before:left-0 before:w-0.5 before:rounded-full before:bg-accent before:content-['']"
         />
         {children}
       </div>

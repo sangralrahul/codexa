@@ -115,10 +115,10 @@ export function NewWorkspaceForm() {
         </SettingsCard>
       </form>
 
-      <aside aria-label="Preview" className="settings-card rounded-[16px] p-5">
+      <aside aria-label="Preview" className="settings-card rounded-lg p-5">
         <p className="text-[13px] font-medium">In the workspace switcher</p>
-        <div aria-hidden="true" className="mt-3 rounded-[14px] border border-border bg-background/60 p-1.5 shadow-[inset_0_1px_0_var(--hairline)]">
-          <div className="flex items-center gap-2.5 rounded-[10px] bg-card px-2.5 py-2 shadow-sm ring-1 ring-border">
+        <div aria-hidden="true" className="mt-3 rounded-md border border-border bg-background/60 p-1.5 shadow-[inset_0_1px_0_var(--hairline)]">
+          <div className="flex items-center gap-2.5 rounded-md bg-card px-2.5 py-2 shadow-sm ring-1 ring-border">
             <span key={display.slice(0, 2)} className="mirror-swap">
               <Avatar name={display} seed={slug} shape="square" size="sm" />
             </span>

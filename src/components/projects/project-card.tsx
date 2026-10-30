@@ -41,7 +41,7 @@ function Visibility({ v }: { v: ProjectListItem["visibility"] }) {
 
 /**
  * Project card. Grid: an edge-to-edge 16:10 picture (the screenshot of the template the project
- * started from, captioned "Starter image" so it is never presented as the user's app), the
+ * started from; a tooltip and an sr-only note say so, so it is never presented as the user's app), the
  * name, a real description, status pills from DB rows, and a footer with framework, visibility
  * and "Edited 2h ago" (absolute time on hover). Hover or focus lifts it 2px, slowly pans the
  * picture and slides up a quick-action bar (always visible on touch).
@@ -63,13 +63,13 @@ export function ProjectCard({ project, layout = "grid", showWorkspace, priority 
         role="row"
         data-testid="project-card"
         data-project-row
-        className="group/row relative grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3 border-b border-border px-3 py-2.5 transition-colors last:border-b-0 hover:bg-foreground/[0.03] focus-within:bg-foreground/[0.04] md:grid-cols-[minmax(0,2.2fr)_minmax(0,1.4fr)_minmax(0,1fr)_minmax(0,0.9fr)_minmax(0,1fr)_40px] md:px-4"
+        className="group/row relative grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3 border-b border-border px-3 py-2 transition-colors last:border-b-0 hover:bg-muted/50 focus-within:bg-muted/50 md:grid-cols-[minmax(0,2.2fr)_minmax(0,1.4fr)_minmax(0,1fr)_minmax(0,0.9fr)_minmax(0,1fr)_40px] md:px-4"
         style={{ viewTransitionName: `proj-${project.id}` }}
       >
         <div role="cell" className="flex min-w-0 items-center gap-3">
           <ProjectThumb templateId={project.templateId} framework={project.framework} size="md" />
           <div className="min-w-0">
-            <h3 className="truncate text-[13.5px] font-medium">
+            <h3 className="truncate text-[13px] font-medium">
               <Link
                 href={href}
                 data-row-link
@@ -78,7 +78,7 @@ export function ProjectCard({ project, layout = "grid", showWorkspace, priority 
                 {project.name}
               </Link>
             </h3>
-            <p className="truncate text-xs text-muted-foreground">
+            <p className="truncate text-[11.5px] text-muted-foreground">
               {project.description || (showWorkspace ? project.workspaceName : frameworkLabel(project.framework))}
               {showWorkspace && project.description ? ` · ${project.workspaceName}` : ""}
             </p>
@@ -86,7 +86,7 @@ export function ProjectCard({ project, layout = "grid", showWorkspace, priority 
           </div>
         </div>
         <div role="cell" className="hidden min-w-0 md:block">
-          {status ? <StatusPills status={status} compact /> : <span className="text-xs text-foreground-dim">Not running</span>}
+          {status ? <StatusPills status={status} compact /> : <span className="text-[11.5px] text-foreground-dim">Idle</span>}
         </div>
         <div role="cell" className="hidden truncate text-xs text-muted-foreground md:block">
           {frameworkLabel(project.framework)}
@@ -109,10 +109,12 @@ export function ProjectCard({ project, layout = "grid", showWorkspace, priority 
   return (
     <article
       data-testid="project-card"
-      className="proj-card shot-pan group/card relative flex h-full flex-col overflow-hidden rounded-[16px] border border-border bg-card shadow-[inset_0_1px_0_var(--hairline),var(--shadow-sm)]"
+      className="proj-card shot-pan group/card relative flex h-full flex-col overflow-hidden rounded-lg border border-border bg-card shadow-[inset_0_1px_0_var(--hairline),var(--shadow-sm)]"
       style={{ viewTransitionName: `proj-${project.id}` }}
     >
-      <div className="relative aspect-[16/10] overflow-hidden border-b border-border bg-surface-2">
+      {/* The picture is the starting template's screenshot, never the user's app: said in the tooltip and to
+          assistive tech, not as a visible label on every card. */}
+      <div className="relative aspect-[16/10] overflow-hidden border-b border-border bg-surface-2" title={needsTemplateCaption(project.templateId) ? "Starter image: a screenshot of the template this project began from" : undefined}>
         <TemplatePreview
           id={project.templateId ?? ""}
           category={category}
@@ -120,11 +122,7 @@ export function ProjectCard({ project, layout = "grid", showWorkspace, priority 
           sizes="(min-width: 1280px) 400px, (min-width: 640px) 50vw, 100vw"
           className="h-full rounded-none border-0 shadow-none"
         />
-        {needsTemplateCaption(project.templateId) ? (
-          <span className="pointer-events-none absolute left-2.5 top-2.5 z-[1] inline-flex h-[18px] items-center rounded-md bg-background/70 px-1.5 text-[10px] font-medium text-muted-foreground backdrop-blur-md transition-opacity duration-(--dur-2) group-hover/card:opacity-0 group-focus-within/card:opacity-0">
-            Starter image
-          </span>
-        ) : null}
+        {needsTemplateCaption(project.templateId) ? <span className="sr-only">Starter image: a screenshot of the template this project began from.</span> : null}
         <div className="proj-card__actions absolute inset-x-2.5 bottom-2.5 z-[3] flex items-center justify-end gap-1.5">
           <Link href={href} className={buttonClasses("primary", "sm", "h-7 px-2.5 text-xs shadow-md")} tabIndex={-1} aria-hidden="true">
             Open editor
@@ -138,18 +136,18 @@ export function ProjectCard({ project, layout = "grid", showWorkspace, priority 
           <ProjectMenu project={project} canEdit={canEdit} canDelete={canDelete} floating />
         </div>
       </div>
-      <div className="flex flex-1 flex-col p-4">
-        <h3 className="truncate text-[15px] font-semibold tracking-[-0.01em]">
+      <div className="flex flex-1 flex-col p-3.5">
+        <h3 className="truncate text-[14px] font-semibold tracking-[-0.01em]">
           <Link
             href={href}
-            className="outline-none after:absolute after:inset-0 after:z-[1] after:rounded-[16px] after:content-[''] focus-visible:after:outline-2 focus-visible:after:-outline-offset-2 focus-visible:after:outline-ring"
+            className="outline-none after:absolute after:inset-0 after:z-[1] after:rounded-lg after:content-[''] focus-visible:after:outline-2 focus-visible:after:-outline-offset-2 focus-visible:after:outline-ring"
           >
             {project.name}
           </Link>
         </h3>
         {project.description ? <p className="mt-1 line-clamp-1 text-[13px] text-muted-foreground">{project.description}</p> : null}
-        <StatusPills status={status} className="mt-3" />
-        <div className="mt-auto flex items-center gap-2.5 pt-4 text-meta text-muted-foreground">
+        <StatusPills status={status} className="mt-2.5" />
+        <div className="mt-auto flex items-center gap-2.5 pt-3 text-meta text-muted-foreground">
           <span className="shrink-0">{frameworkLabel(project.framework)}</span>
           <span aria-hidden="true" className="text-border-strong">
             ·

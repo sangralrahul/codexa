@@ -51,7 +51,7 @@ export function PlanHero({
   const status = showSub ? STATUS[showSub.status] : null;
   const checkoutReady = workspace.billingCurrency === "INR" ? overview.providers.razorpay : overview.providers.stripe;
   return (
-    <section id="plan" aria-labelledby="plan-title" className={cn("relative overflow-hidden", paidActive ? "comet-border__inner" : "settings-card rounded-[18px]")}>
+    <section id="plan" aria-labelledby="plan-title" className={cn("relative overflow-hidden", paidActive ? "comet-border__inner" : "settings-card rounded-lg")}>
       <div className="grid grid-cols-1 gap-6 p-5 sm:p-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.05fr)] lg:gap-8">
         <div className="flex min-w-0 flex-col">
           <p className="flex flex-wrap items-center gap-2 font-mono text-xs text-foreground-dim">
@@ -64,7 +64,7 @@ export function PlanHero({
           </h2>
           <p className="mt-2 max-w-prose text-[14px] text-muted-foreground">{def.tagline}</p>
           {showSub ? (
-            <dl className="mt-5 grid grid-cols-2 gap-px overflow-hidden rounded-[12px] border border-border/80 bg-border/80 text-sm">
+            <dl className="mt-5 grid grid-cols-2 gap-px overflow-hidden rounded-md border border-border/80 bg-border/80 text-sm">
               <Fact label="Price">
                 <span className="tabular-nums">{formatPrice(showSub.amountMinor, showSub.currency)}</span>
                 <span className="text-xs font-normal text-muted-foreground"> / {showSub.interval === "year" ? "yr" : "mo"}</span>
@@ -87,7 +87,7 @@ export function PlanHero({
                 {overview.plan === "free" ? "Free forever. No card on file, nothing to cancel." : "This plan was assigned without an online subscription."}
                 {sub?.provider === "manual" && sub.currentPeriodEnd ? ` It is valid until ${longDate(sub.currentPeriodEnd)}.` : ""}
               </p>
-              <dl className="mt-4 grid grid-cols-2 gap-px overflow-hidden rounded-[12px] border border-border/80 bg-border/80 text-sm">
+              <dl className="mt-4 grid grid-cols-2 gap-px overflow-hidden rounded-md border border-border/80 bg-border/80 text-sm">
                 <Fact label="Billing currency">
                   {workspace.billingCurrency} · {workspace.billingCurrency === "INR" ? "Razorpay" : "Stripe"}
                 </Fact>
@@ -144,7 +144,7 @@ export function UnlockDiff({ from, to, currency }: { from: Plan; to: Plan; curre
   const price = target.prices?.[currency];
   let n = 0;
   return (
-    <figure data-reveal="" className="unlock-diff flex h-full flex-col overflow-hidden rounded-[14px] border border-code-border bg-code-bg text-code-fg shadow-[inset_0_1px_0_color-mix(in_oklab,white_6%,transparent)]">
+    <figure data-reveal="" className="unlock-diff flex h-full flex-col overflow-hidden rounded-md border border-code-border bg-code-bg text-code-fg shadow-[inset_0_1px_0_color-mix(in_oklab,white_6%,transparent)]">
       <figcaption className="flex items-center gap-2 border-b border-code-border px-4 py-2.5 font-mono text-[11.5px] text-code-muted">
         <span aria-hidden="true" className="flex gap-1">
           <span className="size-2 rounded-full bg-code-muted/40" />
@@ -202,7 +202,7 @@ export function UnlockDiff({ from, to, currency }: { from: Plan; to: Plan; curre
 export function PlanIncludes({ plan }: { plan: Plan }) {
   const def = PLANS[plan];
   return (
-    <div className="flex h-full flex-col rounded-[14px] border border-border bg-surface/50 p-4">
+    <div className="flex h-full flex-col rounded-md border border-border bg-surface/50 p-4">
       <p className="text-[13px] font-medium">{def.name} includes</p>
       <ul className="mt-3 space-y-2 text-[13px] text-muted-foreground">
         {def.features.map((f) => (

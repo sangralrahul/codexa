@@ -93,7 +93,7 @@ export function UsageHistogram({ days, periodDays, totals }: { days: UsageDay[];
           onKeyDown={onKey}
           onBlur={() => setActive(null)}
           onPointerLeave={() => setActive(null)}
-          className="usage-chart relative h-[176px] rounded-[12px] outline-none focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ring"
+          className="usage-chart relative h-[176px] rounded-md outline-none focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ring"
         >
           {/* Grid: max, half, zero. Only drawn when there is data, so no line runs behind the empty state. */}
           {total ? (
@@ -138,7 +138,7 @@ export function UsageHistogram({ days, periodDays, totals }: { days: UsageDay[];
           </div>
           {!total ? (
             <div className="absolute inset-0 flex flex-col items-center justify-center pb-6 text-center">
-              <span className="icon-tile flex size-9 items-center justify-center rounded-[10px]">
+              <span className="icon-tile flex size-9 items-center justify-center rounded-md">
                 <Activity className="size-4" aria-hidden="true" />
               </span>
               <p className="mt-3 text-sm font-medium">{def.empty}</p>

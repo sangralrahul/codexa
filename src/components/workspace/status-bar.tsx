@@ -103,8 +103,8 @@ export function StatusBar({
         ) : null}
         <button type="button" onClick={onOpenAgent} className={item} title={agent.ai ? `AI provider: ${agent.ai.provider}` : "AI agent"}>
           {agent.ai?.mock ? (
-            <span className="ws-warn-ink inline-flex items-center gap-1 rounded bg-warning/12 px-1.5 font-medium">
-              <FlaskConical className="size-3" aria-hidden="true" /> Mock AI (development only)
+            <span className="inline-flex items-center gap-1 rounded bg-muted px-1.5 font-medium text-muted-foreground shadow-[inset_0_0_0_1px_var(--border)]" title="AI_MOCK=1 is set: responses are scripted. Development only.">
+              <FlaskConical className="size-3" aria-hidden="true" /> Mock AI
             </span>
           ) : agent.ai?.configured ? (
             <>

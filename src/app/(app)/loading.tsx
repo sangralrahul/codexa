@@ -10,7 +10,7 @@ export default function Loading() {
         <Skeleton className="mt-3 h-4 w-96 max-w-full" />
         <div className="mt-10 grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
           {[0, 1, 2, 3, 4, 5].map((i) => (
-            <div key={i} className="overflow-hidden rounded-[16px] border border-border bg-card">
+            <div key={i} className="overflow-hidden rounded-lg border border-border bg-card">
               <Skeleton className="aspect-[16/10] rounded-none" />
               <div className="space-y-2 p-4">
                 <Skeleton className="h-4 w-2/3" />
