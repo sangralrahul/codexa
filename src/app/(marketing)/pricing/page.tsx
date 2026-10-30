@@ -8,6 +8,7 @@ import { PricingTable } from "@/components/marketing/pricing-table";
 import { LimitsTable } from "@/components/marketing/limits-table";
 import { FAQ } from "@/components/marketing/faq";
 import { CTABand } from "@/components/marketing/cta-band";
+import { IconTile } from "@/components/marketing/premium";
 
 export const metadata = routeMetadata("/pricing");
 
@@ -25,27 +26,28 @@ export default function PricingPage() {
         crumbs={[{ name: "Pricing", path: "/pricing" }]}
         kicker="Pricing"
         headline="Start free. Scale when it works."
+        highlight="when it works."
         lede="Plans in INR and USD. Upgrade when you need more AI requests, runtime, deployments or collaborators; every limit is enforced per workspace on the server."
       >
         <PricingTable finder />
       </PageHeader>
 
       <Section size="sm">
-        <SectionHeader index="01" eyebrow="Limits" title="Usage limits by plan." description="Every number below comes from the plan configuration the server enforces. Monthly limits reset on the first of each month (UTC)." />
-        <LimitsTable className="mt-8" />
-        <p className="mt-6 text-sm">
-          <Link href="/pricing/compare-plans" className="link-draw inline-flex items-center gap-1 font-medium text-foreground">
+        <SectionHeader eyebrow="Limits" title="Usage limits by plan." description="Every number below comes from the plan configuration the server enforces. Monthly limits reset on the first of each month (UTC)." />
+        <LimitsTable className="mt-10" />
+        <p className="mt-6 text-[15px]">
+          <Link href="/pricing/compare-plans" className="link-draw inline-flex items-center gap-1 font-semibold text-primary">
             Compare every feature side by side <ArrowUpRight className="size-3.5" aria-hidden="true" />
           </Link>
         </p>
       </Section>
 
-      <Section size="sm" className="border-t border-border">
+      <Section size="sm" className="border-t border-border bg-surface">
         <div className="grid grid-cols-1 gap-10 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] lg:gap-14">
-          <aside className="lg:sticky lg:top-20 lg:self-start">
-            <div className="rounded-[12px] border border-border bg-card p-6">
-              <Receipt className="size-5 text-primary" aria-hidden="true" />
-              <h2 className="mt-4 text-[20px] font-semibold tracking-[-0.015em]">Billing questions?</h2>
+          <aside className="lg:sticky lg:top-24 lg:self-start">
+            <div className="mk-card p-6">
+              <IconTile icon={Receipt} />
+              <h2 className="mk-h3 mt-5">Billing questions?</h2>
               <p className="mt-2 text-[15px] leading-relaxed text-muted-foreground">INR through Razorpay, USD through Stripe, taxes added at checkout. The details:</p>
               <ul className="mt-5 divide-y divide-border border-y border-border">
                 {MORE.map((m) => (
@@ -71,7 +73,9 @@ export default function PricingPage() {
           </aside>
           <div>
             <h2 className="mk-h2">Pricing questions.</h2>
-            <FAQ items={PRICING_FAQ} withJsonLd className="mt-6" />
+            <div className="mk-card mt-8 px-5 sm:px-8">
+              <FAQ items={PRICING_FAQ} withJsonLd className="border-t-0 [&>details:last-child]:border-b-0" />
+            </div>
           </div>
         </div>
       </Section>

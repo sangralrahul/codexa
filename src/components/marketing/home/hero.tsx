@@ -1,17 +1,18 @@
 import Link from "next/link";
 import { ArrowDown, ArrowRight } from "lucide-react";
-import { BrowserFrame } from "@/components/frames/browser-frame";
 import { TemplatePreview } from "@/components/templates/template-preview";
 import { templatePreviewHref } from "@/components/templates/template-card";
 import { TEMPLATE_SHOTS } from "@/components/templates/shots";
 import { PromptBox } from "@/components/marketing/prompt-box";
+import { BrowserWindow, CtaLink, EyebrowPill, GradientText, Mesh } from "@/components/marketing/premium";
 import { HOME_HERO } from "@/content/marketing/home";
 import { TEMPLATES } from "@/templates";
 
 /**
- * H0 hero: a two-line sans headline, a one-sentence lead, the composer, and one straight product
- * screenshot in a browser frame right under it. The screenshot is a real starter template captured
- * from its own build (never a generated or invented image); the caption says so.
+ * H0 hero on a gradient mesh: eyebrow pill, a two-line headline with one gradient phrase, a 20px
+ * lead, the composer as a premium card, two CTAs, and one real starter screenshot in a browser
+ * window with a gradient glow behind it. The screenshot is captured from the starter's own build
+ * (never generated or invented); the caption says so.
  */
 export function HomeHero({ signedIn, announcement }: { signedIn: boolean; announcement: { title: string; href: string } | null }) {
   const shot = TEMPLATES.find((t) => t.id === HOME_HERO.shotTemplateId && TEMPLATE_SHOTS.has(t.id)) ?? TEMPLATES.find((t) => TEMPLATE_SHOTS.has(t.id)) ?? null;
@@ -32,35 +33,49 @@ export function HomeHero({ signedIn, announcement }: { signedIn: boolean; announ
   );
 
   return (
-    <section aria-labelledby="home-title" className="relative border-b border-border bg-surface/60 pb-12 pt-12 sm:pt-16 lg:pb-16 lg:pt-20">
-      <div className="container-x text-center">
+    <section aria-labelledby="home-title" className="relative isolate overflow-x-clip pb-16 pt-12 sm:pt-16 lg:pb-24 lg:pt-20">
+      <Mesh />
+      <div className="mk-rise container-x flex flex-col items-center text-center">
         {announcement ? (
-          <Link
-            href={announcement.href}
-            className="group inline-flex max-w-full items-center gap-2 rounded-full border border-border bg-card px-3 py-1 text-xs font-medium text-muted-foreground transition-colors hover:border-border-strong hover:text-foreground"
-          >
-            <span className="rounded-full bg-primary/10 px-1.5 py-px text-[11px] font-semibold text-primary">New</span>
-            <span className="min-w-0 truncate">{announcement.title}</span>
-            <ArrowRight className="size-3 shrink-0 transition-transform group-hover:translate-x-0.5" aria-hidden="true" />
-          </Link>
-        ) : null}
-        <h1 id="home-title" className="mk-hero-title mx-auto mt-5 max-w-[22ch]">
+          <EyebrowPill tag="New" href={announcement.href}>
+            {announcement.title}
+          </EyebrowPill>
+        ) : (
+          <EyebrowPill>{HOME_HERO.eyebrow}</EyebrowPill>
+        )}
+        <h1 id="home-title" className="mk-hero-title mx-auto mt-6 max-w-[24ch]">
           <span className="block">{HOME_HERO.lines[0]}</span>
-          <span className="block">{HOME_HERO.lines[1]}</span>
+          <span className="block">
+            <GradientText text={HOME_HERO.lines[1]} phrase={HOME_HERO.phrase} />
+          </span>
         </h1>
-        <p className="text-lead mx-auto mt-5 max-w-[60ch]!">{HOME_HERO.lead}</p>
-        <div className="mt-8">
+        <p className="mk-lead mx-auto mt-6 max-w-[58ch]">{HOME_HERO.lead}</p>
+        <div className="mt-9 w-full">
           <PromptBox signedIn={signedIn} variant="hero" source="home" footer={links} capabilityChip={false} />
+        </div>
+        <div className="mt-8 flex flex-col items-center gap-3 sm:flex-row">
+          {signedIn ? (
+            <CtaLink href={HOME_HERO.primary.signedInHref} arrow>
+              {HOME_HERO.primary.signedInLabel}
+            </CtaLink>
+          ) : (
+            <CtaLink href={HOME_HERO.primary.href} arrow>
+              {HOME_HERO.primary.label}
+            </CtaLink>
+          )}
+          <CtaLink href={HOME_HERO.secondary.href} variant="secondary">
+            {HOME_HERO.secondary.label}
+          </CtaLink>
         </div>
 
         {shot ? (
-          <figure className="mx-auto mt-12 max-w-5xl text-left lg:mt-14">
-            <Link href={templatePreviewHref(shot.id)} aria-label={`Preview the ${shot.name} starter`} className="group/shot block rounded-[12px] outline-offset-4">
-              <BrowserFrame url={`${shot.name} starter`} chrome="minimal" className="rounded-[12px] shadow-xl transition-[border-color] duration-(--dur-3) group-hover/shot:border-foreground/30">
-                <TemplatePreview id={shot.id} category={shot.category} priority sizes="(min-width: 1088px) 1024px, 100vw" className="rounded-none border-0 shadow-none" />
-              </BrowserFrame>
+          <figure className="mx-auto mt-16 w-full max-w-6xl text-left lg:mt-20">
+            <Link href={templatePreviewHref(shot.id)} aria-label={`Preview the ${shot.name} starter`} className="mk-hero-shot block rounded-[16px] outline-offset-8">
+              <BrowserWindow url={HOME_HERO.shotUrl(shot.name)}>
+                <TemplatePreview id={shot.id} category={shot.category} priority sizes="(min-width: 1216px) 1152px, 100vw" className="rounded-none border-0 shadow-none" />
+              </BrowserWindow>
             </Link>
-            <figcaption className="mt-3 text-center text-xs text-muted-foreground">{HOME_HERO.shotCaption(shot.name)}</figcaption>
+            <figcaption className="mt-4 text-center text-[13px] text-muted-foreground">{HOME_HERO.shotCaption(shot.name)}</figcaption>
           </figure>
         ) : null}
       </div>

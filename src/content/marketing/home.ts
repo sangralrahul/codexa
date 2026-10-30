@@ -9,29 +9,60 @@
  */
 
 export const HOME_HERO = {
-  /** The H1, as two visual lines (plain sans; no accent treatment). */
+  /** Eyebrow pill when there is no changelog entry to announce. */
+  eyebrow: "AI-native development platform",
+  /** The H1, as two visual lines; `phrase` is the one gradient-text phrase on the page. */
   lines: ["Describe the app.", "Codexa writes, runs and ships it."],
+  phrase: "runs and ships it.",
   lead: "An AI agent plans the files, writes real TypeScript, checks it in an isolated sandbox and runs a live preview you can edit by hand and deploy.",
+  primary: { label: "Start building free", href: "/signup", signedInLabel: "Open dashboard", signedInHref: "/dashboard" },
+  secondary: { label: "Browse templates", href: "/templates" },
   templatesLink: { label: "Start from a template", href: "/templates" },
   storyLink: { label: "How it works", href: "#how-it-works" },
   /** The starter whose captured screenshot sits under the composer (a real build; see HOME_SHOT_CAPTION). */
   shotTemplateId: "vite-react-dashboard",
+  /** Text in the browser frame's URL pill (a label, not a real address). */
+  shotUrl: (name: string) => `Preview · ${name} starter`,
   shotCaption: (name: string) => `The ${name} starter as it ships, captured from its own build. Open it, read the files, then describe what to change.`,
 } as const;
+
+/** "Built on" trust row: the stack Codexa and its starters actually run on (not customers). */
+export const HOME_TRUST = {
+  label: "Built on",
+  items: [
+    { id: "react", name: "React" },
+    { id: "vite", name: "Vite" },
+    { id: "typescript", name: "TypeScript" },
+    { id: "node", name: "Node.js" },
+    { id: "cloudflare", name: "Cloudflare" },
+  ],
+  note: "Trademarks belong to their owners.",
+} as const;
+
+/**
+ * The three-step "how it works" on the home: each step has a real product picture (see
+ * home/how-it-works.tsx for what each picture is and where it comes from).
+ */
+export const HOME_STEPS = [
+  { id: "describe", icon: "sparkles", label: "Describe", title: "Say what you want in a sentence.", body: "Type the app you have in mind, or start from a real starter template. The agent reads the project and writes a short plan before it touches a file." },
+  { id: "preview", icon: "monitor", label: "Build and preview", title: "Watch it build, then click through it.", body: "The agent edits real files with tools you can see. Type-check and build run in an isolated sandbox, and the live preview opens at desktop, tablet and phone sizes." },
+  { id: "ship", icon: "rocket", label: "Ship", title: "Publish with one click.", body: "Deploy to Codexa hosting with a shareable URL. Every version is kept, so you can roll back the moment something looks wrong." },
+] as const;
 
 /** The eight features on the home grid, by title in PLATFORM_FEATURES (src/content/marketing/product.ts). */
 export const HOME_FEATURE_TITLES = ["AI app builder", "AI agent", "Code editor", "Isolated runtimes", "Live preview", "Snapshots and diffs", "Databases", "Deployment"] as const;
 
 export const HOME_FEATURES_COPY = {
-  index: "02 — Platform",
-  title: "A development platform, not a demo.",
+  index: "Platform",
+  title: "Everything a real project needs, in one workspace.",
+  phrase: "in one workspace.",
   lead: "Real files in a real editor, an agent that shows every tool call, a sandbox that runs the build before you see the result, and hosting with history.",
   all: { label: "All features", href: "/features" },
 };
 
 export const HOME_HOW = {
-  index: "01 — How it works",
-  title: "From a sentence to a deployed app, in six steps.",
+  index: "How it works",
+  title: "From a sentence to a deployed app.",
   lead: "Each run is planned, written with tools, validated in a sandbox and kept in history. Nothing is hidden behind a spinner.",
   more: { label: "Read how it works", href: "/how-it-works" },
 };
@@ -141,14 +172,14 @@ export const HOME_STAGE_COPY = {
 };
 
 export const HOME_PROOF = {
-  index: "04 — Built in the open",
+  index: "Built in the open",
   title: "Numbers read from the source, not from a slide.",
   note: "Each count is read from Codexa's own code at render time. We do not publish usage or customer numbers.",
   platformLine: "Runs on Cloudflare Workers and Containers.",
 };
 
 export const HOME_WALL = {
-  index: "03 — Starters",
+  index: "Starters",
   title: "Start from a real app, not a blank page.",
   caption: "Screenshots captured from each starter template's own build.",
   browse: { label: "Browse all starters", href: "/templates" },
@@ -192,7 +223,7 @@ export const HOME_PLATFORM = {
 };
 
 export const HOME_INTEGRATIONS = {
-  index: "05 — Connect",
+  index: "Connect",
   title: "Connect the services you already use.",
   lead: "Bring your own keys for AI providers, payments, email, databases and hosting. Secrets are encrypted before they are stored and never sent back to the browser.",
   trademark: "Trademarks belong to their owners; no partnership implied.",
@@ -200,7 +231,7 @@ export const HOME_INTEGRATIONS = {
 };
 
 export const HOME_PRICING = {
-  index: "06 — Pricing",
+  index: "Pricing",
   title: "Free to start. Priced in INR and USD.",
   lead: "Limits are enforced on the server for AI requests and tokens, runtime minutes, deployments, storage, projects and members.",
   chips: [
@@ -212,13 +243,14 @@ export const HOME_PRICING = {
 };
 
 export const HOME_FAQ = {
-  index: "07 — Questions",
+  index: "Questions",
   title: "Questions, answered.",
   support: { label: "Still stuck? Contact support", href: "/support" },
 };
 
 export const HOME_FINAL = {
   title: "Start with a sentence.",
+  phrase: "a sentence.",
   lead: "Describe the app you want. Codexa plans it, writes the files, runs the build and gives you a preview to work from.",
   pricing: { label: "See pricing", href: "/pricing" },
 };

@@ -532,12 +532,9 @@ export function PromptBox({
       <div ref={shakeRef} className="relative">
         <div
           data-active={value.length > 0 ? "" : undefined}
-          className={cn(
-            "rounded-[12px] border border-border-strong bg-card shadow-md transition-[border-color,box-shadow] duration-(--dur-3) ease-out",
-            "focus-within:border-primary focus-within:shadow-[0_0_0_3px_color-mix(in_oklab,var(--primary)_18%,transparent),var(--shadow-md)]",
-          )}
+          className={cn("mk-composer", !hero && "mk-composer--compact")}
         >
-          <div className="rounded-[11px]">
+          <div className={hero ? "rounded-[17px]" : "rounded-[13px]"}>
             <label id={`${id}-label`} htmlFor={`${id}-prompt`} className="sr-only">
               Describe the application you want to build
             </label>
@@ -573,10 +570,10 @@ export function PromptBox({
               aria-invalid={Boolean(error)}
               className={cn(
                 "block w-full resize-none bg-transparent text-foreground outline-none placeholder:text-muted-foreground/75 focus-visible:outline-none",
-                hero ? "px-4 pb-2 pt-4 text-[16px] leading-[1.55] sm:text-[17px]" : "px-4 pb-1.5 pt-3.5 text-[15px] leading-[1.55]",
+                hero ? "px-5 pb-2 pt-5 text-[16px] leading-[1.55] sm:text-[17px]" : "px-4 pb-1.5 pt-3.5 text-[15px] leading-[1.55]",
               )}
             />
-            <div className={cn("flex items-center gap-2", hero ? "px-3 pb-3" : "px-2.5 pb-2.5")}>
+            <div className={cn("flex items-center gap-2", hero ? "px-3.5 pb-3.5" : "px-2.5 pb-2.5")}>
               {starters.length > 0 ? (
                 <div className="min-w-0 flex-1 sm:flex-initial">
                   <StarterPicker starters={starters} picked={picked} closest={closest} onPick={pick} compact={!hero} />
@@ -599,7 +596,7 @@ export function PromptBox({
                   size="lg"
                   appearance="app"
                   aria-busy={submitting || undefined}
-                  className={cn("h-10 gap-1.5 pl-4 pr-3.5 text-[14px]", !hero && "h-9 text-sm")}
+                  className={cn("h-10 gap-1.5 pl-4 pr-3.5 text-[14px] shadow-[inset_0_1px_0_color-mix(in_oklab,white_20%,transparent),0_8px_20px_-8px_color-mix(in_oklab,var(--primary)_70%,transparent)]", !hero && "h-9 text-sm")}
                 >
                   Build it
                   <span data-spark-icon className="relative grid size-4 place-items-center">

@@ -155,7 +155,7 @@ function Meters({ meters }: { meters: PricingPlanView["meters"] }) {
           <dd className="font-medium tabular-nums text-foreground">
             {m.value < 0 ? "Custom" : fmt(m.value)}
             <span aria-hidden="true" className="absolute inset-x-0 bottom-0 block h-1 overflow-hidden rounded-full bg-muted shadow-[inset_0_0_0_1px_var(--border)]">
-              <span className={cn("mk-meter block h-full origin-left rounded-full", m.value < 0 ? "bg-[repeating-linear-gradient(90deg,var(--foreground-dim)_0_6px,transparent_6px_10px)]" : "bg-gradient-to-r from-foreground/55 to-foreground")} style={{ "--share": m.share } as React.CSSProperties} />
+              <span className={cn("mk-meter block h-full origin-left rounded-full", m.value < 0 ? "bg-[repeating-linear-gradient(90deg,var(--foreground-dim)_0_6px,transparent_6px_10px)]" : "bg-[image:var(--brand-gradient)]")} style={{ "--share": m.share } as React.CSSProperties} />
             </span>
           </dd>
         </div>
@@ -171,12 +171,7 @@ function PlanCard({ p, prev, currency, interval, compact, fit }: { p: PricingPla
     <div className="relative flex h-full flex-col p-6 sm:p-7">
       <div className="relative flex items-center justify-between gap-2">
         <h3 className="text-[17px] font-semibold tracking-[-0.01em]">{p.name}</h3>
-        {p.highlight ? (
-          <span className="inline-flex items-center gap-1 rounded-full bg-primary px-2.5 py-1 text-[11px] font-semibold text-primary-foreground">
-            <Sparkles className="size-3" aria-hidden="true" />
-            Recommended
-          </span>
-        ) : null}
+        {p.highlight ? <span className="sr-only">Recommended</span> : null}
       </div>
       <p className="relative mt-1.5 min-h-[2.75rem] text-[13.5px] leading-snug text-muted-foreground">{p.tagline}</p>
       {/* Fixed height for the price and its note, so every card's button (and the meters under it)
@@ -207,7 +202,7 @@ function PlanCard({ p, prev, currency, interval, compact, fit }: { p: PricingPla
           </>
         )}
       </div>
-      <Link href={p.cta.href} className={buttonClasses(p.highlight ? "primary" : "outline", "md", "relative mt-6 w-full")}>
+      <Link href={p.cta.href} data-btn="" className={cn("mk-btn relative mt-6 w-full", p.highlight ? "mk-btn--primary" : "mk-btn--secondary")}>
         {p.cta.label}
         {p.highlight ? <ArrowRight className="size-4" aria-hidden="true" /> : null}
       </Link>
@@ -252,11 +247,11 @@ function PlanFinder({ usage, onUsage, currency, interval, plans }: { usage: Usag
   const blockers = ruledOut.filter((r) => r.by.length).map((r) => `${name(r.plan)} allows fewer ${list(r.by.map((k) => USAGE_LABELS[k].unit))}`);
   const reason = blockers.length ? `${blockers.join("; ")}.` : "It is the cheapest plan, and your usage is within its limits.";
   return (
-    <section aria-labelledby={`${id}-title`} className="mt-14 overflow-hidden rounded-[20px] border border-border bg-card/70 shadow-[inset_0_1px_0_var(--hairline)] backdrop-blur">
+    <section aria-labelledby={`${id}-title`} className="mk-card mt-14 overflow-hidden rounded-[20px]">
       <div className="grid grid-cols-1 gap-8 p-6 sm:p-8 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] lg:gap-12">
         <div>
-          <p className="text-label flex items-center gap-2 text-muted-foreground">
-            <span aria-hidden="true" className="size-1.5 rounded-full bg-primary" />
+          <p className="flex items-center gap-2 text-[13px] font-semibold uppercase tracking-[0.08em] text-primary">
+            <span aria-hidden="true" className="inline-block size-2 rounded-[3px] bg-[image:var(--brand-gradient)]" />
             Plan finder
           </p>
           <h3 id={`${id}-title`} className="text-display-4 mt-4">
@@ -332,7 +327,7 @@ export function PricingTableClient({ plans, compact, finder = false }: { plans: 
   return (
     <div>
       <PricingToggles currency={currency} interval={interval} onCurrency={setCurrency} onInterval={setInterval} />
-      <ul className={cn("mt-12 grid grid-cols-1 gap-4 text-left", plans.length >= 4 ? "md:grid-cols-2 xl:grid-cols-4" : "md:grid-cols-3")} style={{ "--price-em": widest } as React.CSSProperties}>
+      <ul className={cn("mt-14 grid grid-cols-1 gap-5 text-left", plans.length >= 4 ? "md:grid-cols-2 xl:grid-cols-4" : "md:grid-cols-3")} style={{ "--price-em": widest } as React.CSSProperties}>
         {plans.map((p, i) => {
           const fit = fitId === p.id;
           const card = <PlanCard p={p} prev={plans[i - 1]} currency={currency} interval={interval} compact={compact} fit={fit} />;
@@ -345,9 +340,15 @@ export function PricingTableClient({ plans, compact, finder = false }: { plans: 
                 </span>
               ) : null}
               {p.highlight ? (
-                <div className={cn("h-full overflow-hidden rounded-[12px] border border-primary bg-card shadow-lg", fit && "ring-2 ring-primary ring-offset-2 ring-offset-background")}>{card}</div>
+                <div className={cn("mk-pro h-full", fit && "ring-2 ring-primary ring-offset-2 ring-offset-background")}>
+                  <span className="mk-pro__badge">
+                    <Sparkles className="size-3" aria-hidden="true" />
+                    Most popular
+                  </span>
+                  <div className="h-full overflow-hidden">{card}</div>
+                </div>
               ) : (
-                <div className={cn("h-full overflow-hidden rounded-[12px] border border-border bg-card transition-[border-color,box-shadow] duration-300 hover:border-border-strong", fit && "ring-2 ring-primary ring-offset-2 ring-offset-background")}>{card}</div>
+                <div className={cn("mk-card mk-card--hover h-full overflow-hidden", fit && "ring-2 ring-primary ring-offset-2 ring-offset-background")}>{card}</div>
               )}
             </li>
           );

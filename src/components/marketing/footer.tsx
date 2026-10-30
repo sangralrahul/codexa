@@ -13,16 +13,16 @@ const GROUPS = Object.entries(FOOTER) as [keyof typeof FOOTER, readonly string[]
 function Column({ group, paths }: { group: keyof typeof FOOTER; paths: readonly string[] }) {
   const more = FOOTER_MORE[group];
   return (
-    <ul className="space-y-2">
+    <ul className="space-y-2.5">
       {paths.map((p) => (
         <li key={p}>
-          <Link href={p} className="text-[13px] text-muted-foreground transition-colors hover:text-foreground">
+          <Link href={p} className="text-[13.5px] text-muted-foreground transition-colors hover:text-foreground">
             {navLabel(p)}
           </Link>
         </li>
       ))}
       <li>
-        <Link href={more.href} className="text-[13px] text-muted-foreground transition-colors hover:text-foreground">
+        <Link href={more.href} className="inline-flex items-center gap-1 text-[13.5px] font-medium text-primary transition-colors hover:text-primary-hover">
           {more.label}
         </Link>
       </li>
@@ -31,42 +31,48 @@ function Column({ group, paths }: { group: keyof typeof FOOTER; paths: readonly 
 }
 
 /**
- * Site footer: five link columns from the route manifest (capitalised labels, eight links each with
- * the "All …" link), <details> accordions on phones, the live status pill, theme and motion settings.
+ * Site footer on the cool off-white: five dense link columns from the route manifest (capitalised
+ * labels, eight links each with the "All …" link), <details> accordions on phones, the live status
+ * pill, theme and motion settings.
  */
 export function MarketingFooter() {
   return (
-    <footer className="border-t border-border bg-background">
-      <div className="container-x pt-12 lg:pt-14">
-        <div className="grid grid-cols-1 gap-10 lg:grid-cols-[minmax(0,1.5fr)_repeat(5,minmax(0,1fr))] lg:gap-6">
+    <footer className="border-t border-border bg-surface">
+      <div className="container-x pt-14 lg:pt-16">
+        <div className="grid grid-cols-1 gap-10 lg:grid-cols-[minmax(0,1.6fr)_repeat(5,minmax(0,1fr))] lg:gap-8">
           <div className="max-w-xs">
             <Logo />
-            <p className="mt-4 text-pretty text-[13px] leading-relaxed text-muted-foreground">
+            <p className="mt-5 text-pretty text-[14px] leading-relaxed text-muted-foreground">
               {site.tagline} Describe it, read the code, run it in a sandbox and ship it, all in one workspace.
             </p>
-            <ul className="mt-4 flex flex-wrap gap-x-4 gap-y-2 text-[13px]">
+            <ul className="mt-5 flex flex-wrap gap-x-4 gap-y-2 text-[13.5px]">
               <li>
-                <a href={site.social.github} rel="noopener noreferrer" className="inline-flex items-center gap-1 text-muted-foreground transition-colors hover:text-foreground">
+                <a href={site.social.github} rel="noopener noreferrer" className="inline-flex items-center gap-1 font-medium text-foreground/80 transition-colors hover:text-foreground">
                   GitHub <ArrowUpRight className="size-3" aria-hidden="true" />
                 </a>
               </li>
               <li>
-                <Link href="/changelog" className="text-muted-foreground transition-colors hover:text-foreground">
+                <Link href="/changelog" className="font-medium text-foreground/80 transition-colors hover:text-foreground">
                   Changelog
                 </Link>
               </li>
               <li>
-                <Link href="/support" className="text-muted-foreground transition-colors hover:text-foreground">
+                <Link href="/support" className="font-medium text-foreground/80 transition-colors hover:text-foreground">
                   Support
                 </Link>
               </li>
             </ul>
+            <div className="mt-6 text-xs text-muted-foreground">
+              <Suspense fallback={<FooterStatusFallback />}>
+                <FooterStatus />
+              </Suspense>
+            </div>
           </div>
 
           {/* Desktop: five columns. */}
           {GROUPS.map(([group, paths]) => (
             <nav key={group} aria-label={group} className="hidden lg:block">
-              <h2 className="mb-3 text-[13px] font-semibold text-foreground">{group}</h2>
+              <h2 className="mb-4 text-[13px] font-semibold uppercase tracking-[0.08em] text-foreground">{group}</h2>
               <Column group={group} paths={paths} />
             </nav>
           ))}
@@ -75,7 +81,7 @@ export function MarketingFooter() {
           <div className="grid grid-cols-2 gap-x-5 border-t border-border lg:hidden">
             {GROUPS.map(([group, paths]) => (
               <details key={group} className="group border-b border-border [&:last-child:nth-child(odd)]:col-span-2">
-                <summary className="flex cursor-pointer list-none items-center justify-between py-3 text-[14px] font-medium [&::-webkit-details-marker]:hidden">
+                <summary className="flex cursor-pointer list-none items-center justify-between py-3 text-[14px] font-semibold [&::-webkit-details-marker]:hidden">
                   {group}
                   <span aria-hidden="true" className="relative inline-flex size-4 items-center justify-center text-muted-foreground">
                     <span className="absolute h-px w-2.5 bg-current" />
@@ -90,15 +96,10 @@ export function MarketingFooter() {
           </div>
         </div>
 
-        <div className="mt-10 flex flex-col gap-4 border-t border-border py-5 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between lg:mt-12">
-          <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-xs text-muted-foreground">
-            <Suspense fallback={<FooterStatusFallback />}>
-              <FooterStatus />
-            </Suspense>
-            <span>
-              © {new Date().getFullYear()} {site.company.legalName}
-            </span>
-          </div>
+        <div className="mt-12 flex flex-col gap-4 border-t border-border py-6 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between lg:mt-14">
+          <p className="text-xs text-muted-foreground">
+            © {new Date().getFullYear()} {site.company.legalName}. Built on React, Vite, TypeScript, Node.js and Cloudflare.
+          </p>
           <div className="flex flex-wrap items-center gap-3">
             <MotionToggle />
             <ThemeToggle />

@@ -12,7 +12,7 @@ import { CodeBlock } from "@/components/content/code-block";
 import { SearchTrigger } from "@/components/search/search-dialog";
 import { SearchExamples } from "@/components/search/search-examples";
 import { tokenize, type TokenKind } from "@/components/vignettes/tokenize";
-import { buttonClasses } from "@/components/ui/button";
+import { CtaLink, IconTile, Kicker, Mesh } from "@/components/marketing/premium";
 import { parseTemplateSearch, searchTemplates, summarizeTemplate } from "@/templates";
 
 export const metadata = routeMetadata("/docs");
@@ -66,45 +66,40 @@ export default async function DocsIndexPage() {
     <ArticleShell sidebar={sidebar}>
       <Breadcrumbs items={[{ name: "Documentation", path: "/docs" }]} className="mb-8" />
 
-      {/* Search hero */}
-      <header className="relative max-w-3xl">
-        <p className="text-label mb-4 flex items-center gap-2.5 text-muted-foreground">
-          <span aria-hidden="true" className="size-1.5 rounded-full bg-primary" />
-          Documentation
-        </p>
+      {/* Search hero on a soft mesh */}
+      <header className="relative isolate max-w-3xl">
+        <Mesh variant="glow" className="-inset-x-32 -top-24 -bottom-24" />
+        <Kicker className="mb-4">Documentation</Kicker>
         <h1 className="mk-h1 max-w-[20ch]">
-          Build, run and ship <span className="text-dim">with Codexa.</span>
+          Build, run and ship <span className="mk-gradient-text">with Codexa.</span>
         </h1>
-        <p className="text-lead mt-4">How Codexa works, from your first prompt to a deployed application. Everything here describes the product as it ships today; roadmap items are marked as such.</p>
-        <div className="mt-7 max-w-2xl">
+        <p className="mk-lead mt-5">How Codexa works, from your first prompt to a deployed application. Everything here describes the product as it ships today; roadmap items are marked as such.</p>
+        <div className="mt-8 max-w-2xl">
           <SearchTrigger variant="hero" examples={HERO_EXAMPLES} />
           <SearchExamples examples={CHIP_EXAMPLES} className="mt-4" />
         </div>
       </header>
 
       {/* The three steps (the "Start here" category below lists every getting-started page) */}
-      <section aria-labelledby="start-heading" className="mt-14">
+      <section aria-labelledby="start-heading" className="mt-16">
         <div className="flex items-end justify-between gap-4">
-          <h2 id="start-heading" className="text-[20px] font-semibold tracking-[-0.015em]">
+          <h2 id="start-heading" className="mk-h3">
             From prompt to deploy
           </h2>
           <span className="text-meta text-foreground-dim">Illustrations of each step</span>
         </div>
-        <ol className="mt-5 grid gap-4 md:grid-cols-3">
+        <ol className="mt-6 grid gap-5 md:grid-cols-3">
           {START.map(({ n, verb, title, body, href, link, Art }) => (
             <li key={n} className="relative">
-              <Link
-                href={href}
-                className="group shot-pan flex h-full flex-col rounded-[12px] border border-border bg-card p-2.5 transition-[border-color,box-shadow] duration-(--dur-3) hover:border-border-strong hover:shadow-md focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
-              >
+              <Link href={href} className="mk-card mk-card--hover group shot-pan flex h-full flex-col p-2.5 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring">
                 <Art />
                 <span className="flex flex-1 flex-col px-2.5 pb-2 pt-4">
-                  <span className="text-label text-muted-foreground">
+                  <span className="text-[12px] font-semibold uppercase tracking-[0.08em] text-primary">
                     {n} — {verb}
                   </span>
-                  <span className="mt-2 text-[17px] font-semibold tracking-[-0.01em]">{title}</span>
+                  <span className="mt-2 text-[17px] font-semibold tracking-[-0.015em]">{title}</span>
                   <span className="mt-1.5 text-sm leading-relaxed text-muted-foreground">{body}</span>
-                  <span className="mt-4 inline-flex items-center gap-1 text-sm font-medium">
+                  <span className="mt-4 inline-flex items-center gap-1 text-sm font-semibold text-primary">
                     {link}
                     <ArrowRight className="size-3.5 transition-transform duration-(--dur-3) group-hover:translate-x-0.5" aria-hidden="true" />
                   </span>
@@ -116,25 +111,22 @@ export default async function DocsIndexPage() {
       </section>
 
       {/* Call the API */}
-      <section aria-labelledby="api-heading" className="mt-14 grid gap-8 rounded-[12px] border border-border bg-surface/60 p-6 sm:p-8 lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)] lg:items-center">
+      <section aria-labelledby="api-heading" className="mk-card mt-16 grid gap-8 p-6 sm:p-8 lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)] lg:items-center">
         <div>
-          <p className="text-label flex items-center gap-2 text-muted-foreground">
-            <Code2 className="size-3.5" aria-hidden="true" />
-            HTTP API
-          </p>
-          <h2 id="api-heading" className="mt-3 text-[20px] font-semibold tracking-[-0.015em]">
+          <IconTile icon={Code2} />
+          <h2 id="api-heading" className="mk-h3 mt-5">
             Call the API
           </h2>
           <p className="mt-3 max-w-md text-[15px] leading-relaxed text-muted-foreground">
             Everything in the workspace is backed by a JSON API. Listing starter templates is public; project, file and deployment calls use your session.
           </p>
-          <div className="mt-6 flex flex-wrap gap-2">
-            <Link href="/api" className={buttonClasses("primary", "md")}>
+          <div className="mt-6 flex flex-wrap gap-3">
+            <CtaLink href="/api" arrow>
               API overview
-            </Link>
-            <Link href="/api/reference" className={buttonClasses("outline", "md")}>
+            </CtaLink>
+            <CtaLink href="/api/reference" variant="secondary">
               Reference
-            </Link>
+            </CtaLink>
           </div>
         </div>
         <div className="min-w-0 space-y-3">
@@ -151,16 +143,14 @@ export default async function DocsIndexPage() {
       </section>
 
       {/* Categories */}
-      <div className="mt-14 space-y-12">
+      <div className="mt-16 space-y-14">
         {groups.map((g) => {
           const Icon = categoryIcon(g.category);
           return (
             <section key={g.category} aria-labelledby={`group-${g.category}`} id={`group-${g.category}`} className="scroll-mt-20">
-              <div className="flex items-center gap-3 border-b border-border pb-3">
-                <span className="grid size-8 place-items-center rounded-[8px] border border-border bg-surface text-foreground">
-                  <Icon className="size-4" aria-hidden="true" />
-                </span>
-                <h2 id={`group-${g.category}`} className="text-[19px] font-semibold tracking-[-0.015em]">
+              <div className="flex items-center gap-3 border-b border-border pb-4">
+                <IconTile icon={Icon} size="sm" />
+                <h2 id={`group-${g.category}`} className="mk-h3">
                   {g.category}
                 </h2>
                 <span className="text-meta text-foreground-dim">{g.items.length} pages</span>
@@ -187,14 +177,14 @@ export default async function DocsIndexPage() {
       </div>
 
       {/* Help strip */}
-      <section aria-label="More help" className="mt-14 grid gap-3 sm:grid-cols-3">
+      <section aria-label="More help" className="mt-16 grid gap-4 sm:grid-cols-3">
         {[
           { href: "/help", title: "Help center", body: "Answers about accounts, previews and billing.", Icon: LifeBuoy },
           { href: "/docs/troubleshooting", title: "Troubleshooting", body: "Error codes and what to do about them.", Icon: Code2 },
           { href: "/support", title: "Contact support", body: "Send your project id and the error you saw.", Icon: MessagesSquare },
         ].map(({ href, title, body, Icon }) => (
-          <Link key={href} href={href} className="group flex items-start gap-3 rounded-[12px] border border-border bg-card p-4 transition-colors duration-(--dur-2) hover:border-border-strong hover:bg-surface">
-            <Icon className="mt-0.5 size-4 shrink-0 text-muted-foreground group-hover:text-foreground" aria-hidden="true" />
+          <Link key={href} href={href} className="mk-card mk-card--hover group flex items-start gap-3 p-4">
+            <IconTile icon={Icon} size="sm" />
             <span>
               <span className="block text-sm font-medium">{title}</span>
               <span className="mt-0.5 block text-sm text-muted-foreground">{body}</span>

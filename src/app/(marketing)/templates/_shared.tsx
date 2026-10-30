@@ -2,7 +2,7 @@ import { Camera, Info } from "lucide-react";
 import { Breadcrumbs } from "@/components/marketing/breadcrumbs";
 import { CTABand } from "@/components/marketing/cta-band";
 import { Kicker } from "@/components/marketing/page-header";
-import { BrowserFrame } from "@/components/frames/browser-frame";
+import { BrowserWindow, Mesh } from "@/components/marketing/premium";
 import { Highlight } from "@/components/marketing/backdrop";
 import { TemplateGallery, TEMPLATE_SHOTS, UseTemplateLink } from "@/components/templates";
 import { TemplatePreview } from "@/components/templates/template-preview";
@@ -58,24 +58,25 @@ export async function PublicGalleryPage({
 
   return (
     <div data-tone="product">
-      <header className="relative overflow-x-clip border-b border-border bg-surface/60">
-        <div className="container-x relative pb-10 pt-6 sm:pt-8 lg:pb-14">
+      <header className="relative isolate overflow-x-clip border-b border-border">
+        <Mesh variant="soft" />
+        <div className="container-x relative pb-16 pt-8 sm:pt-10 lg:pb-24">
           <Breadcrumbs items={crumbs} />
-          <div className={cn("mt-8 grid items-center gap-10 lg:mt-10", visual && "lg:grid-cols-12 lg:gap-12")}>
+          <div className={cn("mk-rise mt-10 grid items-center gap-12 lg:mt-14", visual && "lg:grid-cols-12 lg:gap-14")}>
             <div className={visual ? "lg:col-span-5" : "max-w-3xl"}>
               <Kicker className="mb-5">Templates</Kicker>
               <h1 className="mk-h1 max-w-[18ch]">
                 <Highlight text={title} highlight={dim} />
               </h1>
-              <p className="text-lead mt-5">{intro}</p>
-              <div className="mt-7 flex flex-col gap-4">
-                <dl className="flex flex-wrap gap-x-7 gap-y-3">
+              <p className="mk-lead mt-6">{intro}</p>
+              <div className="mt-8 flex flex-col gap-5">
+                <dl className="flex flex-wrap gap-x-8 gap-y-3">
                   {facts.map((f) => (
                     <div key={f.label} className="flex items-baseline gap-2">
                       <dt className="sr-only">{f.label}</dt>
                       <dd className="flex items-baseline gap-2">
-                        <span className="font-display text-[24px] font-semibold tabular-nums tracking-[-0.03em]">{f.value}</span>
-                        <span className="text-meta text-muted-foreground">{f.label}</span>
+                        <span className="mk-gradient-text font-display text-[32px] font-extrabold tabular-nums tracking-[-0.04em]">{f.value}</span>
+                        <span className="text-[13px] font-medium text-muted-foreground">{f.label}</span>
                       </dd>
                     </div>
                   ))}
@@ -88,18 +89,18 @@ export async function PublicGalleryPage({
             </div>
             {visual ? (
               <figure className="hidden min-w-0 lg:col-span-7 lg:block">
-                <Link href={templatePreviewHref(starters[0].id)} aria-label={`Preview the ${starters[0].name} starter`} className="group/shot block rounded-[12px] outline-offset-4">
-                  <BrowserFrame url={`${starters[0].name} starter`} chrome="minimal" className="rounded-[12px] shadow-lg transition-[border-color] duration-(--dur-3) group-hover/shot:border-foreground/30">
+                <Link href={templatePreviewHref(starters[0].id)} aria-label={`Preview the ${starters[0].name} starter`} className="mk-hero-shot group/shot block rounded-[16px] outline-offset-8">
+                  <BrowserWindow url={`Preview · ${starters[0].name} starter`}>
                     <TemplatePreview id={starters[0].id} category={starters[0].category} priority sizes="(min-width: 1024px) 680px, 1px" className="rounded-none border-0 shadow-none" />
-                  </BrowserFrame>
+                  </BrowserWindow>
                 </Link>
                 {starters.length > 1 ? (
-                  <ul className="mt-3 grid grid-cols-2 gap-3">
+                  <ul className="mt-5 grid grid-cols-2 gap-4">
                     {starters.slice(1).map((t) => (
                       <li key={t.id}>
-                        <Link href={templatePreviewHref(t.id)} aria-label={`Preview the ${t.name} starter`} className="group/small block rounded-[8px] outline-offset-4">
-                          <TemplatePreview id={t.id} category={t.category} sizes="(min-width: 1024px) 330px, 1px" className="rounded-[8px] transition-[border-color] duration-(--dur-3) group-hover/small:border-foreground/30" />
-                          <span className="mt-1.5 block truncate text-[12px] text-muted-foreground">{t.name}</span>
+                        <Link href={templatePreviewHref(t.id)} aria-label={`Preview the ${t.name} starter`} className="mk-card mk-lift group/small block rounded-[12px] p-1.5 outline-offset-4">
+                          <TemplatePreview id={t.id} category={t.category} sizes="(min-width: 1024px) 330px, 1px" className="rounded-[8px] border-border/70 shadow-none" />
+                          <span className="mt-1.5 block truncate px-1.5 pb-1 text-[12.5px] font-medium text-muted-foreground">{t.name}</span>
                         </Link>
                       </li>
                     ))}
@@ -111,7 +112,7 @@ export async function PublicGalleryPage({
           </div>
         </div>
       </header>
-      <div className="container-x pb-14 pt-8 sm:pt-10">
+      <div className="container-x pb-20 pt-12 sm:pt-14">
         <TemplateGallery
           search={search}
           categoryMode="path"

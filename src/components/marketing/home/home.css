@@ -1,21 +1,27 @@
 /* ==========================================================================
    Marketing home only (imported by src/app/(marketing)/page.tsx).
    Plain CSS on the design tokens from globals.css (no Tailwind at-rules, no hex).
-   The home is a flat, static page: no stage, no 3D wall, no floating cards. Only
-   the hero headline size lives here; everything else is utilities on tokens.
+   The shared premium system (mesh, tiles, cards, buttons) lives in marketing.css;
+   only the hero headline size and the hero-specific layout live here.
    ========================================================================== */
 
-/* Hero H1: the display face at a measured size (never the oversized display-1). */
+/* Hero H1: 64–72px at desktop, weight 800, -0.04em, line-height 1.02. */
 .mk-hero-title {
   font-family: var(--font-display);
-  font-size: clamp(2.125rem, 1.3rem + 2.6vw, 3.5rem);
-  line-height: 1.06;
-  letter-spacing: -0.028em;
-  font-weight: 650;
+  font-size: clamp(2.625rem, 1.3rem + 4.4vw, 4.25rem);
+  line-height: 1.02;
+  letter-spacing: -0.04em;
+  font-weight: 800;
   font-stretch: 100%;
   text-wrap: balance;
   color: var(--foreground);
 }
 
-/* The hero's "running app" word cycle and the stage are gone; keep the page's own horizon off. */
+/* The hero screenshot sits on the page edge: a gentle perspective lift that settles on hover. */
+.mk-hero-shot { transition: transform var(--dur-5) var(--ease-out), box-shadow var(--dur-5) var(--ease-out); }
+.mk-hero-shot:is(:hover, :focus-within) { transform: translateY(-4px); }
+@media (prefers-reduced-motion: reduce) { .mk-hero-shot:is(:hover, :focus-within) { transform: none; } }
+[data-motion="reduced"] .mk-hero-shot:is(:hover, :focus-within) { transform: none; }
+
+/* The hero's old stage and horizon are gone. */
 .home-horizon { display: none; }

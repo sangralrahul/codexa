@@ -76,14 +76,14 @@ export function Eyebrow({ children, className, href }: { children: React.ReactNo
   return <p className={cn(base, className)}>{inner}</p>;
 }
 
-/** Sets the part of a headline that matches `highlight` in the two-tone .text-dim (the qualifier). */
+/** Sets the part of a headline that matches `highlight` in the brand gradient (one phrase per page). */
 export function Highlight({ text, highlight }: { text: string; highlight?: string }) {
   if (!highlight || !text.includes(highlight)) return <>{text}</>;
   const i = text.indexOf(highlight);
   return (
     <>
       {text.slice(0, i)}
-      <span className="text-dim">{highlight}</span>
+      <span className="mk-gradient-text">{highlight}</span>
       {text.slice(i + highlight.length)}
     </>
   );

@@ -2,6 +2,7 @@ import * as React from "react";
 import type { HomeData } from "./data";
 import { HomeStoreProvider } from "./home-store";
 import { HomeHero } from "./hero";
+import { TrustRow } from "./trust-row";
 import { HowItWorks } from "./how-it-works";
 import { HomeFeatureGrid } from "./feature-grid";
 import { TemplateStrip } from "./template-strip";
@@ -34,6 +35,7 @@ export function HomeView({
       <HomeStoreProvider starters={data.starters} scenarios={data.scenarios} tools={data.tools} aiReady={aiReady} maxRepairAttempts={data.maxRepairAttempts}>
         {/* H0 */}
         <HomeHero signedIn={signedIn} announcement={announcement} />
+        <TrustRow />
         {/* H1 */}
         <HowItWorks maxRepairAttempts={data.maxRepairAttempts} />
         {/* H2 */}

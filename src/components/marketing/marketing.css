@@ -15,27 +15,361 @@
 @media (width < 64rem) { .site-shell .container-x { max-width: calc(1200px + 3rem); } }
 @media (width < 40rem) { .site-shell .container-x { max-width: calc(1200px + 2rem); } }
 
-/* Page title (inner pages) and section heading: the sans display face, measured sizes, dark ink. */
+/* --------------------------------------------------------------------------
+   Premium Light type (DESIGN-PREMIUM.md): page H1 56–64px / 800 / -0.04em,
+   section H2 40–44px / 700 / -0.03em, lead 20px muted. One gradient phrase per page.
+   -------------------------------------------------------------------------- */
 .mk-h1 {
   font-family: var(--font-display);
-  font-size: clamp(1.875rem, 1.25rem + 2vw, 3rem);
-  line-height: 1.08;
-  letter-spacing: -0.025em;
-  font-weight: 650;
+  font-size: clamp(2.5rem, 1.5rem + 3.4vw, 4rem);
+  line-height: 1.04;
+  letter-spacing: -0.04em;
+  font-weight: 800;
   font-stretch: 100%;
   text-wrap: balance;
   color: var(--foreground);
 }
 .mk-h2 {
   font-family: var(--font-display);
-  font-size: clamp(1.5rem, 1.1rem + 1.2vw, 2.125rem);
-  line-height: 1.15;
-  letter-spacing: -0.022em;
-  font-weight: 650;
+  font-size: clamp(1.875rem, 1.3rem + 1.9vw, 2.75rem);
+  line-height: 1.08;
+  letter-spacing: -0.03em;
+  font-weight: 700;
   font-stretch: 100%;
   text-wrap: balance;
   color: var(--foreground);
 }
+.mk-h3 {
+  font-family: var(--font-display);
+  font-size: clamp(1.25rem, 1.1rem + 0.5vw, 1.5rem);
+  line-height: 1.2;
+  letter-spacing: -0.02em;
+  font-weight: 700;
+  color: var(--foreground);
+}
+.mk-lead {
+  font-size: clamp(1.0625rem, 1rem + 0.4vw, 1.25rem);
+  line-height: 1.55;
+  letter-spacing: -0.005em;
+  color: var(--muted-foreground);
+  text-wrap: pretty;
+}
+/* The one gradient phrase on a page (background-clip text). */
+.mk-gradient-text {
+  background-image: var(--brand-gradient);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  -webkit-text-fill-color: transparent;
+  /* Descenders and tight tracking must not be clipped by the inline box. */
+  padding-inline: 0.02em;
+  margin-inline: -0.02em;
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone;
+}
+
+/* --------------------------------------------------------------------------
+   Gradient mesh: three large blurred blobs (indigo, violet, pink) drifting slowly,
+   masked to fade out downward. Light, not neon. Markup: a decorative
+   .mk-mesh with three .mk-mesh__blob children, inside a `relative isolate` parent.
+   -------------------------------------------------------------------------- */
+.mk-mesh {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  overflow: hidden;
+  pointer-events: none;
+  -webkit-mask-image: linear-gradient(to bottom, #000 0%, rgba(0, 0, 0, 0.85) 30%, transparent 88%);
+  mask-image: linear-gradient(to bottom, #000 0%, rgba(0, 0, 0, 0.85) 30%, transparent 88%);
+}
+.mk-mesh__blob {
+  position: absolute;
+  border-radius: 9999px;
+  filter: blur(100px);
+  opacity: 0.3;
+  will-change: transform;
+  animation: mk-drift 22s var(--ease-in-out) infinite alternate;
+}
+.mk-mesh__blob--1 {
+  left: -6%;
+  top: -34%;
+  width: min(760px, 58vw);
+  height: min(760px, 58vw);
+  background: color-mix(in oklab, var(--brand-from) 58%, transparent);
+}
+.mk-mesh__blob--2 {
+  right: -10%;
+  top: -28%;
+  width: min(720px, 54vw);
+  height: min(720px, 54vw);
+  background: color-mix(in oklab, var(--brand-via) 52%, transparent);
+  animation-delay: -7s;
+  animation-duration: 26s;
+}
+.mk-mesh__blob--3 {
+  left: 32%;
+  top: 8%;
+  width: min(640px, 48vw);
+  height: min(640px, 48vw);
+  background: color-mix(in oklab, var(--brand-to) 40%, transparent);
+  animation-delay: -13s;
+  animation-duration: 30s;
+}
+.mk-mesh--soft .mk-mesh__blob { opacity: 0.22; }
+/* Band variant (final CTA, sign-in): the mesh fades at both edges instead of only downward. */
+.mk-mesh--band {
+  -webkit-mask-image: linear-gradient(to bottom, transparent 0%, #000 25%, #000 75%, transparent 100%);
+  mask-image: linear-gradient(to bottom, transparent 0%, #000 25%, #000 75%, transparent 100%);
+}
+/* Glow variant (inside a content column, e.g. the docs hub): fades out radially on every side. */
+.mk-mesh--glow {
+  -webkit-mask-image: radial-gradient(50% 65% at 35% 35%, #000 0%, rgba(0, 0, 0, 0.6) 40%, transparent 95%);
+  mask-image: radial-gradient(50% 65% at 35% 35%, #000 0%, rgba(0, 0, 0, 0.6) 40%, transparent 95%);
+}
+.mk-mesh--band .mk-mesh__blob--1 { top: -10%; }
+.mk-mesh--band .mk-mesh__blob--2 { top: 0; }
+.mk-mesh--band .mk-mesh__blob--3 { top: 30%; }
+@keyframes mk-drift {
+  from { transform: translate3d(0, 0, 0) scale(1); }
+  50% { transform: translate3d(5%, 7%, 0) scale(1.08); }
+  to { transform: translate3d(-4%, 3%, 0) scale(0.96); }
+}
+@media (prefers-reduced-motion: reduce) { .mk-mesh__blob { animation: none !important; } }
+[data-motion="reduced"] .mk-mesh__blob { animation: none !important; }
+
+/* --------------------------------------------------------------------------
+   Surfaces: cards, icon tiles, glows, the browser frame, the Pro gradient border.
+   -------------------------------------------------------------------------- */
+.mk-card {
+  position: relative;
+  border-radius: 16px;
+  border: 1px solid var(--hairline);
+  background: var(--card);
+  box-shadow: var(--shadow-md);
+  transition: transform var(--dur-3) var(--ease-out), box-shadow var(--dur-3) var(--ease-out), border-color var(--dur-3);
+}
+.mk-card--sm { border-radius: 12px; }
+.mk-card--hover:is(:hover, :focus-within) {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-lg);
+  border-color: color-mix(in oklab, var(--foreground) 10%, transparent);
+}
+/* Icon tile: 40px rounded-12 square, gradient at 12 % tint, the icon in indigo. */
+.mk-tile {
+  display: inline-grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  flex-shrink: 0;
+  border-radius: 12px;
+  background: var(--brand-gradient-soft);
+  color: var(--primary);
+  box-shadow: inset 0 0 0 1px color-mix(in oklab, var(--primary) 12%, transparent);
+}
+.mk-tile--lg { width: 48px; height: 48px; border-radius: 14px; }
+.mk-tile--sm { width: 32px; height: 32px; border-radius: 10px; }
+.mk-tile--solid {
+  background: var(--brand-gradient);
+  color: var(--primary-foreground);
+  box-shadow: inset 0 1px 0 color-mix(in oklab, white 25%, transparent), 0 8px 20px -8px var(--brand-glow);
+}
+/* A soft gradient glow behind product screenshots (blurred blob, 40 % opacity). */
+.mk-glow { position: relative; }
+.mk-glow::before {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  inset: 10% -3% -8% -3%;
+  border-radius: 48px;
+  background: var(--brand-gradient);
+  filter: blur(64px);
+  opacity: 0.4;
+  pointer-events: none;
+}
+.mk-glow--sm::before { inset: 20% 4% -4% 4%; filter: blur(40px); opacity: 0.32; }
+/* Browser frame chrome: white, three dots, URL pill, hairline border. */
+.mk-browser {
+  overflow: hidden;
+  border-radius: 16px;
+  border: 1px solid color-mix(in oklab, var(--foreground) 9%, transparent);
+  background: var(--card);
+  box-shadow: var(--shadow-xl), 0 0 0 1px color-mix(in oklab, var(--foreground) 3%, transparent);
+}
+.mk-browser__bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  height: 44px;
+  padding-inline: 14px;
+  border-bottom: 1px solid var(--border);
+  background: var(--card);
+}
+.mk-browser__dots { display: flex; gap: 6px; }
+.mk-browser__dots > span { width: 10px; height: 10px; border-radius: 9999px; background: var(--surface-3); }
+.mk-browser__url {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  height: 26px;
+  flex: 1 1 auto;
+  min-width: 0;
+  max-width: 420px;
+  margin-inline: auto;
+  padding-inline: 12px;
+  border-radius: 9999px;
+  background: var(--surface);
+  box-shadow: inset 0 0 0 1px var(--border);
+  font-size: 12px;
+  color: var(--muted-foreground);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+/* Pro plan: a 2px gradient border with a violet glow. */
+.mk-pro {
+  position: relative;
+  border-radius: 18px;
+  padding: 2px;
+  background: var(--brand-gradient);
+  box-shadow: 0 24px 56px -24px var(--brand-glow), var(--shadow-md);
+}
+.mk-pro > * { border-radius: 16px; background: var(--card); }
+.mk-pro__badge {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  translate: -50% -50%;
+  z-index: 2;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 26px;
+  padding-inline: 12px;
+  border-radius: 9999px;
+  background: var(--brand-gradient);
+  color: var(--primary-foreground);
+  font-size: 11.5px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  white-space: nowrap;
+  box-shadow: 0 6px 16px -6px var(--brand-glow);
+}
+/* Gradient hairline (section dividers, progress). */
+.mk-rule { height: 1px; background: linear-gradient(90deg, transparent, color-mix(in oklab, var(--brand-via) 45%, transparent), transparent); }
+
+/* --------------------------------------------------------------------------
+   Controls: eyebrow pill, 44px marketing buttons (radius 10), the prompt card.
+   -------------------------------------------------------------------------- */
+.mk-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  max-width: 100%;
+  height: 32px;
+  padding: 0 12px 0 5px;
+  border-radius: 9999px;
+  border: 1px solid var(--border);
+  background: color-mix(in oklab, var(--card) 88%, transparent);
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+  box-shadow: var(--shadow-sm);
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--foreground-dim);
+  transition: border-color var(--dur-2), color var(--dur-2), box-shadow var(--dur-2);
+}
+a.mk-pill:hover { border-color: var(--border-strong); color: var(--foreground); box-shadow: var(--shadow-md); }
+.mk-pill__tag {
+  display: inline-flex;
+  align-items: center;
+  height: 22px;
+  padding-inline: 8px;
+  border-radius: 9999px;
+  background: var(--brand-gradient);
+  color: var(--primary-foreground);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+}
+.mk-btn {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  height: 44px;
+  padding-inline: 20px;
+  border-radius: 10px;
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: -0.005em;
+  white-space: nowrap;
+  text-decoration: none;
+  transition: background-color var(--dur-2), border-color var(--dur-2), box-shadow var(--dur-3) var(--ease-out), translate var(--dur-3) var(--ease-out), color var(--dur-2);
+}
+.mk-btn svg { flex-shrink: 0; }
+.mk-btn--sm { height: 36px; padding-inline: 14px; font-size: 14px; border-radius: 9px; }
+.mk-btn--lg { height: 52px; padding-inline: 26px; font-size: 16px; border-radius: 12px; }
+.mk-btn--primary {
+  background: var(--primary);
+  color: var(--primary-foreground);
+  box-shadow: inset 0 1px 0 color-mix(in oklab, white 20%, transparent), 0 1px 2px color-mix(in oklab, var(--foreground) 10%, transparent), 0 10px 24px -10px color-mix(in oklab, var(--primary) 70%, transparent);
+}
+.mk-btn--primary:hover {
+  background: var(--primary-hover);
+  background-image: var(--brand-gradient);
+  translate: 0 -1px;
+  box-shadow: inset 0 1px 0 color-mix(in oklab, white 22%, transparent), 0 2px 4px color-mix(in oklab, var(--foreground) 10%, transparent), 0 16px 32px -12px var(--brand-glow);
+}
+.mk-btn--secondary {
+  background: var(--card);
+  color: var(--foreground);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow-sm);
+}
+.mk-btn--secondary:hover { border-color: var(--border-strong); translate: 0 -1px; box-shadow: var(--shadow-md); }
+.mk-btn--ghost { color: var(--foreground); }
+.mk-btn--ghost:hover { background: var(--surface); }
+.mk-btn:active { translate: 0 0; }
+/* Premium composer card: gradient focus glow. */
+.mk-composer {
+  border-radius: 18px;
+  border: 1px solid color-mix(in oklab, var(--foreground) 10%, transparent);
+  background: var(--card);
+  box-shadow: var(--shadow-lg);
+  transition: border-color var(--dur-3), box-shadow var(--dur-3) var(--ease-out);
+}
+.mk-composer:focus-within {
+  border-color: color-mix(in oklab, var(--primary) 55%, transparent);
+  box-shadow: var(--brand-ring), 0 24px 56px -20px var(--brand-glow), var(--shadow-lg);
+}
+.mk-composer--compact { border-radius: 14px; }
+
+/* --------------------------------------------------------------------------
+   Motion: content rises in on load (translateY 12px + fade, 60ms stagger).
+   -------------------------------------------------------------------------- */
+.mk-rise > * { animation: mk-rise 640ms var(--ease-out) both; animation-delay: calc(var(--i, 0) * 60ms + 40ms); }
+.mk-rise > :nth-child(2) { --i: 1; }
+.mk-rise > :nth-child(3) { --i: 2; }
+.mk-rise > :nth-child(4) { --i: 3; }
+.mk-rise > :nth-child(5) { --i: 4; }
+.mk-rise > :nth-child(6) { --i: 5; }
+.mk-rise > :nth-child(7) { --i: 6; }
+.mk-rise > :nth-child(n + 8) { --i: 7; }
+@keyframes mk-rise { from { opacity: 0; transform: translateY(12px); } }
+@media (prefers-reduced-motion: reduce) { .mk-rise > * { animation: none !important; } }
+[data-motion="reduced"] .mk-rise > * { animation: none !important; }
+/* Screenshot tiles: lift 2px and deepen the shadow. */
+.mk-lift { transition: transform var(--dur-3) var(--ease-out), box-shadow var(--dur-3) var(--ease-out), border-color var(--dur-3); }
+.mk-lift:is(:hover, :focus-visible, :focus-within) { transform: translateY(-3px); box-shadow: var(--shadow-lg); }
+@media (prefers-reduced-motion: reduce) { .mk-lift:is(:hover, :focus-within), .mk-card--hover:is(:hover, :focus-within) { transform: none; } }
+[data-motion="reduced"] :is(.mk-lift, .mk-card--hover):is(:hover, :focus-within) { transform: none; }
+
+/* Monochrome "Built on" trust row. */
+.mk-trust { color: var(--muted-foreground); }
+.mk-trust__item { display: inline-flex; align-items: center; gap: 9px; font-size: 15px; font-weight: 600; letter-spacing: -0.01em; transition: color var(--dur-2); }
+.mk-trust__item:hover { color: var(--foreground); }
+.mk-trust__item svg { width: 22px; height: 22px; }
 /* No italic serif accent words anywhere on the site: a leftover selection mark reads as plain ink. */
 .site-shell .mark-select {
   font-family: inherit;
@@ -53,23 +387,30 @@
 .site-shell .mark-select::after { display: none; }
 
 /* --------------------------------------------------------------------------
-   Header: a plain 56px bar that stays at the top; once the page scrolls it
-   gains a hairline and a blurred page-colour background.
+   Header: a white 64px bar that stays at the top; once the page scrolls it
+   turns to blurred glass with a hairline and a soft shadow.
    -------------------------------------------------------------------------- */
 .mk-header {
   position: sticky;
   top: 0;
   z-index: 50;
-  height: 56px;
-  border-bottom: 1px solid var(--border);
-  background: color-mix(in oklab, var(--background) 92%, transparent);
-  -webkit-backdrop-filter: blur(12px);
-  backdrop-filter: blur(12px);
-  --mk-top: 64px;
+  height: 64px;
+  border-bottom: 1px solid transparent;
+  background: var(--background);
+  transition: background-color var(--dur-3), border-color var(--dur-3), box-shadow var(--dur-3);
+  --mk-top: 72px;
+}
+.mk-header[data-scrolled],
+.mk-header[data-mega] {
+  border-bottom-color: var(--border);
+  background: color-mix(in oklab, var(--background) 78%, transparent);
+  -webkit-backdrop-filter: blur(16px) saturate(1.4);
+  backdrop-filter: blur(16px) saturate(1.4);
+  box-shadow: 0 1px 0 var(--hairline), 0 8px 24px -16px color-mix(in oklab, var(--foreground) 18%, transparent);
 }
 .mk-bar {
   position: relative;
-  height: 56px;
+  height: 64px;
 }
 
 /* --------------------------------------------------------------------------

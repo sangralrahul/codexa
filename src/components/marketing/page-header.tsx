@@ -1,47 +1,39 @@
 import * as React from "react";
-import Link from "next/link";
-import { ArrowRight } from "lucide-react";
-import { buttonClasses } from "@/components/ui/button";
 import type { Crumb, Tone } from "@/content/marketing/types";
 import { cn } from "@/lib/utils";
 import { Highlight } from "./backdrop";
 import { Breadcrumbs } from "./breadcrumbs";
+import { CtaLink, Mesh, Kicker as PremiumKicker } from "./premium";
 
 export type HeaderAction = { label: string; href: string };
 export type HeaderMeta = { label: string; value: React.ReactNode };
 
-/** Mono kicker with the accent dot ("AI AGENT"). */
+/** Section kicker ("AI AGENT"): a gradient square and a short indigo label. */
 export function Kicker({ children, className }: { children: React.ReactNode; className?: string }) {
-  return (
-    <p className={`text-label ${cn("flex items-center gap-2.5 text-muted-foreground", className)}`}>
-      <span aria-hidden="true" className="size-1.5 rounded-full bg-primary" />
-      {children}
-    </p>
-  );
+  return <PremiumKicker className={className}>{children}</PremiumKicker>;
 }
 
 function Actions({ actions, center }: { actions?: HeaderAction[]; center?: boolean }) {
   if (!actions?.length) return null;
   const [primary, ...rest] = actions;
   return (
-    <div className={cn("mt-7 flex flex-col gap-3 xs:flex-row xs:flex-wrap", center && "xs:justify-center")}>
-      <Link href={primary.href} className={buttonClasses("primary", "md", "group")}>
+    <div className={cn("mt-8 flex flex-col gap-3 xs:flex-row xs:flex-wrap", center && "xs:justify-center")}>
+      <CtaLink href={primary.href} arrow>
         {primary.label}
-        <ArrowRight className="size-4 transition-transform duration-300 ease-snap group-hover:translate-x-0.5" aria-hidden="true" />
-      </Link>
+      </CtaLink>
       {rest.map((a) => (
-        <Link key={a.href} href={a.href} className={buttonClasses("outline", "md")}>
+        <CtaLink key={a.href} href={a.href} variant="secondary">
           {a.label}
-        </Link>
+        </CtaLink>
       ))}
     </div>
   );
 }
 
 /**
- * Inner-page header. One component, four variants; breadcrumbs always come first, then a mono
- * kicker, the h1 (plain sans; an optional two-tone `highlight`), the lede paragraph, and a hairline
- * that ends the header. `mark` is accepted for existing callers and rendered as plain text.
+ * Inner-page header on the gradient mesh. One component, four variants; breadcrumbs always come
+ * first, then the kicker, the h1 (bold display; optional gradient `highlight` phrase), the lede, and
+ * a hairline that ends the header. `mark` is accepted for existing callers and rendered as plain text.
  * - product: split 5/7 with the page's visual on the right.
  * - index: title and a search or filter bar (children) as the hero object.
  * - editorial: title with a right meta column (updated, reading time, review status).
@@ -84,14 +76,15 @@ export function PageHeader({
       <Highlight text={headline} highlight={highlight} />
     </h1>
   );
-  const ledeEl = lede ? <p className={`text-lead ${cn("mt-5", center && "mx-auto")}`}>{lede}</p> : null;
+  const ledeEl = lede ? <p className={cn("mk-lead mt-6 max-w-[60ch]", center && "mx-auto")}>{lede}</p> : null;
 
   return (
-    <header data-tone={tone} className={cn("relative overflow-x-clip border-b border-border bg-surface/60", className)}>
-      <div className={cn("container-x relative pt-6 sm:pt-8", variant === "product" ? "pb-12 lg:pb-16" : "pb-10 lg:pb-14")}>
+    <header data-tone={tone} className={cn("relative isolate overflow-x-clip border-b border-border", className)}>
+      <Mesh variant="soft" />
+      <div className={cn("container-x relative pt-8 sm:pt-10", variant === "product" ? "pb-16 lg:pb-24" : "pb-14 lg:pb-20")}>
         <Breadcrumbs items={crumbs} className={cn(center && "flex justify-center")} />
         {variant === "product" ? (
-          <div className={cn("mt-8 grid grid-cols-1 items-center gap-10 lg:mt-10 lg:gap-12", visual ? "lg:grid-cols-12" : "")}>
+          <div className={cn("mk-rise mt-10 grid grid-cols-1 items-center gap-12 lg:mt-14 lg:gap-14", visual ? "lg:grid-cols-12" : "")}>
             <div className={cn(visual ? "lg:col-span-5" : "max-w-3xl")}>
               {kicker ? <Kicker className="mb-5">{kicker}</Kicker> : null}
               {heading}
@@ -102,7 +95,7 @@ export function PageHeader({
             {visual ? <div className="relative min-w-0 lg:col-span-7">{visual}</div> : null}
           </div>
         ) : variant === "editorial" ? (
-          <div className="mt-8 grid grid-cols-1 gap-8 lg:mt-10 lg:grid-cols-[minmax(0,1fr)_17rem] lg:items-end lg:gap-14">
+          <div className="mk-rise mt-10 grid grid-cols-1 gap-8 lg:mt-14 lg:grid-cols-[minmax(0,1fr)_17rem] lg:items-end lg:gap-14">
             <div className="max-w-3xl">
               {kicker ? <Kicker className="mb-5">{kicker}</Kicker> : null}
               {heading}
@@ -111,25 +104,25 @@ export function PageHeader({
               {children}
             </div>
             {meta?.length ? (
-              <dl className="grid grid-cols-2 gap-x-6 gap-y-4 border-t border-border pt-5 text-sm lg:grid-cols-1 lg:border-l lg:border-t-0 lg:pl-6 lg:pt-0">
+              <dl className="mk-card grid grid-cols-2 gap-x-6 gap-y-4 p-5 text-sm lg:grid-cols-1">
                 {meta.map((m) => (
                   <div key={m.label}>
-                    <dt className="text-label text-muted-foreground">{m.label}</dt>
-                    <dd className="mt-1.5 text-foreground/90">{m.value}</dd>
+                    <dt className="text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">{m.label}</dt>
+                    <dd className="mt-1.5 font-medium text-foreground/90">{m.value}</dd>
                   </div>
                 ))}
               </dl>
             ) : null}
           </div>
         ) : (
-          <div className={cn("mt-8 lg:mt-10", center ? "mx-auto max-w-3xl text-center" : "max-w-3xl")}>
+          <div className={cn("mk-rise mt-10 lg:mt-14", center ? "mx-auto max-w-3xl text-center" : "max-w-3xl")}>
             {kicker ? <Kicker className={cn("mb-5", center && "justify-center")}>{kicker}</Kicker> : null}
             {heading}
             {ledeEl}
             <Actions actions={actions} center={center} />
           </div>
         )}
-        {variant === "index" || variant === "pricing" ? (children ? <div className={cn(variant === "pricing" ? "mt-8" : "mt-8 max-w-3xl")}>{children}</div> : null) : null}
+        {variant === "index" || variant === "pricing" ? (children ? <div className={cn(variant === "pricing" ? "mt-12" : "mt-10 max-w-3xl")}>{children}</div> : null) : null}
       </div>
     </header>
   );
