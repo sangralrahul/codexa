@@ -1,11 +1,16 @@
 import { useEffect, useRef, useState } from "react";
 import { Check, Copy, ExternalLink, Globe, Rocket, TriangleAlert } from "lucide-react";
 import { ApiError, deployApi, type Deployment, type Provider } from "../../lib/api";
-import { relativeTime } from "../../lib/util";
+import { cn, relativeTime } from "../../lib/util";
 import { Badge, Button, Dialog, Spinner } from "../../ui";
 
 const ACTIVE = new Set(["queued", "building", "deploying"]);
 const STEP_LABEL: Record<string, string> = { queued: "Queued", building: "Building your app", deploying: "Putting it online" };
+const STEPS = [
+  { label: "Build", status: ["queued", "building"] },
+  { label: "Deploy", status: ["deploying"] },
+  { label: "Live", status: ["live"] },
+];
 
 /** Publish to Codexa hosting: start a deployment, follow it to live (or failed), then share the link. */
 export function PublishDialog({ projectId, open, onClose, canPublish }: { projectId: string; open: boolean; onClose: () => void; canPublish: boolean }) {
@@ -96,12 +101,25 @@ export function PublishDialog({ projectId, open, onClose, canPublish }: { projec
           ) : null}
 
           {busy && tracking ? (
-            <div className="flex items-center gap-3 rounded-xl border border-border p-4">
-              <Spinner />
-              <div>
-                <p className="text-[13.5px] font-medium">{STEP_LABEL[tracking.status] ?? "Publishing"}…</p>
-                <p className="text-[12.5px] text-muted">This usually takes under a minute.</p>
-              </div>
+            <div className="rounded-xl border border-border p-4">
+              <ol className="flex items-center gap-2">
+                {STEPS.map((s, i) => {
+                  const idx = STEPS.findIndex((x) => x.status.includes(tracking.status));
+                  const state = i < idx ? "done" : i === idx ? "active" : "next";
+                  return (
+                    <li key={s.label} className="flex min-w-0 flex-1 items-center gap-2">
+                      <span className={cn("flex size-6 shrink-0 items-center justify-center rounded-full text-[11px] font-semibold", state === "done" ? "bg-success text-white" : state === "active" ? "bg-accent text-white" : "bg-surface text-dim ring-1 ring-border")}>
+                        {state === "done" ? <Check className="size-3.5" /> : state === "active" ? <Spinner className="size-3.5 text-white" /> : i + 1}
+                      </span>
+                      <span className={cn("truncate text-[12.5px] font-medium", state === "next" ? "text-dim" : "text-fg")}>{s.label}</span>
+                      {i < STEPS.length - 1 ? <span className={cn("h-px min-w-4 flex-1", state === "done" ? "bg-success" : "bg-border")} /> : null}
+                    </li>
+                  );
+                })}
+              </ol>
+              <p className="mt-3 text-[12.5px] text-muted">
+                {STEP_LABEL[tracking.status] ?? "Publishing"}… this usually takes under a minute. You can keep working.
+              </p>
             </div>
           ) : null}
 

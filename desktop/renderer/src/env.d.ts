@@ -20,4 +20,4 @@ interface Window {
   };
 }
 
-type SessionUser = { id: string; email: string; name: string; avatarUrl?: string | null; emailVerifiedAt?: string | null; onboardedAt?: string | null };
+type SessionUser = { id: string; email: string; name: string; avatarUrl?: string | null; emailVerifiedAt?: string | null; onboardedAt?: string | null; createdAt?: string };

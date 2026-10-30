@@ -3,7 +3,7 @@ import { ExternalLink, LogOut, Monitor, Moon, RefreshCw, Sun } from "lucide-reac
 import { useApp } from "../app/state";
 import { accountApi, ApiError } from "../lib/api";
 import { cn } from "../lib/util";
-import { Avatar, Button, Field, Input, Spinner, toast } from "../ui";
+import { Avatar, Button, Field, Input, Kbd, Spinner, toast } from "../ui";
 import { applyTheme, getThemeMode, type ThemeMode } from "../app/theme";
 
 type Tab = "account" | "workspace" | "app";
@@ -76,7 +76,7 @@ function AccountTab() {
     <>
       <Section
         title="Profile"
-        description="How you appear to teammates."
+        description={user.createdAt ? `How you appear to teammates · member since ${new Date(user.createdAt).toLocaleDateString(undefined, { month: "long", year: "numeric" })}` : "How you appear to teammates."}
         footer={
           <Button variant="primary" size="sm" onClick={() => void save()} loading={busy} disabled={!name.trim() || name.trim() === user.name}>
             Save
@@ -206,6 +206,31 @@ function AppTab() {
             </button>
           ))}
         </div>
+      </Section>
+      <Section title="Keyboard shortcuts" description="Work faster without leaving the keyboard.">
+        <dl className="grid grid-cols-2 gap-x-8 gap-y-2.5 text-[13px]">
+          {(
+            [
+              ["Search projects and commands", ["Ctrl", "K"]],
+              ["New project", ["Ctrl", "N"]],
+              ["Home · Projects · Templates", ["Ctrl", "1–3"]],
+              ["Settings", ["Ctrl", ","]],
+              ["Preview view", ["Ctrl", "P"]],
+              ["Code view", ["Ctrl", "E"]],
+              ["Console", ["Ctrl", "J"]],
+              ["Save file", ["Ctrl", "S"]],
+            ] as const
+          ).map(([label, keys]) => (
+            <div key={label} className="flex items-center justify-between gap-3 border-b border-border/60 pb-2">
+              <dt className="text-muted">{label}</dt>
+              <dd className="flex gap-1">
+                {keys.map((k) => (
+                  <Kbd key={k}>{k}</Kbd>
+                ))}
+              </dd>
+            </div>
+          ))}
+        </dl>
       </Section>
       <Section
         title="About Codexa for Windows"

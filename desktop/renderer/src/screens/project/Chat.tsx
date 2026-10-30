@@ -1,8 +1,9 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { ArrowUp, Check, ChevronDown, FileCode2, FilePlus2, FileX2, ListChecks, MessageSquare, Hammer, Sparkles, Square, TriangleAlert, Wrench } from "lucide-react";
+import { ArrowUp, BookOpen, Check, ChevronDown, FileCode2, FilePlus2, FileX2, ListChecks, Mail, MessageSquare, Hammer, Moon, Smartphone, Sparkles, Square, TriangleAlert, Wrench } from "lucide-react";
 import { aiApi, streamGenerate, type AgentMode, type AiStatus, type Message, type MessagePart } from "../../lib/api";
 import { cn } from "../../lib/util";
-import { Button, Menu, Spinner, Textarea } from "../../ui";
+import { Avatar, Button, Logo, Menu, Spinner, Textarea } from "../../ui";
+import { useApp } from "../../app/state";
 import { Markdown } from "../../components/Markdown";
 
 const MODES: { id: AgentMode; label: string; hint: string; icon: typeof Hammer }[] = [
@@ -227,33 +228,57 @@ export function Chat({ projectId, initialPrompt, onFilesChanged }: { projectId: 
   );
 }
 
+const IDEAS = [
+  { icon: Moon, label: "Add a dark mode toggle", hint: "Theme switch that remembers the choice" },
+  { icon: Smartphone, label: "Make it work on phones", hint: "Responsive layout and touch targets" },
+  { icon: Mail, label: "Add a contact form", hint: "With validation and a success state" },
+  { icon: BookOpen, label: "Explain this project", hint: "How the files fit together" },
+];
+
 function Welcome({ configured, onPick }: { configured: boolean; onPick: (t: string) => void }) {
-  const ideas = ["Add a dark mode toggle", "Make the layout work on phones", "Add a contact form with validation", "Explain how this project is structured"];
   return (
-    <div className="fade-in flex h-full flex-col justify-center px-2">
-      <div className="flex size-10 items-center justify-center rounded-xl border border-border bg-surface text-accent">
-        <Sparkles className="size-5" />
+    <div className="fade-in flex h-full flex-col justify-center px-1">
+      <div className="flex size-11 items-center justify-center rounded-xl bg-primary text-primary-fg shadow-sm">
+        <Logo size={22} />
       </div>
-      <h2 className="mt-4 text-[17px] font-semibold tracking-[-0.01em]">What should we change?</h2>
-      <p className="mt-1.5 text-[13px] leading-relaxed text-muted">{configured ? "Describe a feature, ask about the code, or fix an error. Every change is saved as a checkpoint." : "AI isn't configured on this server yet."}</p>
+      <h2 className="mt-4 font-[family-name:var(--font-display)] text-[19px] font-semibold tracking-[-0.02em]">What should we change?</h2>
+      <p className="mt-1.5 text-[13px] leading-relaxed text-muted">{configured ? "Describe a feature, ask about the code, or fix an error. Every change is saved as a checkpoint you can restore." : "AI isn't configured on this server yet."}</p>
       {configured ? (
-        <div className="mt-5 grid gap-2">
-          {ideas.map((t) => (
-            <button key={t} type="button" onClick={() => onPick(t)} className="rounded-lg border border-border px-3 py-2.5 text-left text-[13px] text-muted transition-colors hover:border-border-strong hover:text-fg">
-              {t}
+        <div className="mt-5 grid grid-cols-2 gap-2">
+          {IDEAS.map((i) => (
+            <button key={i.label} type="button" onClick={() => onPick(i.label)} className="card-edge group rounded-xl border border-border bg-card p-3 text-left transition-colors hover:border-border-strong">
+              <i.icon className="size-4 text-muted transition-colors group-hover:text-accent" />
+              <span className="mt-2 block text-[12.5px] font-medium leading-snug">{i.label}</span>
+              <span className="mt-0.5 block text-[11.5px] leading-snug text-dim">{i.hint}</span>
             </button>
           ))}
         </div>
       ) : null}
+      <p className="mt-5 flex items-center gap-1.5 text-[11.5px] text-dim">
+        <Sparkles className="size-3" /> Tip: switch to Plan mode to approve the steps before anything changes.
+      </p>
     </div>
   );
 }
 
 function UserBubble({ text }: { text: string }) {
+  const { user } = useApp();
   return (
-    <div className="flex justify-end">
-      <div className="selectable max-w-[85%] whitespace-pre-wrap rounded-2xl rounded-br-md bg-surface px-3.5 py-2.5 text-[13.5px] leading-relaxed">{text}</div>
+    <div className="flex justify-end gap-2.5">
+      <div className="selectable max-w-[82%] whitespace-pre-wrap rounded-2xl rounded-tr-md bg-surface px-3.5 py-2.5 text-[13.5px] leading-relaxed">{text}</div>
+      <span className="mt-0.5 shrink-0">
+        <Avatar name={user.name || user.email} size={24} />
+      </span>
     </div>
+  );
+}
+
+/** The Codexa mark beside an assistant reply (replies are indented to make room for it). */
+function AssistantMark() {
+  return (
+    <span aria-hidden="true" className="absolute left-0 top-0.5 flex size-6 items-center justify-center rounded-md bg-primary text-primary-fg">
+      <Logo size={13} />
+    </span>
   );
 }
 
@@ -307,7 +332,8 @@ function SavedReply({ message, onApprove }: { message: Message; onApprove: (step
   const errors = parts.filter((p): p is Extract<MessagePart, { type: "error" }> => p.type === "error");
   const tools = parts.filter((p) => p.type === "tool_call").length;
   return (
-    <div className="text-[13.5px] leading-relaxed">
+    <div className="relative pl-9 text-[13.5px] leading-relaxed">
+      <AssistantMark />
       {text ? <Markdown text={text} /> : null}
       {plan ? <Plan steps={plan.steps} onApprove={plan.approval === "pending" ? () => onApprove(plan.steps) : undefined} /> : null}
       <Files files={[...new Map(files.map((f) => [f.path, f])).values()]} />
@@ -323,7 +349,8 @@ function SavedReply({ message, onApprove }: { message: Message; onApprove: (step
 
 function LiveReply({ live }: { live: Live }) {
   return (
-    <div className="text-[13.5px] leading-relaxed">
+    <div className="relative pl-9 text-[13.5px] leading-relaxed">
+      <AssistantMark />
       {live.stage ? (
         <p className="mb-2 flex items-center gap-2 text-[12.5px] text-muted">
           <span className="pulse size-1.5 rounded-full bg-accent" /> {live.stage}
