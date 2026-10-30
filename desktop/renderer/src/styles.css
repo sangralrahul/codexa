@@ -109,6 +109,13 @@ textarea,
   background: color-mix(in oklab, var(--ring) 30%, transparent);
 }
 
+/* The app chrome stays dark in both themes. */
+.chrome {
+  background: #0f1116;
+  color: #e7e9ec;
+  border-bottom: 1px solid #262a31;
+}
+
 /* Window drag regions (our own title bar). */
 .drag {
   -webkit-app-region: drag;

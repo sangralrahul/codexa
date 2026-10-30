@@ -86,7 +86,8 @@ function createWindow() {
     show: false,
     // Native window buttons drawn by Windows over our own title bar.
     titleBarStyle: "hidden",
-    titleBarOverlay: { color: theme.bg, symbolColor: theme.fg, height: 44 },
+    // The app chrome (title bar) is always dark, like a real tool; only the content area follows the theme.
+    titleBarOverlay: { color: PALETTE.dark.bg, symbolColor: PALETTE.dark.fg, height: 44 },
     webPreferences: {
       preload: path.join(__dirname, "preload.js"),
       contextIsolation: true,
@@ -248,7 +249,7 @@ function registerIpc() {
     const t = nativeTheme.shouldUseDarkColors ? PALETTE.dark : PALETTE.light;
     if (mainWindow && process.platform !== "darwin") {
       try {
-        mainWindow.setTitleBarOverlay({ color: t.bg, symbolColor: t.fg, height: 44 });
+        mainWindow.setTitleBarOverlay({ color: PALETTE.dark.bg, symbolColor: PALETTE.dark.fg, height: 44 });
       } catch {
         // Not supported on this platform.
       }

@@ -157,6 +157,16 @@ export const aiApi = {
   cancel: (id: string, runId: string) => api<unknown>(`/api/v1/projects/${enc(id)}/ai/runs/${enc(runId)}/cancel`, { method: "POST", body: {} }),
 };
 
+export type ShowcaseItem = { id: string; slug: string; title: string; description: string; tags: string[]; liveUrl: string | null; remixCount: number; project: { id: string; name: string; framework: string; frameworkName: string; templateId: string | null }; submittedBy: { id: string; name: string } | null };
+export type TeamMember = { userId?: string; id?: string; name?: string | null; email?: string; role: Role; user?: { name?: string | null; email?: string } };
+
+export const showcaseApi = {
+  list: (limit = 6) => api<{ entries: ShowcaseItem[] }>(`/api/v1/showcase?limit=${limit}`),
+};
+export const membersApi = {
+  list: (workspaceId: string) => api<{ members: TeamMember[]; role: Role }>(`/api/v1/workspaces/${enc(workspaceId)}/members`),
+};
+
 export const accountApi = {
   profile: (name: string) => api<unknown>("/api/v1/account/profile", { method: "PATCH", body: { name } }),
   onboarding: (input: { timezone?: string; completed?: boolean }) => api<unknown>("/api/v1/account/onboarding", { method: "PATCH", body: input }),

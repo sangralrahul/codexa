@@ -1,9 +1,9 @@
 import { useEffect, useState } from "react";
-import { ArrowRight, ArrowUp, BarChart3, Bot, Briefcase, Check, ChevronDown, Compass, Cpu, ExternalLink, GitBranch, Globe, LayoutTemplate, Rocket, Server, ShoppingBag, Sparkles, UserPlus, Zap } from "lucide-react";
+import { ArrowRight, ArrowUp, BarChart3, BookOpen, Bot, Briefcase, Check, CheckCircle2, ChevronDown, Circle, Compass, Cpu, ExternalLink, GitBranch, GitFork, Globe, GraduationCap, Lock, X, LayoutTemplate, Rocket, Server, ShoppingBag, Sparkles, UserPlus, Zap } from "lucide-react";
 import { useApp } from "../app/state";
-import { deployApi, templatesApi, type Deployment, type Project, type Template } from "../lib/api";
+import { deployApi, membersApi, showcaseApi, templatesApi, type Deployment, type Project, type ShowcaseItem, type TeamMember, type Template } from "../lib/api";
 import { cn, frameworkLabel, relativeTime } from "../lib/util";
-import { Badge, Button, EmptyState, Kbd, Menu, Spinner, Textarea } from "../ui";
+import { Avatar, Badge, Button, EmptyState, Kbd, Menu, Spinner, Textarea } from "../ui";
 import { ProjectMenu } from "../components/ProjectCard";
 import { ProjectThumb } from "../components/ProjectThumb";
 import { createProject, DEFAULT_TEMPLATE } from "../components/create";
@@ -26,6 +26,12 @@ const PLACEHOLDERS = [
   "A recipe box with search, tags and a shopping list…",
   "A team dashboard with tasks, owners and due dates…",
 ];
+const LEARN = [
+  { title: "Prompting that works", body: "How to describe features so the agent gets them right the first time.", path: "/docs/prompting", icon: BookOpen },
+  { title: "Preview and debug", body: "Run your app, read the console, and let Fix mode repair errors.", path: "/docs/editor", icon: Cpu },
+  { title: "Publish to a domain", body: "Put your app on the web and connect a custom domain.", path: "/docs/custom-domains", icon: Globe },
+];
+const SETUP_KEY = "codexa:setup-dismissed";
 const DEPLOY_TONE: Record<Deployment["status"], "neutral" | "success" | "warning" | "danger"> = { queued: "warning", building: "warning", deploying: "warning", live: "success", failed: "danger", rolled_back: "neutral" };
 const DEPLOY_LABEL: Record<Deployment["status"], string> = { queued: "Queued", building: "Building", deploying: "Deploying", live: "Live", failed: "Failed", rolled_back: "Previous" };
 
@@ -43,7 +49,24 @@ export function HomeScreen() {
   const [starting, setStarting] = useState<string | null>(null);
   const [ph, setPh] = useState(0);
   const [deploys, setDeploys] = useState<(Deployment & { project: Project })[] | null>(null);
+  const [showcase, setShowcase] = useState<ShowcaseItem[]>([]);
+  const [members, setMembers] = useState<TeamMember[]>([]);
+  const [setupHidden, setSetupHidden] = useState(() => localStorage.getItem(SETUP_KEY) === "1");
   const first = (user.name || user.email).split(/[\s@]/)[0];
+
+  useEffect(() => {
+    showcaseApi
+      .list(4)
+      .then((r) => setShowcase(r.entries))
+      .catch(() => setShowcase([]));
+  }, []);
+  useEffect(() => {
+    if (!workspace) return;
+    membersApi
+      .list(workspace.id)
+      .then((r) => setMembers(r.members))
+      .catch(() => setMembers([]));
+  }, [workspace]);
 
   useEffect(() => {
     templatesApi
@@ -86,6 +109,17 @@ export function HomeScreen() {
     if (id) go({ name: "project", id });
   };
 
+  // Setup checklist: every item is a real signal from the account, never a guess.
+  const setup = [
+    { label: "Create your first project", done: (projects?.length ?? 0) > 0, run: () => document.getElementById("composer")?.focus() },
+    { label: "Run a live preview", done: (usage?.used.runtime_minutes ?? 0) > 0, run: () => projects?.[0] && go({ name: "project", id: projects[0].id }) },
+    { label: "Publish an app", done: (deploys?.some((d) => d.status === "live") ?? false) || (usage?.used.deployment ?? 0) > 0, run: () => projects?.[0] && go({ name: "project", id: projects[0].id }) },
+    { label: "Verify your email", done: Boolean(user.emailVerifiedAt), run: () => void window.codexa.openWeb("/settings/security") },
+    { label: "Invite a teammate", done: members.length > 1, run: () => void window.codexa.openWeb("/settings/members") },
+  ];
+  const setupDone = setup.filter((s) => s.done).length;
+  const showSetup = !setupHidden && setupDone < setup.length && projects !== null;
+
   const meters = usage
     ? [
         { icon: LayoutTemplate, label: "Projects", value: usage.counts.projects, limit: usage.limits.projects },
@@ -106,7 +140,17 @@ export function HomeScreen() {
             </h1>
             <p className="mt-0.5 text-[13px] text-muted">{workspace?.name ?? "Your workspace"} · {projects ? `${projects.length} project${projects.length === 1 ? "" : "s"}` : "…"}</p>
           </div>
-          <div className="flex gap-2">
+          <div className="flex items-center gap-2">
+            {members.length > 0 ? (
+              <button type="button" onClick={() => void window.codexa.openWeb("/settings/members")} title={`${members.length} member${members.length === 1 ? "" : "s"}`} className="mr-1 flex items-center">
+                {members.slice(0, 4).map((m, i) => (
+                  <span key={m.userId ?? m.id ?? i} className={cn("rounded-full ring-2 ring-bg", i > 0 && "-ml-1.5")}>
+                    <Avatar name={m.name || m.user?.name || m.email || m.user?.email || "?"} size={24} />
+                  </span>
+                ))}
+                {members.length > 4 ? <span className="-ml-1.5 flex size-6 items-center justify-center rounded-full bg-surface text-[10.5px] font-medium text-muted ring-2 ring-bg">+{members.length - 4}</span> : null}
+              </button>
+            ) : null}
             <Button size="sm" onClick={() => go({ name: "templates" })}>
               <LayoutTemplate /> Templates
             </Button>
@@ -190,6 +234,39 @@ export function HomeScreen() {
           </div>
         </div>
 
+        {showSetup ? (
+          <section className="card-edge mt-5 rounded-xl border border-border bg-card" aria-labelledby="setup">
+            <div className="flex items-center gap-3 border-b border-border px-4 py-2.5">
+              <span className="relative flex size-8 items-center justify-center">
+                <svg viewBox="0 0 36 36" className="absolute inset-0 size-8 -rotate-90">
+                  <circle cx="18" cy="18" r="15" fill="none" stroke="currentColor" strokeWidth="3" className="text-surface" />
+                  <circle cx="18" cy="18" r="15" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" className="text-accent" strokeDasharray={`${(setupDone / setup.length) * 94.2} 94.2`} />
+                </svg>
+                <span className="text-[10.5px] font-semibold tabular-nums">{setupDone}/{setup.length}</span>
+              </span>
+              <span className="min-w-0 flex-1">
+                <h2 id="setup" className="text-[13px] font-semibold">
+                  Get set up
+                </h2>
+                <span className="block text-[12px] text-muted">{setup.length - setupDone} step{setup.length - setupDone === 1 ? "" : "s"} left to get the most out of Codexa.</span>
+              </span>
+              <button type="button" aria-label="Hide setup checklist" onClick={() => (localStorage.setItem(SETUP_KEY, "1"), setSetupHidden(true))} className="flex size-7 items-center justify-center rounded-md text-dim hover:bg-surface hover:text-fg">
+                <X className="size-4" />
+              </button>
+            </div>
+            <ol className="grid grid-cols-5 divide-x divide-border">
+              {setup.map((s) => (
+                <li key={s.label}>
+                  <button type="button" onClick={s.run} disabled={s.done} className={cn("flex h-full w-full items-start gap-2 px-3.5 py-3 text-left transition-colors", s.done ? "text-muted" : "hover:bg-surface/60")}>
+                    {s.done ? <CheckCircle2 className="mt-px size-4 shrink-0 text-success" /> : <Circle className="mt-px size-4 shrink-0 text-border-strong" />}
+                    <span className={cn("text-[12.5px] leading-snug", s.done && "line-through decoration-border-strong")}>{s.label}</span>
+                  </button>
+                </li>
+              ))}
+            </ol>
+          </section>
+        ) : null}
+
         <div className="mt-6 grid grid-cols-[minmax(0,1fr)_320px] gap-5">
           {/* Left: projects table + templates */}
           <div className="min-w-0 space-y-6">
@@ -221,7 +298,10 @@ export function HomeScreen() {
                             {p.description ? <span className="block truncate text-[11.5px] text-muted">{p.description}</span> : null}
                           </span>
                         </button>
-                        <span className="truncate text-[12.5px] text-muted">{frameworkLabel(p.framework)}</span>
+                        <span className="flex items-center gap-1.5 truncate text-[12.5px] text-muted">
+                          {frameworkLabel(p.framework)}
+                          {p.visibility === "private" ? <Lock className="size-3 text-dim" aria-label="Private" /> : <Globe className="size-3 text-dim" aria-label={p.visibility} />}
+                        </span>
                         <span className="text-[12.5px] text-muted">{relativeTime(p.updatedAt)}</span>
                         <span>
                           {live ? (
@@ -264,6 +344,52 @@ export function HomeScreen() {
                 </ul>
               </section>
             ) : null}
+
+            {showcase.length ? (
+              <section aria-labelledby="community">
+                <SectionHead id="community" title="From the community" sub="Public apps built with Codexa that you can open and remix." action="Browse all" onAction={() => void window.codexa.openWeb("/showcase")} />
+                <ul className="grid grid-cols-2 gap-3">
+                  {showcase.map((s) => (
+                    <li key={s.id}>
+                      <button type="button" onClick={() => void window.codexa.openWeb(`/showcase/${s.slug}`)} className="card-edge lift flex w-full items-start gap-3 rounded-xl border border-border bg-card p-3 text-left hover:border-border-strong">
+                        <ProjectThumb templateId={s.project.templateId} name={s.title} className="h-12 w-[78px] shrink-0 rounded-md border border-border" />
+                        <span className="min-w-0 flex-1">
+                          <span className="block truncate text-[13px] font-medium">{s.title}</span>
+                          <span className="mt-0.5 line-clamp-2 text-[12px] leading-snug text-muted">{s.description}</span>
+                          <span className="mt-1.5 flex items-center gap-2 text-[11.5px] text-dim">
+                            <span>{s.project.frameworkName}</span>
+                            <span className="flex items-center gap-1">
+                              <GitFork className="size-3" /> {s.remixCount}
+                            </span>
+                            {s.submittedBy ? <span className="truncate">by {s.submittedBy.name}</span> : null}
+                          </span>
+                        </span>
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              </section>
+            ) : null}
+
+            <section aria-labelledby="learn">
+              <SectionHead id="learn" title="Learn Codexa" sub="Short guides from the documentation." action="All docs" onAction={() => void window.codexa.openWeb("/docs")} />
+              <ul className="grid grid-cols-3 gap-3">
+                {LEARN.map((l) => (
+                  <li key={l.title}>
+                    <button type="button" onClick={() => void window.codexa.openWeb(l.path)} className="card-edge lift flex h-full w-full flex-col rounded-xl border border-border bg-card p-3.5 text-left hover:border-border-strong">
+                      <span className="flex size-7 items-center justify-center rounded-md bg-accent-soft text-accent">
+                        <l.icon className="size-4" />
+                      </span>
+                      <span className="mt-2.5 text-[13px] font-medium">{l.title}</span>
+                      <span className="mt-1 text-[12px] leading-snug text-muted">{l.body}</span>
+                      <span className="mt-2 flex items-center gap-1 text-[11.5px] text-dim">
+                        <GraduationCap className="size-3" /> Guide
+                      </span>
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            </section>
           </div>
 
           {/* Right rail: usage, deployments, quick links */}

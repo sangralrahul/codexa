@@ -67,28 +67,44 @@ export function Shell() {
   );
 }
 
+/** Dark app chrome in both themes: brand, workspace, global search, help and the account, like a real tool. */
 function TitleBar({ onSearch }: { onSearch: () => void }) {
-  const { route, back, canGoBack } = useApp();
+  const { route, back, canGoBack, workspace, user, go } = useApp();
   return (
-    <header className="drag relative flex h-11 shrink-0 items-center border-b border-border bg-sidebar pl-3 pr-[150px]">
-      <div className="flex w-[212px] shrink-0 items-center gap-2 text-fg">
-        <Logo size={18} />
-        <span className="text-[13.5px] font-semibold tracking-[-0.01em]">Codexa</span>
+    <header className="drag chrome relative flex h-11 shrink-0 items-center pl-3 pr-[150px]">
+      <div className="flex w-[212px] shrink-0 items-center gap-2">
+        <span className="flex size-6 items-center justify-center rounded-md bg-white/10">
+          <Logo size={15} />
+        </span>
+        <span className="text-[13px] font-semibold tracking-[-0.01em]">Codexa</span>
         {route.name === "project" && canGoBack ? (
-          <button type="button" onClick={back} aria-label="Back" className="no-drag ml-2 flex size-7 items-center justify-center rounded-md text-muted hover:bg-surface hover:text-fg">
+          <button type="button" onClick={back} aria-label="Back" className="no-drag ml-1 flex size-7 items-center justify-center rounded-md text-white/60 hover:bg-white/10 hover:text-white">
             <ArrowLeft className="size-4" />
           </button>
+        ) : workspace ? (
+          <span className="ml-1 truncate text-[12px] text-white/50">/ {workspace.name}</span>
         ) : null}
       </div>
       <div className="flex flex-1 justify-center">
         <button
           type="button"
           onClick={onSearch}
-          className="no-drag flex h-7 w-full max-w-[420px] items-center gap-2 rounded-lg border border-border bg-card px-2.5 text-[12.5px] text-dim shadow-sm transition-colors hover:border-border-strong hover:text-muted"
+          className="no-drag flex h-7 w-full max-w-[460px] items-center gap-2 rounded-md border border-white/10 bg-white/[0.07] px-2.5 text-[12.5px] text-white/50 transition-colors hover:border-white/20 hover:bg-white/10 hover:text-white/80"
         >
           <Search className="size-3.5" />
-          <span className="flex-1 text-left">Search projects and commands</span>
-          <Kbd>Ctrl K</Kbd>
+          <span className="flex-1 text-left">Search projects, templates and commands</span>
+          <kbd className="rounded border border-white/15 px-1 font-sans text-[10.5px] text-white/50">Ctrl K</kbd>
+        </button>
+      </div>
+      <div className="no-drag flex shrink-0 items-center gap-1">
+        <button type="button" title="What's new" aria-label="What's new" onClick={() => void window.codexa.openWeb("/changelog")} className="flex size-7 items-center justify-center rounded-md text-white/60 hover:bg-white/10 hover:text-white">
+          <Sparkles className="size-4" />
+        </button>
+        <button type="button" title="Help & docs" aria-label="Help & docs" onClick={() => void window.codexa.openWeb("/docs")} className="flex size-7 items-center justify-center rounded-md text-white/60 hover:bg-white/10 hover:text-white">
+          <BookOpen className="size-4" />
+        </button>
+        <button type="button" title="Account settings" aria-label="Account settings" onClick={() => go({ name: "settings" })} className="ml-1 rounded-full ring-1 ring-white/15 hover:ring-white/40">
+          <Avatar name={user.name || user.email} size={24} />
         </button>
       </div>
     </header>
