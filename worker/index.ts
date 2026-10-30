@@ -56,6 +56,15 @@ async function connectPresence(request: Request, env: Env): Promise<Response> {
   return stub.fetch(new Request(request.url, { headers }) as never) as unknown as Response;
 }
 
+/** The app's own host name from APP_URL (codexa.example.com), or null when it is not set. */
+function appHostOf(env: Env): string | null {
+  try {
+    return env.APP_URL ? new URL(env.APP_URL).hostname.toLowerCase() : null;
+  } catch {
+    return null;
+  }
+}
+
 /** The registrable zone Codexa runs under (from DEPLOY_HOST, e.g. -sites.example.com → example.com). */
 function ownZone(env: Env): string | null {
   const base = hostOnly(env.DEPLOY_HOST ?? "");
@@ -66,6 +75,10 @@ const worker = {
   async fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
     const url = new URL(request.url);
     const host = url.hostname.toLowerCase();
+
+    // www.<app host> → <app host>, permanently, keeping the path and query.
+    const appHost = appHostOf(env);
+    if (appHost && host === `www.${appHost}`) return Response.redirect(`https://${appHost}${url.pathname}${url.search}`, 301);
 
     const previewToken = labelUnder(host, hostOnly(env.PREVIEW_HOST));
     if (previewToken) {

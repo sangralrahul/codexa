@@ -72,6 +72,8 @@
   // See docs/CLOUDFLARE.md.
   "routes": [
     { "pattern": "codexa.creditvault.tech", "custom_domain": true },
+    // www.… is answered by the Worker too, which redirects it to the address above (worker/index.ts).
+    { "pattern": "www.codexa.creditvault.tech", "custom_domain": true },
     { "pattern": "*-preview.creditvault.tech/*", "zone_name": "creditvault.tech" },
     { "pattern": "*-sites.creditvault.tech/*", "zone_name": "creditvault.tech" }
   ],
