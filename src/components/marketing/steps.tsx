@@ -24,7 +24,7 @@ export function Steps({ steps, className, orientation = "horizontal" }: { steps:
           >
             {/* Sprocket rail: the frame's place on the strip. */}
             <span aria-hidden="true" className="mb-6 flex items-center gap-2">
-              <span className="font-mono text-[11px] font-medium tabular-nums text-signal-ink">{String(i + 1).padStart(2, "0")}</span>
+              <span className="font-mono text-[11px] font-medium tabular-nums text-primary">{String(i + 1).padStart(2, "0")}</span>
               <span className="h-px flex-1 bg-gradient-to-r from-border-strong to-transparent" />
               <span className="flex gap-1">
                 <span className="size-1 rounded-full bg-border-strong" />

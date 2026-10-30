@@ -25,7 +25,6 @@ export default function PricingPage() {
         crumbs={[{ name: "Pricing", path: "/pricing" }]}
         kicker="Pricing"
         headline="Start free. Scale when it works."
-        mark="Scale when it works."
         lede="Plans in INR and USD. Upgrade when you need more AI requests, runtime, deployments or collaborators; every limit is enforced per workspace on the server."
       >
         <PricingTable finder />
@@ -33,7 +32,7 @@ export default function PricingPage() {
 
       <Section size="sm">
         <SectionHeader index="01" eyebrow="Limits" title="Usage limits by plan." description="Every number below comes from the plan configuration the server enforces. Monthly limits reset on the first of each month (UTC)." />
-        <LimitsTable className="mt-10" />
+        <LimitsTable className="mt-8" />
         <p className="mt-6 text-sm">
           <Link href="/pricing/compare-plans" className="link-draw inline-flex items-center gap-1 font-medium text-foreground">
             Compare every feature side by side <ArrowUpRight className="size-3.5" aria-hidden="true" />
@@ -41,12 +40,12 @@ export default function PricingPage() {
         </p>
       </Section>
 
-      <Section size="sm" className="border-t border-border/60">
+      <Section size="sm" className="border-t border-border">
         <div className="grid grid-cols-1 gap-10 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] lg:gap-14">
-          <aside className="lg:sticky lg:top-24 lg:self-start">
-            <div data-reveal className="e3 rounded-[18px] p-6 sm:p-7">
-              <Receipt className="size-5 text-signal-ink" aria-hidden="true" />
-              <h2 className="text-display-4 mt-4">Billing questions?</h2>
+          <aside className="lg:sticky lg:top-20 lg:self-start">
+            <div className="rounded-[12px] border border-border bg-card p-6">
+              <Receipt className="size-5 text-primary" aria-hidden="true" />
+              <h2 className="mt-4 text-[20px] font-semibold tracking-[-0.015em]">Billing questions?</h2>
               <p className="mt-2 text-[15px] leading-relaxed text-muted-foreground">INR through Razorpay, USD through Stripe, taxes added at checkout. The details:</p>
               <ul className="mt-5 divide-y divide-border border-y border-border">
                 {MORE.map((m) => (
@@ -71,8 +70,8 @@ export default function PricingPage() {
             </div>
           </aside>
           <div>
-            <h2 className="text-display-3">Pricing questions.</h2>
-            <FAQ items={PRICING_FAQ} withJsonLd className="mt-8" />
+            <h2 className="mk-h2">Pricing questions.</h2>
+            <FAQ items={PRICING_FAQ} withJsonLd className="mt-6" />
           </div>
         </div>
       </Section>

@@ -84,13 +84,8 @@ const ICONS: Record<string, LucideIcon> = {
 const OPEN_DELAY = 100;
 const CLOSE_GRACE = 200;
 
-/**
- * Idle nav text. At the top of the page the bar is transparent over the saturated backdrop wash, so the
- * triggers use foreground at 80% (4.5:1 or better on every area tone, with the scrim in marketing.css);
- * inside the condensed glass capsule the quieter muted colour reads fine.
- */
-const TRIGGER_IDLE =
-  "text-foreground/80 hover:text-foreground group-data-[scrolled]/hdr:text-muted-foreground group-data-[scrolled]/hdr:hover:text-foreground";
+/** Idle nav text: muted on the plain bar, foreground on hover. */
+const TRIGGER_IDLE = "text-muted-foreground hover:text-foreground";
 
 const isActivePath = (pathname: string, href: string) => pathname === href || pathname.startsWith(href + "/");
 
@@ -104,8 +99,8 @@ function SearchPill({ className, iconOnlyBelow = "xl" }: { className?: string; i
       aria-keyshortcuts={mod === "⌘" ? "Meta+K" : "Control+K"}
       data-no-ripple
       className={cn(
-        "group inline-flex h-9 shrink-0 items-center gap-2 rounded-full border border-border bg-background/50 text-[13px] text-muted-foreground shadow-[inset_0_1px_0_var(--hairline)] transition-[color,border-color,background-color] duration-200 hover:border-border-strong hover:text-foreground",
-        iconOnlyBelow === "xl" ? "w-9 justify-center xl:w-auto xl:justify-start xl:pl-3 xl:pr-1.5" : "pl-3 pr-1.5",
+        "group inline-flex h-8 shrink-0 items-center gap-2 rounded-[8px] border border-border bg-surface text-[13px] text-muted-foreground transition-[color,border-color,background-color] duration-200 hover:border-border-strong hover:text-foreground",
+        iconOnlyBelow === "xl" ? "w-8 justify-center xl:w-auto xl:justify-start xl:pl-2.5 xl:pr-1.5" : "pl-3 pr-1.5",
         className,
       )}
     >
@@ -261,10 +256,9 @@ export function MarketingHeader({ signedIn, wells }: { signedIn: boolean; wells?
         data-sheet={mobileOpen ? "" : undefined}
         data-armed={armed || open ? "" : undefined}
       >
-        <div className="mk-bar">
-          <div aria-hidden="true" className="mk-bar__glass" />
+        <div className="mk-bar container-x">
           <div className="relative flex h-full items-center justify-between gap-3">
-            <div className="flex min-w-0 items-center gap-3 xl:gap-5">
+            <div className="flex min-w-0 items-center gap-4 xl:gap-6">
               <Logo />
               <nav
                 aria-label="Main"
@@ -277,7 +271,7 @@ export function MarketingHeader({ signedIn, wells }: { signedIn: boolean; wells?
                 onFocus={arm}
               >
                 <div ref={navRef} className="relative">
-                <GlideIndicator ref={glide} className="inset-y-0 rounded-full bg-foreground/[0.065] shadow-none" />
+                <GlideIndicator ref={glide} className="inset-y-0 rounded-[8px] bg-foreground/[0.06] shadow-none" />
                 <ul className="flex items-center">
                   {GROUPS.map((g, gi) => {
                     const expanded = open === g.key;
@@ -312,7 +306,7 @@ export function MarketingHeader({ signedIn, wells }: { signedIn: boolean; wells?
                             setOpen((o) => (o === g.key ? null : g.key));
                           }}
                           className={cn(
-                            "relative z-[1] inline-flex h-9 items-center gap-1 rounded-full px-3 text-[13.5px] font-medium transition-colors duration-200",
+                            "relative z-[1] inline-flex h-8 items-center gap-1 rounded-[8px] px-2.5 text-[13.5px] font-medium transition-colors duration-200",
                             expanded || current ? "text-foreground" : TRIGGER_IDLE,
                           )}
                         >
@@ -343,9 +337,9 @@ export function MarketingHeader({ signedIn, wells }: { signedIn: boolean; wells?
                                       onFocus={() => setFocusItem((f) => ({ ...f, [g.key]: ii }))}
                                       onClick={() => setOpen(null)}
                                       data-on={on ? "" : undefined}
-                                      className="group/item flex items-start gap-3 rounded-[12px] px-3 py-2.5 outline-offset-[-2px] transition-colors duration-150 data-[on]:bg-foreground/[0.05]"
+                                      className="group/item flex items-start gap-3 rounded-[8px] px-3 py-2.5 outline-offset-[-2px] transition-colors duration-150 data-[on]:bg-foreground/[0.05]"
                                     >
-                                      <Icon className="mt-0.5 size-4 shrink-0 text-muted-foreground transition-colors duration-150 group-data-[on]/item:text-signal-ink" aria-hidden="true" />
+                                      <Icon className="mt-0.5 size-4 shrink-0 text-muted-foreground transition-colors duration-150 group-data-[on]/item:text-primary" aria-hidden="true" />
                                       <span className="min-w-0">
                                         <span className="flex items-center gap-1.5 text-[14px] font-medium text-foreground">
                                           {item.label}
@@ -372,7 +366,7 @@ export function MarketingHeader({ signedIn, wells }: { signedIn: boolean; wells?
                                     key={f.href}
                                     href={f.href}
                                     onClick={() => setOpen(null)}
-                                    className="inline-flex h-7 items-center gap-1 rounded-full px-2.5 text-[12.5px] font-medium text-muted-foreground transition-colors hover:bg-foreground/[0.05] hover:text-foreground"
+                                    className="inline-flex h-7 items-center gap-1 rounded-[6px] px-2.5 text-[12.5px] font-medium text-muted-foreground transition-colors hover:bg-foreground/[0.05] hover:text-foreground"
                                   >
                                     {f.label}
                                     <ArrowRight className="size-3" aria-hidden="true" />
@@ -396,7 +390,7 @@ export function MarketingHeader({ signedIn, wells }: { signedIn: boolean; wells?
                           if (open) closeTimer.current = setTimeout(() => setOpen(null), CLOSE_GRACE);
                         }}
                         className={cn(
-                          "relative z-[1] inline-flex h-9 items-center rounded-full px-3 text-[13.5px] font-medium transition-colors duration-200",
+                          "relative z-[1] inline-flex h-8 items-center rounded-[8px] px-2.5 text-[13.5px] font-medium transition-colors duration-200",
                           isActivePath(pathname, l.href) ? "text-foreground" : TRIGGER_IDLE,
                         )}
                       >
@@ -409,21 +403,21 @@ export function MarketingHeader({ signedIn, wells }: { signedIn: boolean; wells?
                 <div ref={bgRef} aria-hidden="true" className="mk-mega-bg" />
               </nav>
             </div>
-            <div className="hidden items-center gap-1.5 lg:flex">
+            <div className="hidden items-center gap-2 lg:flex">
               <SearchPill />
               {signedIn ? (
-                <Link href="/dashboard" data-magnetic className={buttonClasses("secondary", "sm", "ml-1 h-9 px-4")}>
+                <Link href="/dashboard" className={buttonClasses("primary", "sm", "ml-1 h-8 px-3.5", "app")}>
                   Open dashboard
                   <ArrowRight className="size-3.5" aria-hidden="true" />
                 </Link>
               ) : (
                 <>
-                  <Link href="/login" className={buttonClasses("ghost", "sm", cn("h-9 px-3.5", TRIGGER_IDLE))}>
+                  <Link href="/login" className={buttonClasses("ghost", "sm", cn("h-8 px-3", TRIGGER_IDLE), "app")}>
                     Sign in
                   </Link>
-                  <Link href="/signup" data-spark data-magnetic className={buttonClasses("secondary", "sm", "h-9 px-4")}>
+                  <Link href="/signup" className={buttonClasses("primary", "sm", "h-8 px-3.5", "app")}>
                     Start building
-                    <ArrowRight data-spark-icon className="size-3.5" aria-hidden="true" />
+                    <ArrowRight className="size-3.5" aria-hidden="true" />
                   </Link>
                 </>
               )}
@@ -433,7 +427,7 @@ export function MarketingHeader({ signedIn, wells }: { signedIn: boolean; wells?
               <button
                 ref={menuButtonRef}
                 type="button"
-                className="inline-flex size-10 items-center justify-center rounded-full text-foreground transition-colors hover:bg-foreground/[0.06]"
+                className="inline-flex size-9 items-center justify-center rounded-[8px] text-foreground transition-colors hover:bg-foreground/[0.06]"
                 aria-label={mobileOpen ? "Close menu" : "Open menu"}
                 aria-expanded={mobileOpen}
                 aria-controls="mobile-nav"
@@ -461,13 +455,12 @@ function MobileSheet({ signedIn, pathname, onClose }: { signedIn: boolean; pathn
   const next = () => ({ "--i": row++ }) as React.CSSProperties;
   return (
     <div id="mobile-nav" className="mk-sheet fixed inset-0 z-40 overflow-y-auto overscroll-contain bg-background lg:hidden">
-      <div aria-hidden="true" className="bg-blueprint pointer-events-none absolute inset-x-0 top-0 h-80 opacity-60" />
-      <nav aria-label="Mobile" className="container-x relative flex min-h-full flex-col pb-8 pt-24">
+      <nav aria-label="Mobile" className="container-x relative flex min-h-full flex-col pb-8 pt-20">
         <ul className="flex flex-col">
           {GROUPS.map((g) => (
             <li key={g.key} className="mk-sheet__row border-b border-border" style={next()}>
               <details className="group" open={g.items.some((i) => isActivePath(pathname, i.href))}>
-                <summary className="text-display-4 flex cursor-pointer list-none items-center justify-between py-4 [&::-webkit-details-marker]:hidden">
+                <summary className="flex cursor-pointer list-none items-center justify-between py-4 text-[18px] font-semibold tracking-[-0.01em] [&::-webkit-details-marker]:hidden">
                   {g.label}
                   <span aria-hidden="true" className="relative inline-flex size-8 items-center justify-center rounded-full border border-border text-muted-foreground transition-colors group-open:border-border-strong group-open:text-foreground">
                     <span className="absolute h-px w-3 bg-current" />
@@ -500,7 +493,7 @@ function MobileSheet({ signedIn, pathname, onClose }: { signedIn: boolean; pathn
           ))}
           {LINKS.map((l) => (
             <li key={l.href} className="mk-sheet__row border-b border-border" style={next()}>
-              <Link href={l.href} onClick={onClose} aria-current={isActivePath(pathname, l.href) ? "page" : undefined} className="text-display-4 flex items-center justify-between py-4">
+              <Link href={l.href} onClick={onClose} aria-current={isActivePath(pathname, l.href) ? "page" : undefined} className="flex items-center justify-between py-4 text-[18px] font-semibold tracking-[-0.01em]">
                 {l.label}
                 <ArrowRight className="size-5 text-muted-foreground" aria-hidden="true" />
               </Link>
@@ -509,13 +502,13 @@ function MobileSheet({ signedIn, pathname, onClose }: { signedIn: boolean; pathn
         </ul>
         <div className="mk-sheet__row mt-auto flex flex-col gap-2.5 pt-10" style={next()}>
           {signedIn ? (
-            <Link href="/dashboard" onClick={onClose} className={buttonClasses("secondary", "lg", "w-full")}>
+            <Link href="/dashboard" onClick={onClose} className={buttonClasses("primary", "lg", "w-full")}>
               Open dashboard
               <ArrowRight className="size-4" aria-hidden="true" />
             </Link>
           ) : (
             <>
-              <Link href="/signup" onClick={onClose} className={buttonClasses("secondary", "lg", "w-full")}>
+              <Link href="/signup" onClick={onClose} className={buttonClasses("primary", "lg", "w-full")}>
                 Start building
                 <ArrowRight className="size-4" aria-hidden="true" />
               </Link>
@@ -524,7 +517,7 @@ function MobileSheet({ signedIn, pathname, onClose }: { signedIn: boolean; pathn
               </Link>
             </>
           )}
-          <SearchPill iconOnlyBelow="never" className="h-11 w-full justify-start rounded-full px-4 [&>kbd]:ml-auto" />
+          <SearchPill iconOnlyBelow="never" className="h-11 w-full justify-start px-4 [&>kbd]:ml-auto" />
         </div>
         <div className="mk-sheet__row mt-6 flex flex-wrap items-center justify-between gap-3 border-t border-border pt-5" style={next()}>
           <ThemeToggle />

@@ -39,8 +39,8 @@ export function IsolationVisual({ className }: { className?: string }) {
             ))}
           </span>
         </div>
-        <div className="rounded-xl border border-signal/40 bg-card p-3 shadow-[0_0_0_4px_color-mix(in_oklab,var(--signal)_8%,transparent),var(--shadow-sm)]">
-          <span className="flex items-center gap-1.5 font-mono text-[10px] uppercase tracking-[0.08em] text-signal-ink">
+        <div className="rounded-xl border border-primary/40 bg-card p-3 shadow-[0_0_0_4px_color-mix(in_oklab,var(--primary)_8%,transparent),var(--shadow-sm)]">
+          <span className="flex items-center gap-1.5 font-mono text-[10px] uppercase tracking-[0.08em] text-primary">
             <Lock className="size-3" />
             Your instance
           </span>
@@ -77,7 +77,7 @@ export function AuditLogVisual({ className }: { className?: string }) {
         <ul className="divide-y divide-border">
           {rows.map((r) => (
             <li key={r.action} className="flex items-center gap-3 px-3 py-2">
-              <span className="size-1.5 shrink-0 rounded-full bg-signal/70" />
+              <span className="size-1.5 shrink-0 rounded-full bg-primary/70" />
               <span className="truncate font-mono text-[11.5px] text-foreground">{r.action}</span>
               <span className="ml-auto truncate text-muted-foreground">{r.detail}</span>
             </li>

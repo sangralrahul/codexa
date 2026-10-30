@@ -74,7 +74,7 @@ export function StoryScroll({
           <span aria-hidden="true" className="absolute bottom-3 left-[13px] top-3 w-px bg-border" />
           <span
             aria-hidden="true"
-            className="absolute bottom-3 left-[13px] top-3 w-px origin-top bg-gradient-to-b from-signal to-signal-2 transition-transform duration-500 ease-out calm:transition-none"
+            className="absolute bottom-3 left-[13px] top-3 w-px origin-top bg-primary transition-transform duration-500 ease-out calm:transition-none"
             style={{ transform: `scaleY(${n > 1 ? active / (n - 1) : 1})` }}
           />
           {steps.map((s, i) => {
@@ -94,7 +94,7 @@ export function StoryScroll({
                     aria-hidden="true"
                     className={cn(
                       "absolute -left-12 top-0.5 inline-flex size-[27px] items-center justify-center rounded-full border bg-background font-mono text-[11px] tabular-nums transition-[color,border-color,background-color,box-shadow] duration-300",
-                      on ? "border-signal/50 text-signal-ink shadow-[0_0_0_4px_color-mix(in_oklab,var(--signal)_12%,transparent)]" : done ? "border-border-strong text-foreground" : "border-border text-muted-foreground",
+                      on ? "border-primary/50 text-primary shadow-[0_0_0_4px_color-mix(in_oklab,var(--primary)_12%,transparent)]" : done ? "border-border-strong text-foreground" : "border-border text-muted-foreground",
                     )}
                   >
                     {String(i + 1).padStart(2, "0")}

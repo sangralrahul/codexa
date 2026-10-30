@@ -1,18 +1,20 @@
 import Link from "next/link";
 import { ArrowDown, ArrowRight } from "lucide-react";
-import { SplitHeading } from "@/components/motion/split-heading";
-import { Eyebrow } from "@/components/marketing/backdrop";
-import { WordCycle } from "@/components/motion/word-cycle";
-import { HeroFloats } from "./hero-scenes";
+import { BrowserFrame } from "@/components/frames/browser-frame";
+import { TemplatePreview } from "@/components/templates/template-preview";
+import { templatePreviewHref } from "@/components/templates/template-card";
+import { TEMPLATE_SHOTS } from "@/components/templates/shots";
 import { PromptBox } from "@/components/marketing/prompt-box";
 import { HOME_HERO } from "@/content/marketing/home";
+import { TEMPLATES } from "@/templates";
 
 /**
- * H0 hero (PLAN §5.2): announcement from the latest changelog entry, the one H1 (line masks +
- * selection mark), a two-line lead and the composer. The stage itself is rendered right after,
- * by the storyboard, so its top edge shows in the first viewport.
+ * H0 hero: a two-line sans headline, a one-sentence lead, the composer, and one straight product
+ * screenshot in a browser frame right under it. The screenshot is a real starter template captured
+ * from its own build (never a generated or invented image); the caption says so.
  */
 export function HomeHero({ signedIn, announcement }: { signedIn: boolean; announcement: { title: string; href: string } | null }) {
+  const shot = TEMPLATES.find((t) => t.id === HOME_HERO.shotTemplateId && TEMPLATE_SHOTS.has(t.id)) ?? TEMPLATES.find((t) => TEMPLATE_SHOTS.has(t.id)) ?? null;
   const links = (
     <span className="inline-flex items-center gap-3">
       <Link href={HOME_HERO.templatesLink.href} className="link-draw group/l inline-flex items-center gap-1 font-medium text-foreground/85 hover:text-foreground">
@@ -30,32 +32,37 @@ export function HomeHero({ signedIn, announcement }: { signedIn: boolean; announ
   );
 
   return (
-    <section aria-labelledby="home-title" className="relative isolate overflow-clip pb-10 pt-[4vh] sm:pb-14 sm:pt-[9vh]">
-      <HeroFloats />
-      <div className="container-x relative pb-4 pt-6 text-center sm:pt-8 md:pb-3 lg:pt-5">
-        <div className="scroll-fade">
-          {announcement ? (
-            <Eyebrow href={announcement.href} className="max-w-[min(100%,34rem)]">
-              <span className="text-signal-ink">New</span>
-              <span aria-hidden="true" className="mx-1.5 text-border-strong">
-                ·
-              </span>
-              {announcement.title}
-            </Eyebrow>
-          ) : null}
-          <SplitHeading as="h1" id="home-title" size="display-1" lines={[...HOME_HERO.lines]} mark={HOME_HERO.mark} markNode={
-              <>
-                <span className="mark-select">running</span> <WordCycle words={HOME_HERO.cycle} wordClassName="mark-select" />
-              </>
-            } className="mx-auto mt-4 max-w-[18ch]! sm:mt-5">
-            {HOME_HERO.lines.join(" ")}
-          </SplitHeading>
-          <p className="text-lead mx-auto mt-6 max-w-[62ch]! sm:mt-5">{HOME_HERO.lead}</p>
+    <section aria-labelledby="home-title" className="relative border-b border-border bg-surface/60 pb-12 pt-12 sm:pt-16 lg:pb-16 lg:pt-20">
+      <div className="container-x text-center">
+        {announcement ? (
+          <Link
+            href={announcement.href}
+            className="group inline-flex max-w-full items-center gap-2 rounded-full border border-border bg-card px-3 py-1 text-xs font-medium text-muted-foreground transition-colors hover:border-border-strong hover:text-foreground"
+          >
+            <span className="rounded-full bg-primary/10 px-1.5 py-px text-[11px] font-semibold text-primary">New</span>
+            <span className="min-w-0 truncate">{announcement.title}</span>
+            <ArrowRight className="size-3 shrink-0 transition-transform group-hover:translate-x-0.5" aria-hidden="true" />
+          </Link>
+        ) : null}
+        <h1 id="home-title" className="mk-hero-title mx-auto mt-5 max-w-[22ch]">
+          <span className="block">{HOME_HERO.lines[0]}</span>
+          <span className="block">{HOME_HERO.lines[1]}</span>
+        </h1>
+        <p className="text-lead mx-auto mt-5 max-w-[60ch]!">{HOME_HERO.lead}</p>
+        <div className="mt-8">
+          <PromptBox signedIn={signedIn} variant="hero" source="home" footer={links} capabilityChip={false} />
         </div>
-        <div className="relative mt-8 lg:mt-7">
-          <span aria-hidden="true" className="hero-halo" />
-          <PromptBox signedIn={signedIn} variant="hero" source="home" footer={links} />
-        </div>
+
+        {shot ? (
+          <figure className="mx-auto mt-12 max-w-5xl text-left lg:mt-14">
+            <Link href={templatePreviewHref(shot.id)} aria-label={`Preview the ${shot.name} starter`} className="group/shot block rounded-[12px] outline-offset-4">
+              <BrowserFrame url={`${shot.name} starter`} chrome="minimal" className="rounded-[12px] shadow-xl transition-[border-color] duration-(--dur-3) group-hover/shot:border-foreground/30">
+                <TemplatePreview id={shot.id} category={shot.category} priority sizes="(min-width: 1088px) 1024px, 100vw" className="rounded-none border-0 shadow-none" />
+              </BrowserFrame>
+            </Link>
+            <figcaption className="mt-3 text-center text-xs text-muted-foreground">{HOME_HERO.shotCaption(shot.name)}</figcaption>
+          </figure>
+        ) : null}
       </div>
     </section>
   );

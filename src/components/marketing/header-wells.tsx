@@ -38,7 +38,7 @@ function BuilderWell() {
   return (
     <div className="flex h-full flex-col p-3">
       <div className="mk-in rounded-lg bg-background/80 px-2.5 py-2 text-[11.5px] leading-snug shadow-[inset_0_0_0_1px_var(--border)]" style={d(0)}>
-        <span className="text-signal-ink">›</span> A booking app for a yoga studio<span className="caret" />
+        <span className="text-primary">›</span> A booking app for a yoga studio<span className="caret" />
       </div>
       <ul className="mt-2 space-y-1">
         {["src/App.tsx", "src/pages/Schedule.tsx", "src/lib/slots.ts"].map((p, i) => (
@@ -164,7 +164,7 @@ function ChangelogWell({ entry }: { entry: ChromeData["changelog"] }) {
   return (
     <div className="flex h-full flex-col p-3.5">
       <div className="mk-in flex items-center gap-2 text-[10.5px]" style={d(0)}>
-        <span className="rounded-full bg-signal/12 px-2 py-0.5 font-mono font-medium text-signal-ink">{entry.version ? `v${entry.version}` : "Latest"}</span>
+        <span className="rounded-full bg-primary/12 px-2 py-0.5 font-mono font-medium text-primary">{entry.version ? `v${entry.version}` : "Latest"}</span>
         <time dateTime={entry.date} className="text-muted-foreground">
           {entry.dateLabel}
         </time>

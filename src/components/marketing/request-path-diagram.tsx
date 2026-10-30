@@ -98,7 +98,6 @@ export function RequestPathDiagram({ className, caption }: { className?: string;
   return (
     <figure ref={figRef} className={cn("relative", className)}>
       <div className="relative overflow-hidden rounded-[18px] border border-border bg-card/70 shadow-[inset_0_1px_0_var(--hairline)]">
-        <div aria-hidden="true" className="bg-blueprint pointer-events-none absolute inset-0 opacity-70" />
         <PhoneRail running={playing} started={started && !calm} />
         <svg ref={svgRef} viewBox="0 0 1000 440" role="group" aria-label="Request path through Codexa" className="relative hidden w-full md:block">
           <defs>
@@ -106,8 +105,8 @@ export function RequestPathDiagram({ className, caption }: { className?: string;
             <path id={`${id}-preview`} d={PATHS.preview} />
             <path id={`${id}-secrets`} d={PATHS.secrets} />
             <radialGradient id={`${id}-glow`}>
-              <stop offset="0" stopColor="var(--signal)" stopOpacity="0.55" />
-              <stop offset="1" stopColor="var(--signal)" stopOpacity="0" />
+              <stop offset="0" stopColor="var(--primary)" stopOpacity="0.55" />
+              <stop offset="1" stopColor="var(--primary)" stopOpacity="0" />
             </radialGradient>
           </defs>
           {/* Lanes */}
@@ -136,7 +135,7 @@ export function RequestPathDiagram({ className, caption }: { className?: string;
                       <mpath href={`#${id}-${k}`} />
                     </animateMotion>
                   </circle>
-                  <circle r="4" fill="var(--signal)">
+                  <circle r="4" fill="var(--primary)">
                     <animateMotion dur={dur} begin={begin} repeatCount="indefinite" calcMode="spline" keyPoints="0;1" keyTimes="0;1" keySplines="0.65 0 0.35 1">
                       <mpath href={`#${id}-${k}`} />
                     </animateMotion>
@@ -157,9 +156,9 @@ export function RequestPathDiagram({ className, caption }: { className?: string;
                 fill="var(--card)"
                 stroke={n.tone === "core" ? "var(--border-strong)" : "var(--border)"}
                 strokeWidth="1"
-                className="transition-[stroke] duration-200 group-hover/node:stroke-[var(--signal)] group-focus-visible/node:stroke-[var(--ring)] group-focus-visible/node:[stroke-width:2]"
+                className="transition-[stroke] duration-200 group-hover/node:stroke-[var(--primary)] group-focus-visible/node:stroke-[var(--ring)] group-focus-visible/node:[stroke-width:2]"
               />
-              {n.tone === "core" ? <rect x={n.x + 14} y={n.y} width={n.w - 28} height="1" fill="var(--signal)" opacity="0.7" /> : null}
+              {n.tone === "core" ? <rect x={n.x + 14} y={n.y} width={n.w - 28} height="1" fill="var(--primary)" opacity="0.7" /> : null}
               <text x={n.x + 16} y={n.y + 28} fontSize="14" fontWeight="600" fill="var(--foreground)" fontFamily="var(--font-sans)">
                 {n.title}
               </text>

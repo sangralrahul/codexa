@@ -41,7 +41,7 @@ export function SpecStage({ scenes, className }: { scenes: SpecScene[]; classNam
     <div className={cn("sticky top-24", className)}>
       <AppWindow project={current.project} toolbar={<IllustrationBadge label="Illustration" detail={current.detail} />} bodyClassName="flex flex-col bg-background/40">
         <p aria-live="polite" className="text-label flex h-9 shrink-0 items-center gap-2 border-b border-border bg-surface/60 px-5 text-muted-foreground">
-          <span className="font-mono text-signal-ink">{String(active + 1).padStart(2, "0")}</span>
+          <span className="font-mono text-primary">{String(active + 1).padStart(2, "0")}</span>
           <span aria-hidden="true" className="h-px w-5 bg-border-strong" />
           {current.label}
         </p>

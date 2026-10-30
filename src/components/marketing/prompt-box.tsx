@@ -141,7 +141,7 @@ function ChipPreview({ templateId, name, children }: { templateId: string; name:
  * (and in the link's accessible name, since tooltips do not open on touch).
  */
 function CapabilityChip({ aiReady, className }: { aiReady: boolean; className?: string }) {
-  const chip = "inline-flex h-7 shrink-0 items-center gap-1.5 rounded-full border border-border bg-background/60 px-2.5 text-xs whitespace-nowrap";
+  const chip = "inline-flex h-7 shrink-0 items-center gap-1.5 rounded-[6px] border border-border bg-surface px-2.5 text-xs whitespace-nowrap";
   if (aiReady) {
     return (
       <span className={cn(chip, "text-foreground/80", className)}>
@@ -210,7 +210,7 @@ function StarterPicker({
           type="button"
           aria-label={`${prefix}: ${name}. Choose a starter template`}
           className={cn(
-            "group/starter inline-flex h-9 min-w-0 max-w-full items-center gap-2 rounded-full border border-border bg-background/60 pl-1.5 pr-2.5 text-[13px] text-muted-foreground shadow-[inset_0_1px_0_var(--hairline)] transition-[border-color,color,background-color] duration-200 hover:border-border-strong hover:text-foreground data-[state=open]:border-border-strong data-[state=open]:text-foreground",
+            "group/starter inline-flex h-9 min-w-0 max-w-full items-center gap-2 rounded-[8px] border border-border bg-surface pl-1.5 pr-2.5 text-[13px] text-muted-foreground transition-[border-color,color,background-color] duration-200 hover:border-border-strong hover:text-foreground data-[state=open]:border-border-strong data-[state=open]:text-foreground",
             compact && "h-8",
           )}
         >
@@ -253,7 +253,7 @@ function StarterPicker({
                     <img src={templateShotFor(s.id, 320)} alt="" loading="lazy" decoding="async" width={160} height={100} className="size-full bg-white object-cover object-top transition-transform duration-500 group-hover/opt:scale-[1.04]" />
                   ) : (
                     <span aria-hidden="true" className="flex size-full items-center justify-center text-muted-foreground">
-                      {s ? <Code2 className="size-5" /> : <Sparkles className="size-5 text-signal" />}
+                      {s ? <Code2 className="size-5" /> : <Sparkles className="size-5 text-primary" />}
                     </span>
                   )}
                   {selected ? (
@@ -299,6 +299,7 @@ export function PromptBox({
   defaultValue,
   prefill,
   aiReady: aiReadyProp,
+  capabilityChip = true,
   footer,
   className,
 }: {
@@ -314,6 +315,8 @@ export function PromptBox({
   prefill?: boolean;
   /** Show the capability chip ("Agent ready" / "AI not configured…"). Read from the home store when omitted. */
   aiReady?: boolean;
+  /** Render the capability chip at all. Off in the marketing hero: the AI state is an app concern, shown once the visitor is inside. */
+  capabilityChip?: boolean;
   /** Extra items at the end of the meta line under the composer (e.g. the hero's links). */
   footer?: React.ReactNode;
   className?: string;
@@ -324,7 +327,7 @@ export function PromptBox({
   const hero = variant === "hero";
   const drivesStage = Boolean(store && hero);
   const starters = React.useMemo(() => store?.starters ?? [], [store]);
-  const aiReady = aiReadyProp ?? store?.aiReady;
+  const aiReady = capabilityChip ? (aiReadyProp ?? store?.aiReady) : undefined;
 
   const [value, setValue] = React.useState(() => (defaultValue ? defaultValue.slice(0, IDEA_MAX) : ""));
   const [error, setError] = React.useState<string | null>(null);
@@ -530,11 +533,11 @@ export function PromptBox({
         <div
           data-active={value.length > 0 ? "" : undefined}
           className={cn(
-            "comet-border rounded-[20px] shadow-lg transition-shadow duration-(--dur-3) ease-out",
-            "focus-within:shadow-[0_0_0_1px_color-mix(in_oklab,var(--ring)_60%,transparent),0_0_0_5px_color-mix(in_oklab,var(--signal)_16%,transparent),var(--shadow-lg)]",
+            "rounded-[12px] border border-border-strong bg-card shadow-md transition-[border-color,box-shadow] duration-(--dur-3) ease-out",
+            "focus-within:border-primary focus-within:shadow-[0_0_0_3px_color-mix(in_oklab,var(--primary)_18%,transparent),var(--shadow-md)]",
           )}
         >
-          <div className="comet-border__inner rim rounded-[19px] [--rim-opacity:0.5] before:transition-opacity before:duration-(--dur-3) focus-within:[--rim-opacity:1]">
+          <div className="rounded-[11px]">
             <label id={`${id}-label`} htmlFor={`${id}-prompt`} className="sr-only">
               Describe the application you want to build
             </label>
@@ -570,10 +573,10 @@ export function PromptBox({
               aria-invalid={Boolean(error)}
               className={cn(
                 "block w-full resize-none bg-transparent text-foreground outline-none placeholder:text-muted-foreground/75 focus-visible:outline-none",
-                hero ? "px-5 pb-2 pt-[18px] text-[17px] leading-[1.55] sm:text-[18px]" : "px-4 pb-1.5 pt-3.5 text-base leading-[1.55]",
+                hero ? "px-4 pb-2 pt-4 text-[16px] leading-[1.55] sm:text-[17px]" : "px-4 pb-1.5 pt-3.5 text-[15px] leading-[1.55]",
               )}
             />
-            <div className={cn("flex items-center gap-2", hero ? "px-3 pb-3 sm:px-3.5" : "px-2.5 pb-2.5")}>
+            <div className={cn("flex items-center gap-2", hero ? "px-3 pb-3" : "px-2.5 pb-2.5")}>
               {starters.length > 0 ? (
                 <div className="min-w-0 flex-1 sm:flex-initial">
                   <StarterPicker starters={starters} picked={picked} closest={closest} onPick={pick} compact={!hero} />
@@ -592,12 +595,11 @@ export function PromptBox({
                 </Kbd>
                 <Button
                   type="submit"
-                  variant="ember"
+                  variant="primary"
                   size="lg"
-                  spark
-                  magnetic
+                  appearance="app"
                   aria-busy={submitting || undefined}
-                  className={cn("h-11 gap-1.5 pl-5 pr-4 text-[15px]", !hero && "h-10 text-sm")}
+                  className={cn("h-10 gap-1.5 pl-4 pr-3.5 text-[14px]", !hero && "h-9 text-sm")}
                 >
                   Build it
                   <span data-spark-icon className="relative grid size-4 place-items-center">
@@ -646,7 +648,7 @@ export function PromptBox({
           aria-label="Example ideas"
           onPointerEnter={prefetchPreviews}
           onFocus={prefetchPreviews}
-          className="-mx-4 mt-7 flex snap-x snap-mandatory scroll-px-4 gap-2 overflow-x-auto px-4 pb-1 [mask-image:linear-gradient(to_right,black_calc(100%-48px),transparent)] [scrollbar-width:none] sm:mx-0 sm:flex-wrap sm:justify-center sm:overflow-visible sm:px-0 sm:pb-0 sm:[mask-image:none] lg:-mx-20 [&::-webkit-scrollbar]:hidden"
+          className="-mx-4 mt-5 flex snap-x snap-mandatory scroll-px-4 gap-2 overflow-x-auto px-4 pb-1 [mask-image:linear-gradient(to_right,black_calc(100%-48px),transparent)] [scrollbar-width:none] sm:mx-0 sm:flex-wrap sm:justify-center sm:overflow-visible sm:px-0 sm:pb-0 sm:[mask-image:none] lg:-mx-20 [&::-webkit-scrollbar]:hidden"
         >
           {chips.map((chip) => {
             const starter = starters.find((s) => s.id === chip.templateId);
@@ -657,8 +659,8 @@ export function PromptBox({
                 onClick={() => typeChip(chip)}
                 data-active={active ? "" : undefined}
                 className={cn(
-                  "group/chip inline-flex h-9 items-center gap-2 rounded-full border bg-card/70 pl-1.5 pr-3.5 text-sm text-muted-foreground shadow-[inset_0_1px_0_var(--hairline)] backdrop-blur-sm transition-[border-color,color,background-color,translate] duration-200 hover:-translate-y-px hover:border-border-strong hover:text-foreground calm:hover:translate-y-0",
-                  active ? "border-signal/45 text-foreground" : "border-border",
+                  "group/chip inline-flex h-8 items-center gap-2 rounded-[8px] border bg-card pl-1.5 pr-3 text-[13px] text-muted-foreground transition-[border-color,color,background-color] duration-200 hover:border-border-strong hover:text-foreground",
+                  active ? "border-primary/50 text-foreground" : "border-border",
                 )}
               >
                 <Thumb id={chip.templateId} shot={TEMPLATE_SHOTS.has(chip.templateId)} className="h-[13px] w-5 rounded-[2px]" />

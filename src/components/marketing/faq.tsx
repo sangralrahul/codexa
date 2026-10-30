@@ -26,12 +26,12 @@ export function FAQ({ items, className, withJsonLd = false }: { items: FAQItem[]
       ) : null}
       {items.map((it) => (
         <details key={it.question} className="group relative border-b border-border">
-          <span aria-hidden="true" className="absolute inset-y-3 -left-px w-[2px] origin-top scale-y-0 rounded-full bg-signal transition-transform duration-300 ease-out group-open:scale-y-100" />
+          <span aria-hidden="true" className="absolute inset-y-3 -left-px w-[2px] origin-top scale-y-0 rounded-full bg-primary transition-transform duration-300 ease-out group-open:scale-y-100" />
           <summary className="flex cursor-pointer list-none items-start justify-between gap-6 rounded-md px-4 py-5 text-left text-[15.5px] font-medium tracking-[-0.01em] transition-colors hover:text-foreground sm:text-base [&::-webkit-details-marker]:hidden">
             <span>{it.question}</span>
             <span
               aria-hidden="true"
-              className="relative mt-0.5 inline-flex size-6 shrink-0 items-center justify-center rounded-full border border-border text-muted-foreground transition-[color,border-color,background-color,rotate] duration-300 ease-snap group-open:rotate-180 group-open:border-signal/40 group-open:bg-signal/10 group-open:text-signal-ink group-hover:border-border-strong group-hover:text-foreground"
+              className="relative mt-0.5 inline-flex size-6 shrink-0 items-center justify-center rounded-full border border-border text-muted-foreground transition-[color,border-color,background-color,rotate] duration-300 ease-snap group-open:rotate-180 group-open:border-primary/40 group-open:bg-primary/10 group-open:text-primary group-hover:border-border-strong group-hover:text-foreground"
             >
               <span className="absolute h-px w-2.5 bg-current" />
               <span className="absolute h-2.5 w-px bg-current transition-transform duration-300 ease-snap group-open:scale-y-0" />

@@ -4,22 +4,20 @@ import { Highlight } from "./backdrop";
 
 type Tone = "default" | "surface" | "contrast" | "band";
 const tones: Record<Tone, string> = {
-  // Transparent so the page light can fade out naturally behind the first sections.
   default: "",
-  surface: "bg-surface border-y border-border/60",
+  surface: "bg-surface border-y border-border",
   contrast: "bg-foreground text-background",
-  // A full-bleed band: quiet surface, hairline edges, a rim of light on top and grain.
-  band: "section-band overflow-hidden border-y border-border/70 bg-surface/70",
+  // A full-bleed band: quiet surface with hairline edges (no light, no grain).
+  band: "border-y border-border bg-surface/60",
 };
 
 type Size = "sm" | "md" | "lg";
 const sizes: Record<Size, string> = {
-  // Text-light sections (PLAN §2.4): 64 / 80 / 96px.
-  sm: "py-16 sm:py-20 lg:py-24",
-  // The previous default rhythm (kept for existing pages).
-  md: "py-16 sm:py-20 lg:py-28",
-  // Visual sections: 88 / 112 / 160px.
-  lg: "py-22 sm:py-28 lg:py-40",
+  // Text sections: 56 / 64 / 80px.
+  sm: "py-14 sm:py-16 lg:py-20",
+  md: "py-14 sm:py-16 lg:py-24",
+  // Visual sections: 64 / 80 / 96px.
+  lg: "py-16 sm:py-20 lg:py-24",
 };
 
 export function Section({
@@ -32,25 +30,21 @@ export function Section({
 }: React.HTMLAttributes<HTMLElement> & { tone?: Tone; size?: Size; containerClassName?: string }) {
   return (
     <section className={cn("relative", sizes[size], tones[tone], className)} {...props}>
-      {tone === "band" ? (
-        <>
-          <span aria-hidden="true" className="horizon-line pointer-events-none absolute inset-x-0 top-0 opacity-60" />
-          <span aria-hidden="true" className="bg-noise pointer-events-none absolute inset-0" />
-        </>
-      ) : null}
       <div className={cn("container-x relative", containerClassName)}>{children}</div>
     </section>
   );
 }
 
+/** Heading sizes: `display-2` is the page-title size (mk-h1), `display-3` the section size (mk-h2). */
 const titleSize = {
-  "display-2": "text-display-2",
-  "display-3": "text-display-3",
+  "display-2": "mk-h1",
+  "display-3": "mk-h2",
 } as const;
 
 /**
  * Section heading: an optional mono kicker ("02 — START" via `index`, and/or `eyebrow`),
- * a display heading (two-tone `highlight`), and a lead paragraph.
+ * a sans heading (optional two-tone `highlight`), and a lead paragraph.
+ * The heading's `id` is derived from the section it labels: pass `id` to match `aria-labelledby`.
  */
 export function SectionHeader({
   eyebrow,
@@ -62,11 +56,12 @@ export function SectionHeader({
   align = "left",
   as: Heading = "h2",
   size,
+  id,
   className,
 }: {
   /** Kicker text (rendered as a mono text-label, no pill). */
   eyebrow?: string;
-  /** Chapter index kicker, e.g. "02 — START" (rendered in signal ink before the eyebrow). */
+  /** Chapter index kicker, e.g. "02 — START" (rendered in the accent colour before the eyebrow). */
   index?: string;
   title: string;
   /** Part of the title set in the two-tone .text-dim. */
@@ -76,26 +71,28 @@ export function SectionHeader({
   lead?: React.ReactNode;
   align?: "left" | "center";
   as?: "h1" | "h2" | "h3";
-  /** Display size of the heading. Default: display-2 for h1, display-3 otherwise. */
+  /** Size of the heading. Default: the page-title size for h1, the section size otherwise. */
   size?: "display-2" | "display-3";
+  /** The heading element's id (for `aria-labelledby` on the section). */
+  id?: string;
   className?: string;
 }) {
   const s = size ?? (Heading === "h1" ? "display-2" : "display-3");
   return (
-    <div data-reveal className={cn(s === "display-2" ? "max-w-3xl" : "max-w-2xl", align === "center" && "mx-auto text-center", className)}>
+    <div className={cn(s === "display-2" ? "max-w-3xl" : "max-w-2xl", align === "center" && "mx-auto text-center", className)}>
       {eyebrow || index ? (
         // The shared eyebrow style (text-eyebrow: mono, uppercase, 0.14em, muted; docs/DESIGN.md).
-        <p className={cn("text-eyebrow mb-5 flex items-center gap-2.5", align === "center" && "justify-center")}>
-          {index ? <span className="text-signal-ink">{index}</span> : <span aria-hidden="true" className="size-1.5 rounded-full bg-signal" />}
+        <p className={cn("text-eyebrow mb-4 flex items-center gap-2.5", align === "center" && "justify-center")}>
+          {index ? <span className="text-primary">{index}</span> : <span aria-hidden="true" className="size-1.5 rounded-full bg-primary" />}
           {index && eyebrow ? <span aria-hidden="true" className="h-px w-5 bg-border-strong" /> : null}
           {eyebrow ? <span>{eyebrow}</span> : null}
         </p>
       ) : null}
-      <Heading className={titleSize[s]}>
+      <Heading id={id} className={titleSize[s]}>
         <Highlight text={title} highlight={highlight} />
       </Heading>
-      {description ? <p className={cn("mt-5 text-pretty text-base text-muted-foreground sm:text-lg", align === "center" && "mx-auto")}>{description}</p> : null}
-      {lead ? <div className={`text-lead ${cn("mt-5", align === "center" && "mx-auto")}`}>{lead}</div> : null}
+      {description ? <p className={cn("mt-4 text-pretty text-base text-muted-foreground", align === "center" && "mx-auto")}>{description}</p> : null}
+      {lead ? <div className={`text-lead ${cn("mt-4", align === "center" && "mx-auto")}`}>{lead}</div> : null}
     </div>
   );
 }

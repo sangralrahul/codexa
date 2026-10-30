@@ -95,7 +95,7 @@ export function ComparisonMobile({
         <div
           className={cn(
             "rounded-[16px] border bg-card p-4 shadow-[inset_0_1px_0_var(--hairline)]",
-            hi ? "border-signal/45 shadow-[inset_0_2px_0_var(--signal),inset_0_1px_0_var(--hairline)]" : "border-border",
+            hi ? "border-primary/45 shadow-[inset_0_2px_0_var(--primary),inset_0_1px_0_var(--hairline)]" : "border-border",
           )}
         >
           <p className="text-[17px] font-semibold tracking-[-0.01em]">{columns[col]}</p>

@@ -36,9 +36,9 @@ export function TemplateRail({ ids, signedIn, className }: { ids: string[]; sign
     >
       {items.map((t) => (
         // .shot-pan on the whole card: the screenshot pans while the card is hovered or anything in it has keyboard focus.
-        <li key={t.id} className="glow-card shot-pan group flex w-[min(84%,22rem)] shrink-0 snap-start flex-col rounded-[18px] border border-border p-2.5 lg:w-auto">
-          <div className="relative overflow-hidden rounded-[12px] bg-gradient-to-br from-signal/[0.08] via-surface to-info/[0.08] px-4 pt-4">
-            <TemplatePreview id={t.id} category={t.category} sizes="(min-width: 1024px) 380px, (min-width: 640px) 45vw, 90vw" className="rounded-b-none border-b-0 shadow-lg" />
+        <li key={t.id} className="shot-pan group flex w-[min(84%,22rem)] shrink-0 snap-start flex-col rounded-[12px] border border-border bg-card p-2.5 transition-[border-color,box-shadow] duration-200 hover:border-border-strong hover:shadow-md lg:w-auto">
+          <div className="relative overflow-hidden rounded-[8px] bg-surface px-4 pt-4">
+            <TemplatePreview id={t.id} category={t.category} sizes="(min-width: 1024px) 380px, (min-width: 640px) 45vw, 90vw" className="rounded-b-none border-b-0 shadow-md" />
           </div>
           <div className="flex flex-1 flex-col px-2.5 pb-2 pt-4">
             <p className="text-label text-muted-foreground">{t.categoryName}</p>
@@ -50,7 +50,7 @@ export function TemplateRail({ ids, signedIn, className }: { ids: string[]; sign
             <p className="mt-1.5 text-[13.5px] leading-relaxed text-muted-foreground">{t.description}</p>
             <div className="mt-auto flex flex-wrap items-center gap-2 pt-5">
               <UseTemplateLink templateId={t.id} signedIn={signedIn} />
-              <Link href={templatePreviewHref(t.id)} className="inline-flex h-8 items-center gap-1.5 rounded-full border border-border px-3 text-[13px] text-muted-foreground transition-colors hover:border-border-strong hover:text-foreground">
+              <Link href={templatePreviewHref(t.id)} className="inline-flex h-8 items-center gap-1.5 rounded-[8px] border border-border px-3 text-[13px] text-muted-foreground transition-colors hover:border-border-strong hover:text-foreground">
                 <Eye className="size-3.5" aria-hidden="true" />
                 Preview
               </Link>

@@ -33,7 +33,7 @@ export function ComparisonTable({
   className?: string;
 }) {
   const hi = (i: number) => i === highlightColumn;
-  const rail = "shadow-[inset_1px_0_0_color-mix(in_oklab,var(--signal)_45%,transparent),inset_-1px_0_0_color-mix(in_oklab,var(--signal)_45%,transparent)]";
+  const rail = "shadow-[inset_1px_0_0_color-mix(in_oklab,var(--primary)_45%,transparent),inset_-1px_0_0_color-mix(in_oklab,var(--primary)_45%,transparent)]";
   return (
     <div className={className}>
       <div className="md:hidden">
@@ -53,7 +53,7 @@ export function ComparisonTable({
                   key={c}
                   className={cn(
                     "sticky top-[74px] z-[2] border-b border-border bg-background/90 px-4 pb-4 pt-3 text-left align-bottom font-normal backdrop-blur-md",
-                    hi(i) && cn(rail, "rounded-t-[14px] shadow-[inset_1px_0_0_color-mix(in_oklab,var(--signal)_45%,transparent),inset_-1px_0_0_color-mix(in_oklab,var(--signal)_45%,transparent),inset_0_2px_0_var(--signal)]"),
+                    hi(i) && cn(rail, "rounded-t-[14px] shadow-[inset_1px_0_0_color-mix(in_oklab,var(--primary)_45%,transparent),inset_-1px_0_0_color-mix(in_oklab,var(--primary)_45%,transparent),inset_0_2px_0_var(--primary)]"),
                   )}
                 >
                   <span className={cn("block text-[15px] font-semibold tracking-[-0.01em]", hi(i) && "text-foreground")}>{c}</span>

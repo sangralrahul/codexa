@@ -55,7 +55,7 @@ function HelpCard() {
   ];
   return (
     <div className="e1 rounded-[16px] p-5">
-      <LifeBuoy className="size-4 text-signal-ink" aria-hidden="true" />
+      <LifeBuoy className="size-4 text-primary" aria-hidden="true" />
       <p className="mt-3 text-[14px] font-semibold">Need a hand?</p>
       <ul className="mt-3 space-y-1.5 text-[13.5px]">
         {links.map((l) => (
@@ -199,7 +199,7 @@ export function PageTemplate({
             label: "Last revised",
             value: (
               <span className="inline-flex items-center gap-2 rounded-full border border-border bg-card px-2.5 py-1 text-[12.5px]">
-                <span aria-hidden="true" className="size-1.5 rounded-full bg-signal" />
+                <span aria-hidden="true" className="size-1.5 rounded-full bg-primary" />
                 <time dateTime={page.updated}>{formatDay(page.updated)}</time>
               </span>
             ),

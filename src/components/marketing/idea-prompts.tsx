@@ -37,7 +37,7 @@ export function IdeaPrompts({ ideas, signedIn, className }: { ideas: string[]; s
       {ideas.map((idea, i) => (
         <li key={idea} data-reveal style={{ "--reveal-delay": `${i * 70}ms` } as React.CSSProperties} className="group relative rounded-[14px] border border-border bg-card p-4 shadow-[inset_0_1px_0_var(--hairline)] transition-[border-color,box-shadow] duration-300 hover:border-border-strong hover:shadow-[inset_0_1px_0_var(--hairline),var(--shadow-md)] focus-within:border-border-strong">
           <p className="flex gap-3 text-[15px] leading-relaxed text-foreground">
-            <span aria-hidden="true" className="select-none font-mono text-signal-ink">›</span>
+            <span aria-hidden="true" className="select-none font-mono text-primary">›</span>
             <span>{idea}</span>
           </p>
           <div className="mt-3 flex flex-wrap items-center gap-2 pl-6">

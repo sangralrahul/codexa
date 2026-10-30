@@ -27,11 +27,11 @@ function Mini({ href }: { href: string }) {
             key={p.id}
             className={cn(
               "flex min-w-0 flex-col justify-between rounded-md border px-2 py-1.5 transition-transform duration-500 ease-out group-hover:-translate-y-0.5 group-focus-visible:-translate-y-0.5",
-              p.highlight ? "border-signal/40 bg-signal/10" : "border-border bg-background/70",
+              p.highlight ? "border-primary/40 bg-primary/10" : "border-border bg-background/70",
             )}
             style={{ transitionDelay: `${i * 50}ms` }}
           >
-            <span className={cn("truncate font-mono text-[9.5px] uppercase tracking-[0.08em]", p.highlight ? "text-signal-ink" : "text-muted-foreground")}>{p.name}</span>
+            <span className={cn("truncate font-mono text-[9.5px] uppercase tracking-[0.08em]", p.highlight ? "text-primary" : "text-muted-foreground")}>{p.name}</span>
             <span>
               <span className="mk-num block font-display text-[17px] font-bold leading-none tracking-[-0.02em]">{p.prices ? formatPrice(p.prices.USD.month, "USD") : "Custom"}</span>
               <span className="mt-0.5 block text-[9.5px] text-muted-foreground">a month</span>
@@ -52,11 +52,11 @@ function Mini({ href }: { href: string }) {
                 className={cn(
                   "inline-flex h-6 items-center gap-1 rounded-full border px-2 font-mono text-[10.5px]",
                   i < 2 && "border-success/30 bg-success/10 text-foreground/85",
-                  i === 2 && "border-signal/50 bg-signal/10 text-signal-ink shadow-[0_0_0_3px_color-mix(in_oklab,var(--signal)_10%,transparent)]",
+                  i === 2 && "border-primary/50 bg-primary/10 text-primary shadow-[0_0_0_3px_color-mix(in_oklab,var(--primary)_10%,transparent)]",
                   i > 2 && "border-border bg-background/70 text-muted-foreground",
                 )}
               >
-                {i < 2 ? <Check className="size-3 text-success" strokeWidth={2.5} /> : i === 2 ? <span className="size-1.5 rounded-full bg-signal" /> : null}
+                {i < 2 ? <Check className="size-3 text-success" strokeWidth={2.5} /> : i === 2 ? <span className="size-1.5 rounded-full bg-primary" /> : null}
                 {st.title}
               </span>
               {i < HOW_IT_WORKS_STEPS.length - 1 ? <span className="text-[11px] text-foreground-dim">›</span> : null}
@@ -64,7 +64,7 @@ function Mini({ href }: { href: string }) {
           ))}
         </ol>
         <span className="mx-auto block h-1 w-3/4 overflow-hidden rounded-full bg-muted shadow-[inset_0_0_0_1px_var(--border)]">
-          <span className="block h-full w-1/2 origin-left rounded-full bg-gradient-to-r from-signal to-signal-2 transition-transform duration-700 ease-out group-hover:scale-x-[1.6] group-focus-visible:scale-x-[1.6]" />
+          <span className="block h-full w-1/2 origin-left rounded-full bg-primary transition-transform duration-700 ease-out group-hover:scale-x-[1.6] group-focus-visible:scale-x-[1.6]" />
         </span>
       </div>
     );
@@ -75,7 +75,7 @@ function Mini({ href }: { href: string }) {
       <ol className="flex h-full flex-col justify-center gap-1 px-4 py-3 font-mono text-[10.5px]">
         {FEATURE_GROUPS.slice(0, 4).map((g, i) => (
           <li key={g.id} className="flex items-center gap-2.5 transition-transform duration-500 ease-out group-hover:translate-x-1 group-focus-visible:translate-x-1" style={{ transitionDelay: `${i * 40}ms` }}>
-            <span className="text-signal-ink">{String(i + 1).padStart(2, "0")}</span>
+            <span className="text-primary">{String(i + 1).padStart(2, "0")}</span>
             <span className="truncate text-foreground/80">{g.navLabel}</span>
             <span className="h-px flex-1 bg-border" />
             <span className="tabular-nums text-muted-foreground">{g.features.length}</span>
@@ -88,7 +88,7 @@ function Mini({ href }: { href: string }) {
   return (
     <div className="grid h-full grid-cols-3 gap-1.5 p-3">
       {Array.from({ length: 6 }, (_, i) => (
-        <span key={i} className={cn("rounded-md border border-border bg-background/70 transition-colors duration-300", i === 1 && "group-hover:border-signal/40 group-hover:bg-signal/10 group-focus-visible:border-signal/40 group-focus-visible:bg-signal/10")} />
+        <span key={i} className={cn("rounded-md border border-border bg-background/70 transition-colors duration-300", i === 1 && "group-hover:border-primary/40 group-hover:bg-primary/10 group-focus-visible:border-primary/40 group-focus-visible:bg-primary/10")} />
       ))}
     </div>
   );

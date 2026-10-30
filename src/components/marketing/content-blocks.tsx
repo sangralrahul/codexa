@@ -34,7 +34,7 @@ function FeatureBento({ items }: { items: Feature[] }) {
             <FeatureVisualPlate visual={f.visual!} />
             <div className="px-3 pb-3 pt-5">
               <h3 className="flex items-center gap-2.5 text-[17px] font-semibold tracking-[-0.015em]">
-                {Icon ? <Icon className="size-[18px] shrink-0 text-signal-ink" aria-hidden="true" /> : null}
+                {Icon ? <Icon className="size-[18px] shrink-0 text-primary" aria-hidden="true" /> : null}
                 {f.title}
               </h3>
               <p className="mt-2 max-w-lg text-[14.5px] leading-relaxed text-muted-foreground">
@@ -48,7 +48,7 @@ function FeatureBento({ items }: { items: Feature[] }) {
         const Icon = f.icon;
         return (
           <li key={f.title} data-spotlight-tile className="rounded-[16px] border border-border bg-card p-5 shadow-[inset_0_1px_0_var(--hairline)]">
-            {Icon ? <Icon className="size-5 text-signal-ink" strokeWidth={1.5} aria-hidden="true" /> : null}
+            {Icon ? <Icon className="size-5 text-primary" strokeWidth={1.5} aria-hidden="true" /> : null}
             <h3 className="mt-4 text-[15.5px] font-semibold tracking-[-0.01em]">{f.title}</h3>
             <p className="mt-1.5 text-[14px] leading-relaxed text-muted-foreground">
               <Inline text={f.description} />
@@ -75,7 +75,7 @@ function Block({ b, flip }: { b: ContentBlock; flip?: boolean }) {
           {b.items.map((it, j) => (
             <li key={j} className="relative pl-7 text-foreground/85">
               {b.ordered ? (
-                <span aria-hidden="true" className="absolute left-0 top-[0.2em] font-mono text-[11px] tabular-nums text-signal-ink">
+                <span aria-hidden="true" className="absolute left-0 top-[0.2em] font-mono text-[11px] tabular-nums text-primary">
                   {String(j + 1).padStart(2, "0")}
                 </span>
               ) : (
@@ -172,7 +172,7 @@ function Block({ b, flip }: { b: ContentBlock; flip?: boolean }) {
             return (
               <li key={f.title} data-spotlight-tile className="rounded-[16px] border border-border bg-card p-5 shadow-[inset_0_1px_0_var(--hairline)]">
                 <h3 className="flex items-center gap-2.5 text-[15.5px] font-semibold tracking-[-0.01em]">
-                  {Icon ? <Icon className="size-4 shrink-0 text-signal-ink" aria-hidden="true" /> : null}
+                  {Icon ? <Icon className="size-4 shrink-0 text-primary" aria-hidden="true" /> : null}
                   {f.title}
                 </h3>
                 <p className="mt-2 text-[14px] leading-relaxed text-muted-foreground">
@@ -211,7 +211,7 @@ function Block({ b, flip }: { b: ContentBlock; flip?: boolean }) {
               <ul className="space-y-2.5">
                 {b.points.map((p) => (
                   <li key={p} className="relative pl-6 text-[15px] text-foreground/85">
-                    <span aria-hidden="true" className="absolute left-0 top-[0.55em] h-px w-3 bg-signal" />
+                    <span aria-hidden="true" className="absolute left-0 top-[0.55em] h-px w-3 bg-primary" />
                     <Inline text={p} />
                   </li>
                 ))}
@@ -296,7 +296,7 @@ export function LandingSections({ sections }: { sections: ContentSection[] }) {
               <header data-reveal className={cn(wide ? "max-w-3xl" : "lg:col-span-4")}>
                 {/* The same chapter kicker as SectionHeader: "01 —— INCLUDED" (the short label is the nav label). */}
                 <p aria-hidden="true" className="text-label flex items-center gap-2.5 text-muted-foreground">
-                  <span className="text-signal-ink">{String(i + 1).padStart(2, "0")}</span>
+                  <span className="text-primary">{String(i + 1).padStart(2, "0")}</span>
                   {s.navLabel ? (
                     <>
                       <span className="h-px w-5 bg-border-strong" />

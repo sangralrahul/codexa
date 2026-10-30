@@ -2,9 +2,12 @@ import { Camera, Info } from "lucide-react";
 import { Breadcrumbs } from "@/components/marketing/breadcrumbs";
 import { CTABand } from "@/components/marketing/cta-band";
 import { Kicker } from "@/components/marketing/page-header";
-import { SplitHeading } from "@/components/motion/split-heading";
+import { BrowserFrame } from "@/components/frames/browser-frame";
+import { Highlight } from "@/components/marketing/backdrop";
 import { TemplateGallery, TEMPLATE_SHOTS, UseTemplateLink } from "@/components/templates";
-import { StarterFan } from "@/components/templates/starter-fan";
+import { TemplatePreview } from "@/components/templates/template-preview";
+import { templatePreviewHref } from "@/components/templates/template-card";
+import Link from "next/link";
 import { getCurrentUser } from "@/lib/auth/session";
 import { getTemplate, parseTemplateSearch, TEMPLATE_CATEGORIES, TEMPLATE_FRAMEWORKS, TEMPLATES, type TemplateCategory } from "@/templates";
 import type { Crumb } from "@/content/marketing/types";
@@ -13,10 +16,10 @@ import { cn } from "@/lib/utils";
 export type GallerySearchParams = { q?: string; framework?: string; sort?: string; category?: string };
 
 /**
- * Starters fanned in the /templates hero, front card first. Deliberately not the Featured row
- * (dashboard, storefront, SaaS) right below, so the first screen shows six different starters.
+ * Starters in the /templates hero, lead first. Deliberately not the Featured row (dashboard,
+ * storefront, SaaS) right below, so the first screen shows different starters.
  */
-const HERO_STARTERS = ["vite-react-landing", "vite-react-ops-dashboard", "static-landing"];
+const HERO_STARTERS = ["vite-react-ops-dashboard", "vite-react-landing", "static-landing"];
 
 const HONESTY = "Screenshots are captured from each template's own build; API templates show their real route list.";
 
@@ -55,53 +58,58 @@ export async function PublicGalleryPage({
 
   return (
     <div data-tone="product">
-      <header className="relative overflow-x-clip">
-        <div className="container-x relative pb-12 pt-6 sm:pt-8 lg:pb-14 lg:pt-10">
+      <header className="relative overflow-x-clip border-b border-border bg-surface/60">
+        <div className="container-x relative pb-10 pt-6 sm:pt-8 lg:pb-14">
           <Breadcrumbs items={crumbs} />
-          <div className={cn("mt-10 grid items-center gap-10 lg:mt-12", visual && "lg:grid-cols-12 lg:gap-12")}>
-            <div className={visual ? "lg:col-span-6" : "max-w-3xl"}>
-              <Kicker className="mb-6">Templates</Kicker>
-              <SplitHeading as="h1" size="display-2" dim={dim} className="max-w-[14ch]">
-                {title}
-              </SplitHeading>
-              <p data-reveal style={{ "--reveal-delay": "220ms" } as React.CSSProperties} className="text-lead mt-6">
-                {intro}
-              </p>
-              <div data-reveal style={{ "--reveal-delay": "300ms" } as React.CSSProperties} className="mt-8 flex flex-col gap-4">
+          <div className={cn("mt-8 grid items-center gap-10 lg:mt-10", visual && "lg:grid-cols-12 lg:gap-12")}>
+            <div className={visual ? "lg:col-span-5" : "max-w-3xl"}>
+              <Kicker className="mb-5">Templates</Kicker>
+              <h1 className="mk-h1 max-w-[18ch]">
+                <Highlight text={title} highlight={dim} />
+              </h1>
+              <p className="text-lead mt-5">{intro}</p>
+              <div className="mt-7 flex flex-col gap-4">
                 <dl className="flex flex-wrap gap-x-7 gap-y-3">
                   {facts.map((f) => (
                     <div key={f.label} className="flex items-baseline gap-2">
                       <dt className="sr-only">{f.label}</dt>
                       <dd className="flex items-baseline gap-2">
-                        <span className="font-display text-[26px] font-semibold tabular-nums tracking-[-0.03em]">{f.value}</span>
+                        <span className="font-display text-[24px] font-semibold tabular-nums tracking-[-0.03em]">{f.value}</span>
                         <span className="text-meta text-muted-foreground">{f.label}</span>
                       </dd>
                     </div>
                   ))}
                 </dl>
-                {/* The one honesty line in the hero; on large screens it is the fan's caption instead. */}
-                <p className={cn("flex max-w-2xl items-start gap-2 text-[13px] leading-relaxed text-muted-foreground", visual && "lg:hidden")}>
-                  <Camera className="mt-0.5 size-3.5 shrink-0 text-signal-ink" aria-hidden="true" />
+                <p className="flex max-w-2xl items-start gap-2 text-[13px] leading-relaxed text-muted-foreground">
+                  <Camera className="mt-0.5 size-3.5 shrink-0 text-primary" aria-hidden="true" />
                   <span>{HONESTY}</span>
                 </p>
               </div>
             </div>
             {visual ? (
-              <div className="hidden min-w-0 lg:col-span-6 lg:block">
-                <StarterFan
-                  starters={starters}
-                  caption={
-                    <span className="inline-flex max-w-[46ch] items-start gap-2 text-balance">
-                      <Camera className="mt-0.5 size-3.5 shrink-0 text-signal-ink" aria-hidden="true" />
-                      <span>{HONESTY}</span>
-                    </span>
-                  }
-                />
-              </div>
+              <figure className="hidden min-w-0 lg:col-span-7 lg:block">
+                <Link href={templatePreviewHref(starters[0].id)} aria-label={`Preview the ${starters[0].name} starter`} className="group/shot block rounded-[12px] outline-offset-4">
+                  <BrowserFrame url={`${starters[0].name} starter`} chrome="minimal" className="rounded-[12px] shadow-lg transition-[border-color] duration-(--dur-3) group-hover/shot:border-foreground/30">
+                    <TemplatePreview id={starters[0].id} category={starters[0].category} priority sizes="(min-width: 1024px) 680px, 1px" className="rounded-none border-0 shadow-none" />
+                  </BrowserFrame>
+                </Link>
+                {starters.length > 1 ? (
+                  <ul className="mt-3 grid grid-cols-2 gap-3">
+                    {starters.slice(1).map((t) => (
+                      <li key={t.id}>
+                        <Link href={templatePreviewHref(t.id)} aria-label={`Preview the ${t.name} starter`} className="group/small block rounded-[8px] outline-offset-4">
+                          <TemplatePreview id={t.id} category={t.category} sizes="(min-width: 1024px) 330px, 1px" className="rounded-[8px] transition-[border-color] duration-(--dur-3) group-hover/small:border-foreground/30" />
+                          <span className="mt-1.5 block truncate text-[12px] text-muted-foreground">{t.name}</span>
+                        </Link>
+                      </li>
+                    ))}
+                  </ul>
+                ) : null}
+                <figcaption className="sr-only">{HONESTY}</figcaption>
+              </figure>
             ) : null}
           </div>
         </div>
-        <div aria-hidden="true" className="horizon-line" />
       </header>
       <div className="container-x pb-14 pt-8 sm:pt-10">
         <TemplateGallery

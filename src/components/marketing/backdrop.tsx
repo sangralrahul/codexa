@@ -58,7 +58,7 @@ export function Eyebrow({ children, className, href }: { children: React.ReactNo
   const inner = (
     <>
       <span aria-hidden="true" className="relative flex size-1.5">
-        <span className="size-1.5 rounded-full bg-signal" />
+        <span className="size-1.5 rounded-full bg-primary" />
       </span>
       <span className="min-w-0 truncate">{children}</span>
       {href ? <ArrowRight aria-hidden="true" className="size-3.5 shrink-0 text-muted-foreground transition-transform duration-300 group-hover:translate-x-0.5 group-hover:text-foreground" /> : null}

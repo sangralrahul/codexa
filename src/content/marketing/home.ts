@@ -9,15 +9,32 @@
  */
 
 export const HOME_HERO = {
-  /** The H1, as two visual lines. `mark` gets the selection mark (once per page). */
-  lines: ["From one sentence", "to a running app."],
-  mark: "running app.",
-  /** The marked word cycles through these (visual only; the H1 text stays "…running app."). Each is a kind of starter Codexa ships. */
-  cycle: ["app.", "dashboard.", "store.", "CRM.", "AI chat.", "portfolio."],
-  lead: "Codexa plans the files, writes real code, checks it in a sandbox and runs a live preview you can deploy. Every change is yours to edit or undo.",
+  /** The H1, as two visual lines (plain sans; no accent treatment). */
+  lines: ["Describe the app.", "Codexa writes, runs and ships it."],
+  lead: "An AI agent plans the files, writes real TypeScript, checks it in an isolated sandbox and runs a live preview you can edit by hand and deploy.",
   templatesLink: { label: "Start from a template", href: "/templates" },
-  storyLink: { label: "See it build", href: "#watch-it-build" },
+  storyLink: { label: "How it works", href: "#how-it-works" },
+  /** The starter whose captured screenshot sits under the composer (a real build; see HOME_SHOT_CAPTION). */
+  shotTemplateId: "vite-react-dashboard",
+  shotCaption: (name: string) => `The ${name} starter as it ships, captured from its own build. Open it, read the files, then describe what to change.`,
 } as const;
+
+/** The eight features on the home grid, by title in PLATFORM_FEATURES (src/content/marketing/product.ts). */
+export const HOME_FEATURE_TITLES = ["AI app builder", "AI agent", "Code editor", "Isolated runtimes", "Live preview", "Snapshots and diffs", "Databases", "Deployment"] as const;
+
+export const HOME_FEATURES_COPY = {
+  index: "02 — Platform",
+  title: "A development platform, not a demo.",
+  lead: "Real files in a real editor, an agent that shows every tool call, a sandbox that runs the build before you see the result, and hosting with history.",
+  all: { label: "All features", href: "/features" },
+};
+
+export const HOME_HOW = {
+  index: "01 — How it works",
+  title: "From a sentence to a deployed app, in six steps.",
+  lead: "Each run is planned, written with tools, validated in a sandbox and kept in history. Nothing is hidden behind a spinner.",
+  more: { label: "Read how it works", href: "/how-it-works" },
+};
 
 /** Example ideas under the hero prompt. Each chip types its prompt and switches the stage to its starter. */
 export const HOME_CHIPS: { label: string; templateId: string; prompt: string }[] = [
@@ -124,15 +141,15 @@ export const HOME_STAGE_COPY = {
 };
 
 export const HOME_PROOF = {
-  index: "01 — Proof",
-  title: "Built in the open.",
-  note: "Numbers read from Codexa's source. We don't publish usage or customer numbers.",
+  index: "04 — Built in the open",
+  title: "Numbers read from the source, not from a slide.",
+  note: "Each count is read from Codexa's own code at render time. We do not publish usage or customer numbers.",
   platformLine: "Runs on Cloudflare Workers and Containers.",
 };
 
 export const HOME_WALL = {
-  index: "02 — Start",
-  title: "Start from something real.",
+  index: "03 — Starters",
+  title: "Start from a real app, not a blank page.",
   caption: "Screenshots captured from each starter template's own build.",
   browse: { label: "Browse all starters", href: "/templates" },
 };
@@ -176,16 +193,15 @@ export const HOME_PLATFORM = {
 
 export const HOME_INTEGRATIONS = {
   index: "05 — Connect",
-  title: "Connect real services, then test them live.",
-  highlight: "then test them live.",
+  title: "Connect the services you already use.",
   lead: "Bring your own keys for AI providers, payments, email, databases and hosting. Secrets are encrypted before they are stored and never sent back to the browser.",
   trademark: "Trademarks belong to their owners; no partnership implied.",
+  all: { label: "All integrations", href: "/integrations" },
 };
 
 export const HOME_PRICING = {
   index: "06 — Pricing",
-  title: "Free to start. Priced in rupees and dollars.",
-  highlight: "Priced in rupees and dollars.",
+  title: "Free to start. Priced in INR and USD.",
   lead: "Limits are enforced on the server for AI requests and tokens, runtime minutes, deployments, storage, projects and members.",
   chips: [
     { label: "INR & USD", icon: "rupee" },
@@ -202,7 +218,7 @@ export const HOME_FAQ = {
 };
 
 export const HOME_FINAL = {
-  title: "What will you build first?",
-  highlight: "build first?",
+  title: "Start with a sentence.",
+  lead: "Describe the app you want. Codexa plans it, writes the files, runs the build and gives you a preview to work from.",
   pricing: { label: "See pricing", href: "/pricing" },
 };

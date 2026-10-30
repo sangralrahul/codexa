@@ -69,34 +69,33 @@ export default async function DocsIndexPage() {
       {/* Search hero */}
       <header className="relative max-w-3xl">
         <p className="text-label mb-4 flex items-center gap-2.5 text-muted-foreground">
-          <span aria-hidden="true" className="size-1.5 rounded-full bg-signal shadow-[0_0_0_3px_color-mix(in_oklab,var(--signal)_18%,transparent)]" />
+          <span aria-hidden="true" className="size-1.5 rounded-full bg-primary" />
           Documentation
         </p>
-        <h1 className="text-display-2 max-w-[16ch]">
+        <h1 className="mk-h1 max-w-[20ch]">
           Build, run and ship <span className="text-dim">with Codexa.</span>
         </h1>
-        <p className="text-lead mt-5">How Codexa works, from your first prompt to a deployed application. Everything here describes the product as it ships today; roadmap items are marked as such.</p>
-        <div className="mt-8 max-w-2xl">
+        <p className="text-lead mt-4">How Codexa works, from your first prompt to a deployed application. Everything here describes the product as it ships today; roadmap items are marked as such.</p>
+        <div className="mt-7 max-w-2xl">
           <SearchTrigger variant="hero" examples={HERO_EXAMPLES} />
           <SearchExamples examples={CHIP_EXAMPLES} className="mt-4" />
         </div>
       </header>
 
       {/* The three steps (the "Start here" category below lists every getting-started page) */}
-      <section aria-labelledby="start-heading" className="mt-16">
+      <section aria-labelledby="start-heading" className="mt-14">
         <div className="flex items-end justify-between gap-4">
-          <h2 id="start-heading" className="text-display-4">
+          <h2 id="start-heading" className="text-[20px] font-semibold tracking-[-0.015em]">
             From prompt to deploy
           </h2>
           <span className="text-meta text-foreground-dim">Illustrations of each step</span>
         </div>
-        <ol data-reveal="stagger" className="mt-6 grid gap-4 md:grid-cols-3">
+        <ol className="mt-5 grid gap-4 md:grid-cols-3">
           {START.map(({ n, verb, title, body, href, link, Art }) => (
             <li key={n} className="relative">
               <Link
                 href={href}
-                data-spotlight-tile
-                className="group shot-pan flex h-full flex-col rounded-[20px] border border-border bg-card p-2.5 shadow-[inset_0_1px_0_var(--hairline)] transition-[border-color,box-shadow,translate] duration-(--dur-3) hover:-translate-y-0.5 hover:border-border-strong hover:shadow-lg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring calm:hover:translate-y-0"
+                className="group shot-pan flex h-full flex-col rounded-[12px] border border-border bg-card p-2.5 transition-[border-color,box-shadow] duration-(--dur-3) hover:border-border-strong hover:shadow-md focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
               >
                 <Art />
                 <span className="flex flex-1 flex-col px-2.5 pb-2 pt-4">
@@ -117,20 +116,20 @@ export default async function DocsIndexPage() {
       </section>
 
       {/* Call the API */}
-      <section aria-labelledby="api-heading" className="mt-16 grid gap-8 rounded-[24px] border border-border bg-surface/50 p-6 sm:p-8 lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)] lg:items-center">
+      <section aria-labelledby="api-heading" className="mt-14 grid gap-8 rounded-[12px] border border-border bg-surface/60 p-6 sm:p-8 lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)] lg:items-center">
         <div>
           <p className="text-label flex items-center gap-2 text-muted-foreground">
             <Code2 className="size-3.5" aria-hidden="true" />
             HTTP API
           </p>
-          <h2 id="api-heading" className="text-display-4 mt-3">
+          <h2 id="api-heading" className="mt-3 text-[20px] font-semibold tracking-[-0.015em]">
             Call the API
           </h2>
           <p className="mt-3 max-w-md text-[15px] leading-relaxed text-muted-foreground">
             Everything in the workspace is backed by a JSON API. Listing starter templates is public; project, file and deployment calls use your session.
           </p>
           <div className="mt-6 flex flex-wrap gap-2">
-            <Link href="/api" className={buttonClasses("secondary", "md")}>
+            <Link href="/api" className={buttonClasses("primary", "md")}>
               API overview
             </Link>
             <Link href="/api/reference" className={buttonClasses("outline", "md")}>
@@ -152,13 +151,13 @@ export default async function DocsIndexPage() {
       </section>
 
       {/* Categories */}
-      <div className="mt-16 space-y-14">
+      <div className="mt-14 space-y-12">
         {groups.map((g) => {
           const Icon = categoryIcon(g.category);
           return (
-            <section key={g.category} aria-labelledby={`group-${g.category}`} id={`group-${g.category}`} className="scroll-mt-28">
+            <section key={g.category} aria-labelledby={`group-${g.category}`} id={`group-${g.category}`} className="scroll-mt-20">
               <div className="flex items-center gap-3 border-b border-border pb-3">
-                <span className="grid size-8 place-items-center rounded-[9px] bg-surface-2 text-foreground">
+                <span className="grid size-8 place-items-center rounded-[8px] border border-border bg-surface text-foreground">
                   <Icon className="size-4" aria-hidden="true" />
                 </span>
                 <h2 id={`group-${g.category}`} className="text-[19px] font-semibold tracking-[-0.015em]">
@@ -169,7 +168,7 @@ export default async function DocsIndexPage() {
               <ul className="mt-2 grid gap-x-6 sm:grid-cols-2">
                 {g.items.map((d) => (
                   <li key={d.href}>
-                    <Link href={d.href} className="group -mx-2.5 flex items-start gap-3.5 rounded-[14px] px-2.5 py-3.5 transition-colors duration-(--dur-2) hover:bg-surface focus-visible:outline-2 focus-visible:outline-ring">
+                    <Link href={d.href} className="group -mx-2.5 flex items-start gap-3.5 rounded-[8px] px-2.5 py-3 transition-colors duration-(--dur-2) hover:bg-surface focus-visible:outline-2 focus-visible:outline-ring">
                       <DocIcon href={d.href} category={d.category} />
                       <span className="min-w-0 flex-1">
                         <span className="flex items-center gap-1.5 font-medium">
@@ -188,13 +187,13 @@ export default async function DocsIndexPage() {
       </div>
 
       {/* Help strip */}
-      <section aria-label="More help" className="mt-16 grid gap-3 sm:grid-cols-3">
+      <section aria-label="More help" className="mt-14 grid gap-3 sm:grid-cols-3">
         {[
           { href: "/help", title: "Help center", body: "Answers about accounts, previews and billing.", Icon: LifeBuoy },
           { href: "/docs/troubleshooting", title: "Troubleshooting", body: "Error codes and what to do about them.", Icon: Code2 },
           { href: "/support", title: "Contact support", body: "Send your project id and the error you saw.", Icon: MessagesSquare },
         ].map(({ href, title, body, Icon }) => (
-          <Link key={href} href={href} className="group flex items-start gap-3 rounded-[16px] border border-border p-4 transition-colors duration-(--dur-2) hover:border-border-strong hover:bg-surface">
+          <Link key={href} href={href} className="group flex items-start gap-3 rounded-[12px] border border-border bg-card p-4 transition-colors duration-(--dur-2) hover:border-border-strong hover:bg-surface">
             <Icon className="mt-0.5 size-4 shrink-0 text-muted-foreground group-hover:text-foreground" aria-hidden="true" />
             <span>
               <span className="block text-sm font-medium">{title}</span>

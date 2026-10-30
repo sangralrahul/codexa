@@ -18,7 +18,7 @@ export function FeatureGrid({ features, columns = 3, className }: { features: Fe
         const body = (
           <>
             <div className="flex items-center gap-2.5">
-              {Icon ? <Icon className="size-4 shrink-0 text-muted-foreground transition-colors duration-300 group-hover:text-signal-ink group-focus-within:text-signal-ink" aria-hidden="true" /> : null}
+              {Icon ? <Icon className="size-4 shrink-0 text-muted-foreground transition-colors duration-300 group-hover:text-primary group-focus-within:text-primary" aria-hidden="true" /> : null}
               <h3 className="text-[15px] font-semibold tracking-tight">{f.title}</h3>
               {f.href ? (
                 <ArrowUpRight

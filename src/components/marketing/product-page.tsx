@@ -132,7 +132,7 @@ export function ProductPageTemplate({ page }: { page: ProductPage }) {
                   <VignettePlate id={bento[i]} className="border-0 bg-surface/70" />
                   <div className="px-3 pb-3 pt-5">
                     <h3 className="flex items-center gap-2.5 text-[18px] font-semibold tracking-[-0.015em]">
-                      {Icon ? <Icon className="size-[18px] text-signal-ink" aria-hidden="true" /> : null}
+                      {Icon ? <Icon className="size-[18px] text-primary" aria-hidden="true" /> : null}
                       {f.title}
                     </h3>
                     <p className="mt-2 max-w-lg text-[15px] leading-relaxed text-foreground/75">

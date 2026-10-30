@@ -144,7 +144,7 @@ export function ValidateRun({ playing, className }: { playing?: boolean; classNa
         <span className="font-medium text-code-fg/80">Validation</span>
         <span className="text-code-muted">sandbox</span>
         <span className="ml-auto inline-flex items-center gap-1.5">
-          <span className={cn("size-1.5 rounded-full", done ? "bg-syn-string" : "bg-signal")} />
+          <span className={cn("size-1.5 rounded-full", done ? "bg-syn-string" : "bg-primary")} />
           {done ? "passed" : "checking"}
         </span>
       </div>
@@ -232,7 +232,7 @@ export function PlanSteps({ playing, className }: { playing?: boolean; className
       </div>
       {done || !started ? (
         <p className={cn("flex items-center gap-2 px-1 text-[12px] text-muted-foreground", started && !calm && "pop-in")}>
-          <span className="size-1.5 rounded-full bg-signal" />
+          <span className="size-1.5 rounded-full bg-primary" />
           Next: Editing the project, after a snapshot of the current files.
         </p>
       ) : null}

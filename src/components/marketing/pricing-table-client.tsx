@@ -169,13 +169,10 @@ function PlanCard({ p, prev, currency, interval, compact, fit }: { p: PricingPla
   const extras = p.features.filter((f) => !isLimitLine(f));
   return (
     <div className="relative flex h-full flex-col p-6 sm:p-7">
-      {p.highlight ? (
-        <div aria-hidden="true" className="pointer-events-none absolute inset-0 rounded-[inherit] bg-[radial-gradient(90%_55%_at_50%_0%,color-mix(in_oklab,var(--glow)_13%,transparent),transparent_70%)]" />
-      ) : null}
       <div className="relative flex items-center justify-between gap-2">
         <h3 className="text-[17px] font-semibold tracking-[-0.01em]">{p.name}</h3>
         {p.highlight ? (
-          <span className="inline-flex items-center gap-1 rounded-full bg-foreground px-2.5 py-1 text-[11px] font-semibold text-background">
+          <span className="inline-flex items-center gap-1 rounded-full bg-primary px-2.5 py-1 text-[11px] font-semibold text-primary-foreground">
             <Sparkles className="size-3" aria-hidden="true" />
             Recommended
           </span>
@@ -210,7 +207,7 @@ function PlanCard({ p, prev, currency, interval, compact, fit }: { p: PricingPla
           </>
         )}
       </div>
-      <Link href={p.cta.href} className={buttonClasses(p.highlight ? "secondary" : "outline", "md", "relative mt-6 w-full")}>
+      <Link href={p.cta.href} className={buttonClasses(p.highlight ? "primary" : "outline", "md", "relative mt-6 w-full")}>
         {p.cta.label}
         {p.highlight ? <ArrowRight className="size-4" aria-hidden="true" /> : null}
       </Link>
@@ -259,7 +256,7 @@ function PlanFinder({ usage, onUsage, currency, interval, plans }: { usage: Usag
       <div className="grid grid-cols-1 gap-8 p-6 sm:p-8 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] lg:gap-12">
         <div>
           <p className="text-label flex items-center gap-2 text-muted-foreground">
-            <span aria-hidden="true" className="size-1.5 rounded-full bg-signal" />
+            <span aria-hidden="true" className="size-1.5 rounded-full bg-primary" />
             Plan finder
           </p>
           <h3 id={`${id}-title`} className="text-display-4 mt-4">
@@ -280,7 +277,7 @@ function PlanFinder({ usage, onUsage, currency, interval, plans }: { usage: Usag
                     : "Custom pricing"}
                 </span>
               </span>
-              <Link href={match.cta.href} className={buttonClasses("secondary", "sm", "h-9 px-4")}>
+              <Link href={match.cta.href} className={buttonClasses("primary", "sm", "h-9 px-4")}>
                 {match.cta.label}
                 <ArrowRight className="size-3.5" aria-hidden="true" />
               </Link>
@@ -342,17 +339,15 @@ export function PricingTableClient({ plans, compact, finder = false }: { plans: 
           return (
             <li key={p.id} data-reveal style={{ "--reveal-delay": `${i * 70}ms` } as React.CSSProperties} className={cn("relative", p.highlight && "xl:-translate-y-2")}>
               {fit ? (
-                <span className="pop-in absolute -top-3 right-5 z-[3] inline-flex items-center gap-1 rounded-full bg-[image:var(--ember)] px-2.5 py-1 text-[11px] font-semibold text-[color:var(--ember-ink)] shadow-[var(--glow-signal)]">
+                <span className="pop-in absolute -top-3 right-5 z-[3] inline-flex items-center gap-1 rounded-full bg-primary px-2.5 py-1 text-[11px] font-semibold text-primary-foreground shadow-md">
                   <Check className="size-3" aria-hidden="true" strokeWidth={3} />
                   Fits your usage
                 </span>
               ) : null}
               {p.highlight ? (
-                <div className={cn("comet-border h-full shadow-xl", fit && "ring-2 ring-signal ring-offset-2 ring-offset-background")} data-active="">
-                  <div className="comet-border__inner h-full overflow-hidden">{card}</div>
-                </div>
+                <div className={cn("h-full overflow-hidden rounded-[12px] border border-primary bg-card shadow-lg", fit && "ring-2 ring-primary ring-offset-2 ring-offset-background")}>{card}</div>
               ) : (
-                <div className={cn("h-full rounded-[20px] border border-border bg-card shadow-[inset_0_1px_0_var(--hairline)] transition-[border-color,box-shadow] duration-300 hover:border-border-strong", fit && "ring-2 ring-signal ring-offset-2 ring-offset-background")}>{card}</div>
+                <div className={cn("h-full overflow-hidden rounded-[12px] border border-border bg-card transition-[border-color,box-shadow] duration-300 hover:border-border-strong", fit && "ring-2 ring-primary ring-offset-2 ring-offset-background")}>{card}</div>
               )}
             </li>
           );

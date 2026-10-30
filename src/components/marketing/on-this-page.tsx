@@ -139,7 +139,7 @@ export function OnThisPage({
         <div ref={listRef} className="relative pl-4">
           <span aria-hidden="true" className="absolute inset-y-0 left-0 w-px bg-border" />
           <span ref={fillRef} aria-hidden="true" className="absolute inset-y-0 left-0 w-px origin-top bg-foreground/35" style={{ transform: "scaleY(0)" }} />
-          <GlideIndicator ref={marker} className="-left-px w-[3px] rounded-full bg-signal shadow-none" />
+          <GlideIndicator ref={marker} className="-left-px w-[3px] rounded-full bg-primary shadow-none" />
           <ul className="relative">
             {items.map((it, i) => {
               const on = it.id === active;
