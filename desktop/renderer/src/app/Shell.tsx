@@ -72,38 +72,38 @@ function TitleBar({ onSearch }: { onSearch: () => void }) {
   const { route, back, canGoBack, workspace, user, go } = useApp();
   return (
     <header className="drag chrome relative flex h-11 shrink-0 items-center pl-3 pr-[150px]">
-      <div className="flex w-[212px] shrink-0 items-center gap-2">
-        <span className="flex size-6 items-center justify-center rounded-md bg-white/10">
+      <div className="flex w-[228px] shrink-0 items-center gap-2">
+        <span className="brand-gradient flex size-7 items-center justify-center rounded-lg text-white shadow-sm">
           <Logo size={15} />
         </span>
-        <span className="text-[13px] font-semibold tracking-[-0.01em]">Codexa</span>
+        <span className="text-[14px] font-bold tracking-[-0.02em]">Codexa</span>
         {route.name === "project" && canGoBack ? (
-          <button type="button" onClick={back} aria-label="Back" className="no-drag ml-1 flex size-7 items-center justify-center rounded-md text-white/60 hover:bg-white/10 hover:text-white">
+          <button type="button" onClick={back} aria-label="Back" className="no-drag ml-1 flex size-7 items-center justify-center rounded-md text-muted hover:bg-surface hover:text-fg">
             <ArrowLeft className="size-4" />
           </button>
         ) : workspace ? (
-          <span className="ml-1 truncate text-[12px] text-white/50">/ {workspace.name}</span>
+          <span className="ml-1 truncate text-[12px] text-dim">/ {workspace.name}</span>
         ) : null}
       </div>
       <div className="flex flex-1 justify-center">
         <button
           type="button"
           onClick={onSearch}
-          className="no-drag flex h-7 w-full max-w-[460px] items-center gap-2 rounded-md border border-white/10 bg-white/[0.07] px-2.5 text-[12.5px] text-white/50 transition-colors hover:border-white/20 hover:bg-white/10 hover:text-white/80"
+          className="no-drag flex h-8 w-full max-w-[480px] items-center gap-2 rounded-lg border border-border bg-surface px-3 text-[12.5px] text-muted transition-colors hover:border-border-strong hover:bg-card hover:text-fg"
         >
           <Search className="size-3.5" />
           <span className="flex-1 text-left">Search projects, templates and commands</span>
-          <kbd className="rounded border border-white/15 px-1 font-sans text-[10.5px] text-white/50">Ctrl K</kbd>
+          <Kbd>Ctrl K</Kbd>
         </button>
       </div>
       <div className="no-drag flex shrink-0 items-center gap-1">
-        <button type="button" title="What's new" aria-label="What's new" onClick={() => void window.codexa.openWeb("/changelog")} className="flex size-7 items-center justify-center rounded-md text-white/60 hover:bg-white/10 hover:text-white">
+        <button type="button" title="What's new" aria-label="What's new" onClick={() => void window.codexa.openWeb("/changelog")} className="flex size-8 items-center justify-center rounded-md text-muted hover:bg-surface hover:text-fg">
           <Sparkles className="size-4" />
         </button>
-        <button type="button" title="Help & docs" aria-label="Help & docs" onClick={() => void window.codexa.openWeb("/docs")} className="flex size-7 items-center justify-center rounded-md text-white/60 hover:bg-white/10 hover:text-white">
+        <button type="button" title="Help & docs" aria-label="Help & docs" onClick={() => void window.codexa.openWeb("/docs")} className="flex size-8 items-center justify-center rounded-md text-muted hover:bg-surface hover:text-fg">
           <BookOpen className="size-4" />
         </button>
-        <button type="button" title="Account settings" aria-label="Account settings" onClick={() => go({ name: "settings" })} className="ml-1 rounded-full ring-1 ring-white/15 hover:ring-white/40">
+        <button type="button" title="Account settings" aria-label="Account settings" onClick={() => go({ name: "settings" })} className="ml-1 rounded-full ring-2 ring-border hover:ring-primary/40">
           <Avatar name={user.name || user.email} size={24} />
         </button>
       </div>
@@ -122,14 +122,14 @@ function Sidebar() {
   };
 
   return (
-    <aside className="flex w-[224px] shrink-0 flex-col border-r border-border bg-sidebar">
+    <aside className="flex w-[240px] shrink-0 flex-col border-r border-border bg-sidebar">
       <div className="px-3 pt-3">
         <Menu
           align="start"
           width={216}
           trigger={(open, toggle) => (
             <button type="button" onClick={toggle} aria-expanded={open} className="flex h-11 w-full items-center gap-2.5 rounded-lg px-2 text-left hover:bg-surface">
-              <span className="flex size-7 items-center justify-center rounded-md bg-primary text-[12px] font-semibold text-primary-fg">{(workspace?.name ?? "W")[0]?.toUpperCase()}</span>
+              <span className="brand-gradient flex size-7 items-center justify-center rounded-md text-[12px] font-semibold text-white">{(workspace?.name ?? "W")[0]?.toUpperCase()}</span>
               <span className="min-w-0 flex-1">
                 <span className="block truncate text-[13px] font-semibold">{workspace?.name ?? "Workspace"}</span>
                 <span className="block truncate text-[11.5px] capitalize text-muted">{workspace?.plan ?? "free"} plan</span>
@@ -192,12 +192,11 @@ function Sidebar() {
                   onClick={() => go({ name: n.name } as Route)}
                   aria-current={active ? "page" : undefined}
                   className={cn(
-                    "group relative flex h-8 w-full items-center gap-2.5 rounded-lg px-2.5 text-[13px] transition-colors",
-                    active ? "bg-card font-medium text-fg shadow-sm ring-1 ring-border" : "text-muted hover:bg-surface hover:text-fg",
+                    "group relative flex h-9 w-full items-center gap-2.5 rounded-lg px-2.5 text-[13.5px] transition-colors",
+                    active ? "bg-accent-soft font-semibold text-primary" : "text-muted hover:bg-surface hover:text-fg",
                   )}
                 >
-                  {active ? <span className="absolute -left-3 top-1.5 h-5 w-[3px] rounded-r-full bg-accent" /> : null}
-                  <n.icon className={cn("size-4", active ? "text-accent" : "")} />
+                  <n.icon className={cn("size-4", active ? "text-primary" : "")} />
                   <span className="flex-1 text-left">{n.label}</span>
                 </button>
               </li>
@@ -329,7 +328,7 @@ function UsageCard({ usage }: { usage: NonNullable<ReturnType<typeof useApp>["us
                 </span>
               </div>
               <div className="mt-1 h-1 overflow-hidden rounded-full bg-surface">
-                <div className={cn("h-full rounded-full", pct > 90 ? "bg-danger" : pct > 70 ? "bg-warning" : "bg-accent")} style={{ width: `${Math.max(pct, 2)}%` }} />
+                <div className={cn("h-full rounded-full", pct > 90 ? "bg-danger" : pct > 70 ? "bg-warning" : "brand-bar")} style={{ width: `${Math.max(pct, 2)}%` }} />
               </div>
             </div>
           );

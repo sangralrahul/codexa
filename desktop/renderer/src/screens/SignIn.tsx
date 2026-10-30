@@ -84,12 +84,12 @@ export function SignIn({ onSignedIn }: { onSignedIn: (u: SessionUser) => void })
       <div className="relative flex flex-1 items-center justify-center px-8">
         <div className="w-full max-w-[380px]">
           <div className="rise flex items-center gap-2.5 text-fg" style={{ "--d": "0ms" } as React.CSSProperties}>
-            <span className="flex size-9 items-center justify-center rounded-xl bg-primary text-primary-fg shadow-card">
+            <span className="brand-gradient flex size-9 items-center justify-center rounded-xl text-white shadow-card">
               <Logo size={20} />
             </span>
             <span className="text-[19px] font-semibold tracking-[-0.02em]">codexa</span>
           </div>
-          <h1 className="rise mt-10 font-[family-name:var(--font-display)] text-[30px] font-semibold leading-tight tracking-[-0.025em]" style={{ "--d": "80ms" } as React.CSSProperties}>
+          <h1 className="rise mt-10 font-[family-name:var(--font-display)] text-[34px] font-bold leading-tight tracking-[-0.035em]" style={{ "--d": "80ms" } as React.CSSProperties}>
             Welcome back
           </h1>
           <p className="rise mt-2 text-[14.5px] text-muted" style={{ "--d": "140ms" } as React.CSSProperties}>
@@ -149,17 +149,20 @@ export function SignIn({ onSignedIn }: { onSignedIn: (u: SessionUser) => void })
         </p>
       </div>
 
-      <aside className="relative hidden w-[50%] max-w-[760px] flex-col justify-center overflow-hidden border-l border-border/70 bg-sidebar/70 px-14 backdrop-blur-xl lg:flex">
+      <aside className="brand-mesh relative hidden w-[52%] max-w-[800px] flex-col justify-center overflow-hidden border-l border-border/70 px-14 lg:flex">
         <div className="relative">
-          <p className="rise text-[12.5px] font-medium text-muted" style={{ "--d": "120ms" } as React.CSSProperties}>
-            Codexa for Windows
+          <p className="rise inline-flex items-center gap-1.5 rounded-full border border-border bg-card/80 px-2.5 py-1 text-[12px] font-medium text-muted shadow-sm" style={{ "--d": "120ms" } as React.CSSProperties}>
+            <Logo size={12} /> Codexa for Windows
           </p>
-          <h2 className="rise mt-2 max-w-lg text-balance font-[family-name:var(--font-display)] text-[32px] font-semibold leading-[1.12] tracking-[-0.025em]" style={{ "--d": "200ms" } as React.CSSProperties}>
-            From a sentence to a <span className="shimmer-text">running app.</span>
+          <h2 className="rise mt-4 max-w-xl text-balance font-[family-name:var(--font-display)] text-[40px] font-bold leading-[1.05] tracking-[-0.04em]" style={{ "--d": "200ms" } as React.CSSProperties}>
+            From a sentence to a <span className="brand-gradient-text">running app.</span>
           </h2>
+          <p className="rise mt-3 max-w-lg text-[15px] leading-relaxed text-muted" style={{ "--d": "240ms" } as React.CSSProperties}>
+            Describe it. Codexa plans the files, writes real code, runs a live preview and publishes it, all from this app.
+          </p>
 
           {/* Showcase: a template screenshot inside a window frame, cycling with a crossfade. */}
-          <figure className="rise lift mt-8 overflow-hidden rounded-2xl border border-border bg-card shadow-card" style={{ "--d": "300ms" } as React.CSSProperties}>
+          <figure className="rise lift glow-frame mt-8 overflow-hidden rounded-2xl border border-border bg-card shadow-card" style={{ "--d": "300ms" } as React.CSSProperties}>
             <div className="flex h-9 items-center gap-1.5 border-b border-border bg-surface/60 px-3">
               <span className="size-2.5 rounded-full bg-[#ff5f57]" />
               <span className="size-2.5 rounded-full bg-[#febc2e]" />
@@ -191,8 +194,8 @@ export function SignIn({ onSignedIn }: { onSignedIn: (u: SessionUser) => void })
 
           <ul className="mt-6 grid grid-cols-3 gap-3">
             {STEPS.map(([t, d, Icon], i) => (
-              <li key={t} className="rise lift rounded-xl border border-border bg-card/80 p-3.5 card-edge" style={{ "--d": `${380 + i * 70}ms` } as React.CSSProperties}>
-                <span className="flex size-7 items-center justify-center rounded-lg bg-accent-soft text-accent">
+              <li key={t} className="rise lift rounded-xl border border-border bg-card/90 p-3.5 card-edge" style={{ "--d": `${380 + i * 70}ms` } as React.CSSProperties}>
+                <span className="icon-tile size-8">
                   <Icon className="size-4" />
                 </span>
                 <p className="mt-2.5 text-[13.5px] font-semibold">{t}</p>

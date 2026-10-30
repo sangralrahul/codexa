@@ -6,24 +6,43 @@ import { Button, Dialog, Field, Input, Menu, MenuItem, MenuSeparator, toast } fr
 import { useApp } from "../app/state";
 import { ProjectThumb } from "./ProjectThumb";
 
-export function ProjectCard({ project: p }: { project: Project }) {
+export function ProjectCard({ project: p, live }: { project: Project; live?: string | null }) {
   const { go } = useApp();
   return (
-    <article className="group lift relative flex flex-col overflow-hidden rounded-2xl border border-border bg-card shadow-sm hover:border-border-strong">
+    <article className="group lift card-edge relative flex flex-col overflow-hidden rounded-2xl border border-border bg-card hover:border-border-strong">
       <button type="button" onClick={() => go({ name: "project", id: p.id })} className="text-left" aria-label={`Open ${p.name}`}>
-        <div className="aspect-[16/10] overflow-hidden border-b border-border bg-surface">
-          <ProjectThumb templateId={p.templateId} name={p.name} big className="h-full w-full transition-transform duration-500 group-hover:scale-[1.02]" />
+        {/* Browser-frame thumbnail */}
+        <div className="border-b border-border bg-surface">
+          <div className="flex h-6 items-center gap-1 px-2.5">
+            <span className="size-1.5 rounded-full bg-border-strong" />
+            <span className="size-1.5 rounded-full bg-border-strong" />
+            <span className="size-1.5 rounded-full bg-border-strong" />
+            <span className="ml-2 h-3 flex-1 rounded-sm bg-card/70" />
+          </div>
+          <div className="aspect-[16/9] overflow-hidden">
+            <ProjectThumb templateId={p.templateId} name={p.name} big className="h-full w-full transition-transform duration-500 group-hover:scale-[1.02]" />
+          </div>
         </div>
-        <div className="px-4 pb-4 pt-3.5">
-          <h3 className="truncate pr-8 text-[14.5px] font-semibold tracking-[-0.01em]">{p.name}</h3>
+        <div className="px-4 pb-4 pt-3">
+          <div className="flex items-center gap-2 pr-8">
+            <h3 className="min-w-0 flex-1 truncate text-[14.5px] font-semibold tracking-[-0.01em]">{p.name}</h3>
+            {live ? (
+              <span className="inline-flex shrink-0 items-center gap-1 rounded-md bg-success/10 px-1.5 py-0.5 text-[11px] font-semibold text-success">
+                <span className="size-1.5 rounded-full bg-success" /> Live
+              </span>
+            ) : live === null ? (
+              <span className="shrink-0 rounded-md bg-surface px-1.5 py-0.5 text-[11px] font-medium text-dim">Draft</span>
+            ) : null}
+          </div>
           <p className="mt-1 flex items-center gap-1.5 text-[12.5px] text-muted">
-            <span className="truncate">{frameworkLabel(p.framework)}</span>
-            <span className="text-dim">·</span>
-            <span className="shrink-0">Edited {relativeTime(p.updatedAt)}</span>
+            <span className="truncate">{p.description || frameworkLabel(p.framework)}</span>
+          </p>
+          <p className="mt-1.5 text-[11.5px] text-dim">
+            {frameworkLabel(p.framework)} · Edited {relativeTime(p.updatedAt)}
           </p>
         </div>
       </button>
-      <div className="absolute bottom-3.5 right-3">
+      <div className="absolute bottom-3 right-3">
         <ProjectMenu project={p} />
       </div>
     </article>

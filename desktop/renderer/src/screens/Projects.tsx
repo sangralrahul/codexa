@@ -17,7 +17,7 @@ export function ProjectsScreen() {
   const [q, setQ] = useState("");
   const [framework, setFramework] = useState("all");
   const [sort, setSort] = useState<Sort>(() => (localStorage.getItem("codexa:projects-sort") as Sort) ?? "recent");
-  const [view, setView] = useState<"grid" | "list">(() => (localStorage.getItem("codexa:projects-view") as "grid" | "list") ?? "list");
+  const [view, setView] = useState<"grid" | "list">(() => (localStorage.getItem("codexa:projects-view") as "grid" | "list") ?? "grid");
 
   const frameworks = useMemo(() => {
     const counts = new Map<string, number>();
@@ -50,10 +50,10 @@ export function ProjectsScreen() {
       <div className="relative mx-auto max-w-[1240px] px-8 py-7">
         <header className="flex items-end justify-between gap-4">
           <div>
-            <h1 className="font-[family-name:var(--font-display)] text-[22px] font-semibold tracking-[-0.02em]">Projects</h1>
+            <h1 className="font-[family-name:var(--font-display)] text-[26px] font-bold tracking-[-0.03em]">Projects</h1>
             <p className="mt-0.5 text-[13px] text-muted">{projects ? `${projects.length} project${projects.length === 1 ? "" : "s"} in ${workspace?.name ?? "this workspace"}` : "Loading…"}</p>
           </div>
-          <Button variant="accent" onClick={newProject}>
+          <Button variant="primary" onClick={newProject}>
             <Plus /> New project
           </Button>
         </header>

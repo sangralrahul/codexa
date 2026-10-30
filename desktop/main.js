@@ -12,7 +12,7 @@ const APP_URL = (process.env.CODEXA_URL || "https://codexa.creditvault.tech").re
 const APP_ORIGIN = new URL(APP_URL).origin;
 const RENDERER_DIR = path.join(__dirname, "dist-renderer");
 const STATE_FILE = path.join(app.getPath("userData"), "window-state.json");
-const PALETTE = { dark: { bg: "#0d0e11", fg: "#e7e9ec" }, light: { bg: "#f5f6f8", fg: "#0f1116" } };
+const PALETTE = { dark: { bg: "#141a2a", fg: "#eef0f6" }, light: { bg: "#ffffff", fg: "#0b0f1a" } };
 
 protocol.registerSchemesAsPrivileged([{ scheme: "app", privileges: { standard: true, secure: true, supportFetchAPI: true, corsEnabled: false } }]);
 
@@ -86,8 +86,7 @@ function createWindow() {
     show: false,
     // Native window buttons drawn by Windows over our own title bar.
     titleBarStyle: "hidden",
-    // The app chrome (title bar) is always dark, like a real tool; only the content area follows the theme.
-    titleBarOverlay: { color: PALETTE.dark.bg, symbolColor: PALETTE.dark.fg, height: 44 },
+    titleBarOverlay: { color: theme.bg, symbolColor: theme.fg, height: 44 },
     webPreferences: {
       preload: path.join(__dirname, "preload.js"),
       contextIsolation: true,
@@ -249,7 +248,7 @@ function registerIpc() {
     const t = nativeTheme.shouldUseDarkColors ? PALETTE.dark : PALETTE.light;
     if (mainWindow && process.platform !== "darwin") {
       try {
-        mainWindow.setTitleBarOverlay({ color: PALETTE.dark.bg, symbolColor: PALETTE.dark.fg, height: 44 });
+        mainWindow.setTitleBarOverlay({ color: t.bg, symbolColor: t.fg, height: 44 });
       } catch {
         // Not supported on this platform.
       }
