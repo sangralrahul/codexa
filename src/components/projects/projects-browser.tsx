@@ -52,14 +52,14 @@ export function ProjectsBrowser({
 }) {
   const [query, setQuery] = useState("");
   const [sort, setSort] = useState<Sort>("recent");
-  const [layout, setLayout] = useState<Layout>("list");
+  const [layout, setLayout] = useState<Layout>("grid");
   const [vis, setVis] = useState<Vis>("all");
   const rowsRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    const saved = readLocal<Layout>(LAYOUT_KEY, "list");
+    const saved = readLocal<Layout>(LAYOUT_KEY, "grid");
     // eslint-disable-next-line react-hooks/set-state-in-effect -- one-time hydration from localStorage after mount (SSR-safe)
-    if (saved === "grid") setLayout("grid");
+    if (saved === "list") setLayout("list");
   }, []);
   const changeLayout = (l: Layout) => {
     withViewTransition(() => setLayout(l));
@@ -245,7 +245,7 @@ export function ProjectsBrowser({
         </ul>
       ) : (
         <div role="table" aria-label="Projects" aria-rowcount={filtered.length + 1} className="overflow-clip rounded-lg border border-border bg-card">
-          <div role="rowgroup" className="sticky top-[52px] z-10 hidden border-b border-border bg-surface md:block">
+          <div role="rowgroup" className="sticky top-[56px] z-10 hidden border-b border-border bg-surface md:block">
             <div role="row" className="grid grid-cols-[minmax(0,2.2fr)_minmax(0,1.4fr)_minmax(0,1fr)_minmax(0,0.9fr)_minmax(0,1fr)_40px] items-center gap-3 px-4 py-1.5 text-[11.5px] font-medium text-muted-foreground">
               <span role="columnheader">Name</span>
               <span role="columnheader">Status</span>

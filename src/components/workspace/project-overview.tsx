@@ -164,7 +164,7 @@ export function ProjectOverview({
                     onClick={() => onAction(id)}
                     className="flex h-10 w-full items-center gap-2.5 px-3 text-left text-[13px] transition-colors hover:bg-muted/60 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-ring disabled:opacity-50"
                   >
-                    <Icon className={cn("size-4 text-muted-foreground", id === "publish" && "text-signal")} aria-hidden="true" />
+                    <Icon className={cn("size-4 text-muted-foreground", id === "publish" && "text-primary")} aria-hidden="true" />
                     {label}
                     {kbd ? <span className="ml-auto">{kbd}</span> : null}
                   </button>
@@ -174,7 +174,7 @@ export function ProjectOverview({
           </section>
           <section aria-labelledby="ov-ai">
             <h3 id="ov-ai" className="flex items-center gap-1.5 text-[13px] font-semibold">
-              <Sparkles className="size-3.5 text-signal" aria-hidden="true" /> Changed by the AI
+              <Sparkles className="size-3.5 text-primary" aria-hidden="true" /> Changed by the AI
             </h3>
             {recentAi.length ? (
               <ul className="mt-2 overflow-hidden rounded-xl border border-border">

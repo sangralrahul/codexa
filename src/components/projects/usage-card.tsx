@@ -45,12 +45,12 @@ export function UsageCard({ entitlements, projectCount, className }: { entitleme
       }
       className={className}
     >
-      <div className="space-y-3 px-3 py-3">
+      <div className="space-y-3.5 px-4 py-4">
         {rows.map((r) => (
           <Meter key={r.label} label={r.label} value={r.used} max={Math.max(0, r.limit)} unlimited={r.limit < 0} format={n} size="sm" warnAt={0.7} dangerAt={0.9} />
         ))}
       </div>
-      <p className="border-t border-border px-3 py-2 text-[11.5px] text-muted-foreground">
+      <p className="border-t border-border bg-surface/60 px-4 py-2.5 text-[12px] text-muted-foreground">
         Resets <time dateTime={resetsAt.toISOString()}>{resets}</time> · limits are enforced on the server
       </p>
     </PanelCard>

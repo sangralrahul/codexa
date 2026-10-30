@@ -14,17 +14,16 @@
 /* ---------- Cards: glassy e1 with an inset highlight, staggered entrance ---------- */
 .settings-card {
   position: relative;
-  background: color-mix(in oklab, var(--card) 86%, transparent);
-  -webkit-backdrop-filter: blur(10px) saturate(130%);
-  backdrop-filter: blur(10px) saturate(130%);
-  border: 1px solid var(--border);
-  box-shadow: inset 0 1px 0 var(--hairline), var(--shadow-sm);
+  background: var(--card);
+  border: 1px solid color-mix(in oklab, var(--foreground) 6%, transparent);
+  border-radius: 16px;
+  box-shadow: var(--shadow-md);
   transition: border-color var(--dur-3) var(--ease-out), box-shadow var(--dur-4) var(--ease-out);
   animation: settings-in var(--dur-4) var(--ease-out) backwards;
   animation-delay: calc(var(--card-i, 0) * 50ms);
   scroll-margin-top: 84px;
 }
-.settings-card:hover { border-color: var(--border-strong); }
+.settings-card:hover { border-color: color-mix(in oklab, var(--foreground) 10%, transparent); box-shadow: var(--shadow-lg); }
 .settings-card[data-tone="danger"] { border-color: color-mix(in oklab, var(--danger) 28%, var(--border)); }
 .settings-card[data-tone="danger"]:hover { border-color: color-mix(in oklab, var(--danger) 45%, var(--border)); }
 @keyframes settings-in { from { opacity: 0; transform: translateY(8px); } }
@@ -67,7 +66,7 @@
 .settings-row:is(:hover, :focus-within) { box-shadow: inset 2px 0 0 0 var(--accent); }
 
 /* ---------- Navigation ---------- */
-.settings-nav-pill { left: 0; right: 0; width: auto !important; border-radius: 10px; background: var(--card); box-shadow: inset 0 0 0 1px var(--border), var(--shadow-sm); }
+.settings-nav-pill { left: 0; right: 0; width: auto !important; border-radius: 10px; background: color-mix(in oklab, var(--foreground) 4%, transparent); box-shadow: none; }
 .settings-tabs {
   scrollbar-width: none;
   -webkit-overflow-scrolling: touch;
@@ -95,6 +94,7 @@
 
 /* ---------- Overview bento ---------- */
 .bento-tile { transition: transform var(--dur-4) var(--ease-out), border-color var(--dur-3), box-shadow var(--dur-4) var(--ease-out); }
+.bento-tile:is(:hover, :focus-visible) { transform: translateY(-2px); box-shadow: var(--shadow-lg); }
 .bento-tile .bento-arrow { transition: transform var(--dur-3) var(--ease-out), color var(--dur-2); }
 .bento-tile:is(:hover, :focus-visible) .bento-arrow { transform: translate(2px, -2px); color: var(--foreground); }
 
@@ -102,7 +102,7 @@
 .setup-item[data-done] .setup-tick { animation: tick-pop 420ms var(--ease-spring) backwards; animation-delay: calc(var(--i, 0) * 70ms + 200ms); }
 .setup-item[data-done] .setup-tick path { stroke-dasharray: 1; stroke-dashoffset: 1; animation: check-draw 320ms var(--ease-out) forwards; animation-delay: calc(var(--i, 0) * 70ms + 320ms); }
 @keyframes tick-pop { from { transform: scale(0.4); opacity: 0; } }
-.setup-progress { transform-origin: 0 50%; animation: grow-x 900ms var(--ease-out) 200ms backwards; }
+.setup-progress { transform-origin: 0 50%; background: var(--brand-gradient); animation: grow-x 900ms var(--ease-out) 200ms backwards; }
 /* Check-ring: done arcs fade in one after another. */
 .setup-ring-seg[data-done] { animation: ring-seg-in 420ms var(--ease-out) backwards; animation-delay: calc(var(--i, 0) * 90ms + 200ms); }
 @keyframes ring-seg-in { from { opacity: 0; } }
@@ -139,7 +139,7 @@
 }
 @keyframes unlock-flash { from { opacity: 1; } to { opacity: 0; } }
 .plan-card { transition: transform var(--dur-4) var(--ease-out), border-color var(--dur-3), box-shadow var(--dur-4) var(--ease-out); }
-.plan-card:hover { transform: translateY(-2px); border-color: var(--border-strong); box-shadow: inset 0 1px 0 var(--hairline), var(--shadow-lg); }
+.plan-card:hover { transform: translateY(-2px); border-color: var(--border-strong); box-shadow: var(--shadow-lg); }
 .price-swap { display: inline-block; animation: price-swap var(--dur-3) var(--ease-out) backwards; }
 @keyframes price-swap { from { opacity: 0; transform: translateY(35%); } }
 
@@ -154,7 +154,7 @@ button.seat:is(:hover, :focus-visible) { transform: translateY(-2px); border-col
 /* Invite chips */
 .chip-in { animation: chip-pop var(--dur-3) var(--ease-snap) backwards; }
 @keyframes chip-pop { from { opacity: 0; transform: scale(0.85); } }
-.chip-field:focus-within { border-color: color-mix(in oklab, var(--ring) 70%, transparent); box-shadow: 0 0 0 4px color-mix(in oklab, var(--accent) 16%, transparent); }
+.chip-field:focus-within { border-color: color-mix(in oklab, var(--ring) 70%, transparent); box-shadow: var(--brand-ring); }
 
 /* Rows: new rows sweep a signal highlight once; removed rows collapse (diff-row from globals). */
 .row-sweep { position: relative; overflow: hidden; }
@@ -190,9 +190,9 @@ button.seat:is(:hover, :focus-visible) { transform: translateY(-2px); border-col
 
 /* Radio cards */
 .radio-card { transition: border-color var(--dur-2), background-color var(--dur-2), box-shadow var(--dur-3) var(--ease-out), scale var(--dur-2) var(--ease-snap); }
-.radio-card[aria-checked="true"] { border-color: color-mix(in oklab, var(--foreground) 55%, var(--border-strong)); box-shadow: inset 0 1px 0 var(--hairline), 0 0 0 3px color-mix(in oklab, var(--foreground) 8%, transparent); }
-.radio-card .radio-dot::after { content: ""; position: absolute; inset: 3px; border-radius: inherit; background: var(--foreground); transform: scale(0); transition: transform var(--dur-3) var(--ease-spring); }
-.radio-card[aria-checked="true"] .radio-dot { border-color: var(--foreground); }
+.radio-card[aria-checked="true"] { border-color: color-mix(in oklab, var(--primary) 60%, var(--border-strong)); box-shadow: var(--brand-ring); }
+.radio-card .radio-dot::after { content: ""; position: absolute; inset: 3px; border-radius: inherit; background: var(--primary); transform: scale(0); transition: transform var(--dur-3) var(--ease-spring); }
+.radio-card[aria-checked="true"] .radio-dot { border-color: var(--primary); }
 .radio-card[aria-checked="true"] .radio-dot::after { transform: scale(1); }
 
 /* ---------- Profile ---------- */
@@ -222,8 +222,8 @@ button.seat:is(:hover, :focus-visible) { transform: translateY(-2px); border-col
 :is(.int-tile:hover, .int-tile:focus-within) .brand-tile { transform: scale(1.06); }
 
 /* New-workspace steps */
-.ws-step[data-state="done"] .ws-step__dot { background: var(--foreground); color: var(--background); border-color: var(--foreground); }
-.ws-step[data-state="active"] .ws-step__dot { border-color: var(--accent); color: var(--accent); box-shadow: 0 0 0 4px color-mix(in oklab, var(--accent) 14%, transparent); }
+.ws-step[data-state="done"] .ws-step__dot { background: var(--brand-gradient); color: #ffffff; border-color: transparent; }
+.ws-step[data-state="active"] .ws-step__dot { border-color: var(--primary); color: var(--primary); box-shadow: var(--brand-ring); }
 .ws-step__line { transform-origin: 0 50%; transition: transform 420ms var(--ease-out); }
 .ws-step[data-state="done"] .ws-step__line { transform: scaleX(1); }
 

@@ -127,7 +127,7 @@ function useTypedPlaceholder(active: boolean, ref: React.RefObject<HTMLElement |
 }
 
 const chip =
-  "group/chip inline-flex h-8 min-w-0 shrink-0 items-center gap-2 rounded-md border border-border bg-background/60 px-2 text-xs text-muted-foreground transition-[color,border-color,background-color] hover:border-border-strong hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-ring data-[state=open]:border-border-strong data-[state=open]:text-foreground disabled:pointer-events-none disabled:opacity-50";
+  "group/chip inline-flex h-8 min-w-0 shrink-0 items-center gap-2 rounded-[8px] border border-border bg-surface/70 px-2 text-xs text-muted-foreground transition-[color,border-color,background-color] hover:border-border-strong hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-ring data-[state=open]:border-border-strong data-[state=open]:text-foreground disabled:pointer-events-none disabled:opacity-50";
 
 /**
  * The dashboard composer: "What do you want to build?". A comet border lights while it is focused
@@ -332,11 +332,12 @@ export function PromptBox({
             data-active={prompt.trim() ? "" : undefined}
             className={
               compact
-                ? "rounded-lg border border-border bg-card shadow-sm transition-[border-color,box-shadow] duration-(--dur-2) focus-within:border-accent focus-within:shadow-[0_0_0_3px_color-mix(in_oklab,var(--accent)_16%,transparent)]"
+                ? // Dashboard hero card: 16px radius, hairline border, soft depth, and a brand gradient glow while focused.
+                  "glow-focus rounded-2xl border border-border bg-card shadow-[var(--shadow-md)]"
                 : "comet-border rounded-[20px] shadow-[var(--shadow-lg)]"
             }
           >
-            <div className={compact ? "overflow-hidden rounded-[7px]" : "comet-border__inner overflow-hidden rounded-[19px] bg-card shadow-[inset_0_1px_0_var(--hairline)]"}>
+            <div className={compact ? "overflow-hidden rounded-[15px]" : "comet-border__inner overflow-hidden rounded-[19px] bg-card shadow-[inset_0_1px_0_var(--hairline)]"}>
               {carried ? (
                 <div className="flex items-center gap-2 px-4 pt-3.5 sm:px-5">
                   <span className="chip-in inline-flex h-6 items-center gap-1.5 rounded-full bg-selection px-2.5 text-xs font-medium text-foreground shadow-[inset_0_0_0_1px_color-mix(in_oklab,var(--accent)_30%,transparent)]">
@@ -399,7 +400,7 @@ export function PromptBox({
                 disabled={busy || !enabled}
                 className={cn(
                   "block w-full resize-none bg-transparent leading-relaxed placeholder:text-muted-foreground/70 focus:outline-none disabled:opacity-60",
-                  compact ? "min-h-[64px] px-3.5 pb-1.5 pt-3 text-[14px]" : "min-h-[120px] px-4 pb-2 pt-4 text-base sm:px-5",
+                  compact ? "min-h-[76px] px-4 pb-1.5 pt-3.5 text-[15px]" : "min-h-[120px] px-4 pb-2 pt-4 text-base sm:px-5",
                 )}
               />
               {images.length ? (
@@ -420,7 +421,7 @@ export function PromptBox({
                   {notice}
                 </p>
               ) : null}
-              <div className={cn("flex flex-wrap items-center gap-2 sm:flex-nowrap", compact ? "px-2 pb-2" : "px-3 pb-3")}>
+              <div className={cn("flex flex-wrap items-center gap-2 sm:flex-nowrap", compact ? "px-2.5 pb-2.5" : "px-3 pb-3")}>
                 <div className="flex min-w-0 flex-1 items-center gap-1.5 overflow-x-auto [scrollbar-width:none]">
                   <input ref={fileRef} type="file" accept={IMAGE_ACCEPT} multiple hidden onChange={(e) => {
                     void attach(Array.from(e.target.files ?? []));
@@ -547,7 +548,7 @@ export function PromptBox({
                     disabled={(!prompt.trim() && !images.length) || !enabled || busy || enhancing}
                     aria-keyshortcuts="Control+Enter Meta+Enter"
                     aria-busy={busy || undefined}
-                    className={cn("composer-build gap-2", compact ? "h-8 px-3" : "h-9 px-3.5 sm:px-4")}
+                    className={cn("composer-build gap-2", compact ? "h-9 px-3.5" : "h-9 px-3.5 sm:px-4")}
                   >
                     <span>Build</span>
                     <span data-spark-icon aria-hidden="true" className="hidden items-center gap-0.5 rounded-[6px] bg-current/12 px-1.5 py-0.5 text-[11px] font-semibold leading-none sm:inline-flex">
@@ -621,7 +622,7 @@ export function PromptBox({
       </div>
 
       {presets.length ? (
-        <div className={cn(start ? "" : "mx-auto max-w-4xl", compact ? "mt-2.5" : "mt-5")}>
+        <div className={cn(start ? "" : "mx-auto max-w-4xl", compact ? "mt-3.5" : "mt-5")}>
           <p className="sr-only" id="presets-label">
             Quick starts
           </p>
@@ -645,8 +646,8 @@ export function PromptBox({
                     title={p.prompt}
                     className={cn(
                       "flex items-center rounded-full border transition-[border-color,color,background-color] duration-(--dur-3) disabled:pointer-events-none disabled:opacity-50",
-                      compact ? "h-7 px-2.5 text-xs" : "h-8 px-3.5 text-[13px]",
-                      on ? "border-foreground/40 bg-card text-foreground" : "border-border text-muted-foreground hover:border-border-strong hover:bg-card hover:text-foreground",
+                      compact ? "h-8 px-3 text-[12.5px]" : "h-8 px-3.5 text-[13px]",
+                      on ? "border-primary/40 bg-[image:var(--brand-gradient-soft)] text-primary" : "border-border bg-card/70 text-muted-foreground hover:border-border-strong hover:bg-card hover:text-foreground",
                     )}
                   >
                     {p.label}

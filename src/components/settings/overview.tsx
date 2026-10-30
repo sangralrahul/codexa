@@ -18,12 +18,12 @@ const date = (iso: string, opts: Intl.DateTimeFormatOptions) => new Date(iso).to
 /** 56px avatar, name and the account facts on their own lines, so nothing truncates. */
 export function IdentityRow({ account, workspace }: { account: SettingsOverview["account"]; workspace: SettingsOverview["workspace"] }) {
   return (
-    <section aria-label="Your account" className="settings-card flex flex-col gap-4 rounded-lg p-4 sm:flex-row sm:items-center sm:p-5">
-      <span className="relative w-fit shrink-0 self-start rounded-full p-[3px] shadow-[0_0_0_1px_var(--border-strong)] sm:self-center">
+    <section aria-label="Your account" className="settings-card flex flex-col gap-4 p-4 sm:flex-row sm:items-center sm:p-5">
+      <span className="relative w-fit shrink-0 self-start rounded-full bg-[image:var(--brand-gradient)] p-[2px] sm:self-center">
         <Avatar name={account.name || account.email} src={account.avatarUrl} size="xl" />
       </span>
       <div className="min-w-0 flex-1">
-        <p className="text-balance text-[18px] font-semibold leading-tight tracking-[-0.02em] [overflow-wrap:anywhere]">{account.name || account.email}</p>
+        <p className="text-balance text-[20px] font-bold leading-tight tracking-[-0.02em] [overflow-wrap:anywhere]">{account.name || account.email}</p>
         <p className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-[13px] text-muted-foreground">
           <span className="[overflow-wrap:anywhere]">{account.email}</span>
           {account.emailVerified ? (
@@ -46,7 +46,7 @@ export function IdentityRow({ account, workspace }: { account: SettingsOverview[
           ) : null}
         </p>
       </div>
-      <Link href="/settings/profile" className="inline-flex h-9 shrink-0 items-center gap-1.5 self-start rounded-md border border-border-strong bg-background/60 px-3.5 text-[13px] font-medium shadow-[inset_0_1px_0_var(--hairline)] transition-colors hover:border-foreground/25 hover:bg-muted sm:self-center">
+      <Link href="/settings/profile" className="inline-flex h-9 shrink-0 items-center gap-1.5 self-start rounded-[10px] border border-border bg-card px-3.5 text-[13px] font-medium shadow-sm transition-colors hover:border-border-strong hover:bg-surface sm:self-center">
         <UserRound className="size-3.5" aria-hidden="true" /> Edit profile
       </Link>
     </section>
@@ -55,7 +55,7 @@ export function IdentityRow({ account, workspace }: { account: SettingsOverview[
 
 function Tick({ done, i }: { done: boolean; i: number }) {
   return done ? (
-    <span className="setup-tick flex size-6 shrink-0 items-center justify-center rounded-full bg-foreground text-background" style={{ "--i": i } as React.CSSProperties}>
+    <span className="setup-tick flex size-6 shrink-0 items-center justify-center rounded-full bg-[image:var(--brand-gradient)] text-primary-foreground" style={{ "--i": i } as React.CSSProperties}>
       <svg viewBox="0 0 16 16" className="size-3.5" aria-hidden="true">
         <path d="M3.5 8.5 6.6 11.5 12.5 5" pathLength={1} fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
       </svg>
@@ -99,7 +99,7 @@ function SetupRing({ done, total }: { done: number; total: number }) {
             strokeDasharray={`${Math.max(seg, 0.01)} ${c}`}
             strokeDashoffset={-(i * (seg + gap)) - gap / 2}
             data-done={i < done ? "" : undefined}
-            className={cn("setup-ring-seg", i < done ? "stroke-foreground" : "stroke-border-strong")}
+            className={cn("setup-ring-seg", i < done ? "stroke-primary" : "stroke-border-strong")}
             style={{ "--i": i } as React.CSSProperties}
           />
         ))}
@@ -118,7 +118,7 @@ export function SetupChecklist({ items, emailConfigured }: { items: ChecklistIte
   if (!items.length) return null;
   if (done === items.length) {
     return (
-      <section aria-label="Setup" className="settings-card flex items-center gap-3 rounded-lg px-5 py-3.5">
+      <section aria-label="Setup" className="settings-card flex items-center gap-3 px-5 py-3.5">
         <span className="setup-item" data-done="">
           <Tick done i={0} />
         </span>
@@ -132,7 +132,7 @@ export function SetupChecklist({ items, emailConfigured }: { items: ChecklistIte
   const n = items.length;
   const lastSpan = cn(n % 2 === 1 && "sm:col-span-2", n % 3 === 1 ? "lg:col-span-3" : n % 3 === 2 ? "lg:col-span-2" : "lg:col-span-1");
   return (
-    <section aria-labelledby="setup-title" className="settings-card overflow-hidden rounded-lg">
+    <section aria-labelledby="setup-title" className="settings-card overflow-hidden">
       <div className="flex items-center gap-3.5 px-5 pt-5 sm:px-6">
         <SetupRing done={done} total={n} />
         <div className="min-w-0">
@@ -182,17 +182,19 @@ function Tile({ href, icon: Icon, label, className, children, footer }: { href: 
     <Link
       href={href}
       className={cn(
-        "glow-card bento-tile group flex min-h-[150px] flex-col rounded-lg border border-border p-4 outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring",
+        "card-premium bento-tile group flex min-h-[160px] flex-col p-5 outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring",
         className,
       )}
     >
-      <span className="relative z-[2] flex items-center gap-2 text-[13px] font-medium text-muted-foreground">
-        <Icon className="size-4 text-foreground-dim" aria-hidden="true" />
+      <span className="relative z-[2] flex items-center gap-2.5 text-[13.5px] font-medium text-muted-foreground">
+        <span className="icon-tile size-8 rounded-[9px]" aria-hidden="true">
+          <Icon className="size-4" />
+        </span>
         {label}
         <ArrowUpRight className="bento-arrow ml-auto size-4 text-foreground-dim" aria-hidden="true" />
       </span>
-      <span className="relative z-[2] mt-3 flex flex-1 flex-col">{children}</span>
-      {footer ? <span className="relative z-[2] mt-3 block border-t border-border/70 pt-2.5 text-xs text-muted-foreground">{footer}</span> : null}
+      <span className="relative z-[2] mt-4 flex flex-1 flex-col">{children}</span>
+      {footer ? <span className="relative z-[2] mt-4 block border-t border-border/70 pt-3 text-xs text-muted-foreground">{footer}</span> : null}
     </Link>
   );
 }
@@ -213,7 +215,7 @@ export function OverviewBento({ data }: { data: SettingsOverview }) {
   const offset = utcOffset(tz);
   const others = account.otherSessions;
   return (
-    <div data-spotlight="grid" data-reveal="stagger" className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-6">
+    <div data-spotlight="grid" data-reveal="stagger" className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-6">
       <Tile href="/settings/profile" icon={UserRound} label="Profile" className="sm:col-span-2 lg:col-span-4" footer={<>Language: {account.locale === "hi" ? "Hindi (in preparation)" : "English"} · dates in {tz.replace(/_/g, " ")}</>}>
         <span className="flex flex-1 flex-wrap items-center justify-between gap-5">
           <span className="flex min-w-0 items-center gap-3.5">
@@ -266,7 +268,7 @@ function WorkspaceTiles({ workspace: w }: { workspace: NonNullable<SettingsOverv
         className="lg:col-span-2"
         footer={sub ? `${sub.interval === "year" ? "Annual" : "Monthly"} · ${sub.provider === "stripe" ? "Stripe" : sub.provider === "razorpay" ? "Razorpay" : sub.provider}` : w.plan.id === "free" ? "No card on file" : "Assigned without an online subscription"}
       >
-        <span className="block text-[26px] font-semibold leading-none tracking-[-0.03em]">{w.plan.name}</span>
+        <span className="brand-gradient-text block w-fit text-[28px] font-bold leading-none tracking-[-0.03em]">{w.plan.name}</span>
         <span className="mt-2 block text-[13px] text-muted-foreground">
           {sub
             ? sub.cancelAtPeriodEnd
@@ -367,9 +369,9 @@ function WorkspaceTiles({ workspace: w }: { workspace: NonNullable<SettingsOverv
 
       <Link
         href="/settings/workspaces/new"
-        className="bento-tile group flex min-h-[150px] flex-col justify-between rounded-lg border border-dashed border-border-strong p-4 text-muted-foreground outline-none transition-colors hover:border-foreground/35 hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring sm:col-span-2 lg:col-span-2"
+        className="bento-tile group flex min-h-[160px] flex-col justify-between rounded-2xl border border-dashed border-border-strong p-5 text-muted-foreground outline-none transition-colors hover:border-primary/40 hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring sm:col-span-2 lg:col-span-2"
       >
-        <span className="flex size-9 items-center justify-center rounded-md border border-dashed border-border-strong transition-transform duration-300 group-hover:rotate-90">
+        <span className="icon-tile transition-transform duration-300 group-hover:rotate-90">
           <Plus className="size-4" aria-hidden="true" />
         </span>
         <span>

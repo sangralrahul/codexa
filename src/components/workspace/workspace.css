@@ -56,7 +56,7 @@
 /* Agent card: a comet-border (globals) whose comet runs while a real run is active. */
 .ws-agent.comet-border { border-radius: 16px; box-shadow: var(--shadow-md); height: 100%; }
 .ws-agent > .comet-border__inner { border-radius: 15px; height: 100%; overflow: hidden; }
-.ws-agent[data-running-calm] { background: linear-gradient(color-mix(in oklab, var(--signal) 55%, var(--border-strong)), color-mix(in oklab, var(--signal) 55%, var(--border-strong))); }
+.ws-agent[data-running-calm] { background: linear-gradient(var(--brand-from), var(--brand-from)); }
 
 /* Splitters: 6px transparent gutters with a 3×28px grab pill that turns signal while dragging. */
 .ws-sep { position: relative; display: flex; align-items: center; justify-content: center; background: transparent; outline: none; flex: none; }
@@ -74,14 +74,14 @@
 .ws-sep:is(:hover, [data-separator="hover"], [data-separator="focus"])::after { opacity: 1; }
 .ws-sep[data-separator="active"]::after {
   opacity: 1;
-  background: var(--signal);
+  background: var(--primary);
   transform: scale(1.12);
-  box-shadow: 0 0 0 3px color-mix(in oklab, var(--signal) 22%, transparent);
+  box-shadow: 0 0 0 3px color-mix(in oklab, var(--primary) 22%, transparent);
 }
 .ws-sep:focus-visible::after { opacity: 1; background: var(--ring); }
 .ws-sep--seam { width: 1px; background: var(--border); transition: background-color var(--dur-2); }
 .dark .ws-sep--seam { background: color-mix(in oklab, var(--border) 70%, var(--border-strong)); }
-.ws-sep--seam[data-separator="active"] { background: var(--signal); }
+.ws-sep--seam[data-separator="active"] { background: var(--primary); }
 .ws-sep[data-off] { width: 0; height: 0; pointer-events: none; overflow: hidden; }
 .ws-sep[data-off]::after { display: none; }
 
@@ -100,13 +100,13 @@
 .ws-pill-in { animation: ws-pill-in var(--dur-3) var(--ease-out) both; }
 @keyframes ws-pill-in { from { opacity: 0; transform: translateY(-4px) scale(0.96); } }
 
-/* Publish (btn-ember) in the header: the resting signal glow is clipped to a tight halo so it never
+/* Publish (btn-brand) in the header: the resting signal glow is clipped to a tight halo so it never
    hazes the cards under the header; hover and keyboard focus release the full glow. */
-.btn-ember.ws-publish {
+.btn-brand.ws-publish {
   clip-path: inset(-3px round 13px);
   transition: box-shadow var(--dur-4) var(--ease-out), translate var(--dur-3) var(--ease-out), scale var(--dur-3) var(--ease-snap), filter var(--dur-3), clip-path var(--dur-4) var(--ease-out);
 }
-.btn-ember.ws-publish:is(:hover, :focus-visible) { clip-path: inset(-48px round 13px); }
+.btn-brand.ws-publish:is(:hover, :focus-visible) { clip-path: inset(-48px round 13px); }
 
 /* Run button: a running state that offers Stop on hover/focus. */
 .ws-run [data-when="hover"] { display: none; }
@@ -122,7 +122,7 @@
   inset: -3px;
   border-radius: 11px;
   padding: 1.5px;
-  background: conic-gradient(from var(--angle), transparent 0deg 210deg, color-mix(in oklab, var(--signal) 85%, transparent) 300deg, var(--signal-2) 345deg, transparent 360deg);
+  background: conic-gradient(from var(--angle), transparent 0deg 210deg, color-mix(in oklab, var(--primary) 85%, transparent) 300deg, var(--brand-to) 345deg, transparent 360deg);
   -webkit-mask: linear-gradient(black 0 0) content-box, linear-gradient(black 0 0);
   -webkit-mask-composite: xor;
   mask: linear-gradient(black 0 0) content-box, linear-gradient(black 0 0);
@@ -140,13 +140,13 @@
   position: absolute;
   inset: 0;
   border-radius: inherit;
-  background: var(--ws-seg, var(--success));
+  background: var(--ws-seg, var(--brand-gradient));
   transform-origin: 0 50%;
   transform: scaleX(0);
   transition: transform var(--dur-4) var(--ease-out);
 }
 .ws-rail-seg[data-state="done"]::after { transform: scaleX(1); }
-.ws-rail-seg[data-state="active"]::after { --ws-seg: var(--signal); transform: scaleX(1); animation: ws-seg-breathe 1.2s var(--ease-in-out) infinite alternate; }
+.ws-rail-seg[data-state="active"]::after { --ws-seg: var(--brand-gradient); transform: scaleX(1); animation: ws-seg-breathe 1.2s var(--ease-in-out) infinite alternate; }
 .ws-rail-seg[data-state="error"]::after { --ws-seg: var(--danger); transform: scaleX(1); }
 .ws-rail-seg[data-state="cancelled"]::after { --ws-seg: var(--warning); transform: scaleX(1); }
 .ws-rail-seg[data-state="skipped"] { background: repeating-linear-gradient(90deg, color-mix(in oklab, var(--foreground) 9%, transparent) 0 3px, transparent 3px 6px); }
@@ -160,7 +160,7 @@
   height: 0.95em;
   margin-left: 2px;
   vertical-align: -0.12em;
-  background: var(--signal);
+  background: var(--primary);
   animation: caret 1s steps(1) infinite;
 }
 
@@ -172,7 +172,7 @@
   height: 1.05em;
   margin-left: 2px;
   vertical-align: -0.18em;
-  background: var(--signal);
+  background: var(--primary);
   animation: caret 1s steps(1) infinite;
 }
 
@@ -192,7 +192,7 @@
 /* Composer: a focus glow ring; the comet (globals) runs while a run is active. */
 .ws-composer.comet-border { border-radius: 16px; }
 .ws-composer > .comet-border__inner { border-radius: 15px; transition: box-shadow var(--dur-3) var(--ease-out); }
-.ws-composer:focus-within > .comet-border__inner { box-shadow: 0 0 0 3px color-mix(in oklab, var(--signal) 16%, transparent), 0 14px 40px -18px color-mix(in oklab, var(--signal) 45%, transparent); }
+.ws-composer:focus-within > .comet-border__inner { box-shadow: 0 0 0 3px color-mix(in oklab, var(--primary) 16%, transparent), 0 14px 40px -18px color-mix(in oklab, var(--primary) 45%, transparent); }
 .ws-send { transition: transform var(--dur-4) var(--ease-spring), opacity var(--dur-2), background-color var(--dur-2); }
 .ws-send:active { transform: scale(0.88); transition-duration: var(--dur-1); }
 .ws-ring { transition: stroke-dashoffset var(--dur-4) var(--ease-out); }
@@ -212,7 +212,7 @@
 @keyframes ws-reload { to { transform: rotate(360deg); } }
 
 /* While the agent edits: a 2px signal beam rides the top edge of the frame. */
-.ws-beam { position: absolute; z-index: 3; inset: 0 0 auto 0; height: 2px; overflow: hidden; pointer-events: none; background: color-mix(in oklab, var(--signal) 18%, transparent); }
+.ws-beam { position: absolute; z-index: 3; inset: 0 0 auto 0; height: 2px; overflow: hidden; pointer-events: none; background: color-mix(in oklab, var(--primary) 18%, transparent); }
 .ws-beam::after {
   content: "";
   position: absolute;
@@ -238,7 +238,7 @@
   inset: 0;
   z-index: 2;
   pointer-events: none;
-  background: linear-gradient(to bottom, transparent calc(100% - 28px), color-mix(in oklab, var(--signal) 9%, transparent) calc(100% - 2px), color-mix(in oklab, var(--signal) 85%, transparent) calc(100% - 2px));
+  background: linear-gradient(to bottom, transparent calc(100% - 28px), color-mix(in oklab, var(--primary) 9%, transparent) calc(100% - 2px), color-mix(in oklab, var(--primary) 85%, transparent) calc(100% - 2px));
   animation: ws-scan 720ms var(--ease-in-out) both;
 }
 @keyframes ws-scan { from { transform: translateY(-100%); opacity: 1; } 86% { opacity: 1; } to { transform: translateY(0); opacity: 0; } }
@@ -264,7 +264,7 @@
   pointer-events: none;
   background: linear-gradient(to right, transparent, var(--ws-editor-bg) 85%);
 }
-.ws-ai-dot { width: 6px; height: 6px; border-radius: 9999px; background: var(--ember); box-shadow: 0 0 0 2px color-mix(in oklab, var(--signal) 18%, transparent); flex-shrink: 0; }
+.ws-ai-dot { width: 6px; height: 6px; border-radius: 9999px; background: var(--brand-gradient); box-shadow: 0 0 0 2px color-mix(in oklab, var(--primary) 18%, transparent); flex-shrink: 0; }
 
 /* Monaco: AI gutter marks (added = green, modified = amber) and the after-restore sweep. */
 .ws-gutter-added, .ws-gutter-modified { margin-left: 3px; width: 3px !important; border-radius: 2px; }
@@ -278,7 +278,7 @@
 .ws-tree-group[data-collapsed] { grid-template-rows: 0fr; }
 .ws-tree-group > div { min-height: 0; overflow: hidden; }
 .ws-ai-flash { animation: ws-ai-flash 1.6s var(--ease-out) both; }
-@keyframes ws-ai-flash { from { background-color: color-mix(in oklab, var(--signal) 15%, transparent); } to { background-color: transparent; } }
+@keyframes ws-ai-flash { from { background-color: color-mix(in oklab, var(--primary) 15%, transparent); } to { background-color: transparent; } }
 
 /* ---------- Dock ---------- */
 .ws-ticker-line { animation: ws-ticker-in var(--dur-2) var(--ease-out) both; }
@@ -291,7 +291,7 @@
   position: absolute;
   inset: -1px;
   border-radius: inherit;
-  border: 2px solid var(--signal);
+  border: 2px solid var(--primary);
   animation: ws-node-ring 1.8s var(--ease-out) infinite;
 }
 @keyframes ws-node-ring { from { opacity: 0.6; transform: scale(1); } to { opacity: 0; transform: scale(1.9); } }
@@ -300,7 +300,7 @@
 .ws-step-line { transform-origin: 0 50%; transition: transform var(--dur-4) var(--ease-out), background-color var(--dur-3); }
 .ws-check-pop { animation: ws-check-pop var(--dur-4) var(--ease-spring) both; }
 @keyframes ws-check-pop { from { transform: scale(0.4); opacity: 0; } }
-.ws-particle { position: fixed; z-index: 2147483646; width: 5px; height: 5px; border-radius: 9999px; pointer-events: none; background: var(--signal); }
+.ws-particle { position: fixed; z-index: 2147483646; width: 5px; height: 5px; border-radius: 9999px; pointer-events: none; background: var(--primary); }
 .ws-flight {
   position: fixed;
   z-index: 2147483646;
@@ -328,7 +328,7 @@
 @media (prefers-reduced-motion: reduce) {
   .ws-orb::before, .ws-beam, .ws-particle, .ws-flight, .ws-wipe, .ws-node-pulse::after, .ws-assemble::after { display: none; }
   .ws-assemble > iframe { animation: none; clip-path: none; }
-  .ws-rail-seg::after, .ws-frame, .ws-tree-group, .ws-animating > [data-panel], .ws-sep::after, .ws-ring, .ws-send, .btn-ember.ws-publish { transition: none; }
+  .ws-rail-seg::after, .ws-frame, .ws-tree-group, .ws-animating > [data-panel], .ws-sep::after, .ws-ring, .ws-send, .btn-brand.ws-publish { transition: none; }
   .ws-pill-in, .ws-msg-user, .ws-msg-agent, .ws-suggest > *, .ws-drop, .ws-frame-develop, .ws-tab-in, .ws-tab-out, .ws-ai-flash, .ws-ticker-line, .ws-check-pop, .ws-save__icon, .ws-rail-seg::after, .ws-write-caret::after, .ws-reload[data-spin] svg { animation: none; }
 }
 [data-motion="reduced"] .ws-orb::before,
@@ -346,7 +346,7 @@
 [data-motion="reduced"] .ws-sep::after,
 [data-motion="reduced"] .ws-ring,
 [data-motion="reduced"] .ws-send,
-[data-motion="reduced"] .btn-ember.ws-publish { transition: none; }
+[data-motion="reduced"] .btn-brand.ws-publish { transition: none; }
 [data-motion="reduced"] .ws-pill-in,
 [data-motion="reduced"] .ws-msg-user,
 [data-motion="reduced"] .ws-msg-agent,

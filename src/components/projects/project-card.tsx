@@ -63,13 +63,13 @@ export function ProjectCard({ project, layout = "grid", showWorkspace, priority 
         role="row"
         data-testid="project-card"
         data-project-row
-        className="group/row relative grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3 border-b border-border px-3 py-2 transition-colors last:border-b-0 hover:bg-muted/50 focus-within:bg-muted/50 md:grid-cols-[minmax(0,2.2fr)_minmax(0,1.4fr)_minmax(0,1fr)_minmax(0,0.9fr)_minmax(0,1fr)_40px] md:px-4"
+        className="group/row relative grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3 border-b border-border px-3 py-2.5 transition-colors last:border-b-0 hover:bg-surface focus-within:bg-surface md:grid-cols-[minmax(0,2.2fr)_minmax(0,1.4fr)_minmax(0,1fr)_minmax(0,0.9fr)_minmax(0,1fr)_40px] md:px-4"
         style={{ viewTransitionName: `proj-${project.id}` }}
       >
         <div role="cell" className="flex min-w-0 items-center gap-3">
           <ProjectThumb templateId={project.templateId} framework={project.framework} size="md" />
           <div className="min-w-0">
-            <h3 className="truncate text-[13px] font-medium">
+            <h3 className="truncate text-[13.5px] font-semibold">
               <Link
                 href={href}
                 data-row-link
@@ -109,9 +109,28 @@ export function ProjectCard({ project, layout = "grid", showWorkspace, priority 
   return (
     <article
       data-testid="project-card"
-      className="proj-card shot-pan group/card relative flex h-full flex-col overflow-hidden rounded-lg border border-border bg-card shadow-[inset_0_1px_0_var(--hairline),var(--shadow-sm)]"
+      className="proj-card card-premium shot-pan group/card relative flex h-full flex-col overflow-hidden"
       style={{ viewTransitionName: `proj-${project.id}` }}
     >
+      {/* Browser chrome: three dots, the address pill (the real live host, or "Not published"), and a Live / Draft chip. */}
+      <div className="flex h-9 shrink-0 items-center gap-2 border-b border-border bg-surface px-3" aria-hidden="true">
+        <span className="flex items-center gap-1.5">
+          <span className="size-2 rounded-full bg-border-strong" />
+          <span className="size-2 rounded-full bg-border-strong" />
+          <span className="size-2 rounded-full bg-border-strong" />
+        </span>
+        <span className="flex h-5 min-w-0 flex-1 items-center rounded-md bg-card px-2 font-mono text-[10.5px] text-muted-foreground shadow-[inset_0_0_0_1px_var(--border)]">
+          <span className="truncate">{status?.live ? status.live.host : "Not published"}</span>
+        </span>
+        {status?.live ? (
+          <span className="inline-flex h-5 items-center gap-1 rounded-full bg-success/10 px-2 text-[10.5px] font-semibold text-success shadow-[inset_0_0_0_1px_color-mix(in_oklab,var(--success)_30%,transparent)]">
+            <span className="size-1.5 rounded-full bg-success" /> Live
+          </span>
+        ) : (
+          <span className="inline-flex h-5 items-center rounded-full bg-foreground/[0.05] px-2 text-[10.5px] font-semibold text-muted-foreground shadow-[inset_0_0_0_1px_var(--border)]">Draft</span>
+        )}
+      </div>
+      <span className="sr-only">{status?.live ? `Live at ${status.live.host}` : "Draft, not published"}</span>
       {/* The picture is the starting template's screenshot, never the user's app: said in the tooltip and to
           assistive tech, not as a visible label on every card. */}
       <div className="relative aspect-[16/10] overflow-hidden border-b border-border bg-surface-2" title={needsTemplateCaption(project.templateId) ? "Starter image: a screenshot of the template this project began from" : undefined}>
@@ -136,17 +155,17 @@ export function ProjectCard({ project, layout = "grid", showWorkspace, priority 
           <ProjectMenu project={project} canEdit={canEdit} canDelete={canDelete} floating />
         </div>
       </div>
-      <div className="flex flex-1 flex-col p-3.5">
-        <h3 className="truncate text-[14px] font-semibold tracking-[-0.01em]">
+      <div className="flex flex-1 flex-col p-4">
+        <h3 className="truncate text-[15px] font-semibold tracking-[-0.01em]">
           <Link
             href={href}
-            className="outline-none after:absolute after:inset-0 after:z-[1] after:rounded-lg after:content-[''] focus-visible:after:outline-2 focus-visible:after:-outline-offset-2 focus-visible:after:outline-ring"
+            className="outline-none after:absolute after:inset-0 after:z-[1] after:rounded-2xl after:content-[''] focus-visible:after:outline-2 focus-visible:after:-outline-offset-2 focus-visible:after:outline-ring"
           >
             {project.name}
           </Link>
         </h3>
         {project.description ? <p className="mt-1 line-clamp-1 text-[13px] text-muted-foreground">{project.description}</p> : null}
-        <StatusPills status={status} className="mt-2.5" />
+        {status?.preview || status?.deploy ? <StatusPills status={{ ...status, live: null }} className="mt-2.5" /> : null}
         <div className="mt-auto flex items-center gap-2.5 pt-3 text-meta text-muted-foreground">
           <span className="shrink-0">{frameworkLabel(project.framework)}</span>
           <span aria-hidden="true" className="text-border-strong">

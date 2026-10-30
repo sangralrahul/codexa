@@ -446,7 +446,7 @@ export function OnboardingFlow({ user, workspaceId, templates, defaultTemplateId
                 <>
                   {ideaChip ? (
                     <div className="mt-8 flex justify-center">
-                      <span className="ob-chip inline-flex items-center gap-1.5 rounded-full bg-signal/12 py-1 pl-2.5 pr-1 text-xs font-medium text-accent">
+                      <span className="ob-chip inline-flex items-center gap-1.5 rounded-full bg-primary/10 py-1 pl-2.5 pr-1 text-xs font-medium text-primary">
                         <span aria-hidden="true" className="size-1.5 rounded-full bg-accent" />
                         {ideaChip}
                         <button
@@ -456,7 +456,7 @@ export function OnboardingFlow({ user, workspaceId, templates, defaultTemplateId
                             setIdeaChip(null);
                             clearPendingIdea();
                           }}
-                          className="ml-0.5 flex size-5 items-center justify-center rounded-full transition-colors hover:bg-signal/20"
+                          className="ml-0.5 flex size-5 items-center justify-center rounded-full transition-colors hover:bg-primary/20"
                         >
                           <X className="size-3" aria-hidden="true" />
                         </button>

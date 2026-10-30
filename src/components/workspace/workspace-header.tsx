@@ -440,10 +440,10 @@ function AgentPill({ onReveal }: { onReveal: () => void }) {
     <button
       type="button"
       onClick={onReveal}
-      className="ws-pill-in hidden h-8 items-center gap-2 rounded-full border border-signal/30 bg-signal/[0.07] px-3 text-[12.5px] font-medium transition-colors hover:bg-signal/12 focus-visible:outline-2 focus-visible:outline-ring md:inline-flex"
+      className="ws-pill-in hidden h-8 items-center gap-2 rounded-full border border-primary/30 bg-primary/[0.07] px-3 text-[12.5px] font-medium transition-colors hover:bg-primary/12 focus-visible:outline-2 focus-visible:outline-ring md:inline-flex"
       aria-label={`Agent: ${label}, ${formatElapsed(now - run.startedAt)} elapsed. Show the agent`}
     >
-      <Loader2 className="size-3.5 animate-spin text-signal" aria-hidden="true" />
+      <Loader2 className="size-3.5 animate-spin text-primary" aria-hidden="true" />
       <span className="text-shimmer">{label}</span>
       <span className="font-mono text-[11.5px] tabular-nums text-muted-foreground">{formatElapsed(now - run.startedAt)}</span>
     </button>

@@ -81,7 +81,7 @@ function Highlight({ text, indices, offset = 0 }: { text: string; indices: numbe
     <>
       {Array.from(text).map((ch, i) =>
         set.has(i) ? (
-          <mark key={i} className="rounded-[2px] bg-transparent font-semibold text-signal-ink">
+          <mark key={i} className="rounded-[2px] bg-transparent font-semibold text-primary">
             {ch}
           </mark>
         ) : (
@@ -193,7 +193,7 @@ function Body({
           aria-activedescendant={items[index] ? `qo-${index}` : undefined}
           className="h-full min-w-0 flex-1 bg-transparent text-[15px] outline-none placeholder:text-muted-foreground"
         />
-        <span className={cn("shrink-0 rounded-md px-1.5 py-0.5 text-[11px] font-medium", commandMode ? "bg-signal/12 text-signal-ink" : "bg-muted text-muted-foreground")}>{commandMode ? "Commands" : "Files"}</span>
+        <span className={cn("shrink-0 rounded-md px-1.5 py-0.5 text-[11px] font-medium", commandMode ? "bg-primary/12 text-primary" : "bg-muted text-muted-foreground")}>{commandMode ? "Commands" : "Files"}</span>
       </div>
       <ul id="quick-open-results" ref={listRef} role="listbox" aria-label={commandMode ? "Commands" : "Files"} className="scrollbar-thin max-h-[min(56vh,460px)] overflow-y-auto p-1.5">
         {items.length === 0 ? <li className="px-3 py-8 text-center text-sm text-muted-foreground">{commandMode ? "No matching command" : "No matching files"}</li> : null}
@@ -233,7 +233,7 @@ function Body({
                 </div>
               ) : (
                 <div id={`qo-${i}`} data-index={i} role="option" aria-selected={selected} onMouseMove={() => !selected && setIndex(i)} onClick={() => choose(item)} className={row}>
-                  <span className="flex size-7 shrink-0 items-center justify-center rounded-lg bg-signal/12 text-signal">
+                  <span className="flex size-7 shrink-0 items-center justify-center rounded-lg bg-primary/12 text-primary">
                     <Sparkles className="size-3.5" aria-hidden="true" />
                   </span>
                   <span className="min-w-0 flex-1 truncate">

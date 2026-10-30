@@ -56,7 +56,7 @@ function ProgressAvatar({ name, src, progress }: { name: string; src: string; pr
       </span>
       <svg viewBox="0 0 88 88" className="pointer-events-none absolute inset-0 -rotate-90" aria-hidden="true">
         <circle cx="44" cy="44" r={r} fill="none" stroke="var(--border)" strokeWidth="2" />
-        {progress !== null ? <circle className="upload-ring" cx="44" cy="44" r={r} fill="none" stroke="var(--signal)" strokeWidth="2.5" strokeLinecap="round" strokeDasharray={c} strokeDashoffset={c * (1 - progress)} /> : null}
+        {progress !== null ? <circle className="upload-ring" cx="44" cy="44" r={r} fill="none" stroke="var(--primary)" strokeWidth="2.5" strokeLinecap="round" strokeDasharray={c} strokeDashoffset={c * (1 - progress)} /> : null}
       </svg>
     </span>
   );
@@ -112,7 +112,7 @@ function TeammateMirror({ name, email, avatarUrl, timezone, role, workspaceName 
         {/* Presence cursor */}
         <div className="relative h-[84px] overflow-hidden rounded-md border border-border bg-[radial-gradient(color-mix(in_oklab,var(--foreground)_10%,transparent)_1px,transparent_1.4px)] bg-[length:16px_16px]">
           <div className="presence-cursor absolute left-[38%] top-[22%]">
-            <svg viewBox="0 0 16 16" className="size-4 text-signal drop-shadow-sm" fill="currentColor">
+            <svg viewBox="0 0 16 16" className="size-4 text-primary drop-shadow-sm" fill="currentColor">
               <path d="M2 1.5 14 7.2l-5.3 1.5L6.4 14z" stroke="var(--background)" strokeWidth="1" strokeLinejoin="round" />
             </svg>
             <span key={first} className="mirror-swap ml-3 mt-0.5 inline-flex items-center gap-1.5 rounded-full bg-accent py-0.5 pl-0.5 pr-2 text-[11px] font-medium text-white shadow-md">
@@ -242,7 +242,7 @@ export function ProfileForm({
           }
         >
           <div
-            className={cn("avatar-drop flex flex-col gap-4 rounded-md p-1 sm:flex-row sm:items-center", drag && "bg-signal/[0.04]")}
+            className={cn("avatar-drop flex flex-col gap-4 rounded-md p-1 sm:flex-row sm:items-center", drag && "bg-primary/[0.04]")}
             data-drag={drag ? "" : undefined}
             onDragEnter={(e) => {
               if (e.dataTransfer.types.includes("Files")) {

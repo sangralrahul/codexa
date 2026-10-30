@@ -24,7 +24,7 @@ export function PlanPill({ plan, className }: { plan: string; className?: string
     <span
       className={cn(
         "inline-flex h-[18px] shrink-0 items-center rounded-full px-1.5 font-mono text-[9.5px] font-medium uppercase tracking-[0.08em]",
-        paid ? "bg-accent/15 text-foreground shadow-[inset_0_0_0_1px_color-mix(in_oklab,var(--accent)_35%,transparent)]" : "bg-muted text-muted-foreground shadow-[inset_0_0_0_1px_var(--border)]",
+        paid ? "bg-[image:var(--brand-gradient-soft)] text-primary shadow-[inset_0_0_0_1px_color-mix(in_oklab,var(--brand-from)_25%,transparent)]" : "bg-muted text-muted-foreground shadow-[inset_0_0_0_1px_var(--border)]",
         className,
       )}
     >
@@ -106,7 +106,7 @@ export function WorkspaceSwitcher({
             type="button"
             title={current.name}
             className={cn(
-              "group/ws flex h-10 min-w-0 items-center gap-1.5 rounded-md pl-2 pr-1.5 text-left transition-colors hover:bg-foreground/[0.06] data-[state=open]:bg-foreground/[0.06]",
+              "group/ws flex h-10 min-w-0 items-center gap-1.5 rounded-[10px] pl-2 pr-1.5 text-left transition-[background-color,border-color] hover:bg-foreground/[0.04] data-[state=open]:bg-foreground/[0.04]",
               className,
             )}
           >

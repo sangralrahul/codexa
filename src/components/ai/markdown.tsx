@@ -67,7 +67,7 @@ const components: Components = {
     </code>
   ),
   a: ({ node: _n, href = "", children, ...rest }) => (
-    <a href={href} target={href.startsWith("/") ? undefined : "_blank"} rel={href.startsWith("/") ? undefined : "noreferrer noopener"} className="font-medium text-foreground underline decoration-signal/50 underline-offset-[3px] transition-colors hover:decoration-signal" {...rest}>
+    <a href={href} target={href.startsWith("/") ? undefined : "_blank"} rel={href.startsWith("/") ? undefined : "noreferrer noopener"} className="font-medium text-foreground underline decoration-primary/50 underline-offset-[3px] transition-colors hover:decoration-primary" {...rest}>
       {children}
     </a>
   ),

@@ -34,7 +34,8 @@ export function Meter({
   className?: string;
 }) {
   const ratio = unlimited || max <= 0 ? 0 : Math.min(1, Math.max(0, value / max));
-  const tone = neutral || unlimited ? "bg-foreground/70" : ratio >= dangerAt ? "bg-danger" : ratio >= warnAt ? "bg-warning" : "bg-foreground/80";
+  // The fill is the brand gradient (thin gradient progress bars everywhere); warning and danger keep their colour.
+  const tone = ratio >= dangerAt && !neutral ? "bg-danger" : ratio >= warnAt && !neutral ? "bg-warning" : "bg-[image:var(--brand-gradient)]";
   const labelText = typeof label === "string" ? label : undefined;
   return (
     <div className={cn("space-y-1.5", className)}>
@@ -59,7 +60,7 @@ export function Meter({
         aria-valuemax={unlimited ? undefined : max}
         aria-valuenow={unlimited ? undefined : Math.min(value, max)}
         aria-valuetext={unlimited ? `${format(value)} used, unlimited` : `${format(value)} of ${format(max)}`}
-        className={cn("relative overflow-hidden rounded-full bg-muted shadow-[inset_0_0_0_1px_var(--border)]", size === "sm" ? "h-1" : "h-1.5")}
+        className={cn("relative overflow-hidden rounded-full bg-foreground/[0.06]", size === "sm" ? "h-1.5" : "h-2")}
       >
         <span
           className={cn("absolute inset-y-0 left-0 w-full origin-left rounded-full transition-transform duration-[600ms] ease-out calm:transition-none", tone, unlimited && "opacity-25")}

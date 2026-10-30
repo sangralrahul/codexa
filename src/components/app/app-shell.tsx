@@ -177,15 +177,15 @@ export function AppShell({
 
   return (
     <ActionsSlot.Provider value={slot}>
-      <div className="flex min-h-dvh bg-background [--btn-radius:6px]">
+      <div className="flex min-h-dvh bg-background [--btn-radius:10px]">
         {command}
         <ShortcutsSheet open={shortcuts} onOpenChange={setShortcuts} />
         <aside
           aria-label="Sidebar"
           data-collapsed={collapsed || undefined}
           className={cn(
-            "sticky top-0 hidden h-dvh shrink-0 overflow-hidden border-r border-border bg-surface transition-[width] duration-[280ms] ease-out calm:transition-none lg:block",
-            collapsed ? "w-14" : "w-[228px]",
+            "sticky top-0 hidden h-dvh shrink-0 overflow-hidden border-r border-border bg-card transition-[width] duration-[280ms] ease-out calm:transition-none lg:block",
+            collapsed ? "w-14" : "w-[240px]",
           )}
         >
           <AppSidebar {...sidebarProps} collapsed={collapsed} onToggle={toggle} />
@@ -199,7 +199,7 @@ export function AppShell({
               aria-label="Navigation"
               aria-describedby={undefined}
               data-side="left"
-              className="cx-sheet fixed inset-y-0 left-0 z-50 w-[min(300px,calc(100vw-48px))] border-r border-border bg-surface pt-[env(safe-area-inset-top)] shadow-xl outline-none lg:hidden"
+              className="cx-sheet fixed inset-y-0 left-0 z-50 w-[min(300px,calc(100vw-48px))] border-r border-border bg-card pt-[env(safe-area-inset-top)] shadow-xl outline-none lg:hidden"
             >
               <RD.Title className="sr-only">Navigation</RD.Title>
               <AppSidebar {...sidebarProps} onNavigate={() => setDrawer(false)} onClose={() => setDrawer(false)} />
@@ -209,7 +209,8 @@ export function AppShell({
 
         <div className="relative isolate flex min-w-0 flex-1 flex-col">
           {/* Two columns below md (the centred ⌘K trigger is hidden there), so the actions stay at the right edge. */}
-          <header className="sticky top-0 z-40 grid h-[52px] grid-cols-[minmax(0,1fr)_auto] items-center gap-3 border-b border-border bg-background/90 px-3 backdrop-blur-sm sm:px-5 md:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)]">
+          {/* White top bar with a subtle bottom shadow (the hairline plus the sm shadow token). */}
+          <header className="sticky top-0 z-40 grid h-[56px] grid-cols-[minmax(0,1fr)_auto] items-center gap-3 bg-card/95 px-3 shadow-[0_1px_0_var(--border),var(--shadow-sm)] backdrop-blur-sm sm:px-6 md:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)]">
             <div className="flex min-w-0 items-center gap-1.5">
               <button type="button" onClick={() => setDrawer(true)} className="-ml-1 flex size-8 items-center justify-center rounded-md hover:bg-muted lg:hidden" aria-label="Open navigation">
                 <Menu className="size-5" aria-hidden="true" />
@@ -240,7 +241,7 @@ export function AppShell({
               type="button"
               onClick={openCommandMenu}
               aria-keyshortcuts="Control+K Meta+K"
-              className="group/k hidden h-8 w-[min(400px,40vw)] items-center gap-2 rounded-md border border-border bg-card px-2.5 text-[12.5px] text-muted-foreground transition-[border-color,color,background-color] hover:border-border-strong hover:text-foreground md:flex"
+              className="group/k hidden h-9 w-[min(440px,40vw)] items-center gap-2 rounded-[10px] border border-border bg-surface px-3 text-[13px] text-muted-foreground shadow-[inset_0_1px_0_var(--hairline)] transition-[border-color,color,background-color,box-shadow] hover:border-border-strong hover:bg-card hover:text-foreground hover:shadow-sm md:flex"
             >
               <Search className="size-3.5" aria-hidden="true" />
               <span className="flex-1 truncate text-left">Search or build anything…</span>
@@ -305,7 +306,7 @@ function VerifyChip({ email, emailConfigured, devMailbox, dismissLabel, onDismis
   return (
     <Popover>
       <PopoverTrigger
-        className="inline-flex h-7 items-center gap-1.5 rounded-md border border-border bg-card px-2 text-[12px] font-medium text-muted-foreground transition-colors hover:border-border-strong hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring data-[state=open]:text-foreground"
+        className="inline-flex h-8 items-center gap-1.5 rounded-[10px] border border-border bg-card px-2.5 text-[12.5px] font-medium text-muted-foreground transition-colors hover:border-border-strong hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring data-[state=open]:text-foreground"
         title="Email not verified"
       >
         <MailWarning className="size-3.5" aria-hidden="true" />
@@ -343,19 +344,26 @@ function VerifyChip({ email, emailConfigured, devMailbox, dismissLabel, onDismis
   );
 }
 
-/** Standard page width and padding for app pages (one width across the app: 1280px). */
+/** Standard page width and padding for app pages (one width across the app: 1280px; 24px gutters). */
 export function AppPage({ children, className, width = "default" }: { children: React.ReactNode; className?: string; width?: "default" | "narrow" | "wide" }) {
-  return <div className={cn("mx-auto w-full px-4 py-5 sm:px-6 lg:px-8 lg:py-6", width === "narrow" ? "max-w-3xl" : width === "wide" ? "max-w-[1440px]" : "max-w-[1280px]", className)}>{children}</div>;
+  return <div className={cn("mx-auto w-full px-4 py-6 sm:px-6 lg:px-8 lg:py-8", width === "narrow" ? "max-w-3xl" : width === "wide" ? "max-w-[1440px]" : "max-w-[1280px]", className)}>{children}</div>;
 }
 
-/** App page heading: optional eyebrow, a 22px title (text-app-title), description and actions. */
-export function PageHeader({ title, description, actions, eyebrow }: { title: string; description?: React.ReactNode; actions?: React.ReactNode; eyebrow?: React.ReactNode }) {
+/** App page heading: optional icon tile and eyebrow, a 26px title (text-app-title), description and actions. */
+export function PageHeader({ title, description, actions, eyebrow, icon }: { title: string; description?: React.ReactNode; actions?: React.ReactNode; eyebrow?: React.ReactNode; icon?: React.ReactNode }) {
   return (
-    <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-      <div className="min-w-0">
-        {eyebrow ? <p className="mb-1 text-[11.5px] font-medium uppercase tracking-[0.06em] text-foreground-dim">{eyebrow}</p> : null}
-        <h1 className="text-app-title text-balance">{title}</h1>
-        {description ? <p className="mt-1 max-w-2xl text-pretty text-[13px] text-muted-foreground">{description}</p> : null}
+    <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+      <div className="flex min-w-0 items-start gap-3.5">
+        {icon ? (
+          <span aria-hidden="true" className="icon-tile mt-0.5 size-11 [&_svg]:size-5">
+            {icon}
+          </span>
+        ) : null}
+        <div className="min-w-0">
+          {eyebrow ? <p className="mb-1 text-[11.5px] font-medium uppercase tracking-[0.06em] text-foreground-dim">{eyebrow}</p> : null}
+          <h1 className="text-app-title text-balance">{title}</h1>
+          {description ? <p className="mt-1.5 max-w-2xl text-pretty text-[14px] text-muted-foreground">{description}</p> : null}
+        </div>
       </div>
       {actions ? <div className="flex shrink-0 flex-wrap items-center gap-2">{actions}</div> : null}
     </div>

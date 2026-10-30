@@ -171,7 +171,7 @@ export function Composer({
       ) : null}
       {queued ? (
         <div className="ws-drop mb-2 flex items-center gap-2 rounded-xl border border-border bg-surface px-3 py-1.5 text-[12px]" role="status">
-          <span className="size-1.5 shrink-0 rounded-full bg-signal" aria-hidden="true" />
+          <span className="size-1.5 shrink-0 rounded-full bg-primary" aria-hidden="true" />
           <span className="min-w-0 flex-1 truncate">
             <span className="font-medium">Queued:</span> <span className="text-muted-foreground">{queued}</span>
           </span>
@@ -360,7 +360,7 @@ export function Composer({
               >
                 <svg className="pointer-events-none absolute inset-0 -rotate-90" viewBox="0 0 36 36" aria-hidden="true">
                   <circle cx="18" cy="18" r="15" fill="none" stroke="var(--border)" strokeWidth="2" />
-                  <circle className="ws-ring" cx="18" cy="18" r="15" fill="none" stroke="var(--signal)" strokeWidth="2" strokeLinecap="round" strokeDasharray={ring} strokeDashoffset={ring * (1 - Math.max(0.06, Math.min(1, progress ?? 0)))} />
+                  <circle className="ws-ring" cx="18" cy="18" r="15" fill="none" stroke="var(--primary)" strokeWidth="2" strokeLinecap="round" strokeDasharray={ring} strokeDashoffset={ring * (1 - Math.max(0.06, Math.min(1, progress ?? 0)))} />
                 </svg>
                 <Square className="size-3 fill-current" aria-hidden="true" />
               </button>

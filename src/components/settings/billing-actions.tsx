@@ -421,7 +421,7 @@ export function PlanCards({
                 {isCurrent ? (
                   <span className="rounded-full bg-foreground/[0.06] px-2 py-0.5 text-[11px] font-medium text-muted-foreground">Your plan</span>
                 ) : def.highlight ? (
-                  <span className="rounded-full bg-signal/12 px-2 py-0.5 text-[11px] font-medium text-accent">Recommended</span>
+                  <span className="rounded-full bg-primary/12 px-2 py-0.5 text-[11px] font-medium text-accent">Recommended</span>
                 ) : null}
               </div>
               <p className="mt-1 text-[13px] text-muted-foreground">{def.tagline}</p>

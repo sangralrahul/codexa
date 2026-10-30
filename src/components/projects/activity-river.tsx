@@ -73,7 +73,7 @@ const VERBS: Record<string, Verb> = {
   "database.query": { icon: Database, verb: () => "ran SQL in" },
 };
 
-const TONE = { success: "text-success", danger: "text-danger", accent: "text-accent", info: "text-info" } as const;
+const TONE = { success: "text-success", danger: "text-danger", accent: "text-primary", info: "text-info" } as const;
 
 /**
  * Activity: the newest project_activity rows across the user's workspaces (who, what, which
@@ -83,17 +83,19 @@ export function ActivityRiver({ items, className }: { items: RiverItem[]; classN
   return (
     <PanelCard title="Recent activity" icon={Activity} aside={<span className="text-foreground-dim">All workspaces</span>} className={className}>
       {items.length === 0 ? (
-        <p className="px-3 py-3 text-xs text-muted-foreground">Edits, AI runs, previews and deploys from your projects show up here as they happen.</p>
+        <p className="px-4 py-4 text-[13px] text-muted-foreground">Edits, AI runs, previews and deploys from your projects show up here as they happen.</p>
       ) : (
         <ol className="river-in divide-y divide-border">
           {items.map((a) => {
             const v = VERBS[a.kind] ?? { icon: Activity, verb: () => "updated" };
             const Icon = v.icon;
             return (
-              <li key={a.id} className="flex gap-2.5 px-3 py-2">
-                <Icon className={cn("mt-0.5 size-3.5 shrink-0", v.tone ? TONE[v.tone] : "text-muted-foreground")} aria-hidden="true" />
+              <li key={a.id} className="flex items-center gap-3 px-4 py-2.5">
+                <span className={cn("flex size-7 shrink-0 items-center justify-center rounded-[8px] bg-surface shadow-[inset_0_0_0_1px_var(--border)]", v.tone ? TONE[v.tone] : "text-muted-foreground")} aria-hidden="true">
+                  <Icon className="size-3.5" />
+                </span>
                 <div className="min-w-0 flex-1">
-                  <p className="truncate text-[12.5px] leading-snug" title={a.message}>
+                  <p className="truncate text-[13px] leading-snug" title={a.message}>
                     <span className="font-medium">{a.actorName}</span> <span className="text-muted-foreground">{v.verb(a.count)}</span>{" "}
                     <Link href={`/projects/${a.projectId}`} className="link-draw font-medium">
                       {a.projectName}

@@ -21,9 +21,9 @@ export function fileIconFor(name: string): { Icon: LucideIcon; tone: string } {
       return { Icon: FileJson, tone: "text-warning" };
     case "css":
     case "scss":
-      return { Icon: Palette, tone: "text-signal" };
+      return { Icon: Palette, tone: "text-primary" };
     case "html":
-      return { Icon: Globe, tone: "text-signal" };
+      return { Icon: Globe, tone: "text-primary" };
     case "md":
     case "mdx":
     case "txt":

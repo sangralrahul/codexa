@@ -27,39 +27,48 @@
    the redesign is kept; new ones are marked ★ in docs/DESIGN.md.
    -------------------------------------------------------------------------- */
 :root {
-  --background: #f6f7f9;
-  --foreground: #0f172a;
-  --foreground-dim: #5f6b7c;
-  --surface: #f1f3f6;
-  --surface-2: #e9ecf1;
-  --surface-3: #dfe3ea;
+  /* Premium Light (DESIGN-PREMIUM.md): white page, near-black ink, indigo → violet → pink signature. */
+  --background: #ffffff;
+  --foreground: #0b0f1a;
+  --foreground-dim: #4b5563;
+  --surface: #f7f8fc;
+  --surface-2: #eef0f6;
+  --surface-3: #e3e6ef;
   --card: #ffffff;
-  --card-foreground: #0f172a;
-  --muted: #f1f3f6;
-  --muted-foreground: #596475;
-  --border: #e2e6ec;
-  --border-strong: #c9d1dc;
+  --card-foreground: #0b0f1a;
+  --muted: #f7f8fc;
+  --muted-foreground: #6b7280;
+  --border: #e5e7eb;
+  --border-strong: #d1d5db;
   --input: #ffffff;
-  --ring: #2563eb;
-  --focus: #2563eb; /* control focus — blue, never red, so it can't read as an error */
-  --primary: #2563eb;
-  --primary-hover: #1d4ed8;
+  --ring: #4f46e5;
+  --focus: #4f46e5; /* control focus — indigo, never red, so it can't read as an error */
+  --primary: #4f46e5;
+  --primary-hover: #4338ca;
   --primary-foreground: #ffffff;
-  --signal: #f0512a; /* brand-only: the Codexa ember (logo, marketing CTA). Not an app accent. */
+  --signal: #f0512a; /* brand-only: the Codexa ember (logo). Not an app accent. */
   --signal-2: #f59e0b;
   --signal-ink: #c2410c;
-  --accent: #2563eb;
+  --accent: #7c3aed;
   --accent-foreground: #ffffff;
-  --success: #15803d; /* ≥4.5:1 as text on a /10–/15 success chip over background, card and muted */
-  --warning: #a16207;
+  /* Brand gradient stops (indigo → violet → pink) and the composed signature. */
+  --brand-from: #4f46e5;
+  --brand-via: #7c3aed;
+  --brand-to: #db2777;
+  --brand-gradient: linear-gradient(100deg, #4f46e5, #7c3aed, #db2777);
+  --brand-gradient-soft: linear-gradient(100deg, rgba(79, 70, 229, 0.12), rgba(124, 58, 237, 0.12), rgba(219, 39, 119, 0.12));
+  --brand-glow: rgba(124, 58, 237, 0.4); /* blurred-blob friendly: the violet mid-stop at 40% */
+  --brand-ring: 0 0 0 4px rgba(79, 70, 229, 0.15);
+  --success: #059669;
+  --warning: #d97706;
   --danger: #dc2626;
   --danger-foreground: #ffffff;
-  --info: #2563eb;
-  --code-bg: #0c0c0c;
+  --info: #4f46e5;
+  --code-bg: #0b0f1a;
   --code-fg: #e6e6e6;
-  --code-border: #222222;
+  --code-border: #1f2937;
   --code-muted: #8a8a8a; /* 5.5:1 on --code-bg */
-  --selection: rgba(37, 99, 235, 0.16);
+  --selection: rgba(79, 70, 229, 0.16);
   --selection-strong: color-mix(in oklab, var(--accent) 24%, transparent);
   /* Selection mark (.mark-select): gradient text ink. */
   --mark-ink-1: var(--signal-ink);
@@ -71,23 +80,24 @@
   --comet-head: color-mix(in oklab, var(--signal-2) 70%, var(--signal));
   --hairline: rgba(15, 23, 42, 0.06);
   --grid-line: rgba(15, 23, 42, 0.05);
-  --glass: rgba(255, 255, 255, 0.78);
+  --glass: rgba(255, 255, 255, 0.82);
   --ember-ink: #1a0b05;
-  --shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.05);
-  --shadow-md: 0 4px 12px rgba(15, 23, 42, 0.07);
-  --shadow-lg: 0 1px 0 rgba(255, 255, 255, 0.9) inset, 0 16px 36px -16px rgba(15, 23, 42, 0.16), 0 4px 12px -4px rgba(15, 23, 42, 0.07);
+  /* Soft slate-tinted depth (spec: card 0 1px 2px .04 + 0 12px 32px -12px .14). */
+  --shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.04), 0 1px 3px rgba(15, 23, 42, 0.04);
+  --shadow-md: 0 1px 2px rgba(15, 23, 42, 0.04), 0 12px 32px -12px rgba(15, 23, 42, 0.14);
+  --shadow-lg: 0 1px 2px rgba(15, 23, 42, 0.04), 0 20px 48px -16px rgba(15, 23, 42, 0.2);
   --shadow-xl: 0 40px 80px -30px rgba(15, 23, 42, 0.22);
-  --shadow-stage: 0 1px 0 #ffffff inset, 0 60px 120px -50px rgba(15, 23, 42, 0.24), 0 30px 60px -30px color-mix(in oklab, var(--accent) 12%, transparent);
-  --radius: 0.5rem;
-  /* Silk / Horizon light: cobalt, ember, amber. */
-  --silk-0: #f6f7f9;
-  --silk-1: #2563eb;
-  --silk-2: #ff8a66;
-  --silk-3: #ffc070;
+  --shadow-stage: 0 1px 0 #ffffff inset, 0 60px 120px -50px rgba(15, 23, 42, 0.22), 0 30px 60px -30px rgba(124, 58, 237, 0.18);
+  --radius: 0.75rem;
+  /* Silk / Horizon light: indigo, violet, pink. */
+  --silk-0: #ffffff;
+  --silk-1: #4f46e5;
+  --silk-2: #7c3aed;
+  --silk-3: #db2777;
   --silk-opacity: 0.85;
-  /* Background glows and washes. Light: the signal ember. Dark: neutral light (see .dark). */
-  --glow: var(--signal);
-  --glow-2: var(--signal-2);
+  /* Background glows and washes: the brand violet / pink. */
+  --glow: #7c3aed;
+  --glow-2: #db2777;
   /* Syntax (code panes stay dark in both themes). */
   --syn-keyword: #c4a7ff;
   --syn-string: #9fe0b0;
@@ -116,39 +126,47 @@
 }
 
 .dark {
-  --background: #0f1219;
+  /* Deep navy surfaces, same brand gradient. */
+  --background: #0b0f1a;
   --foreground: #e6e9ef;
-  --foreground-dim: #8d97a7;
-  --surface: #141823;
-  --surface-2: #1a1f2b;
-  --surface-3: #212736;
-  --card: #151a25;
+  --foreground-dim: #9aa3b5;
+  --surface: #10162a;
+  --surface-2: #161d33;
+  --surface-3: #1d253d;
+  --card: #0f1526;
   --card-foreground: #e6e9ef;
-  --muted: #1b202c;
-  --muted-foreground: #9aa4b5;
-  --border: #262d3a;
-  --border-strong: #363f4f;
-  --input: #11151e;
-  --ring: #60a5fa;
-  --focus: #60a5fa;
-  --primary: #3b82f6;
-  --primary-hover: #2563eb;
+  --muted: #141b30;
+  --muted-foreground: #9aa4b8;
+  --border: #1f2740;
+  --border-strong: #2d3755;
+  --input: #0d1222;
+  --ring: #818cf8;
+  --focus: #818cf8;
+  --primary: #6366f1;
+  --primary-hover: #4f46e5;
   --primary-foreground: #ffffff;
   --signal: #ff5f3a; /* brand-only */
   --signal-2: #ffb23e;
   --signal-ink: #ff7a59;
-  --accent: #3b82f6;
+  --accent: #a78bfa;
   --accent-foreground: #ffffff;
-  --success: #4ade80;
+  --brand-from: #6366f1;
+  --brand-via: #8b5cf6;
+  --brand-to: #ec4899;
+  --brand-gradient: linear-gradient(100deg, #6366f1, #8b5cf6, #ec4899);
+  --brand-gradient-soft: linear-gradient(100deg, rgba(99, 102, 241, 0.18), rgba(139, 92, 246, 0.18), rgba(236, 72, 153, 0.18));
+  --brand-glow: rgba(139, 92, 246, 0.45);
+  --brand-ring: 0 0 0 4px rgba(129, 140, 248, 0.22);
+  --success: #34d399;
   --warning: #fbbf24;
   --danger: #f87171;
   --danger-foreground: #ffffff;
-  --info: #60a5fa;
-  --code-bg: #0c0c0c;
+  --info: #818cf8;
+  --code-bg: #070a12;
   --code-fg: #e6e6e6;
-  --code-border: #222222;
+  --code-border: #1f2740;
   --code-muted: #8a8a8a; /* 5.5:1 on --code-bg */
-  --selection: rgba(96, 165, 250, 0.28);
+  --selection: rgba(129, 140, 248, 0.28);
   --selection-strong: color-mix(in oklab, var(--accent) 42%, transparent);
   /* Higher alpha than on paper so the band reads as lit orange, not brown, over near-black; the
      amber end is pulled toward the signal so it never turns olive. */
@@ -167,13 +185,13 @@
   --shadow-lg: 0 1px 0 rgba(255, 255, 255, 0.05) inset, 0 24px 48px -16px rgba(0, 0, 0, 0.7), 0 4px 12px -4px rgba(0, 0, 0, 0.5);
   --shadow-xl: 0 1px 0 rgba(255, 255, 255, 0.06) inset, 0 40px 80px -24px rgba(0, 0, 0, 0.75);
   --shadow-stage: 0 1px 0 rgba(255, 255, 255, 0.06) inset, 0 80px 160px -60px rgba(0, 0, 0, 0.9), 0 0 0 1px rgba(255, 255, 255, 0.04);
-  /* Dark: every wash and glow is neutral light, never coloured haze. */
-  --glow: rgba(255, 255, 255, 0.5);
-  --glow-2: rgba(255, 255, 255, 0.32);
-  --silk-0: #0f1219;
-  --silk-1: rgba(255, 255, 255, 0.38);
-  --silk-2: rgba(255, 255, 255, 0.3);
-  --silk-3: rgba(255, 255, 255, 0.26);
+  /* Dark: the same brand light, dimmed. */
+  --glow: #8b5cf6;
+  --glow-2: #ec4899;
+  --silk-0: #0b0f1a;
+  --silk-1: #6366f1;
+  --silk-2: #8b5cf6;
+  --silk-3: #ec4899;
   --silk-opacity: 0.55;
   color-scheme: dark;
 }
@@ -183,8 +201,8 @@
 .dark {
   --live: var(--success);
   --ember: linear-gradient(100deg, var(--signal), var(--signal-2));
-  --rim: linear-gradient(90deg, transparent 8%, color-mix(in oklab, var(--signal) 80%, transparent) 38%, color-mix(in oklab, var(--signal-2) 70%, transparent) 62%, transparent 92%);
-  --glow-signal: 0 0 0 1px color-mix(in oklab, var(--signal) 45%, transparent), 0 12px 40px -12px color-mix(in oklab, var(--signal) 60%, transparent);
+  --rim: linear-gradient(90deg, transparent 8%, color-mix(in oklab, var(--brand-from) 80%, transparent) 38%, color-mix(in oklab, var(--brand-to) 70%, transparent) 62%, transparent 92%);
+  --glow-signal: 0 0 0 1px color-mix(in oklab, var(--brand-from) 45%, transparent), 0 12px 40px -12px var(--brand-glow);
   --keylight: radial-gradient(60% 50% at 50% -10%, color-mix(in oklab, var(--foreground) 6%, transparent), transparent 70%), radial-gradient(28% 18% at 50% 0%, color-mix(in oklab, var(--glow) 5%, transparent), transparent 70%);
 }
 /* Dark: flat ember for the one primary action, a white hairline rim, and a neutral hover lift. */
@@ -236,6 +254,9 @@ body:has(main [data-tone="company"]) { --silk-1: #ff8a66; --silk-2: #ffc070; --s
   --color-signal: var(--signal);
   --color-signal-2: var(--signal-2);
   --color-signal-ink: var(--signal-ink);
+  --color-brand-from: var(--brand-from);
+  --color-brand-via: var(--brand-via);
+  --color-brand-to: var(--brand-to);
   --color-selection: var(--selection);
   --color-hairline: var(--hairline);
   --color-grid-line: var(--grid-line);
@@ -497,13 +518,21 @@ body:has(main [data-tone="company"]) { --silk-1: #ff8a66; --silk-2: #ffc070; --s
   font-stretch: 104%;
   text-wrap: balance;
 }
+/* App page title (spec): 24–26px, 700, -0.02em. */
 @utility text-app-title {
   font-family: var(--font-sans);
-  font-size: 1.375rem;
-  line-height: 1.2;
+  font-size: 1.625rem;
+  line-height: 1.15;
   letter-spacing: -0.02em;
-  font-weight: 600;
+  font-weight: 700;
   font-stretch: 100%;
+}
+/* App section title: 15–16px, 600. */
+@utility text-section-title {
+  font-size: 0.9375rem;
+  line-height: 1.3;
+  letter-spacing: -0.01em;
+  font-weight: 600;
 }
 /* Two-tone emphasis: the qualifier of a display heading (≥4.8:1 in both themes). */
 @utility text-dim {
@@ -911,7 +940,7 @@ body:has(main [data-tone="company"]) { --silk-1: #ff8a66; --silk-2: #ffc070; --s
   padding: 1px;
   --comet-o: 0;
   background:
-    conic-gradient(from var(--angle), transparent 0deg 270deg, color-mix(in oklab, var(--signal) calc(var(--comet-o) * 90%), transparent) 325deg, color-mix(in oklab, var(--signal-2) calc(var(--comet-o) * 90%), transparent) 345deg, color-mix(in oklab, var(--comet-head) calc(var(--comet-o) * 100%), transparent) 355deg, transparent 360deg),
+    conic-gradient(from var(--angle), transparent 0deg 270deg, color-mix(in oklab, var(--brand-from) calc(var(--comet-o) * 90%), transparent) 325deg, color-mix(in oklab, var(--brand-via) calc(var(--comet-o) * 90%), transparent) 345deg, color-mix(in oklab, var(--brand-to) calc(var(--comet-o) * 100%), transparent) 355deg, transparent 360deg),
     linear-gradient(var(--border-strong), var(--border-strong));
   animation: spin-angle 6s linear infinite;
   animation-play-state: paused;
@@ -965,10 +994,149 @@ body:has(main [data-tone="company"]) { --silk-1: #ff8a66; --silk-2: #ffc070; --s
 
 :is(a, button, summary).glow-card:active { transform: translateY(0); scale: 0.985; transition-duration: var(--dur-1); }
 
+/* Icon tile (spec): 40px rounded-12 square, brand gradient at 12% tint, icon in indigo.
+   Size with utilities (size-10 default; size-8 / size-9 for compact rows). */
 .icon-tile {
-  background: linear-gradient(180deg, var(--surface), var(--card));
-  box-shadow: inset 0 0 0 1px var(--border), inset 0 1px 0 0 var(--hairline);
-  color: var(--foreground);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 12px;
+  background: var(--brand-gradient-soft);
+  box-shadow: inset 0 0 0 1px color-mix(in oklab, var(--brand-from) 14%, transparent);
+  color: var(--primary);
+}
+.icon-tile--solid {
+  background: var(--brand-gradient);
+  color: #ffffff;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.25), 0 8px 20px -8px var(--brand-glow);
+}
+
+/* Brand gradient text: one key phrase per page. */
+.brand-gradient-text {
+  background-image: var(--brand-gradient);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  -webkit-text-fill-color: transparent;
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone;
+}
+
+/* Gradient mesh: three large blurred blobs (indigo, violet, pink) drifting slowly, masked to fade
+   out downward. Put it on an empty `absolute inset-0 -z-10` layer (or a positioned container with
+   overflow hidden). Light, not neon: --mesh-opacity tunes it (0.5 app header, 0.8 hero). */
+.brand-mesh {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  opacity: var(--mesh-opacity, 0.6);
+  mask-image: linear-gradient(to bottom, #000 30%, transparent 100%);
+}
+.brand-mesh::before,
+.brand-mesh::after { content: ""; }
+.brand-mesh::before,
+.brand-mesh::after,
+.brand-mesh > i {
+  position: absolute;
+  display: block;
+  border-radius: 9999px;
+  filter: blur(70px);
+  will-change: transform;
+}
+.brand-mesh::before {
+  width: 46%;
+  height: 120%;
+  left: -8%;
+  top: -40%;
+  background: color-mix(in oklab, var(--brand-from) 42%, transparent);
+  animation: mesh-drift-a 22s ease-in-out infinite alternate;
+}
+.brand-mesh::after {
+  width: 44%;
+  height: 120%;
+  left: 30%;
+  top: -55%;
+  background: color-mix(in oklab, var(--brand-via) 38%, transparent);
+  animation: mesh-drift-b 26s ease-in-out infinite alternate;
+}
+.brand-mesh > i {
+  width: 40%;
+  height: 120%;
+  right: -10%;
+  top: -35%;
+  background: color-mix(in oklab, var(--brand-to) 30%, transparent);
+  animation: mesh-drift-c 24s ease-in-out infinite alternate;
+}
+@keyframes mesh-drift-a { from { transform: translate(0, 0) scale(1); } to { transform: translate(10%, 8%) scale(1.08); } }
+@keyframes mesh-drift-b { from { transform: translate(0, 0) scale(1); } to { transform: translate(-8%, 12%) scale(0.94); } }
+@keyframes mesh-drift-c { from { transform: translate(0, 0) scale(1); } to { transform: translate(-10%, 6%) scale(1.1); } }
+.brand-mesh { @variant calm { &::before, &::after, & > i { animation: none; } } }
+
+/* Glow frame: a soft brand gradient blob behind a product screenshot (40% opacity, blurred).
+   Markup: <div class="glow-frame"> <browser frame> </div>. */
+.glow-frame {
+  position: relative;
+  isolation: isolate;
+}
+.glow-frame::before {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  inset: 6% -4% -6% -4%;
+  border-radius: 9999px;
+  background: var(--brand-gradient);
+  filter: blur(48px);
+  opacity: 0.4;
+  pointer-events: none;
+}
+
+/* Thin gradient progress bar: <div class="brand-bar"><span style="width: 42%" /></div>. */
+.brand-bar {
+  position: relative;
+  height: 6px;
+  border-radius: 9999px;
+  overflow: hidden;
+  background: color-mix(in oklab, var(--foreground) 6%, transparent);
+}
+.brand-bar > span {
+  position: absolute;
+  inset: 0 auto 0 0;
+  border-radius: inherit;
+  background: var(--brand-gradient);
+  transition: width var(--dur-5) var(--ease-out);
+}
+.brand-bar[data-tone="warning"] > span { background: var(--warning); }
+.brand-bar[data-tone="danger"] > span { background: var(--danger); }
+.brand-bar--thin { height: 4px; }
+
+/* Premium card: 16px radius, hairline border, soft slate shadow; lifts 2px on hover. */
+.card-premium {
+  background: var(--card);
+  border: 1px solid rgba(15, 23, 42, 0.06);
+  border-radius: 16px;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04), 0 12px 32px -12px rgba(15, 23, 42, 0.14);
+  transition: transform var(--dur-3) var(--ease-out), box-shadow var(--dur-3) var(--ease-out), border-color var(--dur-3);
+}
+.dark .card-premium { border-color: var(--border); box-shadow: 0 1px 2px rgba(0, 0, 0, 0.3), 0 12px 32px -12px rgba(0, 0, 0, 0.5); }
+.card-premium--hover:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04), 0 20px 48px -16px rgba(15, 23, 42, 0.2);
+}
+.dark .card-premium--hover:hover { box-shadow: 0 1px 2px rgba(0, 0, 0, 0.3), 0 20px 48px -16px rgba(0, 0, 0, 0.6); }
+.card-premium--hover { @variant calm { &:hover { transform: none; } } }
+
+/* Gradient hairline ring around a focused hero input / card: add [data-glow] or :focus-within. */
+.glow-focus {
+  position: relative;
+  transition: box-shadow var(--dur-3) var(--ease-out), border-color var(--dur-3);
+}
+.glow-focus:is(:focus-within, [data-glow="true"]) {
+  border-color: color-mix(in oklab, var(--brand-from) 45%, transparent);
+  box-shadow: var(--brand-ring), 0 20px 48px -16px var(--brand-glow);
 }
 
 /* ==========================================================================
@@ -994,6 +1162,37 @@ body:has(main [data-tone="company"]) { --silk-1: #ff8a66; --silk-2: #ffc070; --s
 }
 .btn-solid:hover { translate: 0 -1px; }
 .btn-solid:hover::after { transform: translateX(100%); }
+
+/* Indigo primary (spec): solid --primary with a subtle inner highlight and a soft brand glow. */
+.btn-indigo {
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.2), 0 1px 2px rgba(15, 23, 42, 0.1), 0 8px 20px -10px var(--brand-glow);
+}
+.btn-indigo:hover { box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.24), 0 1px 2px rgba(15, 23, 42, 0.12), 0 12px 28px -10px var(--brand-glow); }
+
+/* Brand CTA: the gradient itself (one per viewport: IDE Publish, upgrade). White ink. */
+.btn-brand {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  color: #ffffff;
+  background: var(--brand-gradient);
+  font-weight: 600;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.28), 0 1px 2px rgba(15, 23, 42, 0.12), 0 10px 28px -10px var(--brand-glow);
+  transition: box-shadow var(--dur-4) var(--ease-out), translate var(--dur-3) var(--ease-out), scale var(--dur-3) var(--ease-snap), filter var(--dur-3);
+}
+.btn-brand::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background: linear-gradient(110deg, transparent 30%, rgba(255, 255, 255, 0.35) 50%, transparent 70%);
+  transform: translateX(-110%);
+  transition: transform 800ms var(--ease-out);
+}
+.btn-brand:hover { translate: 0 -1px; box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.32), 0 1px 2px rgba(15, 23, 42, 0.12), 0 16px 36px -12px var(--brand-glow); }
+.btn-brand:hover::after { transform: translateX(110%); }
+.btn-brand:disabled, .btn-brand[aria-disabled="true"] { filter: saturate(0.5); }
 
 /* Ember CTA: one per viewport, at most two per page (hero Build, final CTA; IDE Publish). */
 .btn-ember {
@@ -1449,8 +1648,8 @@ img[data-developed], .develop { animation: develop 700ms var(--ease-out) backwar
   transform-origin: 0 50%;
   transform: scaleX(0);
   opacity: 0;
-  background: var(--ember);
-  box-shadow: 0 0 12px color-mix(in oklab, var(--signal) 70%, transparent), 0 0 2px var(--signal);
+  background: var(--brand-gradient);
+  box-shadow: 0 0 12px var(--brand-glow), 0 0 2px var(--brand-from);
 }
 .nav-progress[data-state="loading"] { opacity: 1; animation: nav-progress 9s cubic-bezier(0.1, 0.7, 0.2, 1) forwards; }
 .nav-progress[data-state="done"] { animation: nav-progress-done 450ms var(--ease-out) forwards; }
@@ -1478,7 +1677,7 @@ input:is([type="checkbox"], [type="radio"]):checked { animation: check-pop 260ms
   left: 0;
   width: 2px;
   border-radius: 2px;
-  background: var(--accent);
+  background: var(--brand-gradient);
   animation: nav-item-in 320ms var(--ease-snap) both;
 }
 @keyframes nav-item-in { from { transform: scaleY(0); } }

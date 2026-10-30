@@ -692,7 +692,7 @@ function ConversationMenu({ conversations, activeId, disabled, onPick, onNew, ti
           className="flex min-w-0 items-center gap-2 rounded-lg px-2 py-1.5 text-left text-[13.5px] font-semibold transition-colors hover:bg-muted focus-visible:outline-2 focus-visible:outline-ring"
           aria-label={`Conversation: ${title}. Choose conversation`}
         >
-          <Sparkles className="size-4 shrink-0 text-signal" aria-hidden="true" />
+          <Sparkles className="size-4 shrink-0 text-primary" aria-hidden="true" />
           <span className="truncate">{title}</span>
           <ChevronDown className="size-3.5 shrink-0 text-muted-foreground" aria-hidden="true" />
         </button>
@@ -992,7 +992,7 @@ function ChatWelcome({ projectName, category, framework, onPick }: { projectName
                 onClick={() => onPick(s.prompt, s.mode)}
                 className="group flex h-full w-full items-start gap-2.5 rounded-xl border border-border bg-card px-3 py-2.5 text-left transition-[border-color,background-color,box-shadow] duration-200 hover:border-border-strong hover:bg-muted/40 focus-visible:outline-2 focus-visible:outline-ring"
               >
-                <span className="mt-px flex size-7 shrink-0 items-center justify-center rounded-lg bg-muted text-muted-foreground shadow-[inset_0_0_0_1px_var(--border)] transition-colors group-hover:text-signal">
+                <span className="mt-px flex size-7 shrink-0 items-center justify-center rounded-lg bg-muted text-muted-foreground shadow-[inset_0_0_0_1px_var(--border)] transition-colors group-hover:text-primary">
                   <Icon className="size-3.5" aria-hidden="true" />
                 </span>
                 <span className="min-w-0">

@@ -242,7 +242,7 @@ export function PreviewPanel({
             ) : (
               // No address yet: plain sans status text (mono is kept for real URLs), not a repeat of the card title.
               <span className="flex min-w-0 items-center gap-1.5 text-muted-foreground">
-                <span className={cn("size-1.5 shrink-0 rounded-full", status === "starting" ? "bg-signal" : "bg-muted-foreground/45")} aria-hidden="true" />
+                <span className={cn("size-1.5 shrink-0 rounded-full", status === "starting" ? "bg-primary" : "bg-muted-foreground/45")} aria-hidden="true" />
                 <span className="truncate">{status === "starting" ? "Starting…" : "No address yet"}</span>
               </span>
             )}
@@ -276,7 +276,7 @@ export function PreviewPanel({
                 aria-label="Visual edit"
                 disabled={!inspectable || status !== "running"}
                 onClick={() => toggleInspect(!inspecting)}
-                className={cn(toolButton, "h-7 w-auto gap-1 px-2 text-[12px] font-medium", inspecting && "bg-signal/12 text-foreground shadow-[inset_0_0_0_1px_color-mix(in_oklab,var(--signal)_45%,transparent)]")}
+                className={cn(toolButton, "h-7 w-auto gap-1 px-2 text-[12px] font-medium", inspecting && "bg-primary/12 text-foreground shadow-[inset_0_0_0_1px_color-mix(in_oklab,var(--primary)_45%,transparent)]")}
               >
                 <MousePointerClick className="size-3.5" aria-hidden="true" />
                 <span className="hidden @[600px]/preview:inline">Edit</span>
@@ -380,7 +380,7 @@ export function PreviewPanel({
           {editing ? (
             // Visual only: the agent column's live region already announces each stage once.
             <div className="ws-drop glass pointer-events-none absolute left-1/2 top-3 z-[4] flex -translate-x-1/2 items-center gap-2 rounded-full border border-border-strong px-3 py-1 text-[12px] font-medium shadow-lg" aria-hidden="true">
-              <Loader2 className="size-3.5 animate-spin text-signal" aria-hidden="true" />
+              <Loader2 className="size-3.5 animate-spin text-primary" aria-hidden="true" />
               {agentFiles ? `Agent is editing · ${agentFiles} file${agentFiles === 1 ? "" : "s"}` : "Agent is working…"}
             </div>
           ) : updated && status === "running" ? (
@@ -493,7 +493,7 @@ function FrameState({ canEdit, showOperatorDetails }: { canEdit: boolean; showOp
     );
   } else if (status === "starting") {
     card = (
-      <StatusCard icon={<Loader2 className="size-5 animate-spin text-signal" aria-hidden="true" />} title="Starting the dev server…" description="Files are copied into an isolated sandbox and dependencies linked.">
+      <StatusCard icon={<Loader2 className="size-5 animate-spin text-primary" aria-hidden="true" />} title="Starting the dev server…" description="Files are copied into an isolated sandbox and dependencies linked.">
         {session?.startedAt ? <Elapsed since={session.startedAt} /> : null}
         <LogTail lines={tail} />
       </StatusCard>

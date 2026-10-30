@@ -1,9 +1,9 @@
 import * as React from "react";
 import { cn } from "@/lib/utils";
 
-/** Elevation e1 card (16px radius, hairline border, inner top highlight). Add `e2`/`e3` or `data-spotlight` for more. */
+/** Premium card (16px radius, hairline border, soft slate shadow). Add `card-premium--hover` for the 2px lift. */
 export function Card({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) {
-  return <div className={cn("rounded-xl border border-border bg-card text-card-foreground shadow-[inset_0_1px_0_0_var(--hairline),var(--shadow-sm)]", className)} {...props} />;
+  return <div className={cn("card-premium text-card-foreground", className)} {...props} />;
 }
 export function CardHeader({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) {
   return <div className={cn("flex flex-col gap-1.5 p-5", className)} {...props} />;

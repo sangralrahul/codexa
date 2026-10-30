@@ -5,7 +5,7 @@ import { Odometer } from "@/components/motion/odometer";
 import { describeUsage, formatLimit, ratioOf, toneOf, type UsageMetric, type UsageTone } from "./usage-model";
 
 const STROKE: Record<UsageTone, string> = {
-  ok: "var(--signal)",
+  ok: "var(--primary)",
   warn: "var(--warning)",
   danger: "var(--danger)",
   neutral: "color-mix(in oklab, var(--foreground) 62%, transparent)",

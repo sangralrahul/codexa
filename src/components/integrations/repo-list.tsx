@@ -139,7 +139,7 @@ export function RepoList({
           {repos.map((r) => {
             const selected = selectedId === r.id;
             return (
-              <li key={r.id} className={selected ? "bg-muted/60 shadow-[inset_2px_0_0_var(--signal)]" : "transition-colors hover:bg-muted/40"}>
+              <li key={r.id} className={selected ? "bg-muted/60 shadow-[inset_2px_0_0_var(--primary)]" : "transition-colors hover:bg-muted/40"}>
                 <div className="flex flex-col gap-2 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
                   <div className="flex min-w-0 items-start gap-3">
                     <span aria-hidden="true" className="mt-0.5 flex size-8 shrink-0 items-center justify-center rounded-lg border border-border bg-surface text-muted-foreground">

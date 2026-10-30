@@ -21,6 +21,7 @@ export const TYPE_SCALE_UTILITIES = [
   "meta",
   "app-display",
   "app-title",
+  "section-title",
 ] as const;
 
 const twMerge = extendTailwindMerge({

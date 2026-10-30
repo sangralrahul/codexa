@@ -16,14 +16,14 @@ const solidUnavailable =
   "unavailable:bg-muted unavailable:bg-none unavailable:text-muted-foreground unavailable:shadow-[inset_0_0_0_1px_var(--border)] unavailable:opacity-100 unavailable:filter-none";
 
 const variants: Record<ButtonVariant, string> = {
-  primary: cn("btn-solid bg-primary text-primary-foreground hover:bg-primary-hover shadow-sm", solidUnavailable),
+  primary: cn("btn-solid btn-indigo bg-primary text-primary-foreground hover:bg-primary-hover", solidUnavailable),
   secondary: cn("btn-solid bg-foreground text-background hover:opacity-90 shadow-sm", solidUnavailable),
-  outline: "border border-border-strong bg-background/60 text-foreground shadow-[inset_0_1px_0_var(--hairline)] hover:border-foreground/25 hover:bg-muted",
+  outline: "border border-border bg-card text-foreground shadow-sm hover:border-border-strong hover:bg-surface",
   ghost: "text-foreground hover:bg-muted",
   danger: cn("bg-danger text-danger-foreground shadow-sm hover:opacity-90", solidUnavailable),
   link: "h-auto px-0 text-foreground underline-offset-4 hover:underline",
-  // One per viewport, at most two per page (hero Build, final CTA; IDE Publish).
-  ember: cn("btn-ember", solidUnavailable),
+  // One per viewport, at most two per page (hero Build, final CTA; IDE Publish): the brand gradient.
+  ember: cn("btn-brand", solidUnavailable),
   soft: "bg-muted text-foreground shadow-[inset_0_0_0_1px_var(--border)] hover:bg-surface-3",
 };
 

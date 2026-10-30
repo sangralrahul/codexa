@@ -108,7 +108,7 @@ export function StatusBar({
             </span>
           ) : agent.ai?.configured ? (
             <>
-              <Sparkles className={cn("size-3.5", agent.running && "text-signal")} aria-hidden="true" />
+              <Sparkles className={cn("size-3.5", agent.running && "text-primary")} aria-hidden="true" />
               <span className="max-w-[12rem] truncate font-mono">{agent.ai.model}</span>
             </>
           ) : agent.ai ? (

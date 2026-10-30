@@ -18,7 +18,7 @@ import { Drawer } from "./drawer";
 import { ConfirmDialog } from "./confirm-dialog";
 
 const KIND: Record<string, { label: string; Icon: typeof Clock; tone: string }> = {
-  ai: { label: "AI run", Icon: Sparkles, tone: "bg-signal/12 text-signal ring-signal/30" },
+  ai: { label: "AI run", Icon: Sparkles, tone: "bg-primary/12 text-primary ring-primary/30" },
   deploy: { label: "Deploy", Icon: Rocket, tone: "bg-success/12 text-success ring-success/30" },
   manual: { label: "Checkpoint", Icon: Flag, tone: "bg-foreground/[0.07] text-foreground ring-border-strong" },
   auto: { label: "Auto", Icon: Clock, tone: "bg-muted text-muted-foreground ring-border" },
@@ -254,7 +254,7 @@ export function HistoryDrawer({
             <ol className="relative" aria-label="Version history">
               <span className="absolute bottom-3 left-[13px] top-3 w-px bg-border" aria-hidden="true" />
               <li className="relative flex items-start gap-3 pb-5">
-                <span className="ws-node-pulse relative z-[1] mt-0.5 flex size-[27px] shrink-0 items-center justify-center rounded-full bg-signal text-background shadow-[0_0_0_4px_var(--card)]" aria-hidden="true">
+                <span className="ws-node-pulse relative z-[1] mt-0.5 flex size-[27px] shrink-0 items-center justify-center rounded-full bg-primary text-background shadow-[0_0_0_4px_var(--card)]" aria-hidden="true">
                   <span className="size-2 rounded-full bg-background" />
                 </span>
                 <div className="min-w-0">

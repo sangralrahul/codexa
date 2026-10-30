@@ -75,7 +75,7 @@ function MetaChip({ k, meta }: { k?: SettingsNavKey; meta: SettingsNavMetaView }
   if (k === "security" && meta.otherSessions > 0) {
     return (
       <span className="settings-meta ml-auto flex size-5 shrink-0 items-center justify-center" title={`${meta.otherSessions} other active session${meta.otherSessions === 1 ? "" : "s"}`}>
-        <span aria-hidden="true" className="size-1.5 rounded-full bg-accent shadow-[0_0_0_3px_color-mix(in_oklab,var(--accent)_18%,transparent)]" />
+        <span aria-hidden="true" className="size-1.5 rounded-full bg-primary shadow-[0_0_0_3px_color-mix(in_oklab,var(--primary)_18%,transparent)]" />
         <span className="sr-only">{`, ${meta.otherSessions} other active session${meta.otherSessions === 1 ? "" : "s"}`}</span>
       </span>
     );
@@ -92,13 +92,13 @@ function NavLink({ it, active, meta, onNavigate }: { it: SettingsNavItem; active
       onClick={onNavigate}
       data-nav-item=""
       className={cn(
-        "nav-item relative z-[1] flex h-9 shrink-0 snap-center items-center gap-2.5 whitespace-nowrap rounded-md px-3 text-[13.5px] outline-none transition-colors duration-200 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-ring lg:h-[34px] lg:px-2.5",
-        active ? "font-medium text-foreground" : "text-muted-foreground hover:text-foreground",
+        "relative z-[1] flex h-9 shrink-0 snap-center items-center gap-2.5 whitespace-nowrap rounded-[10px] px-3 text-[13.5px] outline-none transition-colors duration-200 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-ring lg:h-9 lg:px-2.5",
+        active ? "font-semibold text-primary lg:bg-[image:var(--brand-gradient-soft)] lg:shadow-[inset_0_0_0_1px_color-mix(in_oklab,var(--brand-from)_12%,transparent)]" : "text-muted-foreground hover:text-foreground",
       )}
     >
       {Icon ? (
         <span className="relative flex shrink-0">
-          <Icon className={cn("size-4 shrink-0 transition-colors", active ? "text-foreground" : "text-foreground-dim")} aria-hidden="true" />
+          <Icon className={cn("size-4 shrink-0 transition-colors", active ? "text-primary" : "text-foreground-dim")} aria-hidden="true" />
           {/* Below lg the meta chips are hidden, so the security attention dot sits on the tab's own icon. */}
           {it.key === "security" && meta.otherSessions > 0 ? (
             <span className="absolute -right-1 -top-1 flex size-2 items-center justify-center lg:hidden">
@@ -231,7 +231,7 @@ export function SettingsNav({ workspaceName, meta }: { workspaceName: string | n
           autoComplete="off"
           aria-controls={searching ? "settings-search-results" : undefined}
           aria-describedby="settings-search-hint"
-          className="h-9 w-full rounded-md border border-border bg-background/60 pl-8 pr-8 text-[13px] text-foreground shadow-[inset_0_1px_0_var(--hairline)] outline-none transition-[border-color,box-shadow] placeholder:text-muted-foreground hover:border-border-strong focus-visible:border-ring/70 focus-visible:shadow-[0_0_0_4px_color-mix(in_oklab,var(--accent)_14%,transparent)] [&::-webkit-search-cancel-button]:hidden"
+          className="h-9 w-full rounded-[10px] border border-border bg-card pl-8 pr-8 text-[13px] text-foreground shadow-sm outline-none transition-[border-color,box-shadow] placeholder:text-muted-foreground hover:border-border-strong focus-visible:border-focus focus-visible:shadow-(--brand-ring) [&::-webkit-search-cancel-button]:hidden"
         />
         <span id="settings-search-hint" className="sr-only">
           Type to find a setting. Press Enter to open the first result.

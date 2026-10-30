@@ -55,7 +55,7 @@ function burst(from: HTMLElement | null) {
     p.className = "ws-particle";
     p.style.left = `${r.left + r.width / 2 - 2.5}px`;
     p.style.top = `${r.top + r.height / 2 - 2.5}px`;
-    if (i % 3 === 1) p.style.background = "var(--signal-2)";
+    if (i % 3 === 1) p.style.background = "var(--brand-to)";
     if (i % 3 === 2) p.style.background = "var(--success)";
     document.body.appendChild(p);
     const a = (i / 14) * Math.PI * 2 + Math.random() * 0.4;
@@ -336,7 +336,7 @@ export function PublishPopover({ projectId, onManage, className, compact, open: 
             type="button"
             data-spark=""
             onClick={() => void onOpen(true)}
-            className={cn("btn-ember relative inline-flex h-8 select-none items-center gap-1.5 rounded-[10px] text-[13px] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring active:scale-[0.97] calm:active:scale-100", compact ? "w-8 justify-center px-0" : "px-3.5", className)}
+            className={cn("btn-brand relative inline-flex h-8 select-none items-center gap-1.5 rounded-[10px] text-[13px] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring active:scale-[0.97] calm:active:scale-100", compact ? "w-8 justify-center px-0" : "px-3.5", className)}
             aria-label={live ? `Publish (published ${publishedAgo})` : "Publish"}
           >
             {inProgress ? <Loader2 className="size-3.5 animate-spin" aria-hidden="true" /> : live ? <LiveDot /> : <Rocket className="size-3.5" aria-hidden="true" data-spark-icon="" />}
@@ -524,7 +524,7 @@ export function PublishPopover({ projectId, onManage, className, compact, open: 
                         ref={s.id === "live" ? checkRef : undefined}
                         className={cn(
                           "relative z-[1] flex size-6 shrink-0 items-center justify-center rounded-full border text-[11px]",
-                          failed ? "border-danger bg-danger/10 text-danger" : done ? "border-success bg-success text-background" : active ? "border-signal bg-card text-signal" : "border-border bg-card text-muted-foreground",
+                          failed ? "border-danger bg-danger/10 text-danger" : done ? "border-success bg-success text-background" : active ? "border-primary bg-card text-primary" : "border-border bg-card text-muted-foreground",
                         )}
                       >
                         {failed ? <CircleAlert className="size-3.5" aria-hidden="true" /> : done ? <Check className={cn("size-3.5", !calm && s.id === "live" && "check-draw")} strokeWidth={3} aria-hidden="true" /> : active ? <Loader2 className="size-3.5 animate-spin" aria-hidden="true" /> : i + 1}

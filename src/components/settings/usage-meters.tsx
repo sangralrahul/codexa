@@ -63,7 +63,7 @@ export function UsageMeters({
         .map((group, gi) => (
           <div key={gi}>
             <p className="mb-2 text-xs font-medium text-foreground-dim">{gi === 0 ? "Metered this period" : "Capacity"}</p>
-            <ul className={cn("grid grid-cols-2 gap-px overflow-hidden rounded-md border border-border bg-border", COLS[Math.min(group.length, 4)])}>
+            <ul className={cn("card-premium grid grid-cols-2 gap-px overflow-hidden bg-border", COLS[Math.min(group.length, 4)])}>
               {group.map((m) => (
                 <li key={m.key} className={cn("min-w-0 bg-card/95 p-3.5 sm:p-4", group.length % 2 === 1 && "last:col-span-2 xl:last:col-span-1", group.length === 1 && "col-span-2")}>
                   {/* Two tiles a row on phones: the ring sits above the numbers until there is room beside them. */}
@@ -74,7 +74,7 @@ export function UsageMeters({
           </div>
         ))}
       {showUpgrade && e.plan !== "enterprise" ? (
-        <div className={cn("flex flex-wrap items-center justify-between gap-3 rounded-md border px-4 py-3", near ? "border-warning/40 bg-warning/[0.06]" : "border-border bg-surface/60")}>
+        <div className={cn("flex flex-wrap items-center justify-between gap-3 rounded-2xl border px-4 py-3.5", near ? "border-warning/40 bg-warning/[0.06]" : "border-border bg-[image:var(--brand-gradient-soft)]")}>
           <p className="min-w-0 flex-1 text-[13px] text-muted-foreground">
             {near ? <span className="font-medium text-foreground">You are close to a limit. </span> : null}
             {upDef

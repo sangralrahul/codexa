@@ -722,7 +722,7 @@ function Shell({
                         aria-label="Show the agent"
                       >
                         <MessageSquare className="size-4" aria-hidden="true" />
-                        {agent.running ? <span className="size-1.5 rounded-full bg-signal" aria-hidden="true" /> : null}
+                        {agent.running ? <span className="size-1.5 rounded-full bg-primary" aria-hidden="true" /> : null}
                       </button>
                     </Tooltip>
                   ) : null}
@@ -1028,8 +1028,8 @@ function MobileNav({ tab, onChange, previewBadge, problems, agentRunning }: { ta
           >
             <span className="relative">
               <Icon className="size-[18px]" aria-hidden="true" />
-              {id === "preview" && previewBadge ? <span className="absolute -right-1 -top-0.5 size-2 rounded-full bg-signal ring-2 ring-card" aria-label="New changes" role="img" /> : null}
-              {id === "chat" && agentRunning ? <span className="absolute -right-1 -top-0.5 size-2 rounded-full bg-signal ring-2 ring-card" aria-label="Agent working" role="img" /> : null}
+              {id === "preview" && previewBadge ? <span className="absolute -right-1 -top-0.5 size-2 rounded-full bg-primary ring-2 ring-card" aria-label="New changes" role="img" /> : null}
+              {id === "chat" && agentRunning ? <span className="absolute -right-1 -top-0.5 size-2 rounded-full bg-primary ring-2 ring-card" aria-label="Agent working" role="img" /> : null}
               {id === "logs" && problems ? <span className="absolute -right-1.5 -top-1 rounded-full bg-danger px-1 font-mono text-[9px] leading-[14px] text-background">{problems}</span> : null}
             </span>
             {label}

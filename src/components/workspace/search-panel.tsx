@@ -61,7 +61,7 @@ export function SearchPanel({ projectId, onOpen, focusKey, header }: { projectId
     return (
       <>
         {t.slice(0, i)}
-        <mark className="rounded-[3px] bg-signal/20 text-foreground">{t.slice(i, i + q.length)}</mark>
+        <mark className="rounded-[3px] bg-primary/20 text-foreground">{t.slice(i, i + q.length)}</mark>
         {t.slice(i + q.length)}
       </>
     );

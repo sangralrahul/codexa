@@ -97,7 +97,7 @@ export function SettingsCard({
         <div
           className={cn(
             "flex flex-wrap items-center justify-between gap-3 border-t px-5 py-3 transition-colors duration-200 sm:px-6",
-            danger ? "border-danger/15 bg-danger/[0.035]" : dirty ? "border-signal/25 bg-signal/[0.05]" : "border-border/80 bg-surface/50",
+            danger ? "border-danger/15 bg-danger/[0.035]" : dirty ? "border-primary/25 bg-primary/[0.05]" : "border-border/80 bg-surface/50",
           )}
         >
           <div className="min-w-0 flex-1 text-xs text-muted-foreground">{hint}</div>

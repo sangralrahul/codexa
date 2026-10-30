@@ -208,7 +208,7 @@ export function VisualEditPanel({
           ) : null}
           {outcome.toAi ? (
             <p className="flex items-center gap-2 text-muted-foreground">
-              <Sparkles className="size-4 text-signal" aria-hidden="true" />
+              <Sparkles className="size-4 text-primary" aria-hidden="true" />
               {outcome.saved.length ? "The rest was sent to the AI agent, which is applying it now." : "Sent to the AI agent, which is applying it now."}
             </p>
           ) : null}
@@ -271,7 +271,7 @@ export function VisualEditPanel({
 export function VisualEditHint({ onExit }: { onExit: () => void }) {
   return (
     <div className="ws-drop glass absolute left-1/2 top-3 z-[5] flex -translate-x-1/2 items-center gap-2 rounded-full border border-border-strong py-1 pl-3 pr-1 text-[12px] font-medium shadow-lg" role="status">
-      <MousePointerClick className="size-3.5 text-signal" aria-hidden="true" />
+      <MousePointerClick className="size-3.5 text-primary" aria-hidden="true" />
       Click any element to edit it
       <button type="button" onClick={onExit} className="rounded-full px-2 py-0.5 text-muted-foreground hover:bg-muted hover:text-foreground">
         Done

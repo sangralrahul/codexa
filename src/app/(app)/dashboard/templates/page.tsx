@@ -48,7 +48,7 @@ export default async function DashboardTemplatesPage({ searchParams }: { searchP
         search={search}
         categoryMode="query"
         basePath="/dashboard/templates"
-        stickyClassName="md:top-[52px]"
+        stickyClassName="md:top-[56px]"
         renderAction={(t) => <UseTemplateButton templateId={t.id} templateName={t.name} workspaceId={workspaceId} canCreate={canCreate} fileCount={t.fileCount} />}
         sheet={{
           initial: sp.preview ?? null,

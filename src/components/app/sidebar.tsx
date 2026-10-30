@@ -105,12 +105,13 @@ function NavRow({ item, current, collapsed, onNavigate, trailing }: { item: NavI
         aria-current={current ? "page" : undefined}
         aria-label={collapsed ? item.label : undefined}
         className={cn(
-          "nav-item group/row relative z-[1] flex h-8 items-center gap-2.5 rounded-md px-2.5 text-[13px] outline-none transition-colors duration-(--dur-2)",
+          "group/row relative z-[1] flex h-9 items-center gap-2.5 rounded-[10px] px-2.5 text-[13.5px] outline-none transition-colors duration-(--dur-2)",
           "focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-ring",
-          current ? "font-medium text-foreground" : "text-muted-foreground hover:text-foreground",
+          // Active: a gradient-tinted background with indigo text (the brand signature, quietly).
+          current ? "bg-[image:var(--brand-gradient-soft)] font-semibold text-primary shadow-[inset_0_0_0_1px_color-mix(in_oklab,var(--brand-from)_12%,transparent)]" : "text-muted-foreground hover:text-foreground",
         )}
       >
-        <Icon className={cn("size-4 shrink-0 transition-colors", current ? "text-accent" : "text-muted-foreground group-hover/row:text-foreground")} aria-hidden="true" />
+        <Icon className={cn("size-4 shrink-0 transition-colors", current ? "text-primary" : "text-muted-foreground group-hover/row:text-foreground")} aria-hidden="true" />
         <span className={cn("min-w-0 flex-1 truncate whitespace-nowrap", fade(collapsed))}>{item.label}</span>
         <span className={cn("flex shrink-0 items-center", fade(collapsed))}>
           {item.keys ? <KeyHint keys={item.keys} className="opacity-0 transition-opacity duration-(--dur-2) group-hover/row:opacity-100 group-focus-visible/row:opacity-100 [@media(hover:none)]:hidden" /> : null}
@@ -132,7 +133,7 @@ function RecentRow({ project: p, collapsed, onNavigate }: { project: SidebarProj
     }
   };
   return (
-    <li data-nav-row className="group/rec relative z-[1] flex h-8 items-center rounded-md">
+    <li data-nav-row className="group/rec relative z-[1] flex h-9 items-center rounded-[10px]">
       <RailTip
         show={collapsed}
         content={
@@ -149,7 +150,7 @@ function RecentRow({ project: p, collapsed, onNavigate }: { project: SidebarProj
           href={href}
           onClick={onNavigate}
           aria-label={collapsed ? `${p.name}${p.running ? ", preview running" : ""}` : undefined}
-          className="flex h-full min-w-0 flex-1 items-center gap-2.5 rounded-md pl-[9px] pr-2 text-[12.5px] text-muted-foreground outline-none transition-colors hover:text-foreground focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-ring"
+          className="flex h-full min-w-0 flex-1 items-center gap-2.5 rounded-[10px] pl-[9px] pr-2 text-[13px] text-muted-foreground outline-none transition-colors hover:text-foreground focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-ring"
         >
           <span title={p.templateName ? `Template preview · ${p.templateName}` : undefined} className="relative flex">
             <ProjectThumb templateId={p.templateId} framework={p.framework} size="xs" />
@@ -251,8 +252,8 @@ export function AppSidebar({
 
   return (
     <div className="relative flex h-full flex-col">
-      {/* Header: logo mark + the workspace switcher (name over plan and role). */}
-      <div className="relative flex h-[52px] shrink-0 items-center gap-0.5 border-b border-border px-2.5">
+      {/* Header: logo mark + the workspace switcher card (name over plan and role). */}
+      <div className="relative flex h-[56px] shrink-0 items-center gap-1.5 border-b border-border px-2.5">
         {collapsed && onToggle ? (
           <RailTip show content={<>Expand sidebar <KeyHint keys={["["]} /></>}>
             <button type="button" onClick={onToggle} aria-label="Expand sidebar" className="group/logo relative flex size-9 shrink-0 items-center justify-center rounded-md transition-colors hover:bg-foreground/[0.06]">
@@ -267,7 +268,7 @@ export function AppSidebar({
         )}
         {/* The logo mark is the brand; the switcher beside it gets the rest of the row for the workspace name. */}
         <div inert={collapsed} className={cn("flex min-w-0 flex-1 items-center", fade(collapsed))}>
-          <WorkspaceSwitcher workspaces={workspaces} currentId={currentId} onNavigate={onNavigate} className="min-w-0 flex-1" />
+          <WorkspaceSwitcher workspaces={workspaces} currentId={currentId} onNavigate={onNavigate} className="min-w-0 flex-1 rounded-[10px] border border-border bg-card shadow-sm hover:border-border-strong hover:bg-surface data-[state=open]:border-border-strong data-[state=open]:bg-surface" />
           {onClose ? (
             <button type="button" onClick={onClose} aria-label="Close navigation" className="ml-1 flex size-8 shrink-0 items-center justify-center rounded-[8px] text-muted-foreground transition-colors hover:bg-foreground/[0.06] hover:text-foreground">
               <X className="size-4" aria-hidden="true" />
@@ -290,18 +291,18 @@ export function AppSidebar({
               href="/new-project"
               onClick={onNavigate}
               aria-label={collapsed ? "New project" : undefined}
-              className="group/new flex h-8 items-center gap-2 overflow-hidden rounded-md border border-border-strong bg-card px-[9px] text-[12.5px] font-medium shadow-sm transition-[border-color,box-shadow,background-color] hover:border-foreground/25 hover:bg-surface focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+              className="group/new btn-indigo flex h-9 items-center gap-2 overflow-hidden rounded-[10px] bg-primary px-[9px] text-[13px] font-medium text-primary-foreground transition-[background-color,box-shadow] hover:bg-primary-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
             >
               <Plus className="size-4 shrink-0 transition-transform duration-(--dur-3) ease-snap group-hover/new:rotate-90 calm:transition-none" aria-hidden="true" />
               <span className={cn("flex-1 truncate whitespace-nowrap", fade(collapsed))}>New project</span>
-              <Kbd className={cn("border border-border bg-muted [@media(hover:none)]:hidden", fade(collapsed))}>N</Kbd>
+              <Kbd className={cn("border-0 bg-primary-foreground/15 text-primary-foreground [@media(hover:none)]:hidden", fade(collapsed))}>N</Kbd>
             </Link>
           </RailTip>
         </div>
       ) : null}
 
       <nav ref={navRef} aria-label="Workspace" className="scrollbar-thin relative min-h-0 flex-1 overflow-y-auto overflow-x-hidden px-2.5 pb-3 pt-1.5">
-        <GlideIndicator ref={glide} className="inset-x-2.5 rounded-md bg-foreground/[0.05] shadow-none" />
+        <GlideIndicator ref={glide} className="inset-x-2.5 rounded-[10px] bg-foreground/[0.04] shadow-none" />
         <ul className="space-y-px">
           {nav.map((it) => (
             <li key={it.href}>
@@ -339,14 +340,14 @@ export function AppSidebar({
 
       <div className="relative shrink-0 space-y-2 border-t border-border px-2.5 pb-[max(10px,env(safe-area-inset-bottom))] pt-2.5">
         {limited && !collapsed ? (
-          <div className="rounded-md border border-border bg-card p-2.5">
-            <Meter size="sm" label="Projects" value={usage.projects} max={usage.projectLimit} format={(n) => String(n)} />
+          <div className="rounded-xl border border-border bg-surface p-3">
+            <Meter size="sm" label="Projects" value={usage.projects} max={usage.projectLimit} format={(n) => String(n)} neutral />
             {upsell ? (
               <div className="mt-2.5 flex items-end justify-between gap-2">
                 <p className="min-w-0 text-[11.5px] leading-snug text-muted-foreground">
                   {upsell.plan}: {upsell.points.slice(0, 2).join(" · ")}
                 </p>
-                <Link href="/settings/billing" onClick={onNavigate} className="link-draw shrink-0 text-[12px] font-semibold text-accent">
+                <Link href="/settings/billing" onClick={onNavigate} className="link-draw shrink-0 text-[12px] font-semibold text-primary">
                   Upgrade
                 </Link>
               </div>

@@ -32,7 +32,7 @@ export function DeploymentsCard({ rows, className }: { rows: DeploymentRow[]; cl
   return (
     <PanelCard title="Deployments" icon={Rocket} aside={<Link href="/projects" className="link-draw text-xs text-muted-foreground hover:text-foreground">Projects</Link>} className={className}>
       {rows.length === 0 ? (
-        <p className="px-3 py-3 text-xs text-muted-foreground">No deployments yet. Publish from the editor to get a shareable URL.</p>
+        <p className="px-4 py-4 text-[13px] text-muted-foreground">No deployments yet. Publish from the editor to get a shareable URL.</p>
       ) : (
         <ul className="divide-y divide-border">
           {rows.map((d) => {
@@ -40,8 +40,10 @@ export function DeploymentsCard({ rows, className }: { rows: DeploymentRow[]; cl
             const Icon = s.icon;
             const spin = d.status === "building" || d.status === "queued";
             return (
-              <li key={d.projectId} className="flex items-center gap-2.5 px-3 py-2 text-[12.5px]">
-                <Icon className={cn("size-3.5 shrink-0", s.tone, spin && "animate-spin calm:animate-none")} aria-hidden="true" />
+              <li key={d.projectId} className="flex items-center gap-3 px-4 py-2.5 text-[13px]">
+                <span className={cn("flex size-7 shrink-0 items-center justify-center rounded-[8px] bg-surface shadow-[inset_0_0_0_1px_var(--border)]", s.tone)} aria-hidden="true">
+                  <Icon className={cn("size-3.5", spin && "animate-spin calm:animate-none")} />
+                </span>
                 <div className="min-w-0 flex-1">
                   <p className="truncate">
                     <Link href={`/projects/${d.projectId}`} className="link-draw font-medium text-foreground">

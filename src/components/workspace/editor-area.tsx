@@ -211,7 +211,7 @@ export function EditorArea({
                   leaving.has(path) && "ws-tab-out",
                 )}
               >
-                {isActive ? <span className="absolute inset-x-2 top-0 h-[2px] rounded-b-full bg-signal" aria-hidden="true" /> : null}
+                {isActive ? <span className="absolute inset-x-2 top-0 h-[2px] rounded-b-full bg-primary" aria-hidden="true" /> : null}
                 <FileIcon name={basename(path)} className="size-3.5" />
                 <span className={cn("truncate", isDirty && "italic")}>{basename(path)}</span>
                 {ai ? <span className="ws-ai-dot" title="Changed by the AI" aria-hidden="true" /> : null}

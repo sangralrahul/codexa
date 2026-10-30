@@ -78,7 +78,7 @@ export default async function UsageSettingsPage() {
             aria-valuetext={`Day ${period.day} of ${period.days}`}
             className="relative mt-2 h-1.5 overflow-hidden rounded-full bg-muted shadow-[inset_0_0_0_1px_var(--border)]"
           >
-            <span className="period-fill absolute inset-y-0 left-0 rounded-full bg-[image:var(--ember)]" style={{ width: `${pct}%` }} />
+            <span className="period-fill absolute inset-y-0 left-0 rounded-full bg-[image:var(--brand-gradient)]" style={{ width: `${pct}%` }} />
           </div>
         </div>
         <UsageMeters entitlements={entitlements} counts={{ projects, members: team.members.length, pending }} />

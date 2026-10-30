@@ -118,8 +118,8 @@ export function UsageHistogram({ days, periodDays, totals }: { days: UsageDay[];
                   <span
                     className={cn(
                       "usage-bar block w-full rounded-t-[4px] rounded-b-[2px]",
-                      v === 0 ? "h-[2px] bg-border" : isToday ? "bg-[image:var(--ember)]" : "bg-foreground/75 dark:bg-foreground/80",
-                      on && v > 0 && "outline outline-2 outline-offset-1 outline-signal",
+                      v === 0 ? "h-[2px] bg-border" : isToday ? "bg-[image:var(--brand-gradient)]" : "bg-foreground/75 dark:bg-foreground/80",
+                      on && v > 0 && "outline outline-2 outline-offset-1 outline-primary",
                     )}
                     style={{ height: v === 0 ? undefined : `${h}%`, "--i": i } as React.CSSProperties}
                   />
