@@ -92,18 +92,18 @@ export function HomeScreen() {
       <div aria-hidden="true" className="hero-glow pointer-events-none absolute inset-x-0 top-0 h-[520px]" />
       <div aria-hidden="true" className="dot-grid pointer-events-none absolute inset-x-0 top-0 h-[420px] [mask-image:linear-gradient(to_bottom,black,transparent)] opacity-60" />
       <div className="relative mx-auto max-w-[1180px] px-10 pb-16">
-        <section className="mx-auto max-w-[780px] pt-[7vh]">
+        <section className="mx-auto max-w-[760px] pt-[6vh]">
           <p className="rise text-center text-[13px] font-medium text-muted">
             {greeting()}, {first}
           </p>
-          <h1 className="rise mt-2 text-balance text-center font-[family-name:var(--font-display)] text-[38px] font-semibold leading-[1.1] tracking-[-0.03em]" style={{ "--d": "60ms" } as React.CSSProperties}>
+          <h1 className="rise mt-2 text-balance text-center font-[family-name:var(--font-display)] text-[34px] font-semibold leading-[1.1] tracking-[-0.03em]" style={{ "--d": "60ms" } as React.CSSProperties}>
             What should we build today?
           </h1>
-          <p className="rise mt-3 text-center text-[15px] text-muted" style={{ "--d": "120ms" } as React.CSSProperties}>
+          <p className="rise mt-2.5 text-center text-[14px] text-muted" style={{ "--d": "120ms" } as React.CSSProperties}>
             Describe it in plain words. Codexa plans it, writes the code and runs a live preview.
           </p>
 
-          <div className="card-edge focus-halo mt-8 rounded-[22px] border border-border bg-card focus-within:border-border-strong">
+          <div className="card-edge focus-halo mt-7 rounded-[14px] border border-border bg-card focus-within:border-border-strong">
             <Textarea
               id="composer"
               value={prompt}
@@ -118,7 +118,7 @@ export function HomeScreen() {
               }}
               placeholder={PLACEHOLDERS[ph]}
               aria-label="Describe what you want to build"
-              className="min-h-[116px] px-5 pt-5 text-[15px]"
+              className="min-h-[104px] px-4 pt-4 text-[14.5px]"
             />
             <div className="flex items-center gap-2 border-t border-border/70 px-3 py-2.5">
               <Menu

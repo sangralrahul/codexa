@@ -30,13 +30,13 @@ monaco.editor.defineTheme("codexa-dark", {
   base: "vs-dark",
   inherit: true,
   rules: [],
-  colors: { "editor.background": "#151517", "editor.lineHighlightBackground": "#1c1c1f", "editorGutter.background": "#151517", "editorLineNumber.foreground": "#4a4a52" },
+  colors: { "editor.background": "#16181c", "editor.lineHighlightBackground": "#1c1f24", "editorGutter.background": "#16181c", "editorLineNumber.foreground": "#4b515b", "editorIndentGuide.background1": "#262a31" },
 });
 monaco.editor.defineTheme("codexa-light", {
   base: "vs",
   inherit: true,
   rules: [],
-  colors: { "editor.background": "#ffffff", "editor.lineHighlightBackground": "#f7f6f3", "editorLineNumber.foreground": "#b5b2aa" },
+  colors: { "editor.background": "#ffffff", "editor.lineHighlightBackground": "#f5f6f8", "editorLineNumber.foreground": "#b3b9c3", "editorIndentGuide.background1": "#e4e7eb" },
 });
 
 const LANG: Record<string, string> = {

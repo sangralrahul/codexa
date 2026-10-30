@@ -176,11 +176,12 @@ function Sidebar() {
                   onClick={() => go({ name: n.name } as Route)}
                   aria-current={active ? "page" : undefined}
                   className={cn(
-                    "group flex h-8 w-full items-center gap-2.5 rounded-lg px-2.5 text-[13.5px] transition-colors",
+                    "group relative flex h-8 w-full items-center gap-2.5 rounded-lg px-2.5 text-[13px] transition-colors",
                     active ? "bg-card font-medium text-fg shadow-sm ring-1 ring-border" : "text-muted hover:bg-surface hover:text-fg",
                   )}
                 >
-                  <n.icon className="size-4" />
+                  {active ? <span className="absolute -left-3 top-1.5 h-5 w-[3px] rounded-r-full bg-accent" /> : null}
+                  <n.icon className={cn("size-4", active ? "text-accent" : "")} />
                   <span className="flex-1 text-left">{n.label}</span>
                 </button>
               </li>

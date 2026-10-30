@@ -6,45 +6,45 @@
 
 /* Codexa desktop tokens: neutral surfaces, one warm accent, Windows-native type. */
 :root {
-  --bg: #f7f6f3;
-  --sidebar: #efeee9;
+  --bg: #f5f6f8;
+  --sidebar: #f9fafb;
   --card: #ffffff;
-  --surface: #f2f1ec;
-  --border: #e3e1da;
-  --border-strong: #cfccc3;
-  --fg: #1a1a1c;
-  --muted: #6b6a66;
-  --dim: #9a988f;
-  --primary: #1a1a1c;
+  --surface: #f1f3f5;
+  --border: #e4e7eb;
+  --border-strong: #cfd4db;
+  --fg: #0f1116;
+  --muted: #5f6672;
+  --dim: #8e95a1;
+  --primary: #111318;
   --primary-fg: #ffffff;
-  --accent: #f0531c;
-  --accent-soft: #fde8df;
-  --success: #1f9d55;
-  --warning: #c27c0e;
-  --danger: #d93025;
-  --ring: #3b82f6;
-  --shadow: 0 1px 2px rgb(0 0 0 / 0.04), 0 8px 24px -12px rgb(0 0 0 / 0.12);
+  --accent: #e84a0f;
+  --accent-soft: #fdeae2;
+  --success: #15803d;
+  --warning: #b45309;
+  --danger: #dc2626;
+  --ring: #2563eb;
+  --shadow: 0 1px 1px rgb(15 17 22 / 0.04), 0 2px 6px rgb(15 17 22 / 0.05), 0 12px 24px -16px rgb(15 17 22 / 0.12);
   color-scheme: light;
 }
 .dark {
-  --bg: #0b0b0c;
-  --sidebar: #111113;
-  --card: #151517;
-  --surface: #1a1a1d;
-  --border: #26262a;
-  --border-strong: #35353a;
-  --fg: #e8e8ea;
-  --muted: #9a9aa2;
-  --dim: #6b6b73;
-  --primary: #f2f2f3;
-  --primary-fg: #0b0b0c;
+  --bg: #0d0e11;
+  --sidebar: #111216;
+  --card: #16181c;
+  --surface: #1c1f24;
+  --border: #262a31;
+  --border-strong: #353a43;
+  --fg: #e7e9ec;
+  --muted: #9aa1ac;
+  --dim: #6b727e;
+  --primary: #f1f2f4;
+  --primary-fg: #0d0e11;
   --accent: #ff6a33;
-  --accent-soft: #2a1710;
-  --success: #34c27a;
-  --warning: #e0a43a;
-  --danger: #f05a4f;
+  --accent-soft: #2b1711;
+  --success: #34d399;
+  --warning: #f0b35b;
+  --danger: #f26b62;
   --ring: #60a5fa;
-  --shadow: 0 1px 2px rgb(0 0 0 / 0.4), 0 12px 32px -16px rgb(0 0 0 / 0.6);
+  --shadow: 0 1px 1px rgb(0 0 0 / 0.35), 0 2px 6px rgb(0 0 0 / 0.3), 0 16px 32px -16px rgb(0 0 0 / 0.6);
   color-scheme: dark;
 }
 
@@ -67,6 +67,12 @@
   --color-danger: var(--danger);
   --color-ring: var(--ring);
   --shadow-card: var(--shadow);
+  /* Tighter corners than Tailwind's defaults: the app reads as a tool, not a landing page. */
+  --radius-md: 6px;
+  --radius-lg: 8px;
+  --radius-xl: 10px;
+  --radius-2xl: 12px;
+  --radius-3xl: 16px;
   --font-sans: "Inter Variable", "Segoe UI Variable Text", "Segoe UI", system-ui, sans-serif;
   --font-display: "Inter Tight Variable", "Inter Variable", "Segoe UI", system-ui, sans-serif;
   --font-mono: "Cascadia Code", "Cascadia Mono", Consolas, ui-monospace, monospace;
@@ -82,8 +88,9 @@ body {
   background: var(--bg);
   color: var(--fg);
   font-family: var(--font-sans);
-  font-size: 14px;
-  font-feature-settings: "cv11", "ss01";
+  font-size: 13.5px;
+  letter-spacing: -0.005em;
+  font-feature-settings: "cv11", "ss01", "tnum";
   -webkit-font-smoothing: antialiased;
   overflow: hidden;
   user-select: none;
@@ -354,24 +361,28 @@ textarea,
 /* Depth: a soft brand light behind hero areas, and a crisp card edge. */
 .hero-glow {
   background:
-    radial-gradient(60% 55% at 50% 0%, color-mix(in oklab, var(--accent) 9%, transparent), transparent 70%),
-    radial-gradient(40% 40% at 85% 10%, color-mix(in oklab, var(--ring) 7%, transparent), transparent 70%);
+    radial-gradient(55% 50% at 50% 0%, color-mix(in oklab, var(--accent) 5%, transparent), transparent 70%),
+    radial-gradient(40% 40% at 85% 10%, color-mix(in oklab, var(--ring) 4%, transparent), transparent 70%);
 }
 .dark .hero-glow {
   background:
-    radial-gradient(60% 55% at 50% 0%, color-mix(in oklab, var(--accent) 12%, transparent), transparent 70%),
-    radial-gradient(40% 40% at 85% 10%, color-mix(in oklab, var(--ring) 9%, transparent), transparent 70%);
+    radial-gradient(55% 50% at 50% 0%, color-mix(in oklab, var(--accent) 8%, transparent), transparent 70%),
+    radial-gradient(40% 40% at 85% 10%, color-mix(in oklab, var(--ring) 6%, transparent), transparent 70%);
 }
 .card-edge {
-  box-shadow: inset 0 1px 0 color-mix(in oklab, white 55%, transparent), var(--shadow);
+  box-shadow: 0 0 0 1px color-mix(in oklab, var(--border) 70%, transparent), var(--shadow);
 }
 .dark .card-edge {
-  box-shadow: inset 0 1px 0 color-mix(in oklab, white 6%, transparent), var(--shadow);
+  box-shadow: inset 0 1px 0 color-mix(in oklab, white 5%, transparent), var(--shadow);
 }
 .accent-ring {
   box-shadow: 0 0 0 1px color-mix(in oklab, var(--accent) 35%, transparent), 0 10px 30px -12px color-mix(in oklab, var(--accent) 45%, transparent);
 }
 .dot-grid {
-  background-image: radial-gradient(color-mix(in oklab, var(--fg) 9%, transparent) 1px, transparent 1px);
-  background-size: 18px 18px;
+  background-image: radial-gradient(color-mix(in oklab, var(--fg) 7%, transparent) 1px, transparent 1px);
+  background-size: 20px 20px;
+}
+.orb {
+  filter: blur(90px);
+  opacity: 0.55;
 }
