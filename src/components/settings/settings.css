@@ -102,7 +102,7 @@
 .setup-item[data-done] .setup-tick { animation: tick-pop 420ms var(--ease-spring) backwards; animation-delay: calc(var(--i, 0) * 70ms + 200ms); }
 .setup-item[data-done] .setup-tick path { stroke-dasharray: 1; stroke-dashoffset: 1; animation: check-draw 320ms var(--ease-out) forwards; animation-delay: calc(var(--i, 0) * 70ms + 320ms); }
 @keyframes tick-pop { from { transform: scale(0.4); opacity: 0; } }
-.setup-progress { transform-origin: 0 50%; background: var(--brand-gradient); animation: grow-x 900ms var(--ease-out) 200ms backwards; }
+.setup-progress { transform-origin: 0 50%; background: var(--primary); animation: grow-x 900ms var(--ease-out) 200ms backwards; }
 /* Check-ring: done arcs fade in one after another. */
 .setup-ring-seg[data-done] { animation: ring-seg-in 420ms var(--ease-out) backwards; animation-delay: calc(var(--i, 0) * 90ms + 200ms); }
 @keyframes ring-seg-in { from { opacity: 0; } }
@@ -222,7 +222,7 @@ button.seat:is(:hover, :focus-visible) { transform: translateY(-2px); border-col
 :is(.int-tile:hover, .int-tile:focus-within) .brand-tile { transform: scale(1.06); }
 
 /* New-workspace steps */
-.ws-step[data-state="done"] .ws-step__dot { background: var(--brand-gradient); color: #ffffff; border-color: transparent; }
+.ws-step[data-state="done"] .ws-step__dot { background: var(--primary); color: #ffffff; border-color: transparent; }
 .ws-step[data-state="active"] .ws-step__dot { border-color: var(--primary); color: var(--primary); box-shadow: var(--brand-ring); }
 .ws-step__line { transform-origin: 0 50%; transition: transform 420ms var(--ease-out); }
 .ws-step[data-state="done"] .ws-step__line { transform: scaleX(1); }
@@ -232,7 +232,7 @@ button.seat:is(:hover, :focus-visible) { transform: translateY(-2px); border-col
   .settings-card, .settings-stack > *, .settings-sub > *, .settings-meta, .settings-search-results > *, .setup-item .setup-tick, .setup-progress, .setup-ring-seg, .gauge-arc, .period-fill,
   .usage-chart .usage-bar, .usage-swap, .unlock-diff .unlock-line, .price-swap, .seat-in, .seat--pending, .chip-in, .role-swap, .unsaved-dock,
   .field-flash :is(input, textarea, button[role="combobox"], [role="radiogroup"]), .avatar-fade img, .mirror-swap, .presence-cursor, .pw-rule svg, .tile-flow > * { animation: none !important; }
-  .setup-item .setup-tick path { animation: none !important; stroke-dashoffset: 0; }
+  .setup-item[data-done] .setup-tick path { animation: none !important; stroke-dashoffset: 0; }
   .js .usage-chart:not(.is-visible) .usage-bar, .js .unlock-diff:not(.is-visible) .unlock-line { transform: none; opacity: 1; }
   .row-sweep::after, .unlock-line::after { display: none; }
   .settings-card[data-flash]::after { animation: none; opacity: 1; }
@@ -241,7 +241,7 @@ button.seat:is(:hover, :focus-visible) { transform: translateY(-2px); border-col
 }
 [data-motion="reduced"] :is(.settings-card, .settings-stack > *, .settings-sub > *, .settings-meta, .settings-search-results > *, .setup-item .setup-tick, .setup-progress, .setup-ring-seg, .gauge-arc, .period-fill, .usage-chart .usage-bar, .usage-swap, .unlock-diff .unlock-line, .price-swap, .seat-in, .seat--pending, .chip-in, .role-swap, .unsaved-dock, .avatar-fade img, .mirror-swap, .presence-cursor, .pw-rule svg, .tile-flow > *) { animation: none !important; }
 [data-motion="reduced"] .field-flash :is(input, textarea, button[role="combobox"], [role="radiogroup"]) { animation: none !important; }
-[data-motion="reduced"] .setup-item .setup-tick path { animation: none !important; stroke-dashoffset: 0; }
+[data-motion="reduced"] .setup-item[data-done] .setup-tick path { animation: none !important; stroke-dashoffset: 0; }
 [data-motion="reduced"] :is(.usage-chart:not(.is-visible) .usage-bar, .unlock-diff:not(.is-visible) .unlock-line) { transform: none; opacity: 1; }
 [data-motion="reduced"] .row-sweep::after,
 [data-motion="reduced"] .unlock-line::after { display: none; }

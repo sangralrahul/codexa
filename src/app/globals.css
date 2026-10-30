@@ -41,34 +41,38 @@
   --border: #e5e7eb;
   --border-strong: #d1d5db;
   --input: #ffffff;
-  --ring: #4f46e5;
-  --focus: #4f46e5; /* control focus — indigo, never red, so it can't read as an error */
-  --primary: #4f46e5;
-  --primary-hover: #4338ca;
+  --ring: #2563eb;
+  --focus: #2563eb; /* control focus — blue, never red, so it can't read as an error */
+  --primary: #2563eb;
+  --primary-hover: #1d4ed8;
   --primary-foreground: #ffffff;
   --signal: #f0512a; /* brand-only: the Codexa ember (logo). Not an app accent. */
   --signal-2: #f59e0b;
   --signal-ink: #c2410c;
-  --accent: #7c3aed;
+  --accent: #3b82f6;
   --accent-foreground: #ffffff;
-  /* Brand gradient stops (indigo → violet → pink) and the composed signature. */
-  --brand-from: #4f46e5;
-  --brand-via: #7c3aed;
-  --brand-to: #db2777;
-  --brand-gradient: linear-gradient(100deg, #4f46e5, #7c3aed, #db2777);
-  --brand-gradient-soft: linear-gradient(100deg, rgba(79, 70, 229, 0.12), rgba(124, 58, 237, 0.12), rgba(219, 39, 119, 0.12));
-  --brand-glow: rgba(124, 58, 237, 0.4); /* blurred-blob friendly: the violet mid-stop at 40% */
-  --brand-ring: 0 0 0 4px rgba(79, 70, 229, 0.15);
+  /* Brand accent: blue only (bolt.new-style monochrome UI with one accent). The "gradient" tokens are
+     kept for every caller but now resolve to a subtle blue sheen, never violet or pink. */
+  --brand-from: #2563eb;
+  --brand-via: #3b82f6;
+  --brand-to: #60a5fa;
+  --brand-gradient: linear-gradient(100deg, #2563eb, #3b82f6, #60a5fa);
+  --brand-gradient-soft: linear-gradient(100deg, rgba(37, 99, 235, 0.06), rgba(59, 130, 246, 0.06), rgba(96, 165, 250, 0.06));
+  --brand-glow: rgba(59, 130, 246, 0.22); /* soft blue, blurred-blob friendly */
+  --brand-ring: 0 0 0 4px rgba(37, 99, 235, 0.15);
+  /* Icon tiles: a neutral surface with a grey glyph (no tinted fills). */
+  --tile-bg: #f3f4f6;
+  --tile-fg: #4b5563;
   --success: #059669;
   --warning: #d97706;
   --danger: #dc2626;
   --danger-foreground: #ffffff;
-  --info: #4f46e5;
+  --info: #2563eb;
   --code-bg: #0b0f1a;
   --code-fg: #e6e6e6;
   --code-border: #1f2937;
   --code-muted: #8a8a8a; /* 5.5:1 on --code-bg */
-  --selection: rgba(79, 70, 229, 0.16);
+  --selection: rgba(37, 99, 235, 0.16);
   --selection-strong: color-mix(in oklab, var(--accent) 24%, transparent);
   /* Selection mark (.mark-select): gradient text ink. */
   --mark-ink-1: var(--signal-ink);
@@ -87,17 +91,17 @@
   --shadow-md: 0 1px 2px rgba(15, 23, 42, 0.04), 0 12px 32px -12px rgba(15, 23, 42, 0.14);
   --shadow-lg: 0 1px 2px rgba(15, 23, 42, 0.04), 0 20px 48px -16px rgba(15, 23, 42, 0.2);
   --shadow-xl: 0 40px 80px -30px rgba(15, 23, 42, 0.22);
-  --shadow-stage: 0 1px 0 #ffffff inset, 0 60px 120px -50px rgba(15, 23, 42, 0.22), 0 30px 60px -30px rgba(124, 58, 237, 0.18);
+  --shadow-stage: 0 1px 0 #ffffff inset, 0 60px 120px -50px rgba(15, 23, 42, 0.22), 0 30px 60px -30px rgba(59, 130, 246, 0.14);
   --radius: 0.75rem;
-  /* Silk / Horizon light: indigo, violet, pink. */
+  /* Silk / Horizon light: blue, blue, blue (one accent). */
   --silk-0: #ffffff;
-  --silk-1: #4f46e5;
-  --silk-2: #7c3aed;
-  --silk-3: #db2777;
-  --silk-opacity: 0.85;
-  /* Background glows and washes: the brand violet / pink. */
-  --glow: #7c3aed;
-  --glow-2: #db2777;
+  --silk-1: #2563eb;
+  --silk-2: #3b82f6;
+  --silk-3: #60a5fa;
+  --silk-opacity: 0.35;
+  /* Background glows and washes: the accent blue. */
+  --glow: #3b82f6;
+  --glow-2: #60a5fa;
   /* Syntax (code panes stay dark in both themes). */
   --syn-keyword: #c4a7ff;
   --syn-string: #9fe0b0;
@@ -130,43 +134,46 @@
   --background: #0b0f1a;
   --foreground: #e6e9ef;
   --foreground-dim: #9aa3b5;
+  /* Bolt-style panels: #141a2a cards on the #0b0f1a page, hairline borders, white type. */
   --surface: #10162a;
-  --surface-2: #161d33;
-  --surface-3: #1d253d;
-  --card: #0f1526;
+  --surface-2: #1a2136;
+  --surface-3: #222b44;
+  --card: #141a2a;
   --card-foreground: #e6e9ef;
-  --muted: #141b30;
+  --muted: #1a2136;
   --muted-foreground: #9aa4b8;
-  --border: #1f2740;
-  --border-strong: #2d3755;
-  --input: #0d1222;
-  --ring: #818cf8;
-  --focus: #818cf8;
-  --primary: #6366f1;
-  --primary-hover: #4f46e5;
+  --border: #222b42;
+  --border-strong: #303a58;
+  --input: #0f1424;
+  --ring: #60a5fa;
+  --focus: #60a5fa;
+  --primary: #3b82f6;
+  --primary-hover: #2563eb;
   --primary-foreground: #ffffff;
   --signal: #ff5f3a; /* brand-only */
   --signal-2: #ffb23e;
   --signal-ink: #ff7a59;
-  --accent: #a78bfa;
+  --accent: #3b82f6;
   --accent-foreground: #ffffff;
-  --brand-from: #6366f1;
-  --brand-via: #8b5cf6;
-  --brand-to: #ec4899;
-  --brand-gradient: linear-gradient(100deg, #6366f1, #8b5cf6, #ec4899);
-  --brand-gradient-soft: linear-gradient(100deg, rgba(99, 102, 241, 0.18), rgba(139, 92, 246, 0.18), rgba(236, 72, 153, 0.18));
-  --brand-glow: rgba(139, 92, 246, 0.45);
-  --brand-ring: 0 0 0 4px rgba(129, 140, 248, 0.22);
+  --brand-from: #2563eb;
+  --brand-via: #3b82f6;
+  --brand-to: #60a5fa;
+  --brand-gradient: linear-gradient(100deg, #2563eb, #3b82f6, #60a5fa);
+  --brand-gradient-soft: linear-gradient(100deg, rgba(59, 130, 246, 0.08), rgba(59, 130, 246, 0.08), rgba(96, 165, 250, 0.08));
+  --brand-glow: rgba(59, 130, 246, 0.28);
+  --brand-ring: 0 0 0 4px rgba(96, 165, 250, 0.22);
+  --tile-bg: #1f1f25;
+  --tile-fg: #a1a1aa;
   --success: #34d399;
   --warning: #fbbf24;
   --danger: #f87171;
   --danger-foreground: #ffffff;
-  --info: #818cf8;
+  --info: #60a5fa;
   --code-bg: #070a12;
   --code-fg: #e6e6e6;
   --code-border: #1f2740;
   --code-muted: #8a8a8a; /* 5.5:1 on --code-bg */
-  --selection: rgba(129, 140, 248, 0.28);
+  --selection: rgba(96, 165, 250, 0.28);
   --selection-strong: color-mix(in oklab, var(--accent) 42%, transparent);
   /* Higher alpha than on paper so the band reads as lit orange, not brown, over near-black; the
      amber end is pulled toward the signal so it never turns olive. */
@@ -185,14 +192,14 @@
   --shadow-lg: 0 1px 0 rgba(255, 255, 255, 0.05) inset, 0 24px 48px -16px rgba(0, 0, 0, 0.7), 0 4px 12px -4px rgba(0, 0, 0, 0.5);
   --shadow-xl: 0 1px 0 rgba(255, 255, 255, 0.06) inset, 0 40px 80px -24px rgba(0, 0, 0, 0.75);
   --shadow-stage: 0 1px 0 rgba(255, 255, 255, 0.06) inset, 0 80px 160px -60px rgba(0, 0, 0, 0.9), 0 0 0 1px rgba(255, 255, 255, 0.04);
-  /* Dark: the same brand light, dimmed. */
-  --glow: #8b5cf6;
-  --glow-2: #ec4899;
+  /* Dark: the same blue, dimmed. */
+  --glow: #3b82f6;
+  --glow-2: #60a5fa;
   --silk-0: #0b0f1a;
-  --silk-1: #6366f1;
-  --silk-2: #8b5cf6;
-  --silk-3: #ec4899;
-  --silk-opacity: 0.55;
+  --silk-1: #2563eb;
+  --silk-2: #3b82f6;
+  --silk-3: #60a5fa;
+  --silk-opacity: 0.3;
   color-scheme: dark;
 }
 
@@ -994,7 +1001,7 @@ body:has(main [data-tone="company"]) { --silk-1: #ff8a66; --silk-2: #ffc070; --s
 
 :is(a, button, summary).glow-card:active { transform: translateY(0); scale: 0.985; transition-duration: var(--dur-1); }
 
-/* Icon tile (spec): 40px rounded-12 square, brand gradient at 12% tint, icon in indigo.
+/* Icon tile: 40px rounded-12 square on a neutral surface with a grey glyph (no tinted fills).
    Size with utilities (size-10 default; size-8 / size-9 for compact rows). */
 .icon-tile {
   display: inline-flex;
@@ -1004,25 +1011,19 @@ body:has(main [data-tone="company"]) { --silk-1: #ff8a66; --silk-2: #ffc070; --s
   width: 2.5rem;
   height: 2.5rem;
   border-radius: 12px;
-  background: var(--brand-gradient-soft);
-  box-shadow: inset 0 0 0 1px color-mix(in oklab, var(--brand-from) 14%, transparent);
-  color: var(--primary);
+  background: var(--tile-bg);
+  box-shadow: inset 0 0 0 1px var(--hairline);
+  color: var(--tile-fg);
 }
 .icon-tile--solid {
-  background: var(--brand-gradient);
+  background: var(--primary);
   color: #ffffff;
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.25), 0 8px 20px -8px var(--brand-glow);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.18), 0 8px 20px -8px var(--brand-glow);
 }
 
-/* Brand gradient text: one key phrase per page. */
+/* Formerly gradient text; the app is monochrome now, so the key phrase is plain ink. Kept for callers. */
 .brand-gradient-text {
-  background-image: var(--brand-gradient);
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
-  -webkit-text-fill-color: transparent;
-  -webkit-box-decoration-break: clone;
-  box-decoration-break: clone;
+  color: var(--foreground);
 }
 
 /* Gradient mesh: three large blurred blobs (indigo, violet, pink) drifting slowly, masked to fade
@@ -1033,7 +1034,8 @@ body:has(main [data-tone="company"]) { --silk-1: #ff8a66; --silk-2: #ffc070; --s
   inset: 0;
   overflow: hidden;
   pointer-events: none;
-  opacity: var(--mesh-opacity, 0.6);
+  /* Near-invisible by design: at most a 6% blue tint, never violet or pink. */
+  opacity: var(--mesh-opacity, 0.12);
   mask-image: linear-gradient(to bottom, #000 30%, transparent 100%);
 }
 .brand-mesh::before,
@@ -1052,7 +1054,7 @@ body:has(main [data-tone="company"]) { --silk-1: #ff8a66; --silk-2: #ffc070; --s
   height: 120%;
   left: -8%;
   top: -40%;
-  background: color-mix(in oklab, var(--brand-from) 42%, transparent);
+  background: color-mix(in oklab, var(--brand-from) 30%, transparent);
   animation: mesh-drift-a 22s ease-in-out infinite alternate;
 }
 .brand-mesh::after {
@@ -1060,7 +1062,7 @@ body:has(main [data-tone="company"]) { --silk-1: #ff8a66; --silk-2: #ffc070; --s
   height: 120%;
   left: 30%;
   top: -55%;
-  background: color-mix(in oklab, var(--brand-via) 38%, transparent);
+  background: color-mix(in oklab, var(--brand-via) 26%, transparent);
   animation: mesh-drift-b 26s ease-in-out infinite alternate;
 }
 .brand-mesh > i {
@@ -1068,7 +1070,7 @@ body:has(main [data-tone="company"]) { --silk-1: #ff8a66; --silk-2: #ffc070; --s
   height: 120%;
   right: -10%;
   top: -35%;
-  background: color-mix(in oklab, var(--brand-to) 30%, transparent);
+  background: color-mix(in oklab, var(--brand-to) 22%, transparent);
   animation: mesh-drift-c 24s ease-in-out infinite alternate;
 }
 @keyframes mesh-drift-a { from { transform: translate(0, 0) scale(1); } to { transform: translate(10%, 8%) scale(1.08); } }
@@ -1090,7 +1092,7 @@ body:has(main [data-tone="company"]) { --silk-1: #ff8a66; --silk-2: #ffc070; --s
   border-radius: 9999px;
   background: var(--brand-gradient);
   filter: blur(48px);
-  opacity: 0.4;
+  opacity: 0.12;
   pointer-events: none;
 }
 
@@ -1106,7 +1108,7 @@ body:has(main [data-tone="company"]) { --silk-1: #ff8a66; --silk-2: #ffc070; --s
   position: absolute;
   inset: 0 auto 0 0;
   border-radius: inherit;
-  background: var(--brand-gradient);
+  background: var(--primary);
   transition: width var(--dur-5) var(--ease-out);
 }
 .brand-bar[data-tone="warning"] > span { background: var(--warning); }
@@ -1175,7 +1177,7 @@ body:has(main [data-tone="company"]) { --silk-1: #ff8a66; --silk-2: #ffc070; --s
   isolation: isolate;
   overflow: hidden;
   color: #ffffff;
-  background: var(--brand-gradient);
+  background: var(--primary);
   font-weight: 600;
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.28), 0 1px 2px rgba(15, 23, 42, 0.12), 0 10px 28px -10px var(--brand-glow);
   transition: box-shadow var(--dur-4) var(--ease-out), translate var(--dur-3) var(--ease-out), scale var(--dur-3) var(--ease-snap), filter var(--dur-3);

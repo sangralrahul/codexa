@@ -108,7 +108,8 @@ function NavRow({ item, current, collapsed, onNavigate, trailing }: { item: NavI
           "group/row relative z-[1] flex h-9 items-center gap-2.5 rounded-[10px] px-2.5 text-[13.5px] outline-none transition-colors duration-(--dur-2)",
           "focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-ring",
           // Active: a gradient-tinted background with indigo text (the brand signature, quietly).
-          current ? "bg-[image:var(--brand-gradient-soft)] font-semibold text-primary shadow-[inset_0_0_0_1px_color-mix(in_oklab,var(--brand-from)_12%,transparent)]" : "text-muted-foreground hover:text-foreground",
+          // Active: a neutral highlight with blue text (no tinted fill).
+          current ? "bg-foreground/[0.06] font-semibold text-primary" : "text-muted-foreground hover:text-foreground",
         )}
       >
         <Icon className={cn("size-4 shrink-0 transition-colors", current ? "text-primary" : "text-muted-foreground group-hover/row:text-foreground")} aria-hidden="true" />

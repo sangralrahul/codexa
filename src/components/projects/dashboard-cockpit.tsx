@@ -99,15 +99,14 @@ export function DashboardCockpit({
   return (
     <AppPage width="wide" className="space-y-8 py-6 lg:py-7">
       {/* Header band: greeting, workspace and plan on a faint gradient mesh, with the composer as the hero card. */}
-      <section aria-label="Overview" className="relative isolate overflow-hidden rounded-[20px] border border-border bg-card px-5 pb-5 pt-6 shadow-[var(--shadow-md)] sm:px-7 sm:pb-7 sm:pt-8">
-        <div className="brand-mesh -z-10 [--mesh-opacity:0.42]" aria-hidden="true">
-          <i />
-        </div>
+      {/* Header band: a plain card surface with a hairline border (no mesh, no gradient). */}
+      <section aria-label="Overview" className="card-premium relative overflow-hidden rounded-[20px] px-5 pb-5 pt-6 sm:px-7 sm:pb-7 sm:pt-8">
         <div className="flex flex-wrap items-end gap-x-6 gap-y-3">
           <div className="min-w-0">
-            <p className="text-eyebrow text-primary">Dashboard</p>
-            <h1 className="mt-1.5 text-[28px] font-bold leading-[1.1] tracking-[-0.025em] sm:text-[32px]">
-              Welcome back, <span className="brand-gradient-text">{firstName}</span>
+            <p className="text-eyebrow">Dashboard</p>
+            {/* text-pretty (not balance) and a no-break space keep "back, <name>" together: the name never sits on its own line. */}
+            <h1 className="mt-1.5 text-pretty text-[28px] font-bold leading-[1.1] tracking-[-0.025em] sm:text-[32px]">
+              Welcome back,&nbsp;<span className="whitespace-nowrap">{firstName}</span>
             </h1>
             {workspace ? (
               <p className="mt-2 flex flex-wrap items-center gap-x-2 gap-y-1 text-[14px] text-muted-foreground">

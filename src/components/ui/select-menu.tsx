@@ -61,7 +61,7 @@ export function SelectMenu({
         aria-invalid={ariaInvalid}
         className={cn(
           controlClasses,
-          "group inline-flex items-center justify-between gap-2 text-left data-[placeholder]:text-muted-foreground data-[state=open]:border-ring/70 data-[state=open]:shadow-[0_0_0_4px_color-mix(in_oklab,var(--signal)_14%,transparent)]",
+          "group inline-flex items-center justify-between gap-2 text-left data-[placeholder]:text-muted-foreground data-[state=open]:border-ring/70 data-[state=open]:shadow-[0_0_0_4px_color-mix(in_oklab,var(--primary)_14%,transparent)]",
           size === "sm" ? "h-8 px-2.5 text-[13px]" : "h-10 px-3",
           className,
         )}

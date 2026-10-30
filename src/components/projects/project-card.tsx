@@ -119,9 +119,16 @@ export function ProjectCard({ project, layout = "grid", showWorkspace, priority 
           <span className="size-2 rounded-full bg-border-strong" />
           <span className="size-2 rounded-full bg-border-strong" />
         </span>
-        <span className="flex h-5 min-w-0 flex-1 items-center rounded-md bg-card px-2 font-mono text-[10.5px] text-muted-foreground shadow-[inset_0_0_0_1px_var(--border)]">
-          <span className="truncate">{status?.live ? status.live.host : "Not published"}</span>
-        </span>
+        {status?.live ? (
+          <span className="flex h-5 min-w-0 flex-1 items-center rounded-md bg-card px-2 font-mono text-[10.5px] text-muted-foreground shadow-[inset_0_0_0_1px_var(--border)]">
+            <span className="truncate">{status.live.host}</span>
+          </span>
+        ) : (
+          // No address yet: a quiet sans placeholder on a dashed pill (mono is kept for real hosts).
+          <span className="flex h-5 min-w-0 flex-1 items-center rounded-md border border-dashed border-border px-2 text-[10.5px] text-foreground-dim">
+            <span className="truncate">No address yet</span>
+          </span>
+        )}
         {status?.live ? (
           <span className="inline-flex h-5 items-center gap-1 rounded-full bg-success/10 px-2 text-[10.5px] font-semibold text-success shadow-[inset_0_0_0_1px_color-mix(in_oklab,var(--success)_30%,transparent)]">
             <span className="size-1.5 rounded-full bg-success" /> Live
@@ -164,7 +171,7 @@ export function ProjectCard({ project, layout = "grid", showWorkspace, priority 
             {project.name}
           </Link>
         </h3>
-        {project.description ? <p className="mt-1 line-clamp-1 text-[13px] text-muted-foreground">{project.description}</p> : null}
+        {project.description ? <p className="mt-1 line-clamp-2 text-[13px] leading-snug text-muted-foreground">{project.description}</p> : null}
         {status?.preview || status?.deploy ? <StatusPills status={{ ...status, live: null }} className="mt-2.5" /> : null}
         <div className="mt-auto flex items-center gap-2.5 pt-3 text-meta text-muted-foreground">
           <span className="shrink-0">{frameworkLabel(project.framework)}</span>

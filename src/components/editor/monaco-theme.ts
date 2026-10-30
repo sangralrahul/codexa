@@ -8,7 +8,7 @@ import { cssColor, cssColorAlpha } from "@/lib/client/workspace/css-colors";
  * - codexa-night: the dark code pane (--code-bg / --code-fg / --syn-*).
  * - codexa-day:   a paper editor (--card / --foreground) whose syntax colours are the same
  *                 --syn-* hues deepened toward the ink so they hold contrast on white.
- * Cursor is the signal; selection is --selection. Themes are re-defined whenever the
+ * Cursor and selection are the primary indigo (no ember in the editor). Themes are re-defined whenever the
  * site theme changes so they always match the live tokens.
  */
 export const NIGHT = "codexa-night";
@@ -84,7 +84,7 @@ export function defineCodexaThemes(monaco: Monaco) {
   const nFg = cssColor("var(--code-fg)");
   const nMuted = cssColor("var(--code-muted)");
   const nBorder = cssColor("var(--code-border)");
-  const signal = cssColor("var(--signal)");
+  const accent = cssColor("var(--primary)");
   monaco.editor.defineTheme(NIGHT, {
     base: "vs-dark",
     inherit: true,
@@ -95,24 +95,24 @@ export function defineCodexaThemes(monaco: Monaco) {
       "editorGutter.background": nBg,
       "editor.lineHighlightBackground": cssColor("color-mix(in oklab, var(--code-fg) 4%, var(--code-bg))"),
       "editor.lineHighlightBorder": cssColorAlpha("var(--code-fg)", 0),
-      "editor.selectionBackground": cssColor("color-mix(in oklab, var(--signal) 30%, var(--code-bg))"),
-      "editor.inactiveSelectionBackground": cssColor("color-mix(in oklab, var(--signal) 16%, var(--code-bg))"),
-      "editor.selectionHighlightBackground": cssColorAlpha("var(--signal)", 0.12),
+      "editor.selectionBackground": cssColor("color-mix(in oklab, var(--primary) 34%, var(--code-bg))"),
+      "editor.inactiveSelectionBackground": cssColor("color-mix(in oklab, var(--primary) 18%, var(--code-bg))"),
+      "editor.selectionHighlightBackground": cssColorAlpha("var(--primary)", 0.12),
       "editor.wordHighlightBackground": cssColorAlpha("var(--code-fg)", 0.07),
-      "editor.findMatchBackground": cssColorAlpha("var(--signal-2)", 0.35),
-      "editor.findMatchHighlightBackground": cssColorAlpha("var(--signal-2)", 0.16),
-      "editorCursor.foreground": signal,
+      "editor.findMatchBackground": cssColorAlpha("var(--warning)", 0.35),
+      "editor.findMatchHighlightBackground": cssColorAlpha("var(--warning)", 0.16),
+      "editorCursor.foreground": accent,
       "editorLineNumber.foreground": cssColor("color-mix(in oklab, var(--code-muted) 70%, var(--code-bg))"),
       "editorLineNumber.activeForeground": nFg,
       "editorIndentGuide.background1": cssColor("color-mix(in oklab, var(--code-fg) 7%, var(--code-bg))"),
       "editorIndentGuide.activeBackground1": cssColor("color-mix(in oklab, var(--code-fg) 18%, var(--code-bg))"),
-      "editorBracketMatch.background": cssColorAlpha("var(--signal)", 0.12),
-      "editorBracketMatch.border": cssColorAlpha("var(--signal)", 0.5),
+      "editorBracketMatch.background": cssColorAlpha("var(--primary)", 0.12),
+      "editorBracketMatch.border": cssColorAlpha("var(--primary)", 0.5),
       "editorWidget.background": cssColor("color-mix(in oklab, var(--code-fg) 5%, var(--code-bg))"),
       "editorWidget.border": nBorder,
       "editorSuggestWidget.background": cssColor("color-mix(in oklab, var(--code-fg) 5%, var(--code-bg))"),
       "editorSuggestWidget.border": nBorder,
-      "editorSuggestWidget.selectedBackground": cssColorAlpha("var(--signal)", 0.18),
+      "editorSuggestWidget.selectedBackground": cssColorAlpha("var(--primary)", 0.18),
       "editorHoverWidget.background": cssColor("color-mix(in oklab, var(--code-fg) 5%, var(--code-bg))"),
       "editorHoverWidget.border": nBorder,
       "editorStickyScroll.background": nBg,
@@ -125,7 +125,7 @@ export function defineCodexaThemes(monaco: Monaco) {
       "editorError.foreground": cssColor("var(--danger)"),
       "editorWarning.foreground": cssColor("var(--warning)"),
       "editorWhitespace.foreground": nMuted,
-      "focusBorder": cssColorAlpha("var(--signal)", 0.6),
+      "focusBorder": cssColorAlpha("var(--primary)", 0.6),
       "editorBracketHighlight.foreground1": cssColor("var(--syn-number)"),
       "editorBracketHighlight.foreground2": cssColor("var(--syn-keyword)"),
       "editorBracketHighlight.foreground3": cssColor("var(--syn-fn)"),
@@ -152,24 +152,24 @@ export function defineCodexaThemes(monaco: Monaco) {
       "editorGutter.background": dBg,
       "editor.lineHighlightBackground": cssColor("color-mix(in oklab, var(--foreground) 3.5%, var(--card))"),
       "editor.lineHighlightBorder": cssColorAlpha("var(--foreground)", 0),
-      "editor.selectionBackground": cssColor("color-mix(in oklab, var(--signal) 20%, var(--card))"),
-      "editor.inactiveSelectionBackground": cssColor("color-mix(in oklab, var(--signal) 10%, var(--card))"),
-      "editor.selectionHighlightBackground": cssColorAlpha("var(--signal)", 0.1),
+      "editor.selectionBackground": cssColor("color-mix(in oklab, var(--primary) 20%, var(--card))"),
+      "editor.inactiveSelectionBackground": cssColor("color-mix(in oklab, var(--primary) 10%, var(--card))"),
+      "editor.selectionHighlightBackground": cssColorAlpha("var(--primary)", 0.1),
       "editor.wordHighlightBackground": cssColorAlpha("var(--foreground)", 0.06),
-      "editor.findMatchBackground": cssColorAlpha("var(--signal-2)", 0.35),
-      "editor.findMatchHighlightBackground": cssColorAlpha("var(--signal-2)", 0.16),
-      "editorCursor.foreground": signal,
+      "editor.findMatchBackground": cssColorAlpha("var(--warning)", 0.35),
+      "editor.findMatchHighlightBackground": cssColorAlpha("var(--warning)", 0.16),
+      "editorCursor.foreground": accent,
       "editorLineNumber.foreground": cssColor("color-mix(in oklab, var(--muted-foreground) 55%, var(--card))"),
       "editorLineNumber.activeForeground": dFg,
       "editorIndentGuide.background1": cssColor("color-mix(in oklab, var(--foreground) 7%, var(--card))"),
       "editorIndentGuide.activeBackground1": cssColor("color-mix(in oklab, var(--foreground) 18%, var(--card))"),
-      "editorBracketMatch.background": cssColorAlpha("var(--signal)", 0.1),
-      "editorBracketMatch.border": cssColorAlpha("var(--signal)", 0.45),
+      "editorBracketMatch.background": cssColorAlpha("var(--primary)", 0.1),
+      "editorBracketMatch.border": cssColorAlpha("var(--primary)", 0.45),
       "editorWidget.background": cssColor("var(--card)"),
       "editorWidget.border": cssColor("var(--border-strong)"),
       "editorSuggestWidget.background": cssColor("var(--card)"),
       "editorSuggestWidget.border": cssColor("var(--border-strong)"),
-      "editorSuggestWidget.selectedBackground": cssColorAlpha("var(--signal)", 0.12),
+      "editorSuggestWidget.selectedBackground": cssColorAlpha("var(--primary)", 0.12),
       "editorHoverWidget.background": cssColor("var(--card)"),
       "editorHoverWidget.border": cssColor("var(--border-strong)"),
       "editorStickyScroll.background": dBg,
@@ -181,7 +181,7 @@ export function defineCodexaThemes(monaco: Monaco) {
       "editorOverviewRuler.border": cssColorAlpha("var(--foreground)", 0),
       "editorError.foreground": cssColor("var(--danger)"),
       "editorWarning.foreground": cssColor("var(--warning)"),
-      "focusBorder": cssColorAlpha("var(--signal)", 0.5),
+      "focusBorder": cssColorAlpha("var(--primary)", 0.5),
       "editorBracketHighlight.foreground1": cssColor("color-mix(in oklch, var(--syn-number) 56%, var(--foreground))"),
       "editorBracketHighlight.foreground2": cssColor("color-mix(in oklch, var(--syn-keyword) 56%, var(--foreground))"),
       "editorBracketHighlight.foreground3": cssColor("color-mix(in oklch, var(--syn-fn) 56%, var(--foreground))"),

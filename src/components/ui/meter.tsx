@@ -35,7 +35,7 @@ export function Meter({
 }) {
   const ratio = unlimited || max <= 0 ? 0 : Math.min(1, Math.max(0, value / max));
   // The fill is the brand gradient (thin gradient progress bars everywhere); warning and danger keep their colour.
-  const tone = ratio >= dangerAt && !neutral ? "bg-danger" : ratio >= warnAt && !neutral ? "bg-warning" : "bg-[image:var(--brand-gradient)]";
+  const tone = ratio >= dangerAt && !neutral ? "bg-danger" : ratio >= warnAt && !neutral ? "bg-warning" : "bg-primary";
   const labelText = typeof label === "string" ? label : undefined;
   return (
     <div className={cn("space-y-1.5", className)}>

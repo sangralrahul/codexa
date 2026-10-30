@@ -40,10 +40,10 @@ function loadRazorpay(): Promise<boolean> {
   });
 }
 
-/** The brand signal colour for the provider's checkout modal, read from the live theme (no hex in components). */
+/** The primary (indigo) colour for the provider's checkout modal, read from the live theme (no hex in components). */
 function signalColor(): string | undefined {
   try {
-    const v = getComputedStyle(document.documentElement).getPropertyValue("--signal").trim();
+    const v = getComputedStyle(document.documentElement).getPropertyValue("--primary").trim();
     return v || undefined;
   } catch {
     return undefined;

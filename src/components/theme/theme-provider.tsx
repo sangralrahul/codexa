@@ -58,5 +58,7 @@ export function useTheme() {
   return ctx;
 }
 
-/** Inline script that applies the theme class before hydration to avoid a flash. */
-export const themeInitScript = `(function(){try{var m=document.cookie.match(/(?:^|; )codexa_theme=(light|dark|system)/);var t=m?m[1]:'system';var d=t==='dark'||(t==='system'&&window.matchMedia('(prefers-color-scheme: dark)').matches);document.documentElement.classList.toggle('dark',d);document.documentElement.style.colorScheme=d?'dark':'light';}catch(e){}})();`;
+/** Inline script that applies the theme class before hydration to avoid a flash. Dark is the default
+ * when nothing is stored (the app is dark-first); "light" and "system" stay available in the menu. */
+export const DEFAULT_THEME: Theme = "dark";
+export const themeInitScript = `(function(){try{var m=document.cookie.match(/(?:^|; )codexa_theme=(light|dark|system)/);var t=m?m[1]:'${DEFAULT_THEME}';var d=t==='dark'||(t==='system'&&window.matchMedia('(prefers-color-scheme: dark)').matches);document.documentElement.classList.toggle('dark',d);document.documentElement.style.colorScheme=d?'dark':'light';}catch(e){}})();`;

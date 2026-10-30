@@ -104,7 +104,7 @@ export function GettingStarted({
         </h2>
         <ol className="flex items-center gap-1.5" aria-label={`${done} of ${steps.length} steps done`}>
           {steps.map((s) => (
-            <li key={s.id} title={s.title} className={cn("h-1.5 w-7 rounded-full", s.done ? "bg-[image:var(--brand-gradient)]" : s.id === next ? "bg-primary/40" : "bg-foreground/[0.08]")}>
+            <li key={s.id} title={s.title} className={cn("h-1.5 w-7 rounded-full", s.done ? "bg-primary" : s.id === next ? "bg-primary/40" : "bg-foreground/[0.08]")}>
               <span className="sr-only">
                 {s.title}: {s.done ? "done" : s.locked ? "locked" : "to do"}
               </span>
@@ -158,7 +158,7 @@ export function GettingStarted({
         </div>
       </div>
       <div className="mt-3 h-1 overflow-hidden rounded-full bg-muted" aria-hidden="true">
-        <span className="block h-full origin-left rounded-full bg-[image:var(--brand-gradient)] transition-transform duration-(--dur-5) ease-out calm:transition-none" style={{ transform: `scaleX(${done / steps.length})` }} />
+        <span className="block h-full origin-left rounded-full bg-primary transition-transform duration-(--dur-5) ease-out calm:transition-none" style={{ transform: `scaleX(${done / steps.length})` }} />
       </div>
       <ol className={cn("mt-4 grid gap-3", row ? "md:grid-cols-3" : "")}>
         {steps.map((s, i) => {
@@ -174,7 +174,7 @@ export function GettingStarted({
               <span
                 className={cn(
                   "flex size-7 shrink-0 items-center justify-center rounded-full text-xs font-semibold",
-                  s.done ? "step-done bg-success text-background" : s.locked ? "bg-muted text-muted-foreground" : isNext ? "icon-tile--solid bg-[image:var(--brand-gradient)] text-primary-foreground" : "bg-muted text-muted-foreground shadow-[inset_0_0_0_1px_var(--border)]",
+                  s.done ? "step-done bg-success text-background" : s.locked ? "bg-muted text-muted-foreground" : isNext ? "icon-tile--solid text-primary-foreground" : "bg-muted text-muted-foreground shadow-[inset_0_0_0_1px_var(--border)]",
                 )}
               >
                 {s.done ? <Check className="size-3.5" strokeWidth={3} aria-hidden="true" /> : s.locked ? <Lock className="size-3.5" aria-hidden="true" /> : i + 1}

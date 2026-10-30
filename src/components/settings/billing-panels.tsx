@@ -60,7 +60,7 @@ export function PlanHero({
             {sub?.provider === "manual" && sub.status === "active" ? <span className="rounded-full bg-accent/12 px-2 py-0.5 font-sans text-[11px] font-medium text-accent">Assigned by Codexa staff</span> : null}
           </p>
           <h2 id="plan-title" className="text-app-display mt-3 text-balance">
-            You&apos;re on <span className="brand-gradient-text">{def.name}</span>
+            You&apos;re on <span className="text-primary">{def.name}</span>
           </h2>
           <p className="mt-2 max-w-prose text-[14px] text-muted-foreground">{def.tagline}</p>
           {showSub ? (

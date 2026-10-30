@@ -162,7 +162,7 @@ export function Spinner({ className }: { className?: string }) {
  */
 export function StatusDot({ status, pulse, className }: { status: "ok" | "warn" | "error" | "idle" | "busy"; pulse?: boolean; className?: string }) {
   const color =
-    status === "ok" ? "bg-success" : status === "warn" ? "bg-warning" : status === "error" ? "bg-danger" : status === "busy" ? "bg-signal" : "bg-muted-foreground/50";
+    status === "ok" ? "bg-success" : status === "warn" ? "bg-warning" : status === "error" ? "bg-danger" : status === "busy" ? "bg-primary" : "bg-muted-foreground/50";
   const ring = pulse ?? status === "busy";
   return <span aria-hidden="true" className={cn("inline-block size-2 shrink-0 rounded-full", color, ring && "live-dot", className)} />;
 }

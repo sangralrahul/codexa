@@ -24,7 +24,7 @@ export function PlanPill({ plan, className }: { plan: string; className?: string
     <span
       className={cn(
         "inline-flex h-[18px] shrink-0 items-center rounded-full px-1.5 font-mono text-[9.5px] font-medium uppercase tracking-[0.08em]",
-        paid ? "bg-[image:var(--brand-gradient-soft)] text-primary shadow-[inset_0_0_0_1px_color-mix(in_oklab,var(--brand-from)_25%,transparent)]" : "bg-muted text-muted-foreground shadow-[inset_0_0_0_1px_var(--border)]",
+        paid ? "bg-primary/10 text-primary shadow-[inset_0_0_0_1px_color-mix(in_oklab,var(--primary)_25%,transparent)]" : "bg-muted text-muted-foreground shadow-[inset_0_0_0_1px_var(--border)]",
         className,
       )}
     >
@@ -106,15 +106,16 @@ export function WorkspaceSwitcher({
             type="button"
             title={current.name}
             className={cn(
-              "group/ws flex h-10 min-w-0 items-center gap-1.5 rounded-[10px] pl-2 pr-1.5 text-left transition-[background-color,border-color] hover:bg-foreground/[0.04] data-[state=open]:bg-foreground/[0.04]",
+              "group/ws flex min-h-10 min-w-0 items-center gap-1.5 rounded-[10px] py-1 pl-2 pr-1.5 text-left transition-[background-color,border-color] hover:bg-foreground/[0.04] data-[state=open]:bg-foreground/[0.04]",
               className,
             )}
           >
             <span className="sr-only">Current workspace: </span>
             <span className="min-w-0 flex-1 leading-tight">
-              <span className="block truncate text-[13px] font-semibold tracking-[-0.01em]">{current.name}</span>
+              {/* Two lines before an ellipsis, so "Rahul's workspace" is never cut to "Rahul's wor…". */}
+              <span className="line-clamp-2 text-[12.5px] font-semibold leading-[1.2] tracking-[-0.01em] [overflow-wrap:anywhere]">{current.name}</span>
               <span className="sr-only">, </span>
-              <span className="block truncate text-[11.5px] text-muted-foreground">
+              <span className="block truncate text-[11px] leading-[1.3] text-muted-foreground">
                 {cap(current.plan)} · {cap(current.role)}
               </span>
             </span>

@@ -8,7 +8,7 @@ import { cn } from "@/lib/utils";
 const bar = "rounded-[3px] bg-foreground/12";
 const soft = "rounded-[3px] bg-foreground/[0.06]";
 const tile = "rounded-[4px] border border-border bg-card";
-const accent = "rounded-[3px] bg-signal/80";
+const accent = "rounded-[3px] bg-primary/80";
 
 function Lines({ n, className }: { n: number; className?: string }) {
   return (
@@ -91,7 +91,7 @@ const layouts: Record<string, () => React.ReactNode> = {
           ))}
         </div>
         <div className={cn(tile, "flex flex-1 items-end gap-[3px] p-1.5")}>
-          {[40, 65, 50, 80, 55, 90, 70, 60].map((h, i) => <div key={i} className={cn(i === 5 ? "bg-signal/80" : "bg-foreground/20", "flex-1 rounded-t-[2px]")} style={{ height: `${h}%` }} />)}
+          {[40, 65, 50, 80, 55, 90, 70, 60].map((h, i) => <div key={i} className={cn(i === 5 ? "bg-primary/80" : "bg-foreground/20", "flex-1 rounded-t-[2px]")} style={{ height: `${h}%` }} />)}
         </div>
       </div>
     </Sidebar>
@@ -122,7 +122,7 @@ const layouts: Record<string, () => React.ReactNode> = {
           <div className={cn(soft, "h-1 w-1/2")} />
         </div>
       </div>
-      <div className="grid flex-1 grid-cols-2 gap-1">{[0, 1, 2, 3].map((i) => <div key={i} className={cn("rounded-[4px]", i === 0 ? "bg-signal/30" : "bg-foreground/10")} />)}</div>
+      <div className="grid flex-1 grid-cols-2 gap-1">{[0, 1, 2, 3].map((i) => <div key={i} className={cn("rounded-[4px]", i === 0 ? "bg-primary/30" : "bg-foreground/10")} />)}</div>
     </div>
   ),
   "ai-tools": () => (
@@ -137,7 +137,7 @@ const layouts: Record<string, () => React.ReactNode> = {
         <div className="ml-auto h-2.5 w-1/3 rounded-[5px] rounded-br-[2px] bg-foreground/25" />
       </div>
       <div className={cn(tile, "flex h-3.5 items-center justify-end px-1")}>
-        <div className="size-2 rounded-full bg-signal/80" />
+        <div className="size-2 rounded-full bg-primary/80" />
       </div>
     </div>
   ),
@@ -153,7 +153,7 @@ const layouts: Record<string, () => React.ReactNode> = {
             <div key={i} className="flex items-center gap-1 px-1 py-[3px]">
               <div className={cn(i ? soft : bar, "h-1 w-1/3")} />
               <div className={cn(soft, "h-1 w-1/4")} />
-              <div className={cn(i === 2 ? "bg-signal/50" : "bg-foreground/10", "ml-auto h-1 w-2 rounded-full")} />
+              <div className={cn(i === 2 ? "bg-primary/50" : "bg-foreground/10", "ml-auto h-1 w-2 rounded-full")} />
             </div>
           ))}
         </div>
@@ -182,7 +182,7 @@ const layouts: Record<string, () => React.ReactNode> = {
         <div className="h-1/3 rounded-[3px] bg-foreground/10" />
         <Lines n={3} />
         <div className="mt-auto flex justify-around border-t border-border pt-0.5">
-          {[0, 1, 2, 3].map((i) => <div key={i} className={cn(i === 0 ? "bg-signal/80" : "bg-foreground/20", "size-1 rounded-full")} />)}
+          {[0, 1, 2, 3].map((i) => <div key={i} className={cn(i === 0 ? "bg-primary/80" : "bg-foreground/20", "size-1 rounded-full")} />)}
         </div>
       </div>
     </div>

@@ -30,7 +30,7 @@ function terminalTheme(): ITheme {
     foreground: cssColor("var(--code-fg)"),
     cursor: cssColor("var(--code-bg)"),
     cursorAccent: cssColor("var(--code-bg)"),
-    selectionBackground: cssColorAlpha("var(--signal)", 0.3),
+    selectionBackground: cssColorAlpha("var(--primary)", 0.3),
     black: cssColor("color-mix(in oklab, var(--code-bg) 70%, var(--code-fg))"),
     red: cssColor("var(--danger)"),
     green: cssColor("var(--success)"),

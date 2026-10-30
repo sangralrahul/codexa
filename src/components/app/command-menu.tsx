@@ -648,7 +648,7 @@ export function CommandMenu({
                           ) : it.tone === "build" ? (
                             <span
                               aria-hidden="true"
-                              className="flex h-7 w-8 shrink-0 items-center justify-center rounded-[8px] bg-[image:var(--brand-gradient)] text-primary-foreground shadow-[0_4px_14px_-6px_var(--brand-glow)]"
+                              className="flex h-7 w-8 shrink-0 items-center justify-center rounded-[8px] bg-primary text-primary-foreground shadow-[0_4px_14px_-6px_var(--brand-glow)]"
                             >
                               <Sparkles className="size-3.5" />
                             </span>

@@ -74,7 +74,7 @@ export function UsageMeters({
           </div>
         ))}
       {showUpgrade && e.plan !== "enterprise" ? (
-        <div className={cn("flex flex-wrap items-center justify-between gap-3 rounded-2xl border px-4 py-3.5", near ? "border-warning/40 bg-warning/[0.06]" : "border-border bg-[image:var(--brand-gradient-soft)]")}>
+        <div className={cn("flex flex-wrap items-center justify-between gap-3 rounded-2xl border px-4 py-3.5", near ? "border-warning/40 bg-warning/[0.06]" : "border-border bg-surface")}>
           <p className="min-w-0 flex-1 text-[13px] text-muted-foreground">
             {near ? <span className="font-medium text-foreground">You are close to a limit. </span> : null}
             {upDef

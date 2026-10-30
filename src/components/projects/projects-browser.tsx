@@ -230,7 +230,7 @@ export function ProjectsBrowser({
               <Link
                 href="/new-project"
                 style={{ viewTransitionName: "proj-new" }}
-                className="group/ghost flex min-h-16 items-center gap-3 rounded-lg border border-dashed border-border-strong px-4 py-3 text-left transition-[border-color,background-color] duration-(--dur-3) hover:border-foreground/30 hover:bg-foreground/[0.02] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring sm:h-full sm:min-h-[240px] sm:flex-col sm:justify-center sm:p-6 sm:text-center"
+                className="group/ghost flex min-h-16 items-center gap-3 rounded-2xl border border-dashed border-border-strong px-4 py-3 text-left transition-[border-color,background-color] duration-(--dur-3) hover:border-foreground/30 hover:bg-foreground/[0.02] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring sm:h-full sm:min-h-[240px] sm:flex-col sm:justify-center sm:p-6 sm:text-center"
               >
                 <span className="flex size-9 shrink-0 items-center justify-center rounded-full border border-border bg-card shadow-sm transition-transform duration-(--dur-3) ease-snap group-hover/ghost:rotate-90 group-hover/ghost:scale-105 calm:transition-none sm:size-11">
                   <Plus className="size-4 sm:size-5" aria-hidden="true" />

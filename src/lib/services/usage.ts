@@ -8,12 +8,21 @@ import { ApiError } from "@/lib/api";
 
 export type UsageKind = "ai_request" | "ai_tokens" | "runtime_minutes" | "deployment" | "storage_bytes";
 
+/** Plain product words for each metered limit (used in the 402 message people see in the editor). */
+const QUOTA_LABEL: Record<UsageKind, string> = {
+  ai_request: "AI requests",
+  ai_tokens: "AI tokens",
+  runtime_minutes: "preview minutes",
+  deployment: "deployments",
+  storage_bytes: "bytes of storage",
+};
+
 export class QuotaExceededError extends ApiError {
   kind: UsageKind;
   limit: number;
   used: number;
   constructor(kind: UsageKind, used: number, limit: number) {
-    super(402, `Usage limit reached for ${kind.replace("_", " ")} (${used}/${limit}). Upgrade your plan to continue.`, "quota_exceeded", { kind, used, limit });
+    super(402, `This workspace has used ${used.toLocaleString("en-US")} of its ${limit.toLocaleString("en-US")} ${QUOTA_LABEL[kind]} for this month. Upgrade the plan to keep going.`, "quota_exceeded", { kind, used, limit });
     this.kind = kind;
     this.limit = limit;
     this.used = used;

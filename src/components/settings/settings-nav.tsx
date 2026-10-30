@@ -93,7 +93,7 @@ function NavLink({ it, active, meta, onNavigate }: { it: SettingsNavItem; active
       data-nav-item=""
       className={cn(
         "relative z-[1] flex h-9 shrink-0 snap-center items-center gap-2.5 whitespace-nowrap rounded-[10px] px-3 text-[13.5px] outline-none transition-colors duration-200 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-ring lg:h-9 lg:px-2.5",
-        active ? "font-semibold text-primary lg:bg-[image:var(--brand-gradient-soft)] lg:shadow-[inset_0_0_0_1px_color-mix(in_oklab,var(--brand-from)_12%,transparent)]" : "text-muted-foreground hover:text-foreground",
+        active ? "font-semibold text-primary lg:bg-foreground/[0.06]" : "text-muted-foreground hover:text-foreground",
       )}
     >
       {Icon ? (

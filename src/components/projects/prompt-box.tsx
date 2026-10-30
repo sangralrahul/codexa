@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Check, ChevronDown, CornerDownLeft, Globe, ImagePlus, Link2, Loader2, Lock, Sparkles, Undo2, X } from "lucide-react";
+import { Check, ChevronDown, CornerDownLeft, Globe, ImagePlus, Info, Link2, Loader2, Lock, Sparkles, Undo2, X } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -577,14 +577,19 @@ export function PromptBox({
         ) : null}
 
         {atLimit && atLimit.workspaceId === wsId && !error ? (
-          <p className={cn("mt-3 text-pretty text-xs text-muted-foreground", start ? "text-left" : "text-center")}>
-            <span className="mr-1.5 inline-block size-1.5 rounded-full bg-warning align-middle" aria-hidden="true" />
-            <span>
-              All {atLimit.limit} projects on the {atLimit.plan} plan are in use in this workspace. Delete one or{" "}
-              <Link href="/settings/billing" className="link-draw font-medium text-foreground">
-                view plans
+          // A neutral inline hint with the two real ways out (not a warning dot): the limit is a plan fact, not an error.
+          <p className={cn("mt-3 flex flex-wrap items-center gap-x-3 gap-y-1 text-pretty text-xs text-muted-foreground", start ? "justify-start text-left" : "justify-center text-center")}>
+            <span className="inline-flex items-center gap-1.5">
+              <Info className="size-3.5 shrink-0 text-foreground-dim" aria-hidden="true" />
+              {atLimit.used} of {atLimit.limit} projects on the {atLimit.plan} plan are in use in this workspace.
+            </span>
+            <span className="inline-flex items-center gap-3">
+              <Link href="/projects" className="link-draw font-medium text-foreground">
+                Manage projects
               </Link>
-              .
+              <Link href="/settings/billing" className="link-draw font-medium text-primary">
+                View plans
+              </Link>
             </span>
           </p>
         ) : null}
@@ -647,7 +652,7 @@ export function PromptBox({
                     className={cn(
                       "flex items-center rounded-full border transition-[border-color,color,background-color] duration-(--dur-3) disabled:pointer-events-none disabled:opacity-50",
                       compact ? "h-8 px-3 text-[12.5px]" : "h-8 px-3.5 text-[13px]",
-                      on ? "border-primary/40 bg-[image:var(--brand-gradient-soft)] text-primary" : "border-border bg-card/70 text-muted-foreground hover:border-border-strong hover:bg-card hover:text-foreground",
+                      on ? "border-primary/40 bg-primary/10 text-primary" : "border-border bg-card/70 text-muted-foreground hover:border-border-strong hover:bg-card hover:text-foreground",
                     )}
                   >
                     {p.label}

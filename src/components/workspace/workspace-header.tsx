@@ -53,7 +53,7 @@ const TOOLS: { id: WorkspaceTool; label: string; hint: string; Icon: typeof Hist
   { id: "cloud", label: "Cloud", hint: "Built-in database and user login", Icon: Cloud },
   { id: "feedback", label: "Feedback", hint: "Review link and client comments", Icon: MessageSquareText },
   { id: "database", label: "SQL connection", hint: "Query an external database", Icon: Database },
-  { id: "settings", label: "Settings", hint: "AI knowledge, commands, environment", Icon: Settings },
+  { id: "settings", label: "Settings", hint: "Knowledge, commands, variables", Icon: Settings },
   { id: "activity", label: "Activity", hint: "Who changed what", Icon: Activity },
 ];
 
@@ -302,7 +302,7 @@ export function WorkspaceHeader({
               <ChevronDown className="hidden size-3.5 lg:block" aria-hidden="true" />
             </button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-64">
+          <DropdownMenuContent align="end" className="w-72">
             <DropdownMenuLabel>Tools</DropdownMenuLabel>
             {TOOLS.map(({ id, label, hint, Icon }) => (
               <DropdownMenuItem key={id} onSelect={() => openTool(id)}>
@@ -319,7 +319,7 @@ export function WorkspaceHeader({
                 <Download />
                 <span className="flex min-w-0 flex-col">
                   <span>Download ZIP</span>
-                  <span className="truncate text-[11.5px] text-muted-foreground">The source code, ready to run anywhere</span>
+                  <span className="truncate text-[11.5px] text-muted-foreground">Source code that runs anywhere</span>
                 </span>
               </a>
             </DropdownMenuItem>
@@ -328,7 +328,7 @@ export function WorkspaceHeader({
                 <Smartphone />
                 <span className="flex min-w-0 flex-col">
                   <span>Make installable</span>
-                  <span className="truncate text-[11.5px] text-muted-foreground">Home-screen app with an offline page</span>
+                  <span className="truncate text-[11.5px] text-muted-foreground">Add to home screen, works offline</span>
                 </span>
               </DropdownMenuItem>
             ) : null}

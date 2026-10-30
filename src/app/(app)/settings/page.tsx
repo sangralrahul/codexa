@@ -18,7 +18,7 @@ export default async function SettingsIndexPage() {
   const data = await getSettingsOverview(user, current?.workspace.id ?? null, await getCurrentSessionId());
   return (
     <div className="settings-stack space-y-5">
-      <PageHeader eyebrow="Control centre" title="Settings" description="Your account, security and workspace at a glance. Every number here is live." />
+      <PageHeader eyebrow="Account and workspace" title="Settings" description="Your account, security and workspace at a glance. Every number here is live." />
       <IdentityRow account={data.account} workspace={data.workspace} />
       <SetupChecklist items={data.checklist} emailConfigured={data.account.emailConfigured} />
       <section aria-label="Settings overview" className="settings-plain">

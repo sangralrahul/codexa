@@ -19,7 +19,7 @@ const date = (iso: string, opts: Intl.DateTimeFormatOptions) => new Date(iso).to
 export function IdentityRow({ account, workspace }: { account: SettingsOverview["account"]; workspace: SettingsOverview["workspace"] }) {
   return (
     <section aria-label="Your account" className="settings-card flex flex-col gap-4 p-4 sm:flex-row sm:items-center sm:p-5">
-      <span className="relative w-fit shrink-0 self-start rounded-full bg-[image:var(--brand-gradient)] p-[2px] sm:self-center">
+      <span className="relative w-fit shrink-0 self-start rounded-full sm:self-center">
         <Avatar name={account.name || account.email} src={account.avatarUrl} size="xl" />
       </span>
       <div className="min-w-0 flex-1">
@@ -55,7 +55,7 @@ export function IdentityRow({ account, workspace }: { account: SettingsOverview[
 
 function Tick({ done, i }: { done: boolean; i: number }) {
   return done ? (
-    <span className="setup-tick flex size-6 shrink-0 items-center justify-center rounded-full bg-[image:var(--brand-gradient)] text-primary-foreground" style={{ "--i": i } as React.CSSProperties}>
+    <span className="setup-tick flex size-6 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground" style={{ "--i": i } as React.CSSProperties}>
       <svg viewBox="0 0 16 16" className="size-3.5" aria-hidden="true">
         <path d="M3.5 8.5 6.6 11.5 12.5 5" pathLength={1} fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
       </svg>
@@ -268,7 +268,7 @@ function WorkspaceTiles({ workspace: w }: { workspace: NonNullable<SettingsOverv
         className="lg:col-span-2"
         footer={sub ? `${sub.interval === "year" ? "Annual" : "Monthly"} · ${sub.provider === "stripe" ? "Stripe" : sub.provider === "razorpay" ? "Razorpay" : sub.provider}` : w.plan.id === "free" ? "No card on file" : "Assigned without an online subscription"}
       >
-        <span className="brand-gradient-text block w-fit text-[28px] font-bold leading-none tracking-[-0.03em]">{w.plan.name}</span>
+        <span className="block w-fit text-[28px] font-bold leading-none tracking-[-0.03em]">{w.plan.name}</span>
         <span className="mt-2 block text-[13px] text-muted-foreground">
           {sub
             ? sub.cancelAtPeriodEnd

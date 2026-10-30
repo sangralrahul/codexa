@@ -9,7 +9,8 @@ const styles: Record<Variant, string> = {
   success: "bg-success/12 text-success",
   warning: "bg-warning/12 text-warning",
   danger: "bg-danger/12 text-danger",
-  signal: "bg-signal/12 text-signal-ink",
+  // Kept for callers; the app has no ember accent any more, so it reads as the primary badge.
+  signal: "bg-primary/10 text-primary",
   info: "bg-info/12 text-info",
   outline: "border border-border text-muted-foreground",
 };

@@ -3,7 +3,7 @@ import { GeistMono } from "geist/font/mono";
 import localFont from "next/font/local";
 import { cookies } from "next/headers";
 import "./globals.css";
-import { ThemeProvider, themeInitScript, type Theme } from "@/components/theme/theme-provider";
+import { DEFAULT_THEME, ThemeProvider, themeInitScript, type Theme } from "@/components/theme/theme-provider";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { site } from "@/config/site";
 import { MotionEffects } from "@/components/marketing/motion-effects";
@@ -50,15 +50,15 @@ export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
   themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#fbfaf7" },
-    { media: "(prefers-color-scheme: dark)", color: "#08090b" },
+    { media: "(prefers-color-scheme: light)", color: "#ffffff" },
+    { media: "(prefers-color-scheme: dark)", color: "#0b0f1a" },
   ],
 };
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
   const store = await cookies();
   const raw = store.get("codexa_theme")?.value;
-  const theme: Theme = raw === "light" || raw === "dark" || raw === "system" ? raw : "system";
+  const theme: Theme = raw === "light" || raw === "dark" || raw === "system" ? raw : DEFAULT_THEME;
   // Site motion preference (MotionToggle). "reduced" turns on calm mode everywhere, on top of the OS setting.
   // Same name as MOTION_COOKIE in @/lib/client/motion (that module holds client hooks, so it is not imported here).
   const motion = store.get("codexa_motion")?.value === "reduced" ? "reduced" : undefined;
