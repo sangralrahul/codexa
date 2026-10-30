@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { ArrowRight, Globe } from "lucide-react";
+import { ArrowRight, Globe, MessageSquare, MonitorPlay, Rocket } from "lucide-react";
 import { Button, Field, Input, Logo } from "../ui";
 import { ProjectThumb } from "../components/ProjectThumb";
 
@@ -38,8 +38,9 @@ export function SignIn({ onSignedIn }: { onSignedIn: (u: SessionUser) => void })
   return (
     <div className="flex h-full">
       <div className="drag fixed inset-x-0 top-0 h-11" />
-      <div className="flex flex-1 items-center justify-center px-8">
-        <div className="fade-in w-full max-w-[380px]">
+      <div className="relative flex flex-1 items-center justify-center px-8">
+        <div aria-hidden="true" className="hero-glow pointer-events-none absolute inset-x-0 top-0 h-[40%] opacity-60" />
+        <div className="fade-in relative w-full max-w-[380px]">
           <div className="flex items-center gap-2.5 text-fg">
             <Logo size={30} />
             <span className="text-[19px] font-semibold tracking-[-0.02em]">codexa</span>
@@ -80,7 +81,9 @@ export function SignIn({ onSignedIn }: { onSignedIn: (u: SessionUser) => void })
         </div>
       </div>
       <aside className="relative hidden w-[48%] max-w-[720px] flex-col justify-center overflow-hidden border-l border-border bg-sidebar px-14 lg:flex">
-        <div className="fade-in">
+        <div aria-hidden="true" className="hero-glow pointer-events-none absolute inset-x-0 top-0 h-[55%]" />
+        <div aria-hidden="true" className="dot-grid pointer-events-none absolute inset-0 opacity-50 [mask-image:radial-gradient(70%_60%_at_50%_40%,black,transparent)]" />
+        <div className="fade-in relative">
           <p className="text-[12.5px] font-medium text-muted">Codexa for Windows</p>
           <h2 className="mt-2 max-w-lg text-balance font-[family-name:var(--font-display)] text-[30px] font-semibold leading-[1.15] tracking-[-0.025em]">From a sentence to a running app.</h2>
           <figure className="mt-8 overflow-hidden rounded-xl border border-border bg-card shadow-card">
@@ -94,13 +97,14 @@ export function SignIn({ onSignedIn }: { onSignedIn: (u: SessionUser) => void })
             <figcaption className="border-t border-border px-4 py-2.5 text-[12px] text-muted">The SaaS starter, one of 111 templates you can start from.</figcaption>
           </figure>
           <ul className="mt-8 grid grid-cols-3 gap-4">
-            {[
-              ["Describe it", "Codexa plans it and writes the code."],
-              ["See it run", "A live preview while you chat."],
-              ["Publish", "Checked for security and speed first."],
-            ].map(([t, d]) => (
-              <li key={t}>
-                <p className="text-[13.5px] font-semibold">{t}</p>
+            {([
+              ["Describe it", "Codexa plans it and writes the code.", MessageSquare],
+              ["See it run", "A live preview while you chat.", MonitorPlay],
+              ["Publish", "Checked for security and speed first.", Rocket],
+            ] as const).map(([t, d, Icon]) => (
+              <li key={t} className="rounded-xl border border-border bg-card/70 p-3.5 card-edge">
+                <Icon className="size-4 text-accent" />
+                <p className="mt-2 text-[13.5px] font-semibold">{t}</p>
                 <p className="mt-1 text-[12.5px] leading-relaxed text-muted">{d}</p>
               </li>
             ))}

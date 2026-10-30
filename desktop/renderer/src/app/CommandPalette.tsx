@@ -19,7 +19,7 @@ export function CommandPalette({ open, onClose }: { open: boolean; onClose: () =
   const items = useMemo<Item[]>(() => {
     const projects = (app.projects ?? []).map<Item>((p) => ({
       id: `p:${p.id}`,
-      group: "Projects",
+      group: "Recent projects",
       label: p.name,
       hint: p.description || undefined,
       icon: <ProjectThumb templateId={p.templateId} name={p.name} className="h-[18px] w-[28px] rounded-[4px]" />,
@@ -104,6 +104,16 @@ export function CommandPalette({ open, onClose }: { open: boolean; onClose: () =
             );
           })}
         </ul>
+        <div className="flex h-9 items-center gap-4 border-t border-border bg-surface/60 px-4 text-[11.5px] text-dim">
+          <span className="flex items-center gap-1.5">
+            <Kbd>↑</Kbd>
+            <Kbd>↓</Kbd> navigate
+          </span>
+          <span className="flex items-center gap-1.5">
+            <Kbd>↵</Kbd> open
+          </span>
+          <span className="ml-auto">{app.projects ? `${app.projects.length} projects` : ""}</span>
+        </div>
       </div>
     </div>,
     document.body,
