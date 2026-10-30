@@ -53,11 +53,13 @@ export function Shell() {
       <div className="flex min-h-0 flex-1">
         {inProject ? null : <Sidebar />}
         <main className="min-w-0 flex-1">
-          {route.name === "home" ? <HomeScreen /> : null}
-          {route.name === "projects" ? <ProjectsScreen /> : null}
-          {route.name === "templates" ? <TemplatesScreen /> : null}
-          {route.name === "settings" ? <SettingsScreen tab={route.tab} /> : null}
-          {route.name === "project" ? <Workspace key={route.id} projectId={route.id} initialPrompt={route.prompt} /> : null}
+          <div key={route.name === "project" ? `project:${route.id}` : route.name} className="page-enter h-full">
+            {route.name === "home" ? <HomeScreen /> : null}
+            {route.name === "projects" ? <ProjectsScreen /> : null}
+            {route.name === "templates" ? <TemplatesScreen /> : null}
+            {route.name === "settings" ? <SettingsScreen tab={route.tab} /> : null}
+            {route.name === "project" ? <Workspace projectId={route.id} initialPrompt={route.prompt} /> : null}
+          </div>
         </main>
       </div>
       <CommandPalette open={palette} onClose={() => setPalette(false)} />

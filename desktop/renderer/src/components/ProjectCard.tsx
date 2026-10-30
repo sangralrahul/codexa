@@ -9,7 +9,7 @@ import { ProjectThumb } from "./ProjectThumb";
 export function ProjectCard({ project: p }: { project: Project }) {
   const { go } = useApp();
   return (
-    <article className="group relative flex flex-col overflow-hidden rounded-2xl border border-border bg-card shadow-sm transition-[border-color,box-shadow,translate] duration-200 hover:-translate-y-0.5 hover:border-border-strong hover:shadow-card">
+    <article className="group lift relative flex flex-col overflow-hidden rounded-2xl border border-border bg-card shadow-sm hover:border-border-strong">
       <button type="button" onClick={() => go({ name: "project", id: p.id })} className="text-left" aria-label={`Open ${p.name}`}>
         <div className="aspect-[16/10] overflow-hidden border-b border-border bg-surface">
           <ProjectThumb templateId={p.templateId} name={p.name} big className="h-full w-full transition-transform duration-500 group-hover:scale-[1.02]" />

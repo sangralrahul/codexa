@@ -20,6 +20,14 @@ const IDEAS = [
 const FEATURED = ["vite-react-saas", "vite-react-dashboard", "vite-react-storefront", "vite-react-landing"];
 const STARTERS = [DEFAULT_TEMPLATE, ...FEATURED, "vite-react-ai-chat", "vite-react-portfolio", "node-express-api"];
 
+const PLACEHOLDERS = [
+  "Build a habit tracker with streaks and weekly charts…",
+  "A landing page for my bakery with online orders…",
+  "An invoice app for freelancers with PDF export…",
+  "A recipe box with search, tags and a shopping list…",
+  "A team dashboard with tasks, owners and due dates…",
+];
+
 function greeting() {
   const h = new Date().getHours();
   return h < 5 ? "Working late" : h < 12 ? "Good morning" : h < 18 ? "Good afternoon" : "Good evening";
@@ -32,6 +40,7 @@ export function HomeScreen() {
   const [busy, setBusy] = useState(false);
   const [templates, setTemplates] = useState<Template[] | null>(null);
   const [starting, setStarting] = useState<string | null>(null);
+  const [ph, setPh] = useState(0);
   const first = (user.name || user.email).split(/[\s@]/)[0];
 
   useEffect(() => {
@@ -39,6 +48,11 @@ export function HomeScreen() {
       .list()
       .then((r) => setTemplates(r.templates))
       .catch(() => setTemplates([]));
+  }, []);
+  useEffect(() => {
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    const t = setInterval(() => setPh((p) => (p + 1) % PLACEHOLDERS.length), 3200);
+    return () => clearInterval(t);
   }, []);
 
   const byId = new Map((templates ?? []).map((t) => [t.id, t]));
@@ -79,13 +93,17 @@ export function HomeScreen() {
       <div aria-hidden="true" className="dot-grid pointer-events-none absolute inset-x-0 top-0 h-[420px] [mask-image:linear-gradient(to_bottom,black,transparent)] opacity-60" />
       <div className="relative mx-auto max-w-[1180px] px-10 pb-16">
         <section className="mx-auto max-w-[780px] pt-[7vh]">
-          <p className="text-center text-[13px] font-medium text-muted">
+          <p className="rise text-center text-[13px] font-medium text-muted">
             {greeting()}, {first}
           </p>
-          <h1 className="mt-2 text-balance text-center font-[family-name:var(--font-display)] text-[38px] font-semibold leading-[1.1] tracking-[-0.03em]">What should we build today?</h1>
-          <p className="mt-3 text-center text-[15px] text-muted">Describe it in plain words. Codexa plans it, writes the code and runs a live preview.</p>
+          <h1 className="rise mt-2 text-balance text-center font-[family-name:var(--font-display)] text-[38px] font-semibold leading-[1.1] tracking-[-0.03em]" style={{ "--d": "60ms" } as React.CSSProperties}>
+            What should we build today?
+          </h1>
+          <p className="rise mt-3 text-center text-[15px] text-muted" style={{ "--d": "120ms" } as React.CSSProperties}>
+            Describe it in plain words. Codexa plans it, writes the code and runs a live preview.
+          </p>
 
-          <div className="card-edge mt-8 rounded-[22px] border border-border bg-card transition-colors focus-within:border-border-strong focus-within:accent-ring">
+          <div className="card-edge focus-halo mt-8 rounded-[22px] border border-border bg-card focus-within:border-border-strong">
             <Textarea
               id="composer"
               value={prompt}
@@ -98,7 +116,7 @@ export function HomeScreen() {
                   void build();
                 }
               }}
-              placeholder="Build a habit tracker with streaks and weekly charts…"
+              placeholder={PLACEHOLDERS[ph]}
               aria-label="Describe what you want to build"
               className="min-h-[116px] px-5 pt-5 text-[15px]"
             />
