@@ -114,10 +114,21 @@ export const runtimeApi = {
   sync: (id: string, paths: string[]) => api<unknown>(`/api/v1/projects/${enc(id)}/runtime/sync`, { method: "POST", body: { paths } }),
 };
 
+export type SiteFinding = { id: string; category: "security" | "seo" | "performance" | "quality"; severity: "error" | "warning" | "pass"; title: string; detail: string };
+export type DeploymentReport = { deploymentId: string; url: string | null; createdAt: string; report: { score: { performance: number; seo: number }; totals: { files: number; bytes: number }; findings: SiteFinding[] } };
+export type Publishing = { siteName: string; customName: boolean; live: { id: string; url: string; publishedAt: string } | null };
+
 export const deployApi = {
   list: (id: string) => api<{ deployments: Deployment[]; providers: Provider[] }>(`/api/v1/projects/${enc(id)}/deployments`),
   create: (id: string) => api<{ deployment: Deployment }>(`/api/v1/projects/${enc(id)}/deployments`, { method: "POST", body: { provider: "codexa" } }),
   get: (id: string, did: string) => api<{ deployment: Deployment }>(`/api/v1/projects/${enc(id)}/deployments/${enc(did)}`),
+  rollback: (id: string, did: string) => api<{ deployment: Deployment }>(`/api/v1/projects/${enc(id)}/deployments/${enc(did)}/rollback`, { method: "POST", body: {} }),
+  report: (id: string, did: string) => api<DeploymentReport>(`/api/v1/projects/${enc(id)}/deployments/${enc(did)}/report`),
+};
+
+export const publishingApi = {
+  get: (id: string) => api<{ publishing: Publishing; canManage: boolean }>(`/api/v1/projects/${enc(id)}/publishing`),
+  unpublish: (id: string) => api<{ publishing: Publishing }>(`/api/v1/projects/${enc(id)}/publishing/unpublish`, { method: "POST", body: {} }),
 };
 
 export type LogLine = { ts: string; stream: "stdout" | "stderr" | "system"; line: string };

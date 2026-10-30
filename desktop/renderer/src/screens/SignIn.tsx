@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { ArrowRight, Globe, MessageSquare, MonitorPlay, Rocket } from "lucide-react";
 import { Button, Field, Input, Logo } from "../ui";
 import { ProjectThumb } from "../components/ProjectThumb";
@@ -12,6 +12,13 @@ export function SignIn({ onSignedIn }: { onSignedIn: (u: SessionUser) => void })
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState<"form" | "browser" | null>(null);
+  const [info, setInfo] = useState<{ version: string; appUrl: string } | null>(null);
+  useEffect(() => {
+    window.codexa
+      .info()
+      .then((i) => setInfo({ version: i.version, appUrl: i.appUrl }))
+      .catch(() => {});
+  }, []);
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -79,6 +86,19 @@ export function SignIn({ onSignedIn }: { onSignedIn: (u: SessionUser) => void })
             </button>
           </div>
         </div>
+        <p className="absolute inset-x-0 bottom-5 flex items-center justify-center gap-3 text-[11.5px] text-dim">
+          <span>Codexa for Windows{info ? ` ${info.version}` : ""}</span>
+          <span aria-hidden="true">·</span>
+          <button type="button" className="hover:text-fg" onClick={() => void window.codexa.openWeb("/terms")}>
+            Terms
+          </button>
+          <button type="button" className="hover:text-fg" onClick={() => void window.codexa.openWeb("/privacy")}>
+            Privacy
+          </button>
+          <button type="button" className="hover:text-fg" onClick={() => void window.codexa.openWeb("/status")}>
+            Status
+          </button>
+        </p>
       </div>
       <aside className="relative hidden w-[48%] max-w-[720px] flex-col justify-center overflow-hidden border-l border-border bg-sidebar px-14 lg:flex">
         <div aria-hidden="true" className="hero-glow pointer-events-none absolute inset-x-0 top-0 h-[55%]" />

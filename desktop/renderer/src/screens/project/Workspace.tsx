@@ -1,7 +1,7 @@
 import { lazy, Suspense, useCallback, useEffect, useRef, useState } from "react";
 import { Code2, ExternalLink, History as HistoryIcon, MessageSquare, MonitorPlay, Play, Rocket, SlidersHorizontal, Square, Terminal } from "lucide-react";
-import { aiApi, ApiError, projectsApi, type AiStatus, type Project, type Role } from "../../lib/api";
-import { cn } from "../../lib/util";
+import { aiApi, ApiError, deployApi, projectsApi, type AiStatus, type Deployment, type Project, type Role } from "../../lib/api";
+import { cn, relativeTime } from "../../lib/util";
 import { Badge, Button, Spinner, toast } from "../../ui";
 import { useApp } from "../../app/state";
 import { Chat } from "./Chat";
@@ -31,8 +31,19 @@ export function Workspace({ projectId, initialPrompt }: { projectId: string; ini
   const [panel, setPanel] = useState<"chat" | "history" | "settings">("chat");
   const [consoleOpen, setConsoleOpen] = useState(false);
   const [chatWidth, setChatWidth] = useState(() => Number(localStorage.getItem(CHAT_KEY)) || 400);
+  const [live, setLive] = useState<Deployment | null>(null);
   const runtime = useRuntime(projectId);
   const dragging = useRef(false);
+
+  const refreshLive = useCallback(() => {
+    deployApi
+      .list(projectId)
+      .then((r) => setLive(r.deployments.find((d) => d.status === "live" && d.url) ?? null))
+      .catch(() => setLive(null));
+  }, [projectId]);
+  useEffect(() => {
+    refreshLive();
+  }, [refreshLive]);
 
   useEffect(() => {
     projectsApi
@@ -168,6 +179,16 @@ export function Workspace({ projectId, initialPrompt }: { projectId: string; ini
           <Button variant="ghost" size="icon-sm" aria-label="Open on the web" title="Open on the web" onClick={() => void window.codexa.openWeb(`/projects/${project.id}`)}>
             <ExternalLink />
           </Button>
+          {live ? (
+            <button
+              type="button"
+              onClick={() => void window.codexa.openExternal(live.url!)}
+              title={`Open ${live.url}`}
+              className="hidden h-8 items-center gap-1.5 rounded-lg border border-border bg-card px-2.5 text-[12.5px] text-muted transition-colors hover:border-border-strong hover:text-fg lg:inline-flex"
+            >
+              <span className="size-1.5 rounded-full bg-success" /> Live · {relativeTime(live.createdAt)}
+            </button>
+          ) : null}
           <Button
             variant="accent"
             size="sm"
@@ -280,7 +301,7 @@ export function Workspace({ projectId, initialPrompt }: { projectId: string; ini
         <span className="text-dim">Ctrl P preview · Ctrl E code · Ctrl J console · Ctrl K search</span>
       </footer>
 
-      <PublishDialog projectId={project.id} open={publishOpen} onClose={() => setPublishOpen(false)} canPublish={canEdit} />
+      <PublishDialog projectId={project.id} open={publishOpen} onClose={() => setPublishOpen(false)} canPublish={canEdit} onChanged={refreshLive} />
     </div>
   );
 }

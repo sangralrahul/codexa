@@ -1,10 +1,24 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { ArrowUp, BookOpen, Check, ChevronDown, FileCode2, FilePlus2, FileX2, ListChecks, Mail, MessageSquare, Hammer, Moon, Smartphone, Sparkles, Square, TriangleAlert, Wrench } from "lucide-react";
-import { aiApi, streamGenerate, type AgentMode, type AiStatus, type Message, type MessagePart } from "../../lib/api";
-import { cn } from "../../lib/util";
-import { Avatar, Button, Logo, Menu, Spinner, Textarea } from "../../ui";
+import { ArrowUp, BookOpen, Check, ChevronDown, FileCode2, FilePlus2, FileX2, History, ListChecks, Mail, MessageSquare, MessageSquarePlus, Hammer, Moon, Smartphone, Sparkles, Square, TriangleAlert, Wrench } from "lucide-react";
+import { aiApi, streamGenerate, type AgentMode, type AiStatus, type Conversation, type Message, type MessagePart } from "../../lib/api";
+import { cn, relativeTime } from "../../lib/util";
+import { Avatar, Button, Logo, Menu, MenuItem, MenuSeparator, Spinner, Textarea } from "../../ui";
 import { useApp } from "../../app/state";
 import { Markdown } from "../../components/Markdown";
+
+/** The run's stages, in order, as the progress rail shows them. */
+const RAIL = [
+  { id: "loading_context", label: "Read", match: ["queued", "loading_context"] },
+  { id: "planning", label: "Plan", match: ["planning"] },
+  { id: "working", label: "Edit", match: ["working", "answering"] },
+  { id: "validating", label: "Check", match: ["validating", "repairing"] },
+  { id: "done", label: "Done", match: ["done"] },
+];
+const railIndex = (stage: string) => RAIL.findIndex((r) => r.match.includes(stage));
+const fmtElapsed = (ms: number) => {
+  const s = Math.max(0, Math.floor(ms / 1000));
+  return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`;
+};
 
 const MODES: { id: AgentMode; label: string; hint: string; icon: typeof Hammer }[] = [
   { id: "build", label: "Build", hint: "Plans, edits files and checks the result", icon: Hammer },
@@ -14,13 +28,15 @@ const MODES: { id: AgentMode; label: string; hint: string; icon: typeof Hammer }
 ];
 
 type FileChange = { path: string; action: "create" | "update" | "delete" };
-type Live = { prompt: string; text: string; stage: string | null; tools: number; files: FileChange[]; plan: string[] | null; error: string | null; done: boolean; summary?: string; nextSteps?: string[] };
+type Live = { prompt: string; text: string; stage: string | null; reached: number; startedAt: number; tools: number; files: FileChange[]; plan: string[] | null; error: string | null; done: boolean; summary?: string; nextSteps?: string[] };
 
 export function Chat({ projectId, initialPrompt, onFilesChanged }: { projectId: string; initialPrompt?: string; onFilesChanged: (paths: string[]) => void }) {
   const [status, setStatus] = useState<AiStatus | null>(null);
+  const [conversations, setConversations] = useState<Conversation[]>([]);
   const [conversationId, setConversationId] = useState<string | null>(null);
   const [messages, setMessages] = useState<Message[] | null>(null);
   const [live, setLive] = useState<Live | null>(null);
+  const [suggestions, setSuggestions] = useState<string[]>([]);
   const [input, setInput] = useState("");
   const [mode, setMode] = useState<AgentMode>("build");
   const cancelRef = useRef<(() => void) | null>(null);
@@ -44,6 +60,7 @@ export function Chat({ projectId, initialPrompt, onFilesChanged }: { projectId: 
     void (async () => {
       const [st, conv] = await Promise.all([aiApi.status(projectId).catch(() => ({ configured: false }) as AiStatus), aiApi.conversations(projectId).catch(() => ({ conversations: [] }))]);
       setStatus(st);
+      setConversations(conv.conversations);
       const latest = conv.conversations[0];
       if (latest) {
         setConversationId(latest.id);
@@ -62,8 +79,9 @@ export function Chat({ projectId, initialPrompt, onFilesChanged }: { projectId: 
       const prompt = text.trim();
       if (!prompt || running) return;
       setInput("");
+      setSuggestions([]);
       const changed: string[] = [];
-      setLive({ prompt, text: "", stage: "Starting", tools: 0, files: [], plan: null, error: null, done: false });
+      setLive({ prompt, text: "", stage: "Starting", reached: 0, startedAt: Date.now(), tools: 0, files: [], plan: null, error: null, done: false });
       cancelRef.current = streamGenerate(
         projectId,
         { prompt, mode: opts.mode ?? mode, conversationId, approvedPlan: opts.approvedPlan },
@@ -76,8 +94,10 @@ export function Chat({ projectId, initialPrompt, onFilesChanged }: { projectId: 
                   runIdRef.current = e.data.runId;
                   setConversationId(e.data.conversationId);
                   return l;
-                case "stage":
-                  return { ...l, stage: e.data.detail ?? e.data.stage };
+                case "stage": {
+                  const idx = railIndex(e.data.stage);
+                  return { ...l, stage: e.data.detail ?? e.data.stage, reached: idx >= 0 ? Math.max(l.reached, idx) : l.reached };
+                }
                 case "text":
                   return { ...l, text: l.text + e.data.delta };
                 case "tool_call":
@@ -90,7 +110,8 @@ export function Chat({ projectId, initialPrompt, onFilesChanged }: { projectId: 
                 case "error":
                   return { ...l, error: e.data.message };
                 case "done":
-                  return { ...l, done: true, stage: null, summary: e.data.summary, nextSteps: e.data.nextSteps, error: e.data.status === "failed" ? (e.data.error ?? l.error ?? "The run failed.") : l.error };
+                  if (e.data.status === "succeeded" && e.data.nextSteps?.length) setSuggestions(e.data.nextSteps.slice(0, 3));
+                  return { ...l, done: true, stage: null, reached: e.data.status === "succeeded" ? RAIL.length - 1 : l.reached, summary: e.data.summary, nextSteps: e.data.nextSteps, error: e.data.status === "failed" ? (e.data.error ?? l.error ?? "The run failed.") : l.error };
                 default:
                   return l;
               }
@@ -110,6 +131,10 @@ export function Chat({ projectId, initialPrompt, onFilesChanged }: { projectId: 
                     return l?.error ? l : null;
                   }),
                 );
+              aiApi
+                .conversations(projectId)
+                .then((r) => setConversations(r.conversations))
+                .catch(() => {});
               return cid;
             });
           },
@@ -137,9 +162,61 @@ export function Chat({ projectId, initialPrompt, onFilesChanged }: { projectId: 
 
   const current = MODES.find((m) => m.id === mode)!;
   const notConfigured = status && !status.configured;
+  const activeConversation = conversations.find((c) => c.id === conversationId) ?? null;
+  const newChat = () => {
+    if (running) return;
+    setConversationId(null);
+    setMessages([]);
+    setLive(null);
+    setSuggestions([]);
+  };
+  const switchChat = async (c: Conversation) => {
+    if (running || c.id === conversationId) return;
+    setConversationId(c.id);
+    setMessages(null);
+    setLive(null);
+    setSuggestions([]);
+    await loadMessages(c.id);
+  };
 
   return (
     <div className="flex h-full flex-col bg-card">
+      <div className="flex h-11 shrink-0 items-center gap-1 border-b border-border px-3">
+        <Menu
+          align="start"
+          width={300}
+          trigger={(open, toggle) => (
+            <button type="button" onClick={toggle} aria-expanded={open} aria-label="Switch conversation" className="flex h-8 min-w-0 flex-1 items-center gap-2 rounded-lg px-2 text-left hover:bg-surface">
+              <History className="size-4 shrink-0 text-muted" />
+              <span className="min-w-0 flex-1">
+                <span className="block truncate text-[13px] font-semibold">{activeConversation?.title || (conversationId ? "Chat" : "New chat")}</span>
+                <span className="block truncate text-[11px] text-muted">{activeConversation ? `Updated ${relativeTime(activeConversation.updatedAt)}` : `${conversations.length} conversation${conversations.length === 1 ? "" : "s"} in this project`}</span>
+              </span>
+              <ChevronDown className="size-3.5 shrink-0 text-dim" />
+            </button>
+          )}
+        >
+          {(close) => (
+            <>
+              <p className="px-2.5 pb-1 pt-1.5 text-[11px] font-medium text-dim">Conversations</p>
+              {conversations.length === 0 ? <p className="px-2.5 pb-2 text-[12.5px] text-muted">Nothing yet. Your chats show up here.</p> : null}
+              {conversations.slice(0, 12).map((c) => (
+                <MenuItem key={c.id} checked={c.id === conversationId} onSelect={() => (void switchChat(c), close())}>
+                  <span className="block truncate">{c.title || "Untitled chat"}</span>
+                  <span className="block text-[11px] text-dim">{relativeTime(c.updatedAt)}</span>
+                </MenuItem>
+              ))}
+              <MenuSeparator />
+              <MenuItem icon={<MessageSquarePlus />} onSelect={() => (newChat(), close())}>
+                New chat
+              </MenuItem>
+            </>
+          )}
+        </Menu>
+        <Button variant="ghost" size="icon-sm" aria-label="New chat" title="New chat" onClick={newChat} disabled={running || (!conversationId && messages?.length === 0)}>
+          <MessageSquarePlus />
+        </Button>
+      </div>
       <div ref={scrollRef} className="scroll min-h-0 flex-1 px-4 py-5">
         {messages === null ? (
           <div className="flex h-full items-center justify-center">
@@ -161,6 +238,15 @@ export function Chat({ projectId, initialPrompt, onFilesChanged }: { projectId: 
       </div>
 
       <div className="border-t border-border p-3">
+        {suggestions.length && !running ? (
+          <div className="mb-2.5 flex flex-wrap gap-1.5" aria-label="Suggested next steps">
+            {suggestions.map((s) => (
+              <button key={s} type="button" onClick={() => send(s)} className="inline-flex h-7 max-w-full items-center gap-1.5 rounded-full border border-border bg-card px-2.5 text-[12px] font-medium text-muted transition-colors hover:border-border-strong hover:text-fg">
+                <Sparkles className="size-3 shrink-0 text-accent" /> <span className="truncate">{s}</span>
+              </button>
+            ))}
+          </div>
+        ) : null}
         {notConfigured ? (
           <p className="mb-2 flex items-start gap-2 rounded-lg bg-warning/10 px-3 py-2 text-[12.5px] text-warning">
             <TriangleAlert className="mt-0.5 size-3.5 shrink-0" /> AI isn&apos;t set up on this Codexa server yet, so chat can&apos;t run. Files, preview and publishing still work.
@@ -348,14 +434,38 @@ function SavedReply({ message, onApprove }: { message: Message; onApprove: (step
 }
 
 function LiveReply({ live }: { live: Live }) {
+  const [now, setNow] = useState(() => live.startedAt);
+  useEffect(() => {
+    if (live.done) return;
+    const t = setInterval(() => setNow(Date.now()), 1000);
+    return () => clearInterval(t);
+  }, [live.done]);
   return (
     <div className="relative pl-9 text-[13.5px] leading-relaxed">
       <AssistantMark />
-      {live.stage ? (
-        <p className="mb-2 flex items-center gap-2 text-[12.5px] text-muted">
-          <span className="pulse size-1.5 rounded-full bg-accent" /> {live.stage}
-          {live.tools ? <span className="text-dim">· {live.tools} action{live.tools === 1 ? "" : "s"}</span> : null}
-        </p>
+      {!live.done || live.reached === RAIL.length - 1 ? (
+        <div className="mb-3 rounded-xl border border-border bg-surface/50 px-3 py-2.5">
+          <ol className="flex items-center gap-1.5" aria-label="Progress">
+            {RAIL.map((r, i) => {
+              const state = live.done && live.reached === RAIL.length - 1 ? "done" : i < live.reached ? "done" : i === live.reached ? "active" : "next";
+              return (
+                <li key={r.id} className="flex min-w-0 flex-1 items-center gap-1.5">
+                  <span className={cn("h-1 flex-1 rounded-full", state === "done" ? "bg-success" : state === "active" ? "pulse bg-accent" : "bg-border")} />
+                </li>
+              );
+            })}
+          </ol>
+          <div className="mt-1.5 flex items-center gap-2 text-[12px]">
+            <span className="flex items-center gap-1.5 font-medium text-fg">
+              {live.done ? <Check className="size-3.5 text-success" /> : <Spinner className="size-3.5" />}
+              {live.done ? "Done" : live.stage}
+            </span>
+            <span className="ml-auto tabular-nums text-dim">
+              {live.tools ? `${live.tools} action${live.tools === 1 ? "" : "s"} · ` : ""}
+              {fmtElapsed(now - live.startedAt)}
+            </span>
+          </div>
+        </div>
       ) : null}
       {live.text ? <Markdown text={live.text} /> : null}
       {live.plan ? <Plan steps={live.plan} /> : null}
