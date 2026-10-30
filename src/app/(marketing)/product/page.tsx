@@ -10,7 +10,8 @@ import { FeatureGrid } from "@/components/marketing/feature-grid";
 import { Steps } from "@/components/marketing/steps";
 import { FAQ } from "@/components/marketing/faq";
 import { CTABand } from "@/components/marketing/cta-band";
-import { VignettePlate, VignetteWindow } from "@/components/marketing/vignette-window";
+import { VignettePlate } from "@/components/marketing/vignette-window";
+import { CAPTURE_FOR_ILLUSTRATION, CaptureTile, CaptureWindow } from "@/components/marketing/captures";
 import { Alert } from "@/components/ui/misc";
 
 export const metadata = routeMetadata("/product");
@@ -36,17 +37,17 @@ export default function ProductPage() {
           { label: "Start building", href: "/signup" },
           { label: "See how it works", href: "/how-it-works" },
         ]}
-        visual={<VignetteWindow id="agent-run" />}
+        visual={<CaptureWindow id="agent" priority />}
       />
 
       <Section size="lg">
-        <SectionHeader index="01" eyebrow="The loop" title="Four things Codexa does." description="Every project moves through the same loop. Enter at any point: a prompt, a template, or an imported GitHub repository." />
+        <SectionHeader index="01" eyebrow="The loop" title="Four things Codexa does." description="Every project moves through the same loop. Enter at any point: a prompt, a template, or an imported GitHub repository. Pictures are captured from the app; the preview tile is a labelled illustration." />
         {/* From md each pair of tiles shares two rows (subgrid): the illustrations in a row are one height and
             the captions start on one line, so no tile is left with an empty band. */}
         <ul data-spotlight="grid" className="mt-12 grid grid-cols-1 gap-4 md:grid-cols-2">
           {pillars.map((p, i) => (
             <li key={p.title} data-reveal data-spotlight-tile style={{ "--reveal-delay": `${(i % 2) * 90}ms` } as React.CSSProperties} className="relative flex flex-col overflow-hidden rounded-[20px] border border-border bg-card p-3 shadow-[inset_0_1px_0_var(--hairline)] md:row-span-2 md:grid md:grid-rows-subgrid md:gap-0">
-              <VignettePlate id={p.visual} className="border-0 bg-surface/70" />
+              {CAPTURE_FOR_ILLUSTRATION[p.visual] ? <CaptureTile id={CAPTURE_FOR_ILLUSTRATION[p.visual]!} className="rounded-[14px]" /> : <VignettePlate id={p.visual} className="border-0 bg-surface/70" />}
               <div className="flex items-start justify-between gap-4 px-3 pb-3 pt-5">
                 <div>
                   <p className="text-label text-signal-ink">{String(i + 1).padStart(2, "0")}</p>

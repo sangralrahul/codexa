@@ -11,19 +11,18 @@
 export const HOME_HERO = {
   /** Eyebrow pill when there is no changelog entry to announce. */
   eyebrow: "AI-native development platform",
-  /** The H1, as two visual lines; `phrase` is the one gradient-text phrase on the page. */
-  lines: ["Describe the app.", "Codexa writes, runs and ships it."],
-  phrase: "runs and ships it.",
-  lead: "An AI agent plans the files, writes real TypeScript, checks it in an isolated sandbox and runs a live preview you can edit by hand and deploy.",
-  primary: { label: "Start building free", href: "/signup", signedInLabel: "Open dashboard", signedInHref: "/dashboard" },
+  /** The H1 (plain white, one line where it fits). `lines`/`phrase` are kept for existing callers. */
+  title: "What do you want to build?",
+  lines: ["What do you want to build?"],
+  phrase: "",
+  lead: "Describe it. Codexa plans the files, writes real TypeScript, runs the build in a sandbox and deploys it.",
+  primary: { label: "Get started", href: "/signup", signedInLabel: "Open dashboard", signedInHref: "/dashboard" },
   secondary: { label: "Browse templates", href: "/templates" },
   templatesLink: { label: "Start from a template", href: "/templates" },
+  importLink: { label: "Import from GitHub", href: "/import-project" },
   storyLink: { label: "How it works", href: "#how-it-works" },
-  /** The starter whose captured screenshot sits under the composer (a real build; see HOME_SHOT_CAPTION). */
-  shotTemplateId: "vite-react-dashboard",
-  /** Text in the browser frame's URL pill (a label, not a real address). */
-  shotUrl: (name: string) => `Preview · ${name} starter`,
-  shotCaption: (name: string) => `The ${name} starter as it ships, captured from its own build. Open it, read the files, then describe what to change.`,
+  /** Under the demo: what the pictures are. */
+  demoCaption: "Captured from the Codexa workspace on a development server: a real project, the real agent panel, version history and the Publish dialog.",
 } as const;
 
 /** "Built on" trust row: the stack Codexa and its starters actually run on (not customers). */
@@ -50,12 +49,12 @@ export const HOME_STEPS = [
 ] as const;
 
 /** The eight features on the home grid, by title in PLATFORM_FEATURES (src/content/marketing/product.ts). */
-export const HOME_FEATURE_TITLES = ["AI app builder", "AI agent", "Code editor", "Isolated runtimes", "Live preview", "Snapshots and diffs", "Databases", "Deployment"] as const;
+export const HOME_FEATURE_TITLES = ["AI app builder", "AI agent", "Code editor", "Snapshots and diffs", "Deployment", "Isolated runtimes", "Databases", "Teams"] as const;
 
 export const HOME_FEATURES_COPY = {
   index: "Platform",
   title: "Everything a real project needs, in one workspace.",
-  phrase: "in one workspace.",
+  phrase: "",
   lead: "Real files in a real editor, an agent that shows every tool call, a sandbox that runs the build before you see the result, and hosting with history.",
   all: { label: "All features", href: "/features" },
 };
@@ -250,7 +249,7 @@ export const HOME_FAQ = {
 
 export const HOME_FINAL = {
   title: "Start with a sentence.",
-  phrase: "a sentence.",
+  phrase: "",
   lead: "Describe the app you want. Codexa plans it, writes the files, runs the build and gives you a preview to work from.",
   pricing: { label: "See pricing", href: "/pricing" },
 };

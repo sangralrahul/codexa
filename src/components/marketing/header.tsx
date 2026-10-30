@@ -51,6 +51,8 @@ const GROUPS: Group[] = [
   { key: "resources", label: "Resources", items: NAV.resources, footer: [{ label: "Learn hub", href: "/learn" }, { label: "Help center", href: "/help" }] },
   { key: "company", label: "Company", items: NAV.company, footer: [{ label: "Mission", href: "/mission" }, { label: "Trust center", href: "/trust-center" }] },
 ];
+/** The desktop bar is minimal (logo, Product, Pricing, Docs, Sign in, Get started); the other groups stay in the mobile sheet and the footer. */
+const DESKTOP_GROUPS: Group[] = GROUPS.filter((g) => g.key === "product");
 const LINKS = [
   { label: "Pricing", href: "/pricing" },
   { label: "Docs", href: "/docs" },
@@ -242,7 +244,7 @@ export function MarketingHeader({ signedIn, wells }: { signedIn: boolean; wells?
     if (closeTimer.current) clearTimeout(closeTimer.current);
   };
 
-  const openIndex = open ? GROUPS.findIndex((g) => g.key === open) : -1;
+  const openIndex = open ? DESKTOP_GROUPS.findIndex((g) => g.key === open) : -1;
 
   return (
     <>
@@ -273,7 +275,7 @@ export function MarketingHeader({ signedIn, wells }: { signedIn: boolean; wells?
                 <div ref={navRef} className="relative">
                 <GlideIndicator ref={glide} className="inset-y-0 rounded-[8px] bg-foreground/[0.06] shadow-none" />
                 <ul className="flex items-center">
-                  {GROUPS.map((g, gi) => {
+                  {DESKTOP_GROUPS.map((g, gi) => {
                     const expanded = open === g.key;
                     const current = g.items.some((i) => isActivePath(pathname, i.href));
                     const panelId = `mega-${g.key}`;
@@ -339,7 +341,7 @@ export function MarketingHeader({ signedIn, wells }: { signedIn: boolean; wells?
                                       data-on={on ? "" : undefined}
                                       className="group/item flex items-start gap-3 rounded-[8px] px-3 py-2.5 outline-offset-[-2px] transition-colors duration-150 data-[on]:bg-foreground/[0.05]"
                                     >
-                                      <span className="mk-tile mk-tile--sm mt-0.5 transition-colors duration-150 group-data-[on]/item:bg-[image:var(--brand-gradient)] group-data-[on]/item:text-primary-foreground">
+                                      <span className="mk-tile mk-tile--sm mt-0.5 transition-colors duration-150 group-data-[on]/item:bg-surface-3 group-data-[on]/item:text-foreground">
                                         <Icon className="size-4" aria-hidden="true" />
                                       </span>
                                       <span className="min-w-0">
@@ -406,7 +408,7 @@ export function MarketingHeader({ signedIn, wells }: { signedIn: boolean; wells?
               </nav>
             </div>
             <div className="hidden items-center gap-2 lg:flex">
-              <SearchPill />
+              <SearchPill className="border-transparent bg-transparent shadow-none hover:shadow-none" />
               {signedIn ? (
                 <Link href="/dashboard" data-btn="" className="mk-btn mk-btn--primary mk-btn--sm ml-1">
                   Open dashboard
@@ -418,7 +420,7 @@ export function MarketingHeader({ signedIn, wells }: { signedIn: boolean; wells?
                     Sign in
                   </Link>
                   <Link href="/signup" data-btn="" className="mk-btn mk-btn--primary mk-btn--sm">
-                    Start building
+                    Get started
                     <ArrowRight className="size-3.5" aria-hidden="true" />
                   </Link>
                 </>
@@ -511,7 +513,7 @@ function MobileSheet({ signedIn, pathname, onClose }: { signedIn: boolean; pathn
           ) : (
             <>
               <Link href="/signup" onClick={onClose} data-btn="" className="mk-btn mk-btn--primary mk-btn--lg w-full">
-                Start building
+                Get started
                 <ArrowRight className="size-4" aria-hidden="true" />
               </Link>
               <Link href="/login" onClick={onClose} data-btn="" className="mk-btn mk-btn--secondary mk-btn--lg w-full">

@@ -94,7 +94,7 @@ export default async function DocsIndexPage() {
               <Link href={href} className="mk-card mk-card--hover group shot-pan flex h-full flex-col p-2.5 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring">
                 <Art />
                 <span className="flex flex-1 flex-col px-2.5 pb-2 pt-4">
-                  <span className="text-[12px] font-semibold uppercase tracking-[0.08em] text-primary">
+                  <span className="text-[12px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">
                     {n} — {verb}
                   </span>
                   <span className="mt-2 text-[17px] font-semibold tracking-[-0.015em]">{title}</span>

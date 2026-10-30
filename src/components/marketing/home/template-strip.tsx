@@ -39,7 +39,7 @@ export function TemplateStrip({ tiles, total, frameworkSummary }: { tiles: WallT
                       {t.categoryName} · {t.frameworkName}
                     </span>
                   </span>
-                  <span className="mk-tile mk-tile--sm transition-colors group-hover/t:bg-[image:var(--brand-gradient)] group-hover/t:text-primary-foreground">
+                  <span className="mk-tile mk-tile--sm transition-colors group-hover/t:bg-surface-3 group-hover/t:text-foreground">
                     <ArrowRight className="size-4" aria-hidden="true" />
                   </span>
                 </span>

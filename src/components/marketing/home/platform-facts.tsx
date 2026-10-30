@@ -27,7 +27,7 @@ export function PlatformFacts({ facts, changelog, status, nodes }: { facts: Proo
             <dl className="mt-8 grid grid-cols-2 gap-4 sm:grid-cols-4">
               {facts.map((f) => (
                 <div key={f.label} className="mk-card flex min-w-0 flex-col p-5">
-                  <dd className="mk-num mk-gradient-text font-display text-[2.5rem] font-extrabold leading-none tracking-[-0.04em]">{f.value}</dd>
+                  <dd className="mk-num font-display text-[2.5rem] font-extrabold leading-none tracking-[-0.04em] text-foreground">{f.value}</dd>
                   <dt className="mt-2 text-[13.5px] font-medium text-foreground/85">{f.label}</dt>
                   <dd className="mt-3 min-w-0 font-mono text-[10.5px] leading-snug text-muted-foreground">
                     <span title={f.symbol} className="block truncate">
@@ -72,7 +72,7 @@ export function PlatformFacts({ facts, changelog, status, nodes }: { facts: Proo
             </p>
             {changelog.length ? (
               <div className="mt-8 border-t border-border pt-5">
-                <p className="text-[13px] font-semibold uppercase tracking-[0.08em] text-primary">Changelog</p>
+                <p className="text-[13px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">Changelog</p>
                 <ul className="mt-2 divide-y divide-border">
                   {changelog.map((e) => (
                     <li key={e.href}>

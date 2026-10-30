@@ -16,8 +16,76 @@
 @media (width < 40rem) { .site-shell .container-x { max-width: calc(1200px + 2rem); } }
 
 /* --------------------------------------------------------------------------
-   Premium Light type (DESIGN-PREMIUM.md): page H1 56–64px / 800 / -0.04em,
-   section H2 40–44px / 700 / -0.03em, lead 20px muted. One gradient phrase per page.
+   Marketing dark scope. The website is dark by default, whatever the app theme:
+   neutral near-black page, #16161a panels, white and grey type, and ONE accent
+   (blue) for the primary button, links, focus rings and the live dot. The
+   tokens below shadow the app's light/dark sets for every page under the
+   site shell (and anything portalled out of it while such a page is open), so
+   components keep reading the same token names. globals.css is untouched.
+   Muted text is #9d9da8 on #0b0b0f (≈6.9:1) and on #16161a (≈6.1:1).
+   -------------------------------------------------------------------------- */
+:root:has(.site-shell) {
+  color-scheme: dark;
+  --background: #0b0b0f;
+  --foreground: #f5f5f7;
+  --foreground-dim: #c2c2ca;
+  --surface: #111115;
+  --surface-2: #1b1b21;
+  --surface-3: #27272f;
+  --card: #16161a;
+  --card-foreground: #f5f5f7;
+  --muted: #1c1c22;
+  --muted-foreground: #9d9da8;
+  --border: #26262c;
+  --border-strong: #38383f;
+  --input: #121216;
+  --ring: #3b82f6;
+  --focus: #3b82f6;
+  --primary: #3b82f6;
+  --primary-hover: #2563eb;
+  --primary-foreground: #ffffff;
+  --accent: #3b82f6;
+  --accent-foreground: #ffffff;
+  --signal-ink: #c2c2ca;
+  /* Flat blue stands in wherever a shared component still asks for the brand gradient. */
+  --brand-from: #3b82f6;
+  --brand-via: #3b82f6;
+  --brand-to: #3b82f6;
+  --brand-gradient: linear-gradient(#3b82f6, #3b82f6);
+  --brand-gradient-soft: linear-gradient(rgba(59, 130, 246, 0.1), rgba(59, 130, 246, 0.1));
+  --brand-glow: rgba(59, 130, 246, 0.18);
+  --brand-ring: 0 0 0 4px rgba(59, 130, 246, 0.22);
+  --tile-bg: #1f1f25;
+  --tile-fg: #c2c2ca;
+  --success: #34d399;
+  --warning: #fbbf24;
+  --danger: #f87171;
+  --info: #60a5fa;
+  --code-bg: #0f0f13;
+  --code-fg: #e6e6e6;
+  --code-border: #26262c;
+  --code-muted: #8f8f9a;
+  --selection: rgba(59, 130, 246, 0.28);
+  --selection-strong: rgba(59, 130, 246, 0.42);
+  --mark-ink-1: #f5f5f7;
+  --mark-ink-2: #9d9da8;
+  --hairline: rgba(255, 255, 255, 0.07);
+  --grid-line: rgba(255, 255, 255, 0.045);
+  --glass: rgba(11, 11, 15, 0.72);
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4);
+  --shadow-md: 0 4px 14px rgba(0, 0, 0, 0.45);
+  --shadow-lg: 0 1px 0 rgba(255, 255, 255, 0.05) inset, 0 24px 48px -16px rgba(0, 0, 0, 0.7), 0 4px 12px -4px rgba(0, 0, 0, 0.5);
+  --shadow-xl: 0 1px 0 rgba(255, 255, 255, 0.06) inset, 0 40px 80px -24px rgba(0, 0, 0, 0.75);
+  --shadow-stage: 0 1px 0 rgba(255, 255, 255, 0.06) inset, 0 80px 160px -60px rgba(0, 0, 0, 0.9), 0 0 0 1px rgba(255, 255, 255, 0.04);
+  --glow: #3b82f6;
+  --glow-2: #3b82f6;
+  --silk-opacity: 0;
+}
+:root:has(.site-shell) body { background: var(--background); color: var(--foreground); }
+
+/* --------------------------------------------------------------------------
+   Type: page H1 56–64px / 800 / -0.04em, section H2 40–44px / 700 / -0.03em,
+   lead 20px muted. Headlines are plain white: no gradient text anywhere.
    -------------------------------------------------------------------------- */
 .mk-h1 {
   font-family: var(--font-display);
@@ -54,24 +122,13 @@
   color: var(--muted-foreground);
   text-wrap: pretty;
 }
-/* The one gradient phrase on a page (background-clip text). */
-.mk-gradient-text {
-  background-image: var(--brand-gradient);
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
-  -webkit-text-fill-color: transparent;
-  /* Descenders and tight tracking must not be clipped by the inline box. */
-  padding-inline: 0.02em;
-  margin-inline: -0.02em;
-  -webkit-box-decoration-break: clone;
-  box-decoration-break: clone;
-}
+/* A highlighted phrase reads as plain ink (kept so existing markup needs no change). */
+.mk-gradient-text { color: inherit; }
 
 /* --------------------------------------------------------------------------
-   Gradient mesh: three large blurred blobs (indigo, violet, pink) drifting slowly,
-   masked to fade out downward. Light, not neon. Markup: a decorative
-   .mk-mesh with three .mk-mesh__blob children, inside a `relative isolate` parent.
+   Hero backdrop: at most a very faint monochrome radial behind a hero, fading
+   downward. Nothing coloured, nothing moving. (.mk-mesh--band / --soft / --glow
+   are accepted by existing markup and render the same faint wash or nothing.)
    -------------------------------------------------------------------------- */
 .mk-mesh {
   position: absolute;
@@ -79,66 +136,15 @@
   z-index: -1;
   overflow: hidden;
   pointer-events: none;
-  -webkit-mask-image: linear-gradient(to bottom, #000 0%, rgba(0, 0, 0, 0.85) 30%, transparent 88%);
-  mask-image: linear-gradient(to bottom, #000 0%, rgba(0, 0, 0, 0.85) 30%, transparent 88%);
+  background: radial-gradient(60% 55% at 50% 0%, rgba(255, 255, 255, 0.06), transparent 70%);
 }
-.mk-mesh__blob {
-  position: absolute;
-  border-radius: 9999px;
-  filter: blur(100px);
-  opacity: 0.3;
-  will-change: transform;
-  animation: mk-drift 22s var(--ease-in-out) infinite alternate;
-}
-.mk-mesh__blob--1 {
-  left: -6%;
-  top: -34%;
-  width: min(760px, 58vw);
-  height: min(760px, 58vw);
-  background: color-mix(in oklab, var(--brand-from) 58%, transparent);
-}
-.mk-mesh__blob--2 {
-  right: -10%;
-  top: -28%;
-  width: min(720px, 54vw);
-  height: min(720px, 54vw);
-  background: color-mix(in oklab, var(--brand-via) 52%, transparent);
-  animation-delay: -7s;
-  animation-duration: 26s;
-}
-.mk-mesh__blob--3 {
-  left: 32%;
-  top: 8%;
-  width: min(640px, 48vw);
-  height: min(640px, 48vw);
-  background: color-mix(in oklab, var(--brand-to) 40%, transparent);
-  animation-delay: -13s;
-  animation-duration: 30s;
-}
-.mk-mesh--soft .mk-mesh__blob { opacity: 0.22; }
-/* Band variant (final CTA, sign-in): the mesh fades at both edges instead of only downward. */
-.mk-mesh--band {
-  -webkit-mask-image: linear-gradient(to bottom, transparent 0%, #000 25%, #000 75%, transparent 100%);
-  mask-image: linear-gradient(to bottom, transparent 0%, #000 25%, #000 75%, transparent 100%);
-}
-/* Glow variant (inside a content column, e.g. the docs hub): fades out radially on every side. */
-.mk-mesh--glow {
-  -webkit-mask-image: radial-gradient(50% 65% at 35% 35%, #000 0%, rgba(0, 0, 0, 0.6) 40%, transparent 95%);
-  mask-image: radial-gradient(50% 65% at 35% 35%, #000 0%, rgba(0, 0, 0, 0.6) 40%, transparent 95%);
-}
-.mk-mesh--band .mk-mesh__blob--1 { top: -10%; }
-.mk-mesh--band .mk-mesh__blob--2 { top: 0; }
-.mk-mesh--band .mk-mesh__blob--3 { top: 30%; }
-@keyframes mk-drift {
-  from { transform: translate3d(0, 0, 0) scale(1); }
-  50% { transform: translate3d(5%, 7%, 0) scale(1.08); }
-  to { transform: translate3d(-4%, 3%, 0) scale(0.96); }
-}
-@media (prefers-reduced-motion: reduce) { .mk-mesh__blob { animation: none !important; } }
-[data-motion="reduced"] .mk-mesh__blob { animation: none !important; }
+.mk-mesh--soft { background: radial-gradient(50% 45% at 30% 0%, rgba(255, 255, 255, 0.035), transparent 70%); }
+.mk-mesh--band { background: radial-gradient(50% 60% at 50% 50%, rgba(255, 255, 255, 0.035), transparent 70%); }
+.mk-mesh--glow { background: none; }
+.mk-mesh__blob { display: none; }
 
 /* --------------------------------------------------------------------------
-   Surfaces: cards, icon tiles, glows, the browser frame, the Pro gradient border.
+   Surfaces: cards, neutral icon tiles, the browser frame, the Pro border.
    -------------------------------------------------------------------------- */
 .mk-card {
   position: relative;
@@ -154,7 +160,7 @@
   box-shadow: var(--shadow-lg);
   border-color: color-mix(in oklab, var(--foreground) 10%, transparent);
 }
-/* Icon tile: 40px rounded-12 square, gradient at 12 % tint, the icon in indigo. */
+/* Icon tile: 40px rounded-12 neutral square (#1f1f25) with a light-grey icon. */
 .mk-tile {
   display: inline-grid;
   place-items: center;
@@ -162,18 +168,18 @@
   height: 40px;
   flex-shrink: 0;
   border-radius: 12px;
-  background: var(--brand-gradient-soft);
-  color: var(--primary);
-  box-shadow: inset 0 0 0 1px color-mix(in oklab, var(--primary) 12%, transparent);
+  background: var(--tile-bg);
+  color: var(--tile-fg);
+  box-shadow: inset 0 0 0 1px var(--hairline);
 }
 .mk-tile--lg { width: 48px; height: 48px; border-radius: 14px; }
 .mk-tile--sm { width: 32px; height: 32px; border-radius: 10px; }
 .mk-tile--solid {
-  background: var(--brand-gradient);
+  background: var(--primary);
   color: var(--primary-foreground);
-  box-shadow: inset 0 1px 0 color-mix(in oklab, white 25%, transparent), 0 8px 20px -8px var(--brand-glow);
+  box-shadow: none;
 }
-/* A soft gradient glow behind product screenshots (blurred blob, 40 % opacity). */
+/* Behind product screenshots: a very faint monochrome wash, no colour. */
 .mk-glow { position: relative; }
 .mk-glow::before {
   content: "";
@@ -181,19 +187,18 @@
   z-index: -1;
   inset: 10% -3% -8% -3%;
   border-radius: 48px;
-  background: var(--brand-gradient);
-  filter: blur(64px);
-  opacity: 0.4;
+  background: radial-gradient(60% 60% at 50% 40%, rgba(255, 255, 255, 0.09), transparent 70%);
+  filter: blur(48px);
   pointer-events: none;
 }
-.mk-glow--sm::before { inset: 20% 4% -4% 4%; filter: blur(40px); opacity: 0.32; }
-/* Browser frame chrome: white, three dots, URL pill, hairline border. */
+.mk-glow--sm::before { inset: 20% 4% -4% 4%; filter: blur(32px); }
+/* Browser frame chrome: dark panel, three dots, URL pill, hairline border. */
 .mk-browser {
   overflow: hidden;
   border-radius: 16px;
-  border: 1px solid color-mix(in oklab, var(--foreground) 9%, transparent);
+  border: 1px solid var(--border);
   background: var(--card);
-  box-shadow: var(--shadow-xl), 0 0 0 1px color-mix(in oklab, var(--foreground) 3%, transparent);
+  box-shadow: var(--shadow-xl), 0 0 0 1px rgba(255, 255, 255, 0.03);
 }
 .mk-browser__bar {
   display: flex;
@@ -225,13 +230,13 @@
   overflow: hidden;
   text-overflow: ellipsis;
 }
-/* Pro plan: a 2px gradient border with a violet glow. */
+/* Pro plan: a plain 1px blue border and a plain blue-bordered label. */
 .mk-pro {
   position: relative;
-  border-radius: 18px;
-  padding: 2px;
-  background: var(--brand-gradient);
-  box-shadow: 0 24px 56px -24px var(--brand-glow), var(--shadow-md);
+  border-radius: 17px;
+  padding: 1px;
+  background: var(--primary);
+  box-shadow: var(--shadow-md);
 }
 .mk-pro > * { border-radius: 16px; background: var(--card); }
 .mk-pro__badge {
@@ -246,16 +251,16 @@
   height: 26px;
   padding-inline: 12px;
   border-radius: 9999px;
-  background: var(--brand-gradient);
-  color: var(--primary-foreground);
+  border: 1px solid var(--primary);
+  background: var(--card);
+  color: var(--primary);
   font-size: 11.5px;
   font-weight: 600;
   letter-spacing: 0.01em;
   white-space: nowrap;
-  box-shadow: 0 6px 16px -6px var(--brand-glow);
 }
-/* Gradient hairline (section dividers, progress). */
-.mk-rule { height: 1px; background: linear-gradient(90deg, transparent, color-mix(in oklab, var(--brand-via) 45%, transparent), transparent); }
+/* Hairline (section dividers). */
+.mk-rule { height: 1px; background: var(--border); }
 
 /* --------------------------------------------------------------------------
    Controls: eyebrow pill, 44px marketing buttons (radius 10), the prompt card.
@@ -285,8 +290,8 @@ a.mk-pill:hover { border-color: var(--border-strong); color: var(--foreground); 
   height: 22px;
   padding-inline: 8px;
   border-radius: 9999px;
-  background: var(--brand-gradient);
-  color: var(--primary-foreground);
+  border: 1px solid var(--primary);
+  color: var(--primary);
   font-size: 11px;
   font-weight: 600;
   letter-spacing: 0.01em;
@@ -313,35 +318,30 @@ a.mk-pill:hover { border-color: var(--border-strong); color: var(--foreground); 
 .mk-btn--primary {
   background: var(--primary);
   color: var(--primary-foreground);
-  box-shadow: inset 0 1px 0 color-mix(in oklab, white 20%, transparent), 0 1px 2px color-mix(in oklab, var(--foreground) 10%, transparent), 0 10px 24px -10px color-mix(in oklab, var(--primary) 70%, transparent);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.14), 0 1px 2px rgba(0, 0, 0, 0.4);
 }
-.mk-btn--primary:hover {
-  background: var(--primary-hover);
-  background-image: var(--brand-gradient);
-  translate: 0 -1px;
-  box-shadow: inset 0 1px 0 color-mix(in oklab, white 22%, transparent), 0 2px 4px color-mix(in oklab, var(--foreground) 10%, transparent), 0 16px 32px -12px var(--brand-glow);
-}
+.mk-btn--primary:hover { background: var(--primary-hover); translate: 0 -1px; }
 .mk-btn--secondary {
   background: var(--card);
   color: var(--foreground);
-  border: 1px solid var(--border);
+  border: 1px solid var(--border-strong);
   box-shadow: var(--shadow-sm);
 }
-.mk-btn--secondary:hover { border-color: var(--border-strong); translate: 0 -1px; box-shadow: var(--shadow-md); }
+.mk-btn--secondary:hover { border-color: #4a4a52; background: var(--surface-2); translate: 0 -1px; }
 .mk-btn--ghost { color: var(--foreground); }
-.mk-btn--ghost:hover { background: var(--surface); }
+.mk-btn--ghost:hover { background: var(--surface-2); }
 .mk-btn:active { translate: 0 0; }
-/* Premium composer card: gradient focus glow. */
+/* The prompt card: a dark panel; its border turns blue (the focus ring) while in use. */
 .mk-composer {
   border-radius: 18px;
-  border: 1px solid color-mix(in oklab, var(--foreground) 10%, transparent);
+  border: 1px solid var(--border-strong);
   background: var(--card);
   box-shadow: var(--shadow-lg);
   transition: border-color var(--dur-3), box-shadow var(--dur-3) var(--ease-out);
 }
 .mk-composer:focus-within {
-  border-color: color-mix(in oklab, var(--primary) 55%, transparent);
-  box-shadow: var(--brand-ring), 0 24px 56px -20px var(--brand-glow), var(--shadow-lg);
+  border-color: var(--primary);
+  box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.18), var(--shadow-lg);
 }
 .mk-composer--compact { border-radius: 14px; }
 
@@ -387,8 +387,8 @@ a.mk-pill:hover { border-color: var(--border-strong); color: var(--foreground); 
 .site-shell .mark-select::after { display: none; }
 
 /* --------------------------------------------------------------------------
-   Header: a white 64px bar that stays at the top; once the page scrolls it
-   turns to blurred glass with a hairline and a soft shadow.
+   Header: a 64px bar on the page colour that stays at the top; once the page
+   scrolls it turns to blurred glass with a hairline and a soft shadow.
    -------------------------------------------------------------------------- */
 .mk-header {
   position: sticky;
@@ -431,6 +431,7 @@ a.mk-pill:hover { border-color: var(--border-strong); color: var(--foreground); 
   border-radius: 12px;
   border: 1px solid var(--border-strong);
   background: var(--card);
+  color: var(--foreground);
   box-shadow: var(--shadow-lg);
   transform-origin: 50% 0;
   opacity: 0;

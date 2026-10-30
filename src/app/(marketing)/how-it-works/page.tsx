@@ -10,7 +10,8 @@ import { CTABand } from "@/components/marketing/cta-band";
 import { Inline } from "@/components/marketing/inline";
 import { StoryScroll } from "@/components/marketing/story-scroll";
 import { ChevronDown } from "lucide-react";
-import { VignetteWindow, storyStages } from "@/components/marketing/vignette-window";
+import { storyStages } from "@/components/marketing/vignette-window";
+import { CaptureWindow } from "@/components/marketing/captures";
 import { Alert } from "@/components/ui/misc";
 
 export const metadata = routeMetadata("/how-it-works");
@@ -57,7 +58,7 @@ export default function HowItWorksPage() {
           { label: "Start building", href: "/signup" },
           { label: "Read the docs", href: "/docs" },
         ]}
-        visual={<VignetteWindow id="terminal-stream" />}
+        visual={<CaptureWindow id="agent" priority />}
       />
 
       <Section size="lg">

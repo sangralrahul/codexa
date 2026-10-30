@@ -15,6 +15,7 @@ import { VignettePlate, VignetteWindow, storyStages } from "./vignette-window";
 import { StoryScroll } from "./story-scroll";
 import { FinePrint } from "./fine-print";
 import { RelatedCards } from "./related-cards";
+import { CAPTURE_FOR_ILLUSTRATION, CaptureTile, CaptureWindow } from "./captures";
 
 const RELATED_COPY: Record<string, string> = {
   "/features": "Everything that ships today, group by group.",
@@ -78,6 +79,8 @@ export function ProductPageTemplate({ page }: { page: ProductPage }) {
   const own = page.faq ?? [];
   const faq = [...own, ...PRODUCT_FAQ.filter((q) => !own.some((o) => o.question === q.question))].slice(0, Math.max(5, own.length));
   const related = (page.related ?? []).slice(0, 3).map((r) => ({ ...r, description: RELATED_COPY[r.href] }));
+  // A real capture of the product fronts the page wherever one exists for its visual; otherwise the labelled illustration.
+  const heroCapture = CAPTURE_FOR_ILLUSTRATION[page.visual];
 
   return (
     <div data-tone="product">
@@ -93,7 +96,7 @@ export function ProductPageTemplate({ page }: { page: ProductPage }) {
           { label: "Start building", href: "/signup" },
           { label: "How it works", href: "/how-it-works" },
         ]}
-        visual={<VignetteWindow id={page.visual} />}
+        visual={heroCapture ? <CaptureWindow id={heroCapture} priority /> : <VignetteWindow id={page.visual} />}
       />
 
       <Section size="sm">
@@ -129,7 +132,7 @@ export function ProductPageTemplate({ page }: { page: ProductPage }) {
               const Icon = f.icon;
               return (
                 <article key={f.title} data-reveal data-spotlight-tile style={{ "--reveal-delay": `${i * 90}ms` } as React.CSSProperties} className="relative flex flex-col overflow-hidden rounded-[20px] border border-border bg-card p-3 shadow-[inset_0_1px_0_var(--hairline)] lg:row-span-2 lg:grid lg:grid-rows-subgrid lg:gap-0">
-                  <VignettePlate id={bento[i]} className="border-0 bg-surface/70" />
+                  {CAPTURE_FOR_ILLUSTRATION[bento[i]] ? <CaptureTile id={CAPTURE_FOR_ILLUSTRATION[bento[i]]!} className="rounded-[14px]" /> : <VignettePlate id={bento[i]} className="border-0 bg-surface/70" />}
                   <div className="px-3 pb-3 pt-5">
                     <h3 className="flex items-center gap-2.5 text-[18px] font-semibold tracking-[-0.015em]">
                       {Icon ? <Icon className="size-[18px] text-primary" aria-hidden="true" /> : null}

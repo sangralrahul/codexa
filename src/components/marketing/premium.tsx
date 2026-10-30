@@ -4,32 +4,21 @@ import { ArrowRight, type LucideIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 /**
- * Premium Light primitives (DESIGN-PREMIUM.md), shared by every marketing page. Plain server
- * components on the mk-* classes in marketing.css; every colour comes from a token.
+ * Marketing primitives shared by every marketing page: a dark, neutral site (near-black page,
+ * #16161a panels, white and grey type) with one blue accent for the primary button, links, focus
+ * rings and the live dot. Plain server components on the mk-* classes in marketing.css; every
+ * colour comes from a token.
  */
 
-/** Three drifting blurred blobs (indigo, violet, pink) masked downward. Decorative; parent is `relative isolate`. */
+/** A very faint monochrome wash behind a hero (decorative; parent is `relative isolate`). No colour, no motion. */
 export function Mesh({ className, variant = "hero" }: { className?: string; variant?: "hero" | "soft" | "band" | "glow" }) {
-  return (
-    <div aria-hidden="true" className={cn("mk-mesh", variant === "soft" && "mk-mesh--soft", variant === "band" && "mk-mesh--band", variant === "glow" && "mk-mesh--soft mk-mesh--glow", className)}>
-      <span className="mk-mesh__blob mk-mesh__blob--1" />
-      <span className="mk-mesh__blob mk-mesh__blob--2" />
-      <span className="mk-mesh__blob mk-mesh__blob--3" />
-    </div>
-  );
+  return <div aria-hidden="true" className={cn("mk-mesh", variant === "soft" && "mk-mesh--soft", variant === "band" && "mk-mesh--band", variant === "glow" && "mk-mesh--glow", className)} />;
 }
 
-/** Sets the part of `text` that matches `phrase` in the brand gradient (one per page). */
+/** Headlines are plain white: `phrase` is accepted for existing callers and rendered as ordinary text. */
 export function GradientText({ text, phrase }: { text: string; phrase?: string }) {
-  if (!phrase || !text.includes(phrase)) return <>{text}</>;
-  const i = text.indexOf(phrase);
-  return (
-    <>
-      {text.slice(0, i)}
-      <span className="mk-gradient-text">{phrase}</span>
-      {text.slice(i + phrase.length)}
-    </>
-  );
+  void phrase;
+  return <>{text}</>;
 }
 
 /** Eyebrow pill above a hero headline: an optional gradient tag, the text, and an arrow when it links somewhere. */
@@ -51,7 +40,7 @@ export function EyebrowPill({ tag, children, href, className }: { tag?: string; 
   return <p className={cn("mk-pill", className)}>{inner}</p>;
 }
 
-/** 40px gradient-tinted icon tile with the icon in indigo. */
+/** 40px neutral icon tile (#1f1f25) with a light-grey icon. */
 export function IconTile({ icon: Icon, size = "md", solid, className }: { icon: LucideIcon; size?: "sm" | "md" | "lg"; solid?: boolean; className?: string }) {
   return (
     <span aria-hidden="true" className={cn("mk-tile", size === "lg" && "mk-tile--lg", size === "sm" && "mk-tile--sm", solid && "mk-tile--solid", className)}>
@@ -84,8 +73,8 @@ export function CtaLink({
 }
 
 /**
- * Browser window around a product screenshot: white chrome, three dots, a URL pill, and (with
- * `glow`) a blurred gradient blob behind it. The chrome is decorative; describe the content yourself.
+ * Browser window around a product screenshot: dark chrome, three dots, a URL pill, and (with
+ * `glow`) a faint monochrome wash behind it. The chrome is decorative; describe the content yourself.
  */
 export function BrowserWindow({ url, children, glow = true, className, bodyClassName }: { url: string; children: React.ReactNode; glow?: boolean | "sm"; className?: string; bodyClassName?: string }) {
   return (
@@ -100,17 +89,17 @@ export function BrowserWindow({ url, children, glow = true, className, bodyClass
           <span className="mk-browser__url">{url}</span>
           <span className="w-[46px]" />
         </div>
-        <div className={cn("relative bg-white", bodyClassName)}>{children}</div>
+        <div className={cn("relative bg-card", bodyClassName)}>{children}</div>
       </div>
     </div>
   );
 }
 
-/** Section kicker: a small gradient tile-dot plus a short label, used above section headings. */
+/** Section kicker: a small grey square plus a short grey label, used above section headings. */
 export function Kicker({ children, className, center }: { children: React.ReactNode; className?: string; center?: boolean }) {
   return (
-    <p className={cn("flex items-center gap-2 text-[13px] font-semibold uppercase tracking-[0.08em] text-primary", (center || className?.includes("justify-center")) && "justify-center", className)}>
-      <span aria-hidden="true" className="inline-block size-2 rounded-[3px] bg-[image:var(--brand-gradient)]" />
+    <p className={cn("flex items-center gap-2 text-[13px] font-semibold uppercase tracking-[0.08em] text-muted-foreground", (center || className?.includes("justify-center")) && "justify-center", className)}>
+      <span aria-hidden="true" className="inline-block size-2 rounded-[3px] bg-border-strong" />
       {children}
     </p>
   );

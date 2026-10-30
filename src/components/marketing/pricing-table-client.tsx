@@ -155,7 +155,7 @@ function Meters({ meters }: { meters: PricingPlanView["meters"] }) {
           <dd className="font-medium tabular-nums text-foreground">
             {m.value < 0 ? "Custom" : fmt(m.value)}
             <span aria-hidden="true" className="absolute inset-x-0 bottom-0 block h-1 overflow-hidden rounded-full bg-muted shadow-[inset_0_0_0_1px_var(--border)]">
-              <span className={cn("mk-meter block h-full origin-left rounded-full", m.value < 0 ? "bg-[repeating-linear-gradient(90deg,var(--foreground-dim)_0_6px,transparent_6px_10px)]" : "bg-[image:var(--brand-gradient)]")} style={{ "--share": m.share } as React.CSSProperties} />
+              <span className={cn("mk-meter block h-full origin-left rounded-full", m.value < 0 ? "bg-[repeating-linear-gradient(90deg,var(--foreground-dim)_0_6px,transparent_6px_10px)]" : "bg-foreground/60")} style={{ "--share": m.share } as React.CSSProperties} />
             </span>
           </dd>
         </div>
@@ -250,8 +250,8 @@ function PlanFinder({ usage, onUsage, currency, interval, plans }: { usage: Usag
     <section aria-labelledby={`${id}-title`} className="mk-card mt-14 overflow-hidden rounded-[20px]">
       <div className="grid grid-cols-1 gap-8 p-6 sm:p-8 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] lg:gap-12">
         <div>
-          <p className="flex items-center gap-2 text-[13px] font-semibold uppercase tracking-[0.08em] text-primary">
-            <span aria-hidden="true" className="inline-block size-2 rounded-[3px] bg-[image:var(--brand-gradient)]" />
+          <p className="flex items-center gap-2 text-[13px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">
+            <span aria-hidden="true" className="inline-block size-2 rounded-[3px] bg-border-strong" />
             Plan finder
           </p>
           <h3 id={`${id}-title`} className="text-display-4 mt-4">

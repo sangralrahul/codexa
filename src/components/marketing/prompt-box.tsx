@@ -596,9 +596,9 @@ export function PromptBox({
                   size="lg"
                   appearance="app"
                   aria-busy={submitting || undefined}
-                  className={cn("h-10 gap-1.5 pl-4 pr-3.5 text-[14px] shadow-[inset_0_1px_0_color-mix(in_oklab,white_20%,transparent),0_8px_20px_-8px_color-mix(in_oklab,var(--primary)_70%,transparent)]", !hero && "h-9 text-sm")}
+                  className={cn("h-10 gap-1.5 pl-4 pr-3.5 text-[14px]", !hero && "h-9 text-sm")}
                 >
-                  Build it
+                  Build
                   <span data-spark-icon className="relative grid size-4 place-items-center">
                     <ArrowRight
                       className={cn("col-start-1 row-start-1 size-4 transition-[opacity,transform] duration-(--dur-3) ease-snap", submitting && "rotate-90 scale-50 opacity-0")}
