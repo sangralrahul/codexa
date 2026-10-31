@@ -52,7 +52,7 @@ async function statusSummary(): Promise<Summary> {
   }
 }
 
-const pill = "inline-flex h-7 items-center gap-2 rounded-full border border-border bg-background/60 px-3 text-xs font-medium text-foreground/85 transition-colors hover:border-border-strong hover:text-foreground";
+const pill = "inline-flex items-center gap-2 font-mono text-xs text-muted-foreground transition-colors hover:text-foreground";
 
 /** Footer status pill: the real overall state from the status checks (streams in; never blocks the page). */
 export async function FooterStatus() {

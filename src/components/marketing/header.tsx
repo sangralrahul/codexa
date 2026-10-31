@@ -31,9 +31,8 @@ import {
   X,
   type LucideIcon,
 } from "lucide-react";
-import { Logo } from "@/components/logo";
+import { LogoMark } from "@/components/logo";
 import { NAV, type NavItem } from "@/config/routes";
-import { buttonClasses } from "@/components/ui/button";
 import { Kbd } from "@/components/ui/misc";
 import { ThemeToggle } from "@/components/theme/theme-toggle";
 import { MotionToggle } from "@/components/motion/motion-toggle";
@@ -51,11 +50,15 @@ const GROUPS: Group[] = [
   { key: "resources", label: "Resources", items: NAV.resources, footer: [{ label: "Learn hub", href: "/learn" }, { label: "Help center", href: "/help" }] },
   { key: "company", label: "Company", items: NAV.company, footer: [{ label: "Mission", href: "/mission" }, { label: "Trust center", href: "/trust-center" }] },
 ];
-/** The desktop bar is minimal (logo, Product, Pricing, Docs, Sign in, Get started); the other groups stay in the mobile sheet and the footer. */
+/** The desktop bar (Monochrome Grid): Product menu, then plain links; the other groups stay in the mobile sheet and the footer. */
 const DESKTOP_GROUPS: Group[] = GROUPS.filter((g) => g.key === "product");
+/** `wide`: shown on the bar from xl up only (they stay in the mobile sheet and the footer). */
 const LINKS = [
-  { label: "Pricing", href: "/pricing" },
+  { label: "Templates", href: "/templates" },
+  { label: "Security", href: "/security", wide: true },
   { label: "Docs", href: "/docs" },
+  { label: "Pricing", href: "/pricing" },
+  { label: "Desktop", href: "/download", wide: true },
 ];
 
 const ICONS: Record<string, LucideIcon> = {
@@ -89,10 +92,20 @@ const CLOSE_GRACE = 200;
 /** Idle nav text: muted on the plain bar, foreground on hover. */
 const TRIGGER_IDLE = "text-muted-foreground hover:text-foreground";
 
+/** The brand: the Codexa mark and name, linking home. */
+function Brand() {
+  return (
+    <Link href="/" className="mk-brand" aria-label="Codexa home">
+      <LogoMark size={22} />
+      <span aria-hidden="true">Codexa</span>
+    </Link>
+  );
+}
+
 const isActivePath = (pathname: string, href: string) => pathname === href || pathname.startsWith(href + "/");
 
 /** Platform-aware "Search ⌘K" pill. Opens the site search (the dialog is mounted once in the header). */
-function SearchPill({ className, iconOnlyBelow = "xl" }: { className?: string; iconOnlyBelow?: "xl" | "never" }) {
+function SearchPill({ className, iconOnlyBelow = "xl" }: { className?: string; iconOnlyBelow?: "xl" | "never" | "always" }) {
   const mod = usePlatformMod();
   return (
     <button
@@ -102,15 +115,15 @@ function SearchPill({ className, iconOnlyBelow = "xl" }: { className?: string; i
       data-no-ripple
       className={cn(
         "group inline-flex h-9 shrink-0 items-center gap-2 rounded-[9px] border border-border bg-card text-[13px] text-muted-foreground shadow-sm transition-[color,border-color,background-color,box-shadow] duration-200 hover:border-border-strong hover:text-foreground hover:shadow-md",
-        iconOnlyBelow === "xl" ? "w-8 justify-center xl:w-auto xl:justify-start xl:pl-2.5 xl:pr-1.5" : "pl-3 pr-1.5",
+        iconOnlyBelow === "always" ? "w-8 justify-center" : iconOnlyBelow === "xl" ? "w-8 justify-center xl:w-auto xl:justify-start xl:pl-2.5 xl:pr-1.5" : "pl-3 pr-1.5",
         className,
       )}
     >
       <Search className="size-4" aria-hidden="true" />
       {/* Named from content (not aria-label) so the visible "Search" and the shortcut hint never disagree with the name. */}
       <span className="sr-only">Search documentation</span>
-      <span aria-hidden="true" className={cn(iconOnlyBelow === "xl" && "hidden xl:inline")}>Search</span>
-      <Kbd mod aria-hidden="true" className={cn("ml-1 border-0 bg-muted px-1.5 shadow-[inset_0_0_0_1px_var(--border)]", iconOnlyBelow === "xl" && "hidden xl:inline-flex")}>
+      <span aria-hidden="true" className={cn(iconOnlyBelow === "xl" && "hidden xl:inline", iconOnlyBelow === "always" && "hidden")}>Search</span>
+      <Kbd mod aria-hidden="true" className={cn("ml-1 border-0 bg-muted px-1.5 shadow-[inset_0_0_0_1px_var(--border)]", iconOnlyBelow === "xl" && "hidden xl:inline-flex", iconOnlyBelow === "always" && "hidden")}>
         K
       </Kbd>
     </button>
@@ -258,10 +271,10 @@ export function MarketingHeader({ signedIn, wells }: { signedIn: boolean; wells?
         data-sheet={mobileOpen ? "" : undefined}
         data-armed={armed || open ? "" : undefined}
       >
-        <div className="mk-bar container-x">
+        <div className="mk-bar">
           <div className="relative flex h-full items-center justify-between gap-3">
-            <div className="flex min-w-0 items-center gap-4 xl:gap-6">
-              <Logo />
+            <div className="flex min-w-0 items-center gap-5 xl:gap-7">
+              <Brand />
               <nav
                 aria-label="Main"
                 className="hidden lg:block"
@@ -273,8 +286,8 @@ export function MarketingHeader({ signedIn, wells }: { signedIn: boolean; wells?
                 onFocus={arm}
               >
                 <div ref={navRef} className="relative">
-                <GlideIndicator ref={glide} className="inset-y-0 rounded-[8px] bg-foreground/[0.06] shadow-none" />
-                <ul className="flex items-center">
+                <GlideIndicator ref={glide} className="inset-y-0 rounded-[6px] bg-foreground/[0.06] shadow-none" />
+                <ul className="flex items-center gap-1">
                   {DESKTOP_GROUPS.map((g, gi) => {
                     const expanded = open === g.key;
                     const current = g.items.some((i) => isActivePath(pathname, i.href));
@@ -307,10 +320,8 @@ export function MarketingHeader({ signedIn, wells }: { signedIn: boolean; wells?
                             openedBy.current = "click";
                             setOpen((o) => (o === g.key ? null : g.key));
                           }}
-                          className={cn(
-                            "relative z-[1] inline-flex h-9 items-center gap-1 rounded-[9px] px-3 text-[14px] font-medium transition-colors duration-200",
-                            expanded || current ? "text-foreground" : TRIGGER_IDLE,
-                          )}
+                          data-current={current ? "" : undefined}
+                          className="mk-navitem"
                         >
                           {g.label}
                           <ChevronDown className={cn("size-3.5 opacity-60 transition-transform duration-300 ease-snap", expanded && "rotate-180")} aria-hidden="true" />
@@ -384,7 +395,7 @@ export function MarketingHeader({ signedIn, wells }: { signedIn: boolean; wells?
                     );
                   })}
                   {LINKS.map((l) => (
-                    <li key={l.href}>
+                    <li key={l.href} className={cn(l.wide && "hidden xl:block")}>
                       <Link
                         href={l.href}
                         data-nav-trigger
@@ -393,10 +404,7 @@ export function MarketingHeader({ signedIn, wells }: { signedIn: boolean; wells?
                           clearTimers();
                           if (open) closeTimer.current = setTimeout(() => setOpen(null), CLOSE_GRACE);
                         }}
-                        className={cn(
-                          "relative z-[1] inline-flex h-9 items-center rounded-[9px] px-3 text-[14px] font-medium transition-colors duration-200",
-                          isActivePath(pathname, l.href) ? "text-foreground" : TRIGGER_IDLE,
-                        )}
+                        className="mk-navitem"
                       >
                         {l.label}
                       </Link>
@@ -408,20 +416,26 @@ export function MarketingHeader({ signedIn, wells }: { signedIn: boolean; wells?
               </nav>
             </div>
             <div className="hidden items-center gap-2 lg:flex">
-              <SearchPill className="border-transparent bg-transparent shadow-none hover:shadow-none" />
+              <SearchPill iconOnlyBelow="always" className={cn("h-8 border-transparent bg-transparent shadow-none hover:border-transparent hover:shadow-none", TRIGGER_IDLE)} />
               {signedIn ? (
-                <Link href="/dashboard" data-btn="" className="mk-btn mk-btn--primary mk-btn--sm ml-1">
-                  Open dashboard
-                  <ArrowRight className="size-3.5" aria-hidden="true" />
-                </Link>
+                <>
+                  <Link href="/contact" className="mkb">
+                    Contact
+                  </Link>
+                  <Link href="/dashboard" className="mkb mkb--solid">
+                    Dashboard
+                  </Link>
+                </>
               ) : (
                 <>
-                  <Link href="/login" className={buttonClasses("ghost", "sm", cn("h-9 px-3 text-[14px]", TRIGGER_IDLE), "app")}>
-                    Sign in
+                  <Link href="/login" className="mkb mkb--ghost">
+                    Log in
                   </Link>
-                  <Link href="/signup" data-btn="" className="mk-btn mk-btn--primary mk-btn--sm">
-                    Get started
-                    <ArrowRight className="size-3.5" aria-hidden="true" />
+                  <Link href="/contact" className="mkb">
+                    Contact
+                  </Link>
+                  <Link href="/signup" className="mkb mkb--solid">
+                    Sign up
                   </Link>
                 </>
               )}
@@ -506,21 +520,22 @@ function MobileSheet({ signedIn, pathname, onClose }: { signedIn: boolean; pathn
         </ul>
         <div className="mk-sheet__row mt-auto flex flex-col gap-2.5 pt-10" style={next()}>
           {signedIn ? (
-            <Link href="/dashboard" onClick={onClose} data-btn="" className="mk-btn mk-btn--primary mk-btn--lg w-full">
-              Open dashboard
-              <ArrowRight className="size-4" aria-hidden="true" />
+            <Link href="/dashboard" onClick={onClose} className="mkb mkb--solid mkb--lg mkb--block">
+              Dashboard
             </Link>
           ) : (
             <>
-              <Link href="/signup" onClick={onClose} data-btn="" className="mk-btn mk-btn--primary mk-btn--lg w-full">
-                Get started
-                <ArrowRight className="size-4" aria-hidden="true" />
+              <Link href="/signup" onClick={onClose} className="mkb mkb--solid mkb--lg mkb--block">
+                Sign up
               </Link>
-              <Link href="/login" onClick={onClose} data-btn="" className="mk-btn mk-btn--secondary mk-btn--lg w-full">
-                Sign in
+              <Link href="/login" onClick={onClose} className="mkb mkb--lg mkb--block">
+                Log in
               </Link>
             </>
           )}
+          <Link href="/contact" onClick={onClose} className="mkb mkb--lg mkb--block">
+            Contact
+          </Link>
           <SearchPill iconOnlyBelow="never" className="h-11 w-full justify-start px-4 [&>kbd]:ml-auto" />
         </div>
         <div className="mk-sheet__row mt-6 flex flex-wrap items-center justify-between gap-3 border-t border-border pt-5" style={next()}>

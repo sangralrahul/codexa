@@ -395,7 +395,7 @@ a.mk-pill:hover { border-color: var(--border-strong); color: var(--foreground); 
   top: 0;
   z-index: 50;
   height: 64px;
-  border-bottom: 1px solid transparent;
+  border-bottom: 1px solid var(--border);
   background: var(--background);
   transition: background-color var(--dur-3), border-color var(--dur-3), box-shadow var(--dur-3);
   --mk-top: 72px;
@@ -406,11 +406,89 @@ a.mk-pill:hover { border-color: var(--border-strong); color: var(--foreground); 
   background: color-mix(in oklab, var(--background) 78%, transparent);
   -webkit-backdrop-filter: blur(16px) saturate(1.4);
   backdrop-filter: blur(16px) saturate(1.4);
-  box-shadow: 0 1px 0 var(--hairline), 0 8px 24px -16px color-mix(in oklab, var(--foreground) 18%, transparent);
 }
 .mk-bar {
   position: relative;
-  height: 64px;
+  height: 63px;
+  padding-inline: 24px;
+}
+@media (width < 40rem) { .mk-bar { padding-inline: 16px; } }
+/* Brand: the mark and "Codexa" set in the sans face. */
+.mk-brand { display: inline-flex; align-items: center; gap: 10px; border-radius: 6px; font-size: 15px; font-weight: 600; letter-spacing: -0.01em; color: var(--foreground); }
+/* Header nav items: 14px muted text in a 6px-radius hit area. */
+.mk-navitem {
+  position: relative;
+  z-index: 1;
+  display: inline-flex;
+  height: 32px;
+  align-items: center;
+  gap: 4px;
+  padding-inline: 12px;
+  border-radius: 6px;
+  font-size: 14px;
+  color: var(--muted-foreground);
+  transition: color var(--dur-2);
+}
+.mk-navitem:hover,
+.mk-navitem[aria-current="page"],
+.mk-navitem[data-current],
+.mk-navitem[aria-expanded="true"] { color: var(--foreground); }
+
+/* --------------------------------------------------------------------------
+   Monochrome Grid buttons: 32px / 6px radius hairline buttons, white solid
+   primary, and a 44px pill size for hero and closing CTAs.
+   -------------------------------------------------------------------------- */
+.mkb {
+  display: inline-flex;
+  height: 32px;
+  flex-shrink: 0;
+  align-items: center;
+  gap: 8px;
+  padding-inline: 12px;
+  border: 1px solid var(--border-strong);
+  border-radius: 6px;
+  background: var(--background);
+  color: var(--foreground);
+  font-size: 14px;
+  font-weight: 500;
+  white-space: nowrap;
+  transition: background-color var(--dur-2), border-color var(--dur-2), color var(--dur-2);
+}
+.mkb:hover { border-color: var(--g-dim, var(--muted-foreground)); background: var(--surface-2); }
+.mkb--solid { border-color: var(--primary); background: var(--primary); color: var(--primary-foreground); }
+.mkb--solid:hover { border-color: var(--primary-hover); background: var(--primary-hover); }
+.mkb--ghost { border-color: transparent; background: transparent; color: var(--muted-foreground); }
+.mkb--ghost:hover { border-color: transparent; background: var(--surface-2); color: var(--foreground); }
+.mkb--lg { height: 44px; padding-inline: 20px; border-radius: 999px; font-size: 15px; }
+.mkb--block { width: 100%; justify-content: center; }
+
+/* --------------------------------------------------------------------------
+   The frame: one 1200px column with hairline sides (home rows, the footer).
+   -------------------------------------------------------------------------- */
+.mk-frame {
+  position: relative;
+  width: min(1200px, calc(100% - 32px));
+  margin-inline: auto;
+  border-inline: 1px solid var(--border);
+}
+@media (width < 40rem) { .mk-frame { width: calc(100% - 24px); } }
+
+/* Footer: brand column and the link columns inside the frame, then a hairline bottom bar. */
+.mk-foot { border-top: 1px solid var(--border); background: var(--background); }
+.mk-foot__grid { display: grid; grid-template-columns: 2fr repeat(5, minmax(0, 1fr)); gap: 24px; padding: 40px 48px 56px; font-size: 13px; color: var(--muted-foreground); }
+.mk-foot__h { margin-bottom: 12px; font-size: 13px; font-weight: 500; color: var(--foreground); }
+.mk-foot__links li { margin-bottom: 8px; }
+.mk-foot__links a { transition: color var(--dur-2); }
+.mk-foot__links a:hover { color: var(--foreground); }
+.mk-foot__bar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px 24px; padding: 16px 48px; border-top: 1px solid var(--border); font-size: 12px; color: var(--muted-foreground); }
+@media (width < 64rem) {
+  .mk-foot__grid { grid-template-columns: repeat(3, minmax(0, 1fr)); padding: 40px 32px 48px; }
+  .mk-foot__grid > :first-child { grid-column: 1 / -1; }
+  .mk-foot__bar { padding-inline: 32px; }
+}
+@media (width < 40rem) {
+  .mk-foot__grid { grid-template-columns: repeat(2, minmax(0, 1fr)); padding: 32px 20px 40px; }
+  .mk-foot__bar { padding-inline: 20px; }
 }
 
 /* --------------------------------------------------------------------------
