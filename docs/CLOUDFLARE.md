@@ -219,6 +219,25 @@ npm run cf:deploy
 npm run db:migrate:remote
 ```
 
+## Deploy automatically from GitHub with Cloudflare's own builds
+
+If you connected the GitHub repository in the Cloudflare dashboard (Workers & Pages → codexa →
+Settings → Build), Cloudflare's default commands fail with "The directory specified by the
+`assets.directory` field … does not exist". The site has to be packaged for Cloudflare first.
+Open **Settings → Build → Build configuration**, select **Edit**, and set:
+
+| Field | Value |
+| --- | --- |
+| Build command | `npm run cf:build` |
+| Deploy command | `npx opennextjs-cloudflare deploy && npm run db:migrate:remote` |
+| Root directory | leave empty |
+
+Under **Variables and secrets** for the build, add `NODE_VERSION` = `22`. Save, then go to
+**Deployments** and select **Retry build** on the newest failed build (or push a new commit).
+
+Use either Cloudflare's builds or the GitHub Action in `.github/workflows/deploy.yml`, not both.
+With Cloudflare's builds connected you don't need the GitHub secrets.
+
 ## Try it on your computer first (optional)
 
 `npm run cf:preview` builds everything and runs it in Cloudflare's runtime on your computer, with real
