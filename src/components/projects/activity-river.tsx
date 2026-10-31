@@ -74,6 +74,11 @@ const VERBS: Record<string, Verb> = {
   "database.query": { icon: Database, verb: () => "ran SQL in" },
 };
 
+/** The verb phrase for an activity kind ("ran the agent on"), for compact feeds elsewhere. */
+export function activityVerb(kind: string, count = 1): string {
+  return (VERBS[kind] ?? { verb: () => "updated" }).verb(count);
+}
+
 const TONE = { success: "text-success", danger: "text-danger", accent: "text-primary", info: "text-info" } as const;
 
 /** The stored message, minus the part the verb line already says (the project name / "Project created from …"). */

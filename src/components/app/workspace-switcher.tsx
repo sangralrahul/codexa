@@ -3,7 +3,7 @@
 import { useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Check, ChevronsUpDown, Plus, Search, Settings, UserPlus } from "lucide-react";
+import { ArrowUpRight, Check, ChevronsUpDown, Plus, Search, Settings, UserPlus } from "lucide-react";
 import { Avatar } from "@/components/ui/avatar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
@@ -51,12 +51,16 @@ export function WorkspaceSwitcher({
   variant = "full",
   onNavigate,
   className,
+  upgrade = null,
 }: {
   workspaces: SwitcherWorkspace[];
   currentId: string | null;
-  variant?: "full" | "avatar";
+  /** "bar": the top bar trigger (round avatar, name, plan pill, chevrons). */
+  variant?: "full" | "avatar" | "bar";
   onNavigate?: () => void;
   className?: string;
+  /** The next plan up when the current workspace is on Free (from the plan config): adds an Upgrade entry. */
+  upgrade?: { plan: string; points: string[] } | null;
 }) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
@@ -89,7 +93,24 @@ export function WorkspaceSwitcher({
       }}
     >
       <PopoverTrigger asChild>
-        {variant === "avatar" ? (
+        {variant === "bar" ? (
+          <button
+            type="button"
+            title={current.name}
+            className={cn(
+              "group/ws flex h-8 min-w-0 items-center gap-2 rounded-md px-1.5 text-left text-[14px] font-medium transition-colors hover:bg-surface-2 focus-visible:outline-2 focus-visible:outline-ring data-[state=open]:bg-surface-2",
+              className,
+            )}
+          >
+            <span className="sr-only">Current workspace: </span>
+            <Avatar name={current.name} seed={current.id} size="xs" />
+            <span className="min-w-0 truncate">{current.name}</span>
+            <span className="sr-only">, </span>
+            <span className="app-pill hidden sm:inline-flex">{cap(current.plan)}</span>
+            <span className="sr-only">. Switch workspace</span>
+            <ChevronsUpDown className="app-dim size-3.5 shrink-0 transition-colors group-hover/ws:text-foreground" aria-hidden="true" />
+          </button>
+        ) : variant === "avatar" ? (
           // Both triggers are named by their content (sr-only text around the visible parts) rather
           // than an aria-label, so the name always contains the visible initials and name (WCAG
           // 2.5.3, axe label-content-name-mismatch).
@@ -186,6 +207,7 @@ export function WorkspaceSwitcher({
             { href: "/settings/workspace", label: "Workspace settings", icon: Settings },
             { href: "/settings/members#invite", label: "Invite members", icon: UserPlus },
             { href: "/settings/workspaces/new", label: "New workspace", icon: Plus },
+            ...(upgrade ? [{ href: "/settings/billing", label: `Upgrade to ${upgrade.plan}`, icon: ArrowUpRight }] : []),
           ].map((a) => (
             <Link
               key={a.href}

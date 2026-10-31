@@ -162,13 +162,18 @@ export function PromptBox({
   presets?: PromptPreset[];
   aiConfigured: boolean;
   /** Set when the target workspace already uses every project its plan allows (from the plan config and a DB count). */
-  atLimit?: { workspaceId: string; used: number; limit: number; plan: string } | null;
+  atLimit?: {
+    workspaceId: string;
+    used: number;
+    limit: number;
+    plan: string;
+  } | null;
   /** The idea passport from `?prompt=` (already clamped on the server). */
   initialPrompt?: string;
   initialTemplateId?: string;
   /** "center" (max 768px) or "start": left-aligned, filling its container (the dashboard and the New project hub's column). */
   align?: "center" | "start";
-  /** Dashboard: a two-row box with a plain 1px border and a blue focus ring (no comet), smaller chips and presets. */
+  /** Dashboard: the Monochrome Grid box (10px radius, hairline border, toolbar under a divider, 26px chips, white Build). */
   compact?: boolean;
 }) {
   const router = useRouter();
@@ -203,7 +208,10 @@ export function PromptBox({
     setEnhancing(true);
     setNotice(null);
     try {
-      const res = await api<{ prompt: string }>("/api/v1/ai/enhance", { method: "POST", json: { prompt: text.slice(0, 2000) } });
+      const res = await api<{ prompt: string }>("/api/v1/ai/enhance", {
+        method: "POST",
+        json: { prompt: text.slice(0, 2000) },
+      });
       setPreEnhance(prompt);
       setPrompt(res.prompt.slice(0, PROMPT_MAX));
       areaRef.current?.focus({ preventScroll: true });
@@ -219,6 +227,7 @@ export function PromptBox({
   const workspace = workspaces.find((w) => w.id === wsId);
   const length = prompt.length;
   const start = align === "start";
+  const chipCls = compact ? "group/chip app-chip min-w-0" : chip;
 
   // Idea passport: focus the carried prompt, take the URL param out of the address bar, or fall back to the stashed idea.
   useEffect(() => {
@@ -332,12 +341,12 @@ export function PromptBox({
             data-active={prompt.trim() ? "" : undefined}
             className={
               compact
-                ? // Dashboard hero card: 16px radius, hairline border, soft depth, and a brand gradient glow while focused.
-                  "glow-focus rounded-2xl border border-border bg-card shadow-[var(--shadow-md)]"
+                ? // Dashboard: a flat hairline box; the border brightens while focused.
+                  "app-composer"
                 : "comet-border rounded-[20px] shadow-[var(--shadow-lg)]"
             }
           >
-            <div className={compact ? "overflow-hidden rounded-[15px]" : "comet-border__inner overflow-hidden rounded-[19px] bg-card shadow-[inset_0_1px_0_var(--hairline)]"}>
+            <div className={compact ? "overflow-hidden rounded-[9px]" : "comet-border__inner overflow-hidden rounded-[19px] bg-card shadow-[inset_0_1px_0_var(--hairline)]"}>
               {carried ? (
                 <div className="flex items-center gap-2 px-4 pt-3.5 sm:px-5">
                   <span className="chip-in inline-flex h-6 items-center gap-1.5 rounded-full bg-selection px-2.5 text-xs font-medium text-foreground shadow-[inset_0_0_0_1px_color-mix(in_oklab,var(--accent)_30%,transparent)]">
@@ -400,7 +409,7 @@ export function PromptBox({
                 disabled={busy || !enabled}
                 className={cn(
                   "block w-full resize-none bg-transparent leading-relaxed placeholder:text-muted-foreground/70 focus:outline-none disabled:opacity-60",
-                  compact ? "min-h-[76px] px-4 pb-1.5 pt-3.5 text-[15px]" : "min-h-[120px] px-4 pb-2 pt-4 text-base sm:px-5",
+                  compact ? "min-h-[56px] px-4 pb-2.5 pt-4 text-[15px] placeholder:text-[color:var(--app-dim)]" : "min-h-[120px] px-4 pb-2 pt-4 text-base sm:px-5",
                 )}
               />
               {images.length ? (
@@ -409,7 +418,12 @@ export function PromptBox({
                     <li key={img.id} className="relative">
                       {/* eslint-disable-next-line @next/next/no-img-element -- local data URL preview */}
                       <img src={dataUrlOf(img)} alt={img.name} className="size-16 rounded-lg object-cover shadow-[0_0_0_1px_var(--border-strong)]" />
-                      <button type="button" onClick={() => setImages((list) => list.filter((i) => i.id !== img.id))} aria-label={`Remove ${img.name}`} className="absolute -right-1.5 -top-1.5 inline-flex size-5 items-center justify-center rounded-full bg-foreground text-background shadow-md hover:opacity-90">
+                      <button
+                        type="button"
+                        onClick={() => setImages((list) => list.filter((i) => i.id !== img.id))}
+                        aria-label={`Remove ${img.name}`}
+                        className="absolute -right-1.5 -top-1.5 inline-flex size-5 items-center justify-center rounded-full bg-foreground text-background shadow-md hover:opacity-90"
+                      >
                         <X className="size-3" aria-hidden="true" />
                       </button>
                     </li>
@@ -421,24 +435,52 @@ export function PromptBox({
                   {notice}
                 </p>
               ) : null}
-              <div className={cn("flex flex-wrap items-center gap-2 sm:flex-nowrap", compact ? "px-2.5 pb-2.5" : "px-3 pb-3")}>
+              <div className={cn("flex flex-wrap items-center gap-2 sm:flex-nowrap", compact ? "border-t border-border px-2.5 pb-2.5 pt-2" : "px-3 pb-3")}>
                 <div className="flex min-w-0 flex-1 items-center gap-1.5 overflow-x-auto [scrollbar-width:none]">
-                  <input ref={fileRef} type="file" accept={IMAGE_ACCEPT} multiple hidden onChange={(e) => {
-                    void attach(Array.from(e.target.files ?? []));
-                    e.target.value = "";
-                  }} />
-                  <button type="button" onClick={() => fileRef.current?.click()} disabled={!enabled || busy || images.length >= MAX_PROMPT_IMAGES} className={chip} aria-label="Attach a screenshot or design" title="Attach a screenshot, sketch or design. You can also paste or drop images.">
+                  <input
+                    ref={fileRef}
+                    type="file"
+                    accept={IMAGE_ACCEPT}
+                    multiple
+                    hidden
+                    onChange={(e) => {
+                      void attach(Array.from(e.target.files ?? []));
+                      e.target.value = "";
+                    }}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => fileRef.current?.click()}
+                    disabled={!enabled || busy || images.length >= MAX_PROMPT_IMAGES}
+                    className={chipCls}
+                    aria-label="Attach a screenshot or design"
+                    title="Attach a screenshot, sketch or design. You can also paste or drop images."
+                  >
                     <ImagePlus className="size-3.5" aria-hidden="true" />
                     <span className="hidden sm:inline">Image</span>
                   </button>
                   {aiConfigured ? (
                     preEnhance !== null && !enhancing ? (
-                      <button type="button" onClick={() => { setPrompt(preEnhance); setPreEnhance(null); }} className={chip} title="Put your original text back">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setPrompt(preEnhance);
+                          setPreEnhance(null);
+                        }}
+                        className={chipCls}
+                        title="Put your original text back"
+                      >
                         <Undo2 className="size-3.5" aria-hidden="true" />
                         <span>Undo</span>
                       </button>
                     ) : (
-                      <button type="button" onClick={() => void enhance()} disabled={!enabled || busy || enhancing || prompt.trim().length < 3} className={chip} title="Turn your idea into a detailed brief before building">
+                      <button
+                        type="button"
+                        onClick={() => void enhance()}
+                        disabled={!enabled || busy || enhancing || prompt.trim().length < 3}
+                        className={chipCls}
+                        title="Turn your idea into a detailed brief before building"
+                      >
                         {enhancing ? <Loader2 className="size-3.5 animate-spin" aria-hidden="true" /> : <Sparkles className="size-3.5" aria-hidden="true" />}
                         <span>{enhancing ? "Enhancing…" : "Enhance"}</span>
                       </button>
@@ -447,9 +489,13 @@ export function PromptBox({
                   {templates.length ? (
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild disabled={!enabled}>
-                        <button type="button" className={cn(chip, "max-w-[144px] pl-1 sm:max-w-[220px]")} aria-label={`Template: ${template?.name ?? "React starter"}. Change template`}>
-                          <ProjectThumb key={templateId} templateId={templateId} framework={template?.framework} size="lg" className="thumb-swap h-6 w-[38px] rounded-[6px]" />
-                          <span className="truncate font-medium text-foreground">{template?.name ?? "React starter"}</span>
+                        <button
+                          type="button"
+                          className={cn(chipCls, compact ? "max-w-[180px]" : "max-w-[144px] pl-1 sm:max-w-[220px]")}
+                          aria-label={`Template: ${template?.name ?? "React starter"}. Change template`}
+                        >
+                          {compact ? null : <ProjectThumb key={templateId} templateId={templateId} framework={template?.framework} size="lg" className="thumb-swap h-6 w-[38px] rounded-[6px]" />}
+                          <span className={cn("truncate", !compact && "font-medium text-foreground")}>{template?.name ?? "React starter"}</span>
                           <ChevronDown className="hidden size-3.5 shrink-0 transition-transform duration-(--dur-2) group-data-[state=open]/chip:rotate-180 sm:block" aria-hidden="true" />
                         </button>
                       </DropdownMenuTrigger>
@@ -481,9 +527,11 @@ export function PromptBox({
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild disabled={busy}>
                         {/* Named by content (sr-only), not aria-label, so the name contains the visible text (WCAG 2.5.3). */}
-                        <button type="button" className={cn(chip, "max-w-[180px]")}>
+                        <button type="button" className={cn(chipCls, "max-w-[180px]")}>
                           <Avatar name={workspace.name} seed={workspace.id} shape="square" size="xs" />
-                          <span aria-hidden="true" className="hidden truncate sm:inline">{workspace.name}</span>
+                          <span aria-hidden="true" className="hidden truncate sm:inline">
+                            {workspace.name}
+                          </span>
                           <span className="sr-only">Workspace: {workspace.name}. Change workspace</span>
                           <ChevronDown className="size-3.5 shrink-0" aria-hidden="true" />
                         </button>
@@ -505,7 +553,7 @@ export function PromptBox({
                   ) : null}
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild disabled={!enabled}>
-                      <button type="button" className={chip} aria-label={`Visibility: ${VISIBILITY_LABELS[visibility]}. Change visibility`}>
+                      <button type="button" className={chipCls} aria-label={`Visibility: ${VISIBILITY_LABELS[visibility]}. Change visibility`}>
                         {(() => {
                           const Icon = VIS_ICON[visibility];
                           return <Icon className="size-3.5" aria-hidden="true" />;
@@ -533,6 +581,11 @@ export function PromptBox({
                       </DropdownMenuRadioGroup>
                     </DropdownMenuContent>
                   </DropdownMenu>
+                  {compact && enabled ? (
+                    <Link href="/import-project" className={chipCls}>
+                      Import from GitHub
+                    </Link>
+                  ) : null}
                 </div>
                 <div className="ml-auto flex shrink-0 items-center gap-3">
                   {length >= 1500 ? (
@@ -540,22 +593,38 @@ export function PromptBox({
                       {length.toLocaleString("en-US")} / {PROMPT_MAX.toLocaleString("en-US")}
                     </span>
                   ) : null}
-                  <Button
-                    type="submit"
-                    variant="primary"
-                    size="sm"
-                    spark
-                    disabled={(!prompt.trim() && !images.length) || !enabled || busy || enhancing}
-                    aria-keyshortcuts="Control+Enter Meta+Enter"
-                    aria-busy={busy || undefined}
-                    className={cn("composer-build gap-2", compact ? "h-9 px-3.5" : "h-9 px-3.5 sm:px-4")}
-                  >
-                    <span>Build</span>
-                    <span data-spark-icon aria-hidden="true" className="hidden items-center gap-0.5 rounded-[6px] bg-current/12 px-1.5 py-0.5 text-[11px] font-semibold leading-none sm:inline-flex">
-                      {mod}
-                      <CornerDownLeft className="size-3" aria-hidden="true" />
-                    </span>
-                  </Button>
+                  {compact ? (
+                    <button
+                      type="submit"
+                      disabled={(!prompt.trim() && !images.length) || !enabled || busy || enhancing}
+                      aria-keyshortcuts="Control+Enter Meta+Enter"
+                      aria-busy={busy || undefined}
+                      className="app-btn app-btn--primary app-btn--sm disabled:cursor-not-allowed disabled:opacity-70"
+                    >
+                      {busy ? <Loader2 className="size-3.5 animate-spin" aria-hidden="true" /> : null}
+                      <span>Build</span>
+                      <kbd aria-hidden="true" className="app-kbd hidden sm:inline-flex">
+                        {mod} ↵
+                      </kbd>
+                    </button>
+                  ) : (
+                    <Button
+                      type="submit"
+                      variant="primary"
+                      size="sm"
+                      spark
+                      disabled={(!prompt.trim() && !images.length) || !enabled || busy || enhancing}
+                      aria-keyshortcuts="Control+Enter Meta+Enter"
+                      aria-busy={busy || undefined}
+                      className={cn("composer-build gap-2", compact ? "h-9 px-3.5" : "h-9 px-3.5 sm:px-4")}
+                    >
+                      <span>Build</span>
+                      <span data-spark-icon aria-hidden="true" className="hidden items-center gap-0.5 rounded-[6px] bg-current/12 px-1.5 py-0.5 text-[11px] font-semibold leading-none sm:inline-flex">
+                        {mod}
+                        <CornerDownLeft className="size-3" aria-hidden="true" />
+                      </span>
+                    </Button>
+                  )}
                 </div>
               </div>
             </div>
@@ -600,7 +669,10 @@ export function PromptBox({
             You need a workspace with edit access before creating projects.
           </p>
         ) : aiConfigured ? (
-          <p id="idea-hint" className={cn("mt-2 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-muted-foreground", start ? "justify-start text-left" : "justify-center text-center", compact && "sr-only")}>
+          <p
+            id="idea-hint"
+            className={cn("mt-2 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-muted-foreground", start ? "justify-start text-left" : "justify-center text-center", compact && "sr-only")}
+          >
             <span className="inline-flex items-center gap-1.5">
               <span className="size-1.5 rounded-full bg-success" aria-hidden="true" />
               Agent ready

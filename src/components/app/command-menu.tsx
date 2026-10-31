@@ -332,10 +332,10 @@ export function CommandMenu({
       {
         id: "home",
         group: "Go to",
-        label: "Home",
+        label: "Overview",
         icon: Home,
         keys: ["G", "H"],
-        keywords: "dashboard",
+        keywords: "dashboard home",
         run: go("/dashboard"),
       },
       {
@@ -345,6 +345,14 @@ export function CommandMenu({
         icon: FolderKanban,
         keys: ["G", "P"],
         run: go("/projects"),
+      },
+      {
+        id: "deployments",
+        group: "Go to",
+        label: "Deployments",
+        icon: Rocket,
+        keywords: "publish live hosting",
+        run: go("/dashboard/deployments"),
       },
       {
         id: "templates",

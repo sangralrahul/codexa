@@ -31,6 +31,7 @@ export async function buildProjectCards(rows: Project[], workspace: { id: string
       status: toStatusDto(statuses.get(p.id)),
       fileCount: x?.fileCount ?? 0,
       lastCheckpointAt: x?.lastCheckpointAt?.toISOString() ?? null,
+      lastCheckpointId: x?.lastCheckpointId ?? null,
       checkpointCount: x?.checkpointCount ?? 0,
       collaborators: members,
     };

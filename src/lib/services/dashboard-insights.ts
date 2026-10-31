@@ -99,7 +99,7 @@ export async function getRecentDeployments(projectIds: string[], limit = 5): Pro
   return rows.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime()).slice(0, limit);
 }
 
-export type ProjectExtras = { fileCount: number; lastCheckpointAt: Date | null; checkpointCount: number };
+export type ProjectExtras = { fileCount: number; lastCheckpointAt: Date | null; lastCheckpointId: string | null; checkpointCount: number };
 
 /** File counts and the newest checkpoint of each project (from project_files and project_snapshots). */
 export async function getProjectExtras(projectIds: string[]): Promise<Map<string, ProjectExtras>> {
@@ -118,7 +118,8 @@ export async function getProjectExtras(projectIds: string[]): Promise<Map<string
     Promise.all(
       batches(projectIds).map((batch) =>
         db
-          .select({ projectId: projectSnapshots.projectId, last: sql<number>`max(${projectSnapshots.createdAt})`, n: sql<number>`count(*)` })
+          // SQLite returns the bare `id` column from the row holding max(created_at): the newest checkpoint's id.
+          .select({ projectId: projectSnapshots.projectId, lastId: projectSnapshots.id, last: sql<number>`max(${projectSnapshots.createdAt})`, n: sql<number>`count(*)` })
           .from(projectSnapshots)
           .where(inArray(projectSnapshots.projectId, batch))
           .groupBy(projectSnapshots.projectId),
@@ -128,7 +129,7 @@ export async function getProjectExtras(projectIds: string[]): Promise<Map<string
   const entry = (id: string) => {
     let e = out.get(id);
     if (!e) {
-      e = { fileCount: 0, lastCheckpointAt: null, checkpointCount: 0 };
+      e = { fileCount: 0, lastCheckpointAt: null, lastCheckpointId: null, checkpointCount: 0 };
       out.set(id, e);
     }
     return e;
@@ -139,6 +140,7 @@ export async function getProjectExtras(projectIds: string[]): Promise<Map<string
     e.checkpointCount = Number(r.n);
     // max() of a timestamp_ms column comes back as the raw integer.
     e.lastCheckpointAt = r.last ? new Date(Number(r.last)) : null;
+    e.lastCheckpointId = r.lastId ?? null;
   }
   return out;
 }

@@ -31,6 +31,8 @@ export type ProjectCardItem = ProjectListItem & {
   status?: ProjectStatusDto | null;
   fileCount?: number;
   lastCheckpointAt?: string | null;
+  /** The newest checkpoint's id (a UUID; its first 7 characters are shown as a short reference). */
+  lastCheckpointId?: string | null;
   checkpointCount?: number;
   collaborators?: Collaborator[];
 };
@@ -89,8 +91,8 @@ export const LIST_COLUMNS = "md:grid-cols-[minmax(0,2.1fr)_minmax(0,1.3fr)_minma
 
 export function ListHeader({ sticky }: { sticky?: boolean }) {
   return (
-    <div role="rowgroup" className={cn("hidden border-b border-border bg-surface md:block", sticky && "sticky top-[56px] z-10")}>
-      <div role="row" className={cn("grid items-center gap-3 px-4 py-2 text-[11.5px] font-medium text-muted-foreground", LIST_COLUMNS)}>
+    <div role="rowgroup" className={cn("hidden border-b border-border bg-card md:block", sticky && "sticky top-[44px] z-10")}>
+      <div role="row" className={cn("grid items-center gap-3 px-4 py-2.5 font-mono text-[11px] font-normal uppercase tracking-[0.05em] text-[color:var(--app-dim,var(--muted-foreground))]", LIST_COLUMNS)}>
         <span role="columnheader">Name</span>
         <span role="columnheader">Status</span>
         <span role="columnheader">Framework</span>

@@ -53,14 +53,15 @@ export function ProjectsBrowser({
 }) {
   const [query, setQuery] = useState("");
   const [sort, setSort] = useState<Sort>("recent");
-  const [layout, setLayout] = useState<Layout>("grid");
+  // The table is the default (Monochrome Grid); the grid of cards is remembered once chosen.
+  const [layout, setLayout] = useState<Layout>("list");
   const [vis, setVis] = useState<Vis>("all");
   const rowsRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    const saved = readLocal<Layout>(LAYOUT_KEY, "grid");
+    const saved = readLocal<Layout>(LAYOUT_KEY, "list");
     // eslint-disable-next-line react-hooks/set-state-in-effect -- one-time hydration from localStorage after mount (SSR-safe)
-    if (saved === "list") setLayout("list");
+    if (saved === "grid") setLayout("grid");
   }, []);
   const changeLayout = (l: Layout) => {
     withViewTransition(() => setLayout(l));
@@ -308,7 +309,7 @@ export function ProjectsBrowser({
           ) : null}
         </ul>
       ) : (
-        <div role="table" aria-label="Projects" aria-rowcount={filtered.length + 1} className="overflow-clip rounded-lg border border-border bg-card">
+        <div role="table" aria-label="Projects" aria-rowcount={filtered.length + 1} className="app-box overflow-clip">
           <ListHeader sticky />
           <div role="rowgroup" ref={rowsRef} onKeyDown={onRowsKey}>
             {filtered.map((p) => (

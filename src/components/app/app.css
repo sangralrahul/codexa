@@ -77,3 +77,129 @@
 /* ---------- Dashboard home: a quiet light behind the question and composer ---------- */
 .dash-home { position: relative; isolation: isolate; overflow-x: clip; }
 /* (No wash: the dashboard is a flat tool surface.) */
+
+/* ==========================================================================
+   Monochrome Grid shell: top bar + tab row, hairline boxes, mono numerals.
+   Token colours only. --app-dim is the quietest text (column headers, times).
+   Layered as components so Tailwind utilities (hidden, sm:inline-flex…) still win.
+   ========================================================================== */
+@layer components {
+.app-grid {
+  --app-dim: color-mix(in oklab, var(--foreground) 46%, var(--background));
+  --app-track: color-mix(in oklab, var(--foreground) 10%, var(--background));
+}
+.app-dim { color: var(--app-dim); }
+
+/* Top bar */
+.app-slash { color: var(--border-strong); font-size: 22px; font-weight: 300; line-height: 1; user-select: none; }
+.app-kbd {
+  display: inline-flex; align-items: center; height: 18px; padding: 0 5px; gap: 3px;
+  border: 1px solid var(--border-strong); border-radius: 4px;
+  font-family: var(--font-mono); font-size: 11px; line-height: 1; color: var(--muted-foreground); font-weight: 400; background: transparent;
+}
+.app-btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px; height: 32px; padding: 0 12px;
+  border: 1px solid var(--border-strong); border-radius: 6px; background: var(--background); color: var(--foreground);
+  font-size: 14px; font-weight: 500; white-space: nowrap; transition: background-color 120ms, border-color 120ms, color 120ms;
+}
+.app-btn:hover, .app-btn[data-state="open"] { background: var(--surface-2); }
+.app-btn:focus-visible { outline: 2px solid var(--ring); outline-offset: 2px; }
+.app-btn--icon { width: 32px; padding: 0; }
+.app-btn--primary { background: var(--primary); color: var(--primary-foreground); border-color: var(--primary); }
+.app-btn--primary:hover { background: var(--primary-hover); }
+.app-btn--primary .app-kbd { background: transparent; border-color: color-mix(in oklab, var(--primary-foreground) 28%, transparent); color: color-mix(in oklab, var(--primary-foreground) 70%, transparent); }
+.app-btn--sm { height: 28px; padding: 0 10px; font-size: 13px; }
+.app-search {
+  display: flex; align-items: center; gap: 8px; height: 32px; width: 240px; padding: 0 6px 0 8px;
+  border: 1px solid var(--border-strong); border-radius: 6px; background: var(--background);
+  color: var(--app-dim); font-size: 13px; transition: border-color 120ms, color 120ms;
+}
+.app-search:hover { color: var(--muted-foreground); border-color: color-mix(in oklab, var(--foreground) 35%, var(--background)); }
+.app-search:focus-visible { outline: 2px solid var(--ring); outline-offset: 2px; }
+
+/* Tab row: scrolls inside itself on narrow screens. */
+.app-tabs { display: flex; gap: 2px; overflow-x: auto; scrollbar-width: none; overscroll-behavior-x: contain; }
+.app-tabs::-webkit-scrollbar { display: none; }
+.app-tab {
+  position: relative; flex: none; display: inline-flex; align-items: center; gap: 6px;
+  padding: 10px 10px 12px; font-size: 14px; color: var(--muted-foreground); white-space: nowrap;
+  border-radius: 6px 6px 0 0; transition: color 120ms;
+}
+.app-tab:hover, .app-tab[data-state="open"] { color: var(--foreground); }
+.app-tab:focus-visible { outline: 2px solid var(--ring); outline-offset: -4px; }
+.app-tab[aria-current="page"], .app-tab[data-current="true"] { color: var(--foreground); }
+.app-tab[aria-current="page"]::after, .app-tab[data-current="true"]::after {
+  content: ""; position: absolute; left: 10px; right: 10px; bottom: -1px; height: 2px; background: var(--foreground);
+}
+
+/* Hairline boxes, tables, dots, bars, chips */
+.app-box { border: 1px solid var(--border); border-radius: 8px; background: var(--background); min-width: 0; }
+.app-box__head {
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  padding: 12px 14px; border-bottom: 1px solid var(--border); font-size: 13px; font-weight: 500; color: var(--foreground);
+}
+.app-box__head > :last-child:not(:first-child) { color: var(--app-dim); font-weight: 400; }
+.app-box__head a:hover { color: var(--foreground); }
+.app-pill {
+  display: inline-flex; align-items: center; height: 18px; padding: 0 7px; border: 1px solid var(--border-strong); border-radius: 999px;
+  font-size: 11px; font-weight: 400; color: var(--muted-foreground); line-height: 1; white-space: nowrap;
+}
+.app-chip {
+  display: inline-flex; align-items: center; gap: 6px; height: 26px; padding: 0 9px; flex: none;
+  border: 1px solid var(--border-strong); border-radius: 6px; background: var(--background);
+  font-size: 12px; color: var(--muted-foreground); white-space: nowrap; transition: color 120ms, background-color 120ms;
+}
+.app-chip:hover, .app-chip[data-state="open"] { color: var(--foreground); background: var(--surface-2); }
+.app-chip:focus-visible { outline: 2px solid var(--ring); outline-offset: 1px; }
+.app-chip:disabled { opacity: 0.5; pointer-events: none; }
+
+.app-table { width: 100%; border-collapse: separate; border-spacing: 0; font-size: 13px; }
+.app-table th {
+  text-align: left; font-weight: 400; color: var(--app-dim); font-family: var(--font-mono); font-size: 11px;
+  text-transform: uppercase; letter-spacing: 0.05em; padding: 10px 14px; border-bottom: 1px solid var(--border);
+  background: var(--card); white-space: nowrap;
+}
+.app-table td { padding: 10px 14px; border-bottom: 1px solid var(--border); color: var(--muted-foreground); vertical-align: middle; }
+.app-table tbody tr:last-child td { border-bottom: 0; }
+.app-table tbody tr { transition: background-color 120ms; }
+.app-table tbody tr:hover { background: color-mix(in oklab, var(--foreground) 3%, transparent); }
+.app-table .mono, .app-mono { font-family: var(--font-mono); font-size: 12px; font-variant-numeric: tabular-nums; }
+
+.app-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; flex: none; background: var(--app-dim); }
+.app-dot[data-tone="ok"] { background: var(--success); }
+.app-dot[data-tone="warn"] { background: var(--warning); }
+.app-dot[data-tone="error"] { background: var(--danger); }
+.app-dot[data-tone="info"] { background: var(--foreground); }
+
+.app-bar { height: 4px; border-radius: 2px; background: var(--app-track); overflow: hidden; }
+.app-bar > span { display: block; height: 100%; border-radius: 2px; background: var(--foreground); }
+.app-bar[data-tone="warn"] > span { background: var(--warning); }
+.app-bar[data-tone="error"] > span { background: var(--danger); }
+
+.app-feed > li { display: grid; grid-template-columns: 12px minmax(0, 1fr) auto; gap: 10px; align-items: start; padding: 10px 0; border-bottom: 1px solid var(--border); font-size: 13px; color: var(--muted-foreground); }
+.app-feed > li:last-child { border-bottom: 0; }
+.app-feed > li > .app-dot { margin-top: 6px; }
+.app-feed time, .app-feed .app-meta { font-family: var(--font-mono); font-size: 11px; color: var(--app-dim); white-space: nowrap; }
+
+/* Dashboard composer (PromptBox compact) */
+.app-composer { border: 1px solid var(--border-strong); border-radius: 10px; background: var(--card); transition: border-color 120ms; }
+.app-composer:focus-within { border-color: color-mix(in oklab, var(--foreground) 45%, var(--background)); }
+}
+
+/* ---------- Monochrome Grid: flatten shared surfaces inside the signed-in shell ----------
+   Cards from shared components (projects, settings) become 8px hairline boxes: no shadows,
+   no lift. Scoped to .app-grid (the shell), so marketing pages are untouched. */
+.app-grid :is(.card-premium, .settings-card, .proj-card) {
+  border-color: var(--border);
+  border-radius: 8px;
+  box-shadow: none;
+}
+.app-grid :is(.card-premium, .settings-card, .proj-card, .bento-tile):is(:hover, :focus-within, :focus-visible) {
+  transform: none;
+  translate: none;
+  box-shadow: none;
+  border-color: var(--border-strong);
+}
+.app-grid .card-premium--hover:hover { transform: none; box-shadow: none; }
+.app-grid .icon-tile { border-radius: 6px; box-shadow: none; background: transparent; border: 1px solid var(--border-strong); }
+.app-grid .text-app-title { font-size: 24px; font-weight: 600; letter-spacing: -0.02em; }

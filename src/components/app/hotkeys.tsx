@@ -19,14 +19,13 @@ export const SHORTCUT_GROUPS: { title: string; items: Shortcut[] }[] = [
       { keys: ["K"], mod: true, label: "Search or run a command" },
       { keys: ["N"], label: "New project" },
       { keys: ["/"], label: "Search this page (or open the command menu)" },
-      { keys: ["["], label: "Collapse or expand the sidebar" },
       { keys: ["?"], label: "Show keyboard shortcuts" },
     ],
   },
   {
     title: "Go to",
     items: [
-      { keys: ["G", "H"], then: true, label: "Home" },
+      { keys: ["G", "H"], then: true, label: "Overview" },
       { keys: ["G", "P"], then: true, label: "Projects" },
       { keys: ["G", "T"], then: true, label: "Templates" },
       { keys: ["G", "S"], then: true, label: "Settings" },
@@ -70,11 +69,11 @@ function overlayOpen() {
  * App-wide single-key shortcuts (Linear-style). Ignored while typing, while an overlay is open,
  * and with any modifier held. "G" starts a chord that waits 1.2s for H / P / T.
  */
-export function useAppHotkeys({ enabled, canCreate, onToggleSidebar, onShortcuts }: { enabled: boolean; canCreate: boolean; onToggleSidebar: () => void; onShortcuts: () => void }) {
+export function useAppHotkeys({ enabled, canCreate, onShortcuts }: { enabled: boolean; canCreate: boolean; onShortcuts: () => void }) {
   const router = useRouter();
-  const handlers = useRef({ onToggleSidebar, onShortcuts, canCreate });
+  const handlers = useRef({ onShortcuts, canCreate });
   useEffect(() => {
-    handlers.current = { onToggleSidebar, onShortcuts, canCreate };
+    handlers.current = { onShortcuts, canCreate };
   });
 
   useEffect(() => {
@@ -109,9 +108,6 @@ export function useAppHotkeys({ enabled, canCreate, onToggleSidebar, onShortcuts
           search.focus();
           if (search instanceof HTMLInputElement) search.select();
         } else openCommandMenu();
-      } else if (key === "[") {
-        e.preventDefault();
-        handlers.current.onToggleSidebar();
       } else if (key === "?") {
         e.preventDefault();
         handlers.current.onShortcuts();

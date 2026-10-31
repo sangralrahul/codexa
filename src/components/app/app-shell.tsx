@@ -6,31 +6,19 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Dialog as RD } from "radix-ui";
 import { MailWarning, Menu, Plus, Search } from "lucide-react";
-import { AppSidebar, type SidebarBuild, type SidebarProject, type SidebarUpsell, type SidebarUsage, type SidebarUser, type SidebarWorkspace } from "./sidebar";
+import { AppTabs, NavDrawer, type SidebarBuild, type SidebarProject, type SidebarUpsell, type SidebarUsage, type SidebarUser, type SidebarWorkspace } from "./sidebar";
+import { WorkspaceSwitcher } from "./workspace-switcher";
+import { UserMenu } from "./user-menu";
+import { ActivityBell, type BellItem } from "./activity-bell";
 import { LogoMark } from "@/components/logo";
-import { Alert, Kbd } from "@/components/ui/misc";
-import { buttonClasses } from "@/components/ui/button";
+import { Alert } from "@/components/ui/misc";
+import { usePlatformMod } from "@/lib/client/platform";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { ResendVerificationButton } from "@/components/auth/forms";
 import { CommandMenu, type CommandTemplate } from "./command-menu";
 import { openCommandMenu, SHORTCUTS_EVENT } from "./events";
 import { ShortcutsSheet, useAppHotkeys } from "./hotkeys";
 import { cn } from "@/lib/utils";
-
-/** Breadcrumbs for nested routes only (top-level pages show none). Settings reads "Settings / {Page}". */
-const NESTED: [string, string, string, string][] = [
-  ["/dashboard/templates", "Home", "/dashboard", "Templates"],
-  ["/dashboard/shared", "Home", "/dashboard", "Shared with me"],
-  ["/dashboard/github", "Home", "/dashboard", "GitHub"],
-  ["/settings/workspaces/new", "Settings", "/settings", "New workspace"],
-  ["/settings/billing", "Settings", "/settings", "Billing"],
-  ["/settings/usage", "Settings", "/settings", "Usage"],
-  ["/settings/members", "Settings", "/settings", "Members"],
-  ["/settings/profile", "Settings", "/settings", "Profile"],
-  ["/settings/security", "Settings", "/settings", "Security"],
-  ["/settings/workspace", "Settings", "/settings", "Workspace"],
-  ["/settings/integrations", "Settings", "/settings", "Integrations"],
-];
 
 /** Full-screen routes with their own chrome: the project IDE and first-run onboarding. */
 const isFocusRoute = (path: string) => /^\/projects\/[^/]+/.test(path) || path === "/onboarding";
@@ -76,7 +64,7 @@ export function AppShell({
   recent,
   upsell,
   build = null,
-  initialCollapsed,
+  activity = [],
   templates,
   defaultTemplate,
   children,
@@ -93,15 +81,16 @@ export function AppShell({
   usage: SidebarUsage | null;
   recent: SidebarProject[];
   upsell: SidebarUpsell;
-  /** Version and configured capabilities for the sidebar's bottom line. */
+  /** Version and configured capabilities (the drawer's bottom line). */
   build?: SidebarBuild | null;
-  initialCollapsed: boolean;
+  /** Newest activity across the user's workspaces, for the bell. */
+  activity?: BellItem[];
   templates: CommandTemplate[];
   defaultTemplate: { id: string; name: string; fileCount?: number };
   children: React.ReactNode;
 }) {
   const [drawer, setDrawer] = useState(false);
-  const [collapsed, setCollapsed] = useState(initialCollapsed);
+  const mod = usePlatformMod();
   const [shortcuts, setShortcuts] = useState(false);
   const [slot, setSlot] = useState<HTMLElement | null>(null);
   const pathname = usePathname();
@@ -109,17 +98,8 @@ export function AppShell({
   const current = workspaces.find((w) => w.id === currentWorkspaceId) ?? workspaces[0];
   const canCreate = Boolean(current && current.role !== "viewer");
 
-  const toggle = useCallback(
-    () =>
-      setCollapsed((c) => {
-        // Remembered in a cookie so the server renders the same width (no jump on load).
-        document.cookie = `codexa_sidebar=${c ? "expanded" : "collapsed"}; path=/; max-age=31536000; samesite=lax`;
-        return !c;
-      }),
-    [],
-  );
   const openShortcuts = useCallback(() => setShortcuts(true), []);
-  useAppHotkeys({ enabled: !focus, canCreate, onToggleSidebar: toggle, onShortcuts: openShortcuts });
+  useAppHotkeys({ enabled: !focus, canCreate, onShortcuts: openShortcuts });
 
   // "Keyboard shortcuts" from the command menu or the user menu.
   useEffect(() => {
@@ -175,86 +155,55 @@ export function AppShell({
     );
   }
 
-  const crumb = NESTED.find(([p]) => pathname === p || pathname.startsWith(p + "/"));
-  const sidebarProps = { workspaces, currentId: currentWorkspaceId, isStaff, user, usage, recent, upsell, build, canCreate };
+  const closeDrawer = () => setDrawer(false);
+  // The dashboard has the composer and /projects its own New project button: never twice on a page.
+  const showNew = canCreate && !["/new-project", "/dashboard", "/projects"].includes(pathname);
 
   return (
     <ActionsSlot.Provider value={slot}>
-      <div className="flex min-h-dvh bg-background [--btn-radius:10px]">
+      <div className="app-grid flex min-h-dvh flex-col bg-background [--btn-radius:6px]">
         {command}
         <ShortcutsSheet open={shortcuts} onOpenChange={setShortcuts} />
-        <aside
-          aria-label="Sidebar"
-          data-collapsed={collapsed || undefined}
-          className={cn(
-            "sticky top-0 hidden h-dvh shrink-0 overflow-hidden border-r border-border bg-card transition-[width] duration-[280ms] ease-out calm:transition-none lg:block",
-            collapsed ? "w-14" : "w-[240px]",
-          )}
-        >
-          <AppSidebar {...sidebarProps} collapsed={collapsed} onToggle={toggle} />
-        </aside>
 
         <RD.Root open={drawer} onOpenChange={setDrawer}>
           <RD.Portal>
-            <RD.Overlay className="cx-overlay fixed inset-0 z-50 bg-background/50 backdrop-blur-[2px] lg:hidden" />
+            <RD.Overlay className="cx-overlay fixed inset-0 z-50 bg-background/60 md:hidden" />
             <RD.Content
               aria-modal="true"
               aria-label="Navigation"
               aria-describedby={undefined}
               data-side="left"
-              className="cx-sheet fixed inset-y-0 left-0 z-50 w-[min(300px,calc(100vw-48px))] border-r border-border bg-card pt-[env(safe-area-inset-top)] shadow-xl outline-none lg:hidden"
+              className="cx-sheet fixed inset-y-0 left-0 z-50 w-[min(300px,calc(100vw-48px))] border-r border-border bg-background pt-[env(safe-area-inset-top)] outline-none md:hidden"
             >
               <RD.Title className="sr-only">Navigation</RD.Title>
-              <AppSidebar {...sidebarProps} onNavigate={() => setDrawer(false)} onClose={() => setDrawer(false)} />
+              <NavDrawer workspaces={workspaces} currentId={currentWorkspaceId} isStaff={isStaff} user={user} usage={usage} recent={recent} upsell={upsell} build={build} canCreate={canCreate} onNavigate={closeDrawer} />
             </RD.Content>
           </RD.Portal>
         </RD.Root>
 
-        <div className="relative isolate flex min-w-0 flex-1 flex-col">
-          {/* Two columns below md (the centred ⌘K trigger is hidden there), so the actions stay at the right edge. */}
-          {/* White top bar with a subtle bottom shadow (the hairline plus the sm shadow token). */}
-          <header className="sticky top-0 z-40 grid h-[56px] grid-cols-[minmax(0,1fr)_auto] items-center gap-3 bg-card/95 px-3 shadow-[0_1px_0_var(--border),var(--shadow-sm)] backdrop-blur-sm sm:px-6 md:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)]">
-            <div className="flex min-w-0 items-center gap-1.5">
-              <button type="button" onClick={() => setDrawer(true)} className="-ml-1 flex size-8 items-center justify-center rounded-md hover:bg-muted lg:hidden" aria-label="Open navigation">
-                <Menu className="size-5" aria-hidden="true" />
-              </button>
-              <Link href="/dashboard" className="flex size-8 items-center justify-center rounded-md lg:hidden" aria-label="Codexa home">
-                <LogoMark size={24} />
-              </Link>
-              {crumb ? (
-                <nav aria-label="Breadcrumb" className="hidden min-w-0 sm:block">
-                  <ol className="flex min-w-0 items-center gap-1.5 text-[13px]">
-                    <li className="shrink-0">
-                      <Link href={crumb[2]} className="rounded-md px-1 text-muted-foreground transition-colors hover:text-foreground">
-                        {crumb[1]}
-                      </Link>
-                    </li>
-                    <li aria-hidden="true" className="text-border-strong">
-                      /
-                    </li>
-                    <li aria-current="page" className="truncate px-1 font-medium">
-                      {crumb[3]}
-                    </li>
-                  </ol>
-                </nav>
-              ) : null}
-            </div>
-
-            <button
-              type="button"
-              onClick={openCommandMenu}
-              aria-keyshortcuts="Control+K Meta+K"
-              className="group/k hidden h-9 w-[min(440px,40vw)] items-center gap-2 rounded-[10px] border border-border bg-surface px-3 text-[13px] text-muted-foreground shadow-[inset_0_1px_0_var(--hairline)] transition-[border-color,color,background-color,box-shadow] hover:border-border-strong hover:bg-card hover:text-foreground hover:shadow-sm md:flex"
-            >
-              <Search className="size-3.5" aria-hidden="true" />
-              <span className="flex-1 truncate text-left">Search or build anything…</span>
-              <Kbd mod aria-hidden="true" className="border border-border bg-muted px-1.5">
-                K
-              </Kbd>
+        {/* Top bar (scrolls away) — brand / workspace, search, actions, account. */}
+        <header className="bg-background">
+          <div className="flex h-14 items-center gap-2 px-3 sm:gap-3.5 sm:px-6">
+            <button type="button" onClick={() => setDrawer(true)} className="app-btn app-btn--icon -ml-1 shrink-0 border-transparent md:hidden" aria-label="Open navigation">
+              <Menu className="size-[18px]" aria-hidden="true" />
             </button>
+            <Link href="/dashboard" className="hidden size-7 shrink-0 items-center justify-center rounded-md text-foreground focus-visible:outline-2 focus-visible:outline-ring sm:flex" aria-label="Codexa home">
+              <LogoMark size={22} />
+            </Link>
+            <span className="app-slash -mx-1.5 hidden sm:inline" aria-hidden="true">
+              /
+            </span>
+            <WorkspaceSwitcher workspaces={workspaces} currentId={currentWorkspaceId} variant="bar" upgrade={upsell} className="max-w-[min(340px,48vw)]" />
 
-            <div className="flex min-w-0 items-center justify-end gap-1.5">
-              <button type="button" onClick={openCommandMenu} aria-label="Search or jump to" className="flex size-8 items-center justify-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground md:hidden">
+            <div className="ml-auto flex min-w-0 items-center gap-2 sm:gap-2.5">
+              <button type="button" onClick={openCommandMenu} aria-keyshortcuts="Control+K Meta+K" className="app-search hidden lg:flex">
+                <Search className="size-4 shrink-0" aria-hidden="true" />
+                <span className="flex-1 truncate text-left">Find a project…</span>
+                <kbd className="app-kbd" aria-hidden="true">
+                  {mod} K
+                </kbd>
+              </button>
+              <button type="button" onClick={openCommandMenu} aria-label="Search or jump to" aria-keyshortcuts="Control+K Meta+K" className="app-btn app-btn--icon lg:hidden">
                 <Search className="size-4" aria-hidden="true" />
               </button>
               {showVerify ? (
@@ -269,32 +218,29 @@ export function AppShell({
                   }}
                 />
               ) : null}
-              <div ref={setSlot} className="flex items-center gap-1.5 empty:hidden" />
-              {canCreate && pathname !== "/new-project" ? (
-                <>
-                  {/* Phones: a quiet outline icon button, so it never outweighs the logo. */}
-                  <Link
-                    href="/new-project"
-                    aria-label="New project"
-                    className="flex size-8 items-center justify-center rounded-md border border-border-strong bg-card text-foreground transition-colors hover:bg-muted focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring sm:hidden"
-                  >
-                    <Plus className="size-4" aria-hidden="true" />
-                  </Link>
-                  {/* From 640px: only when the sidebar's own button is out of view (collapsed rail or below 1024px), and never
-                      twice: /projects shows New project in its toolbar from 1024px up. */}
-                  <Link href="/new-project" className={cn(buttonClasses("primary", "sm"), "hidden px-3 sm:inline-flex", !(collapsed && pathname !== "/projects") && "lg:hidden")}>
-                    <Plus className="size-4" aria-hidden="true" />
-                    New project
-                  </Link>
-                </>
+              <div ref={setSlot} className="flex items-center gap-2 empty:hidden" />
+              {showNew ? (
+                <Link href="/new-project" aria-label="New project" className="app-btn app-btn--primary app-btn--icon sm:w-auto sm:px-3">
+                  <Plus className="size-4" aria-hidden="true" />
+                  <span className="hidden sm:inline">New project</span>
+                </Link>
               ) : null}
+              <Link href="/feedback" className="app-btn hidden sm:inline-flex">
+                Feedback
+              </Link>
+              <ActivityBell items={activity} />
+              <UserMenu user={user} />
             </div>
-          </header>
-
-          <main id="main" className="flex-1">
-            {children}
-          </main>
+          </div>
+        </header>
+        {/* The tab row sticks to the top while the page scrolls. */}
+        <div className="sticky top-0 z-40 border-b border-border bg-background">
+          <AppTabs isStaff={isStaff} />
         </div>
+
+        <main id="main" className="flex-1">
+          {children}
+        </main>
       </div>
     </ActionsSlot.Provider>
   );
@@ -309,7 +255,7 @@ function VerifyChip({ email, emailConfigured, devMailbox, dismissLabel, onDismis
   return (
     <Popover>
       <PopoverTrigger
-        className="inline-flex h-8 items-center gap-1.5 rounded-[10px] border border-border bg-card px-2.5 text-[12.5px] font-medium text-muted-foreground transition-colors hover:border-border-strong hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring data-[state=open]:text-foreground"
+        className="app-btn px-2.5 text-[13px] text-muted-foreground hover:text-foreground data-[state=open]:text-foreground"
         title="Email not verified"
       >
         <MailWarning className="size-3.5" aria-hidden="true" />
@@ -347,9 +293,9 @@ function VerifyChip({ email, emailConfigured, devMailbox, dismissLabel, onDismis
   );
 }
 
-/** Standard page width and padding for app pages (one width across the app: 1280px; 24px gutters). */
+/** Standard page width and padding for app pages (one width across the app: 1248px content; 16/24px gutters). */
 export function AppPage({ children, className, width = "default" }: { children: React.ReactNode; className?: string; width?: "default" | "narrow" | "wide" }) {
-  return <div className={cn("mx-auto w-full px-4 py-6 sm:px-6 lg:px-8 lg:py-8", width === "narrow" ? "max-w-3xl" : width === "wide" ? "max-w-[1440px]" : "max-w-[1280px]", className)}>{children}</div>;
+  return <div className={cn("mx-auto w-full px-4 py-6 sm:px-6 lg:py-8", width === "narrow" ? "max-w-3xl" : "max-w-[1296px]", className)}>{children}</div>;
 }
 
 /** App page heading: optional icon tile and eyebrow, a 26px title (text-app-title), description and actions. */
@@ -364,7 +310,7 @@ export function PageHeader({ title, description, actions, eyebrow, icon }: { tit
         ) : null}
         <div className="min-w-0">
           {eyebrow ? <p className="mb-1 text-[11.5px] font-medium uppercase tracking-[0.06em] text-foreground-dim">{eyebrow}</p> : null}
-          <h1 className="text-app-title text-balance">{title}</h1>
+          <h1 className="text-balance text-[24px] font-semibold leading-tight tracking-[-0.02em]">{title}</h1>
           {description ? <p className="mt-1.5 max-w-2xl text-pretty text-[14px] text-muted-foreground">{description}</p> : null}
         </div>
       </div>
