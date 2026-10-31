@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
-import { ArrowRight, ArrowUp, BarChart3, BookOpen, Bot, Briefcase, Check, CheckCircle2, ChevronDown, Circle, Compass, Cpu, ExternalLink, GitBranch, GitFork, Globe, GraduationCap, LayoutTemplate, Rocket, Server, ShoppingBag, Sparkles, UserPlus, X, Zap } from "lucide-react";
+import { Activity, ArrowRight, ArrowUp, BarChart3, BookOpen, Bot, Briefcase, Check, CheckCircle2, ChevronDown, Circle, Clock, Compass, Cpu, ExternalLink, GitBranch, GitFork, Globe, GraduationCap, LayoutTemplate, Rocket, Save, Server, ShieldCheck, ShoppingBag, Sparkles, Undo2, UserPlus, X, Zap } from "lucide-react";
 import { useApp } from "../app/state";
-import { deployApi, membersApi, showcaseApi, templatesApi, type Deployment, type Project, type ShowcaseItem, type TeamMember, type Template } from "../lib/api";
+import { deployApi, historyApi, membersApi, showcaseApi, statusApi, templatesApi, type Deployment, type Project, type ShowcaseItem, type Snapshot, type SystemStatus, type TeamMember, type Template } from "../lib/api";
 import { cn, relativeTime } from "../lib/util";
 import { Avatar, Badge, Button, EmptyState, Kbd, Menu, Spinner, Textarea } from "../ui";
 import { ProjectCard } from "../components/ProjectCard";
@@ -34,6 +34,16 @@ const LEARN = [
 const SETUP_KEY = "codexa:setup-dismissed";
 const DEPLOY_TONE: Record<Deployment["status"], "neutral" | "success" | "warning" | "danger"> = { queued: "warning", building: "warning", deploying: "warning", live: "success", failed: "danger", rolled_back: "neutral" };
 const DEPLOY_LABEL: Record<Deployment["status"], string> = { queued: "Queued", building: "Building", deploying: "Deploying", live: "Live", failed: "Failed", rolled_back: "Previous" };
+type Event = { id: string; at: string; icon: typeof Save; tint: string; text: string; project: Project };
+const SNAPSHOT_KIND: Record<string, { icon: typeof Save; tint: string; verb: string }> = {
+  manual: { icon: Save, tint: "text-fg", verb: "saved a checkpoint in" },
+  auto: { icon: Clock, tint: "text-muted", verb: "auto-saved" },
+  ai: { icon: Sparkles, tint: "text-accent", verb: "AI changed" },
+  deploy: { icon: Rocket, tint: "text-success", verb: "published" },
+  restore: { icon: Undo2, tint: "text-warning", verb: "restored" },
+};
+const STATE_DOT: Record<SystemStatus["overall"], string> = { operational: "bg-success", degraded: "bg-warning", down: "bg-danger", not_configured: "bg-dim", unknown: "bg-dim" };
+const STATE_LABEL: Record<SystemStatus["overall"], string> = { operational: "Operational", degraded: "Degraded", down: "Down", not_configured: "Not configured", unknown: "Unknown" };
 
 function greeting() {
   const h = new Date().getHours();
@@ -52,7 +62,23 @@ export function HomeScreen() {
   const [showcase, setShowcase] = useState<ShowcaseItem[]>([]);
   const [members, setMembers] = useState<TeamMember[]>([]);
   const [setupHidden, setSetupHidden] = useState(() => localStorage.getItem(SETUP_KEY) === "1");
+  const [snapshots, setSnapshots] = useState<(Snapshot & { project: Project })[] | null>(null);
+  const [status, setStatus] = useState<SystemStatus | null>(null);
   const first = (user.name || user.email).split(/[\s@]/)[0];
+
+  useEffect(() => {
+    statusApi
+      .get()
+      .then(setStatus)
+      .catch(() => setStatus(null));
+  }, []);
+  // Checkpoints across recent projects: the activity feed and the 14-day chart are built from them.
+  useEffect(() => {
+    if (!projects) return;
+    Promise.all(projects.slice(0, 6).map((p) => historyApi.list(p.id).then((r) => r.snapshots.map((s) => ({ ...s, project: p }))).catch(() => [])))
+      .then((all) => setSnapshots(all.flat().sort((a, b) => b.createdAt.localeCompare(a.createdAt))))
+      .catch(() => setSnapshots([]));
+  }, [projects]);
 
   useEffect(() => {
     templatesApi
@@ -116,6 +142,30 @@ export function HomeScreen() {
   ];
   const setupDone = setup.filter((s) => s.done).length;
   const showSetup = !setupHidden && setupDone < setup.length && projects !== null;
+
+  // Activity feed: checkpoints + deployments, newest first.
+  const events: Event[] = [
+    ...(snapshots ?? []).map((s) => {
+      const k = SNAPSHOT_KIND[s.kind] ?? SNAPSHOT_KIND.auto;
+      return { id: `s:${s.id}`, at: s.createdAt, icon: k.icon, tint: k.tint, text: `${k.verb} ${s.project.name}`, project: s.project };
+    }),
+    ...(deploys ?? []).map((d) => ({ id: `d:${d.id}`, at: d.createdAt, icon: Rocket, tint: d.status === "failed" ? "text-danger" : "text-success", text: `${d.status === "failed" ? "failed to publish" : d.status === "live" ? "published" : DEPLOY_LABEL[d.status].toLowerCase()} ${d.project.name}`, project: d.project })),
+  ]
+    .sort((a, b) => b.at.localeCompare(a.at))
+    .slice(0, 8);
+  // 14-day chart of checkpoints (one bar per day, oldest left).
+  const days = Array.from({ length: 14 }, (_, i) => {
+    const d = new Date();
+    d.setHours(0, 0, 0, 0);
+    d.setDate(d.getDate() - (13 - i));
+    return d;
+  });
+  const perDay = days.map((d) => (snapshots ?? []).filter((s) => new Date(s.createdAt).toDateString() === d.toDateString()).length);
+  const peak = Math.max(1, ...perDay);
+  const thisWeek = perDay.slice(7).reduce((a, b) => a + b, 0);
+  const lastWeek = perDay.slice(0, 7).reduce((a, b) => a + b, 0);
+  const checkpointsByProject = new Map<string, number>();
+  for (const s of snapshots ?? []) checkpointsByProject.set(s.project.id, (checkpointsByProject.get(s.project.id) ?? 0) + 1);
 
   const kpis = usage
     ? [
@@ -316,7 +366,7 @@ export function HomeScreen() {
                 <ul className="grid grid-cols-2 gap-4 2xl:grid-cols-3">
                   {projects.slice(0, 6).map((p) => (
                     <li key={p.id}>
-                      <ProjectCard project={p} live={liveByProject.get(p.id)?.url ?? null} />
+                      <ProjectCard project={p} live={liveByProject.get(p.id)?.url ?? null} checkpoints={checkpointsByProject.get(p.id)} members={members} />
                     </li>
                   ))}
                 </ul>
@@ -399,6 +449,47 @@ export function HomeScreen() {
           </div>
 
           <aside className="space-y-4">
+            <Card title="Activity · 14 days" icon={Activity}>
+              {snapshots === null ? (
+                <Spinner />
+              ) : (
+                <>
+                  <div className="flex items-end justify-between">
+                    <span>
+                      <span className="block font-[family-name:var(--font-display)] text-[22px] font-bold tabular-nums leading-none tracking-[-0.02em]">{thisWeek}</span>
+                      <span className="mt-1 block text-[11.5px] text-muted">checkpoints this week</span>
+                    </span>
+                    <span className={cn("rounded-md px-1.5 py-0.5 text-[11px] font-medium tabular-nums", thisWeek >= lastWeek ? "bg-success/10 text-success" : "bg-surface text-muted")}>
+                      {thisWeek >= lastWeek ? "+" : ""}
+                      {thisWeek - lastWeek} vs last week
+                    </span>
+                  </div>
+                  <div className="mt-3 flex h-12 items-end gap-1" aria-label="Checkpoints per day, last 14 days">
+                    {perDay.map((n, i) => (
+                      <span key={i} title={`${days[i].toLocaleDateString(undefined, { month: "short", day: "numeric" })}: ${n}`} className={cn("flex-1 rounded-sm", n ? "bg-primary" : "bg-surface")} style={{ height: `${Math.max(8, (n / peak) * 100)}%`, opacity: n ? 0.55 + 0.45 * (n / peak) : 1 }} />
+                    ))}
+                  </div>
+                  <div className="mt-1 flex justify-between text-[10.5px] text-dim">
+                    <span>{days[0].toLocaleDateString(undefined, { month: "short", day: "numeric" })}</span>
+                    <span>Today</span>
+                  </div>
+                  <ul className="mt-3 divide-y divide-border border-t border-border">
+                    {events.length === 0 ? <li className="pt-2 text-[12.5px] text-muted">No activity yet.</li> : null}
+                    {events.slice(0, 6).map((e) => (
+                      <li key={e.id} className="flex items-center gap-2.5 py-1.5">
+                        <e.icon className={cn("size-3.5 shrink-0", e.tint)} />
+                        <button type="button" onClick={() => go({ name: "project", id: e.project.id })} className="min-w-0 flex-1 truncate text-left text-[12.5px] hover:underline">
+                          <span className="text-muted">You </span>
+                          {e.text}
+                        </button>
+                        <span className="shrink-0 text-[11px] tabular-nums text-dim">{relativeTime(e.at)}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </>
+              )}
+            </Card>
+
             <Card title="Latest deployments" icon={Rocket}>
               {deploys === null ? (
                 <Spinner />
@@ -451,13 +542,33 @@ export function HomeScreen() {
               </ul>
             </Card>
 
+            <Card title="System status" icon={ShieldCheck}>
+              {status ? (
+                <ul className="space-y-1.5">
+                  {status.components.map((c) => (
+                    <li key={c.id} className="flex items-center gap-2 text-[12.5px]">
+                      <span className={cn("size-1.5 shrink-0 rounded-full", STATE_DOT[c.state])} />
+                      <span className="min-w-0 flex-1 truncate">{c.name}</span>
+                      <span className="shrink-0 text-[11.5px] text-dim">
+                        {STATE_LABEL[c.state]}
+                        {c.latencyMs !== undefined ? ` · ${c.latencyMs} ms` : ""}
+                      </span>
+                    </li>
+                  ))}
+                  <li className="pt-1 text-[11px] text-dim">Checked {relativeTime(status.checkedAt)}</li>
+                </ul>
+              ) : (
+                <Spinner />
+              )}
+            </Card>
+
             {usage?.plan === "free" ? (
-              <section className="brand-gradient card-edge relative overflow-hidden rounded-2xl p-4 text-white">
+              <section className="card-edge relative overflow-hidden rounded-2xl border border-border bg-card p-4">
                 <p className="text-[14px] font-semibold">Go Pro</p>
-                <p className="mt-1 text-[12.5px] leading-snug text-white/85">25 projects, 1,000 AI requests a month, more preview time and deployments.</p>
-                <button type="button" onClick={() => void window.codexa.openWeb("/settings/billing")} className="mt-3 inline-flex h-8 items-center gap-1.5 rounded-lg bg-white px-3 text-[12.5px] font-semibold text-[var(--brand-a)] shadow-sm hover:bg-white/90">
-                  See plans <ArrowRight className="size-3.5" />
-                </button>
+                <p className="mt-1 text-[12.5px] leading-snug text-muted">25 projects, 1,000 AI requests a month, more preview time and deployments.</p>
+                <Button size="sm" variant="primary" className="mt-3" onClick={() => void window.codexa.openWeb("/settings/billing")}>
+                  See plans <ArrowRight />
+                </Button>
               </section>
             ) : null}
           </aside>

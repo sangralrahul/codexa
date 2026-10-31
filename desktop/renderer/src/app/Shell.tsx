@@ -198,6 +198,7 @@ function Sidebar() {
                 >
                   <n.icon className={cn("size-4", active ? "text-primary" : "")} />
                   <span className="flex-1 text-left">{n.label}</span>
+                  {n.name === "projects" && projects ? <span className="rounded-md bg-surface px-1.5 text-[11px] tabular-nums text-dim ring-1 ring-border">{projects.length}</span> : null}
                 </button>
               </li>
             );

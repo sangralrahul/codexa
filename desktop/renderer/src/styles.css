@@ -171,6 +171,21 @@ textarea,
   background: var(--primary);
 }
 
+/* A faint grain over dark surfaces so large areas don't read as flat. */
+.dark body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  opacity: 0.035;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
+}
+#root {
+  position: relative;
+  z-index: 1;
+}
+
 /* Window drag regions (our own title bar). */
 .drag {
   -webkit-app-region: drag;

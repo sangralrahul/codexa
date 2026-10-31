@@ -160,6 +160,12 @@ export const aiApi = {
 export type ShowcaseItem = { id: string; slug: string; title: string; description: string; tags: string[]; liveUrl: string | null; remixCount: number; project: { id: string; name: string; framework: string; frameworkName: string; templateId: string | null }; submittedBy: { id: string; name: string } | null };
 export type TeamMember = { userId?: string; id?: string; name?: string | null; email?: string; role: Role; user?: { name?: string | null; email?: string } };
 
+export type ComponentState = "operational" | "degraded" | "down" | "not_configured" | "unknown";
+export type SystemStatus = { checkedAt: string; overall: ComponentState; components: { id: string; name: string; state: ComponentState; detail: string; latencyMs?: number }[] };
+export const statusApi = {
+  get: () => api<SystemStatus>("/api/v1/status"),
+};
+
 export const showcaseApi = {
   list: (limit = 6) => api<{ entries: ShowcaseItem[] }>(`/api/v1/showcase?limit=${limit}`),
 };

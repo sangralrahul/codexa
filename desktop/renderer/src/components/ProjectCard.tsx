@@ -1,12 +1,12 @@
 import { useState } from "react";
 import { Copy, ExternalLink, MoreHorizontal, Pencil, Trash2 } from "lucide-react";
 import { ApiError, projectsApi, type Project } from "../lib/api";
-import { frameworkLabel, relativeTime } from "../lib/util";
-import { Button, Dialog, Field, Input, Menu, MenuItem, MenuSeparator, toast } from "../ui";
+import { cn, frameworkLabel, relativeTime } from "../lib/util";
+import { Avatar, Button, Dialog, Field, Input, Menu, MenuItem, MenuSeparator, toast } from "../ui";
 import { useApp } from "../app/state";
 import { ProjectThumb } from "./ProjectThumb";
 
-export function ProjectCard({ project: p, live }: { project: Project; live?: string | null }) {
+export function ProjectCard({ project: p, live, checkpoints, members }: { project: Project; live?: string | null; checkpoints?: number; members?: { userId?: string; id?: string; name?: string | null; email?: string; user?: { name?: string | null; email?: string } }[] }) {
   const { go } = useApp();
   return (
     <article className="group lift card-edge relative flex flex-col overflow-hidden rounded-2xl border border-border bg-card hover:border-border-strong">
@@ -37,8 +37,20 @@ export function ProjectCard({ project: p, live }: { project: Project; live?: str
           <p className="mt-1 flex items-center gap-1.5 text-[12.5px] text-muted">
             <span className="truncate">{p.description || frameworkLabel(p.framework)}</span>
           </p>
-          <p className="mt-1.5 text-[11.5px] text-dim">
-            {frameworkLabel(p.framework)} · Edited {relativeTime(p.updatedAt)}
+          <p className="mt-1.5 flex items-center gap-1.5 text-[11.5px] text-dim">
+            <span className="truncate">
+              {frameworkLabel(p.framework)} · Edited {relativeTime(p.updatedAt)}
+              {checkpoints ? ` · ${checkpoints} checkpoint${checkpoints === 1 ? "" : "s"}` : ""}
+            </span>
+            {members && members.length > 0 ? (
+              <span className="ml-auto flex shrink-0 items-center pr-7">
+                {members.slice(0, 3).map((m, i) => (
+                  <span key={m.userId ?? m.id ?? i} className={cn("rounded-full ring-2 ring-card", i > 0 && "-ml-1")}>
+                    <Avatar name={m.name || m.user?.name || m.email || m.user?.email || "?"} size={18} />
+                  </span>
+                ))}
+              </span>
+            ) : null}
           </p>
         </div>
       </button>
