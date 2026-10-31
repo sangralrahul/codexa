@@ -7,6 +7,7 @@ import { PageHeader } from "@/components/marketing/page-header";
 import { Section } from "@/components/marketing/section";
 import { CTABand } from "@/components/marketing/cta-band";
 import { Kicker } from "@/components/marketing/premium";
+import { CaptureWindow } from "@/components/marketing/captures";
 import { TemplatePreview } from "@/components/templates/template-preview";
 import { TEMPLATE_SHOTS } from "@/components/templates/shots";
 import { getTemplate } from "@/templates";
@@ -17,8 +18,9 @@ export default function SolutionsIndexPage() {
   return (
     <div data-tone="product">
       <PageHeader
-        variant="editorial"
+        variant="product"
         crumbs={[{ name: "Solutions", path: "/solutions" }]}
+        visual={<CaptureWindow id="agent" priority />}
         kicker="Solutions"
         headline="One platform, many kinds of builders."
         highlight="many kinds of builders."
@@ -27,12 +29,20 @@ export default function SolutionsIndexPage() {
           { label: "Start building", href: "/signup" },
           { label: "Browse templates", href: "/templates" },
         ]}
-        meta={[
-          { label: "Audiences", value: `${SOLUTIONS.length} guides` },
-          { label: "Starters shown", value: "Real screenshots" },
-          { label: "Regulated fields", value: "No compliance claims" },
-        ]}
-      />
+      >
+        <dl className="mt-10 grid grid-cols-3 gap-4 border-t border-border pt-6">
+          {[
+            { label: "Audiences", value: `${SOLUTIONS.length} guides` },
+            { label: "Starters", value: `${FACTS.templates} real` },
+            { label: "Regulated fields", value: "No claims" },
+          ].map((m) => (
+            <div key={m.label}>
+              <dt className="text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">{m.label}</dt>
+              <dd className="mt-1 text-[15px] font-semibold text-foreground">{m.value}</dd>
+            </div>
+          ))}
+        </dl>
+      </PageHeader>
       <Section size="sm">
         <ul className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
           {SOLUTIONS.map((s) => {

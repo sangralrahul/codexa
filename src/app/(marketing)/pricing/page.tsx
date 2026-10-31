@@ -8,7 +8,9 @@ import { PricingTable } from "@/components/marketing/pricing-table";
 import { LimitsTable } from "@/components/marketing/limits-table";
 import { FAQ } from "@/components/marketing/faq";
 import { CTABand } from "@/components/marketing/cta-band";
-import { IconTile } from "@/components/marketing/premium";
+import { IconTile, Kicker } from "@/components/marketing/premium";
+import { CaptureWindow } from "@/components/marketing/captures";
+import { FACTS } from "@/content/marketing/facts";
 
 export const metadata = routeMetadata("/pricing");
 
@@ -40,6 +42,27 @@ export default function PricingPage() {
             Compare every feature side by side <ArrowUpRight className="size-3.5" aria-hidden="true" />
           </Link>
         </p>
+      </Section>
+
+      <Section size="sm" className="border-t border-border">
+        <div className="grid grid-cols-1 items-center gap-10 lg:grid-cols-12 lg:gap-14">
+          <div className="lg:col-span-5">
+            <Kicker className="mb-4">In the app</Kicker>
+            <h2 className="mk-h2">Every limit is visible where you work.</h2>
+            <p className="mk-lead mt-4">Usage meters for AI requests, runtime minutes, deployments and storage sit in Settings, next to billing. The same {FACTS.plans} plans, the same numbers the server enforces.</p>
+            <ul className="mt-6 space-y-3 text-[15px] text-foreground/85">
+              {["Monthly counters reset on the first of each month (UTC).", "Upgrade or downgrade from Settings, Billing; the new limits apply at once.", `${FACTS.roles} workspace roles decide who can change billing.`].map((t) => (
+                <li key={t} className="flex items-start gap-3">
+                  <span aria-hidden="true" className="mt-2 size-1.5 shrink-0 rounded-full bg-primary" />
+                  {t}
+                </li>
+              ))}
+            </ul>
+          </div>
+          <div className="min-w-0 lg:col-span-7">
+            <CaptureWindow id="settings" />
+          </div>
+        </div>
       </Section>
 
       <Section size="sm" className="border-t border-border bg-surface">

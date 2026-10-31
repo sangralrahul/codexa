@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { ArrowRight, ArrowUpRight, CreditCard, IndianRupee, LifeBuoy, Smartphone } from "lucide-react";
-import { PLANS, formatPrice } from "@/config/plans";
+import { PLANS, PLAN_ORDER, formatPrice } from "@/config/plans";
 import { PRODUCT_FAQ } from "@/content/marketing/product";
 import { FAQ } from "@/components/marketing/faq";
 import { PricingTable } from "@/components/marketing/pricing-table";
@@ -11,9 +11,9 @@ import { HOME_FAQ, HOME_FINAL, HOME_PRICING } from "@/content/marketing/home";
 
 const PAY_ICONS = { rupee: IndianRupee, phone: Smartphone, card: CreditCard } as const;
 
-/** H6 pricing teaser: header, payment facts, and the compact plan cards (Pro carries the gradient border) read from PLANS. */
+/** H6 pricing teaser: header, payment facts, and the four compact plan cards (Pro carries the blue border) read from PLANS. */
 export function PricingTeaser() {
-  const ids = [PLANS.free.id, PLANS.pro.id, PLANS.team.id];
+  const ids = PLAN_ORDER;
   return (
     <section aria-labelledby="pricing-title" className="border-b border-border py-20 lg:py-28">
       <div className="container-x">
@@ -53,7 +53,9 @@ export function PricingTeaser() {
                       <span className="block font-medium text-foreground">{formatPrice(p.prices.INR.month, "INR")}/mo</span>
                       <span className="block text-xs text-muted-foreground">{formatPrice(p.prices.USD.month, "USD")}/mo</span>
                     </span>
-                  ) : null}
+                  ) : (
+                    <span className="shrink-0 text-right text-sm font-medium text-foreground">Custom</span>
+                  )}
                 </Link>
               </li>
             );

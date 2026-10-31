@@ -253,3 +253,76 @@ export const HOME_FINAL = {
   lead: "Describe the app you want. Codexa plans it, writes the files, runs the build and gives you a preview to work from.",
   pricing: { label: "See pricing", href: "/pricing" },
 };
+
+/* ------------------------------------------------------------------------------------------------
+   v5 home: stats strip, bento grid, timeline, platform (Cloudflare) section, gallery. Copy only;
+   every number is read from code in home/data.ts (FACTS) at render time.
+   ------------------------------------------------------------------------------------------------ */
+
+export const HOME_STATS = {
+  index: "By the numbers",
+  title: "Counted from the source at render time.",
+  note: "Each figure is read from Codexa's own registries when this page renders: the template registry, the agent's tool schemas and the pre-publish scanner. No usage or customer numbers are published.",
+};
+
+/** The six bento cells. `visual` names a capture or a live fragment (home/fragments.tsx). */
+export const HOME_BENTO = {
+  index: "Platform",
+  title: "Everything a real project needs, in one workspace.",
+  lead: "Real files in a real editor, an agent that shows every tool call, a sandbox that runs the build before you see the result, and hosting with history.",
+  all: { label: "All features", href: "/features" },
+  cells: [
+    { id: "agent", size: "wide", visual: "capture:agent", title: "An agent that shows its work", body: "It reads the project, proposes a plan, then writes real files with tools you can see. Every action is listed as it happens.", href: "/ai-agent" },
+    { id: "checks", size: "tall", visual: "fragment:checks", title: "Checks before every publish", body: "Secrets, unsafe code, SEO basics, alt text, dead links and heavy files are scanned before anything goes live.", href: "/app-deployment" },
+    { id: "history", size: "base", visual: "fragment:checkpoints", title: "A checkpoint before every run", body: "Diff any file against any checkpoint and restore in one click. Nothing the agent does is irreversible.", href: "/features#history" },
+    { id: "editor", size: "base", visual: "capture:editor", title: "A real editor, not a text box", body: "Monaco, a file explorer, a terminal and a problems tab. Edit any line by hand, whenever you like.", href: "/code-editor" },
+    { id: "sandbox", size: "base", visual: "fragment:rail", title: "Builds run in a sandbox", body: "Install, type-check and build run in an isolated container per project, never in the app itself.", href: "/security" },
+    { id: "publish", size: "base", visual: "fragment:live", title: "One click to a live address", body: "Publish to Codexa hosting with a shareable URL. Every version is kept; roll back the moment something looks wrong.", href: "/app-deployment" },
+  ],
+} as const;
+
+/** The four timeline steps (captures from the animated demo, in order). */
+export const HOME_TIMELINE = {
+  index: "How it works",
+  title: "From a sentence to a deployed app.",
+  lead: "Each run is planned, written with tools, validated in a sandbox and kept in history. Nothing is hidden behind a spinner.",
+  more: { label: "Read how it works", href: "/how-it-works" },
+  steps: [
+    { id: "describe", capture: "demoDescribe", label: "Describe", title: "Say what you want in a sentence.", body: "Type the app you have in mind, or start from a real starter template. The agent reads the project and writes a short plan before it touches a file.", facts: ["Plan first, then edits", "Any starter as a base"] },
+    { id: "build", capture: "demoAgent", label: "Build", title: "Watch the files get written.", body: "The agent edits real files with tools you can see. Type-check and build run in an isolated sandbox, and the preview opens at desktop, tablet and phone sizes.", facts: ["Every tool call listed", "Errors read back and repaired"] },
+    { id: "review", capture: "demoHistory", label: "Review", title: "Compare, keep or restore.", body: "A checkpoint is saved before every run. Open the diff of any file, keep what works and restore what does not, in one click.", facts: ["Diff any checkpoint", "Restore in one click"] },
+    { id: "publish", capture: "demoPublish", label: "Publish", title: "Run the checks and go live.", body: "The pre-publish scan runs over your source, the build is uploaded, and the new version is served at your address. Add your own domain when you are ready.", facts: ["Scan before publish", "Versions kept for rollback"] },
+  ],
+} as const;
+
+/** "Runs on Cloudflare": facts from docs/CLOUDFLARE.md and the services. */
+export const HOME_PLATFORM_CF = {
+  index: "Infrastructure",
+  title: "Runs on Cloudflare. Isolated by design.",
+  lead: "Generated code never runs inside the app. Each project gets its own container, hosted sites are served from object storage, and every version stays available for rollback.",
+  tiles: [
+    { id: "sandbox", icon: "box", title: "One sandbox per project", body: "A Container owned by a Durable Object, started on demand for previews, builds and terminal commands." },
+    { id: "preview", icon: "monitor", title: "Previews in containers", body: "The live preview is proxied from the project's container to a per-project preview address." },
+    { id: "r2", icon: "database", title: "Hosting on R2", body: "Published files and version-history snapshots live in R2 object storage, served by the Worker." },
+    { id: "domains", icon: "globe", title: "Custom domains", body: "Add your domain in Publish → Domains; Codexa shows the TXT and CNAME records and verifies them." },
+    { id: "rollback", icon: "history", title: "Rollbacks", body: "Every deployment is kept. Serve an earlier version at the same address in one click." },
+    { id: "secrets", icon: "lock", title: "Secrets encrypted at rest", body: "Environment variables and connected-service keys are encrypted before storage and never returned to the browser." },
+  ],
+  diagram: {
+    caption: "How a request travels: the browser reaches the Worker, which routes previews to the project's container and published sites to R2.",
+    nodes: [
+      { id: "browser", label: "Browser", sub: "your visitor" },
+      { id: "worker", label: "Worker", sub: "routing, auth, API" },
+      { id: "container", label: "Container", sub: "one per project" },
+      { id: "r2", label: "R2", sub: "sites and snapshots" },
+    ],
+  },
+  docs: { label: "How it fits together", href: "/security" },
+};
+
+export const HOME_GALLERY = {
+  index: "Starters",
+  title: "Start from a real app, not a blank page.",
+  caption: "Screenshots captured from each starter template's own build. Hover a tile for the starter's name.",
+  browse: { label: "Browse all starters", href: "/templates" },
+};

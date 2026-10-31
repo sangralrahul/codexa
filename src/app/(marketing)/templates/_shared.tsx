@@ -3,6 +3,7 @@ import { Breadcrumbs } from "@/components/marketing/breadcrumbs";
 import { CTABand } from "@/components/marketing/cta-band";
 import { Kicker } from "@/components/marketing/page-header";
 import { BrowserWindow, Mesh } from "@/components/marketing/premium";
+import { CaptureTile } from "@/components/marketing/captures";
 import { Highlight } from "@/components/marketing/backdrop";
 import { TemplateGallery, TEMPLATE_SHOTS, UseTemplateLink } from "@/components/templates";
 import { TemplatePreview } from "@/components/templates/template-preview";
@@ -112,6 +113,29 @@ export async function PublicGalleryPage({
           </div>
         </div>
       </header>
+      {category === "all" ? (
+        <div className="border-b border-border bg-surface">
+          <div className="container-x grid grid-cols-1 items-center gap-8 py-12 lg:grid-cols-12 lg:gap-12">
+            <ol className="grid gap-4 sm:grid-cols-3 lg:col-span-7">
+              {[
+                { n: "01", title: "Pick a starter", body: "Each one is a runnable project with real files, captured below as it ships." },
+                { n: "02", title: "Describe the change", body: "The agent reads the files, proposes a plan and edits with tools you can see." },
+                { n: "03", title: "Run, then publish", body: "Type-check and build run in a sandbox; publish with checks and keep every version." },
+              ].map((s) => (
+                <li key={s.n} className="mk-card p-5">
+                  <span className="font-mono text-[11.5px] text-muted-foreground">{s.n}</span>
+                  <span className="mt-2 block text-[15.5px] font-semibold text-foreground">{s.title}</span>
+                  <span className="mt-1.5 block text-[13.5px] leading-relaxed text-muted-foreground">{s.body}</span>
+                </li>
+              ))}
+            </ol>
+            <figure className="min-w-0 lg:col-span-5">
+              <CaptureTile id="composer" />
+              <figcaption className="mt-2 text-[12px] text-muted-foreground">The New project composer with a starter chosen, captured from the app.</figcaption>
+            </figure>
+          </div>
+        </div>
+      ) : null}
       <div className="container-x pb-20 pt-12 sm:pt-14">
         <TemplateGallery
           search={search}

@@ -13,6 +13,7 @@ import { SearchTrigger } from "@/components/search/search-dialog";
 import { SearchExamples } from "@/components/search/search-examples";
 import { tokenize, type TokenKind } from "@/components/vignettes/tokenize";
 import { CtaLink, IconTile, Kicker, Mesh } from "@/components/marketing/premium";
+import { CaptureWindow } from "@/components/marketing/captures";
 import { parseTemplateSearch, searchTemplates, summarizeTemplate } from "@/templates";
 
 export const metadata = routeMetadata("/docs");
@@ -108,6 +109,20 @@ export default async function DocsIndexPage() {
             </li>
           ))}
         </ol>
+      </section>
+
+      {/* The workspace, captured */}
+      <section aria-labelledby="workspace-heading" className="mt-16">
+        <div className="flex items-end justify-between gap-4">
+          <h2 id="workspace-heading" className="mk-h3">
+            The workspace these pages describe
+          </h2>
+          <Link href="/docs/editor" className="link-draw text-sm font-semibold text-primary">
+            Editor guide
+          </Link>
+        </div>
+        <p className="mt-2 max-w-2xl text-[15px] leading-relaxed text-muted-foreground">Explorer, editor, agent panel and preview in one window. The agent lists every tool call; checkpoints and the Publish dialog are one click away.</p>
+        <CaptureWindow id="editor" className="mt-6" />
       </section>
 
       {/* Call the API */}

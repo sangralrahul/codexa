@@ -2,13 +2,15 @@ import "server-only";
 import { FRAMEWORKS, TEMPLATES } from "@/templates";
 import { TEMPLATE_SHOTS } from "@/components/templates/shots";
 import { templatePreviewHref } from "@/components/templates/template-card";
-import { toolSchemas } from "@/lib/ai/tools/schemas";
+import { COMMANDS, toolSchemas } from "@/lib/ai/tools/schemas";
 import { LIMITS } from "@/lib/ai/agent";
 import { workspaceRoleEnum } from "@/db/schema";
 import { PROVIDER_ADAPTERS } from "@/lib/integrations/providers";
 import { INTEGRATION_CATEGORIES, INTEGRATIONS } from "@/config/integrations";
 import { getIntegrationDetail } from "@/components/integrations-directory/details";
 import { PLANS } from "@/config/plans";
+import { FACTS } from "@/content/marketing/facts";
+import { HOME_CHIPS } from "@/content/marketing/home";
 import { buildScenarios, buildStarters, stageTools } from "./scenarios";
 
 /**
@@ -72,12 +74,41 @@ export function getHomeData() {
       operatorConfigured: Boolean(getIntegrationDetail(i.id).operatorConfigured),
     }));
 
+  // The stats strip: four large counts, each read from the registry that enforces it.
+  const stats: ProofFact[] = [
+    { value: FACTS.templates, label: "starter templates", symbol: "TEMPLATES.length", file: "src/templates/index.ts" },
+    { value: FACTS.runtimes, label: "runtimes", symbol: "TEMPLATE_FRAMEWORKS.length", file: "src/templates/index.ts" },
+    { value: FACTS.agentTools, label: "agent tools", symbol: "toolSchemas", file: "src/lib/ai/tools/schemas.ts" },
+    { value: FACTS.publishChecks, label: "pre-publish checks", symbol: "scanProject", file: "src/lib/services/site-checks.ts" },
+  ];
+
+  // The gallery: eight starters with real screenshots, one per category where possible, chip starters first.
+  const gallery: WallTile[] = [];
+  const seenCategory = new Set<string>();
+  const ordered = [...HOME_CHIPS.map((c) => wall.find((t) => t.id === c.templateId)).filter((t): t is WallTile => Boolean(t)), ...wall];
+  for (const t of ordered) {
+    if (gallery.some((g) => g.id === t.id)) continue;
+    if (seenCategory.has(t.category) && gallery.length < 6) continue;
+    gallery.push(t);
+    seenCategory.add(t.category);
+    if (gallery.length === 8) break;
+  }
+  for (const t of ordered) {
+    if (gallery.length === 8) break;
+    if (!gallery.some((g) => g.id === t.id)) gallery.push(t);
+  }
+
   return {
     scenarios,
     starters,
     tools,
     maxRepairAttempts: LIMITS.maxRepairAttempts,
     proof,
+    stats,
+    categoryCount: FACTS.categories,
+    publishChecks: FACTS.publishChecks,
+    commands: COMMANDS,
+    gallery,
     templateCount: TEMPLATES.length,
     frameworkSummary: frameworkFamilies(),
     wall,

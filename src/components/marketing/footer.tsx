@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Suspense } from "react";
-import { ArrowUpRight } from "lucide-react";
+import { ArrowRight, ArrowUpRight } from "lucide-react";
+import { CtaLink } from "./premium";
 import { Logo } from "@/components/logo";
 import { FOOTER, FOOTER_MORE, navLabel } from "@/config/routes";
 import { site } from "@/config/site";
@@ -31,21 +32,37 @@ function Column({ group, paths }: { group: keyof typeof FOOTER; paths: readonly 
 }
 
 /**
- * Site footer on the cool off-white: five dense link columns from the route manifest (capitalised
- * labels, eight links each with the "All …" link), <details> accordions on phones, the live status
- * pill, theme and motion settings.
+ * Site footer: a top row with the logo, tagline and the two main actions, then five dense link
+ * columns from the route manifest (capitalised labels, seven links each plus the "All …" link),
+ * <details> accordions on phones, the live status pill, theme and motion settings.
  */
 export function MarketingFooter() {
   return (
     <footer className="border-t border-border bg-surface">
-      <div className="container-x pt-14 lg:pt-16">
-        <div className="grid grid-cols-1 gap-10 lg:grid-cols-[minmax(0,1.6fr)_repeat(5,minmax(0,1fr))] lg:gap-8">
-          <div className="max-w-xs">
+      <div className="container-x pt-14 lg:pt-20">
+        <div className="flex flex-col gap-6 border-b border-border pb-10 lg:flex-row lg:items-end lg:justify-between lg:pb-12">
+          <div className="max-w-xl">
             <Logo />
-            <p className="mt-5 text-pretty text-[14px] leading-relaxed text-muted-foreground">
+            <p className="mt-5 text-pretty text-[15.5px] leading-relaxed text-muted-foreground">
               {site.tagline} Describe it, read the code, run it in a sandbox and ship it, all in one workspace.
             </p>
-            <ul className="mt-5 flex flex-wrap gap-x-4 gap-y-2 text-[13.5px]">
+          </div>
+          <div className="flex flex-wrap gap-3">
+            <CtaLink href="/signup" arrow>
+              Start building
+            </CtaLink>
+            <CtaLink href="/docs" variant="secondary">
+              Read the docs
+            </CtaLink>
+          </div>
+        </div>
+        <div className="grid grid-cols-1 gap-10 pt-12 lg:grid-cols-[minmax(0,1.4fr)_repeat(5,minmax(0,1fr))] lg:gap-8">
+          <div className="max-w-xs">
+            <p className="text-[13px] font-semibold uppercase tracking-[0.08em] text-foreground">Codexa</p>
+            <p className="mt-4 text-[13.5px] leading-relaxed text-muted-foreground">
+              Prompt, edit, run and deploy. Starters, an agent that shows its work, a sandbox per project and hosting with history.
+            </p>
+            <ul className="mt-4 flex flex-wrap gap-x-4 gap-y-2 text-[13.5px]">
               <li>
                 <a href={site.social.github} rel="noopener noreferrer" className="inline-flex items-center gap-1 font-medium text-foreground/80 transition-colors hover:text-foreground">
                   GitHub <ArrowUpRight className="size-3" aria-hidden="true" />
@@ -59,6 +76,11 @@ export function MarketingFooter() {
               <li>
                 <Link href="/support" className="font-medium text-foreground/80 transition-colors hover:text-foreground">
                   Support
+                </Link>
+              </li>
+              <li>
+                <Link href="/status" className="inline-flex items-center gap-1 font-medium text-foreground/80 transition-colors hover:text-foreground">
+                  Status <ArrowRight className="size-3" aria-hidden="true" />
                 </Link>
               </li>
             </ul>

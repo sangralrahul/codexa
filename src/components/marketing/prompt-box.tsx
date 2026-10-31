@@ -302,6 +302,7 @@ export function PromptBox({
   capabilityChip = true,
   footer,
   className,
+  align = "center",
 }: {
   signedIn: boolean;
   variant?: "hero" | "compact";
@@ -317,6 +318,8 @@ export function PromptBox({
   aiReady?: boolean;
   /** Render the capability chip at all. Off in the marketing hero: the AI state is an app concern, shown once the visitor is inside. */
   capabilityChip?: boolean;
+  /** How the chips and footer row sit under the card: centred (default) or flush left (the two-column hero). */
+  align?: "center" | "start";
   /** Extra items at the end of the meta line under the composer (e.g. the hero's links). */
   footer?: React.ReactNode;
   className?: string;
@@ -645,7 +648,10 @@ export function PromptBox({
           aria-label="Example ideas"
           onPointerEnter={prefetchPreviews}
           onFocus={prefetchPreviews}
-          className="-mx-4 mt-5 flex snap-x snap-mandatory scroll-px-4 gap-2 overflow-x-auto px-4 pb-1 [mask-image:linear-gradient(to_right,black_calc(100%-48px),transparent)] [scrollbar-width:none] sm:mx-0 sm:flex-wrap sm:justify-center sm:overflow-visible sm:px-0 sm:pb-0 sm:[mask-image:none] lg:-mx-20 [&::-webkit-scrollbar]:hidden"
+          className={cn(
+            "-mx-4 mt-5 flex snap-x snap-mandatory scroll-px-4 gap-2 overflow-x-auto px-4 pb-1 [mask-image:linear-gradient(to_right,black_calc(100%-48px),transparent)] [scrollbar-width:none] sm:mx-0 sm:flex-wrap sm:overflow-visible sm:px-0 sm:pb-0 sm:[mask-image:none] [&::-webkit-scrollbar]:hidden",
+            align === "center" ? "sm:justify-center lg:-mx-20" : "sm:justify-start",
+          )}
         >
           {chips.map((chip) => {
             const starter = starters.find((s) => s.id === chip.templateId);
@@ -681,7 +687,7 @@ export function PromptBox({
 
       {/* One centred row under the composer: the capability chip when the box is too narrow to hold it,
           the compact variant's account hint, then the caller's links. */}
-      <div className={cn("flex flex-wrap items-center justify-center gap-x-4 gap-y-2 px-1 text-xs text-muted-foreground", hero ? "mt-4" : "mt-3")}>
+      <div className={cn("flex flex-wrap items-center gap-x-4 gap-y-2 px-1 text-xs text-muted-foreground", align === "center" ? "justify-center" : "justify-start", hero ? "mt-4" : "mt-3")}>
         {aiReady === undefined ? null : <CapabilityChip aiReady={aiReady} className="@lg:hidden" />}
         {hero ? null : <p id={hintId}>{hint}</p>}
         {footer}
