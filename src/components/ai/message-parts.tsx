@@ -119,29 +119,153 @@ function railStates(stages: StagePart[], status: RunStatus | undefined, running:
 
 const SEG_TEXT: Record<SegState, string> = { done: "complete", active: "in progress", error: "failed", cancelled: "cancelled", skipped: "skipped", pending: "not started" };
 
-/** Six segments (context, plan, edit, validate, repair, done) lit only by real stage events. */
-export function StageRail({ stages, status, running }: { stages: StagePart[]; status?: RunStatus; running: boolean }) {
+/**
+ * How long each rail segment took, from the client clock at which each server stage was first seen
+ * (streamed runs only): a segment runs from its first stage until the next segment starts, the
+ * last one until the run finished (or now, while running). Null when nothing was timed.
+ */
+export function railTimings(stageTimes: Record<string, number> | undefined, finishedAt: number | null | undefined, running: boolean, now: number): (number | null)[] | null {
+  if (!stageTimes) return null;
+  const starts: (number | null)[] = RAIL.map((seg) => {
+    const ts = seg.stages.map((s) => stageTimes[s]).filter((t): t is number => typeof t === "number");
+    return ts.length ? Math.min(...ts) : null;
+  });
+  if (!starts.some((s) => s !== null)) return null;
+  return starts.map((start, i) => {
+    if (start === null) return null;
+    const next = starts.slice(i + 1).find((s): s is number => s !== null);
+    const end = next ?? (running ? now : (finishedAt ?? null));
+    return end === null ? null : Math.max(0, end - start);
+  });
+}
+
+const shortMs = (ms: number) => (ms < 1000 ? "<1s" : ms < 60_000 ? `${(ms / 1000).toFixed(ms < 10_000 ? 1 : 0)}s` : formatElapsed(ms));
+
+/** Six segments (context, plan, edit, validate, repair, done) lit only by real stage events, with the time each took when known. */
+export function StageRail({ stages, status, running, stageTimes, finishedAt }: { stages: StagePart[]; status?: RunStatus; running: boolean; stageTimes?: Record<string, number>; finishedAt?: number | null }) {
   const states = railStates(stages, status, running);
+  const now = useNow(1000, running && Boolean(stageTimes));
+  const timings = railTimings(stageTimes, finishedAt, running, now);
   return (
     <ol className="grid grid-cols-6 gap-1" aria-label="Progress">
-      {RAIL.map((seg, i) => (
-        <li key={seg.id} className="min-w-0">
-          <span className="ws-rail-seg block" data-state={states[i]} aria-hidden="true" />
-          <span
-            aria-hidden="true"
-            className={cn(
-              "mt-1 block truncate text-[10.5px] leading-none",
-              states[i] === "active" ? "font-medium text-foreground" : states[i] === "done" ? "text-muted-foreground" : states[i] === "error" ? "text-danger" : "text-muted-foreground/60",
-            )}
-          >
-            {seg.label}
-          </span>
-          <span className="sr-only">
-            {seg.title}: {SEG_TEXT[states[i]]}
-          </span>
-        </li>
-      ))}
+      {RAIL.map((seg, i) => {
+        const t = timings?.[i];
+        const timed = typeof t === "number" && (states[i] === "done" || states[i] === "active" || states[i] === "error") && seg.id !== "done";
+        return (
+          <li key={seg.id} className="min-w-0">
+            <span className="ws-rail-seg block" data-state={states[i]} aria-hidden="true" />
+            <span aria-hidden="true" className="mt-1 flex items-baseline justify-between gap-1 text-[10.5px] leading-none">
+              <span className={cn("truncate", states[i] === "active" ? "font-medium text-foreground" : states[i] === "done" ? "text-muted-foreground" : states[i] === "error" ? "text-danger" : "text-muted-foreground/60")}>{seg.label}</span>
+              {timed ? <span className="shrink-0 font-mono text-[10px] tabular-nums text-foreground-dim">{shortMs(t)}</span> : null}
+            </span>
+            <span className="sr-only">
+              {seg.title}: {SEG_TEXT[states[i]]}
+              {timed ? `, ${shortMs(t)}` : ""}
+            </span>
+          </li>
+        );
+      })}
     </ol>
+  );
+}
+
+const compactN = (n: number) => (n >= 1000 ? `${(n / 1000).toFixed(n >= 10_000 ? 0 : 1)}k` : String(n));
+
+/**
+ * The facts strip under the rail: files touched with +/- lines (from the run's real diff when
+ * loaded), tokens in and out, repair attempts. Only facts the run recorded are shown.
+ */
+export function RunMetaStrip({ changed, stats, tokens, repairAttempts }: { changed: number; stats?: FileChangeStat[]; tokens?: { in: number; out: number }; repairAttempts?: number }) {
+  const added = stats?.reduce((a, s) => a + s.added, 0) ?? null;
+  const removed = stats?.reduce((a, s) => a + s.removed, 0) ?? null;
+  const items: React.ReactNode[] = [];
+  if (changed > 0) {
+    items.push(
+      <span key="files" className="inline-flex items-center gap-1.5">
+        <FilePen className="size-3 text-foreground-dim" aria-hidden="true" />
+        <span className="tabular-nums">
+          {changed} file{changed === 1 ? "" : "s"}
+        </span>
+        {added !== null && removed !== null && stats?.length ? (
+          <span className="font-mono tabular-nums">
+            <span className="text-success">+{added}</span> <span className="text-danger">−{removed}</span>
+          </span>
+        ) : null}
+      </span>,
+    );
+  }
+  if (tokens && (tokens.in || tokens.out)) {
+    items.push(
+      <span key="tokens" className="inline-flex items-center gap-1 tabular-nums" title={`${tokens.in.toLocaleString("en-US")} tokens in · ${tokens.out.toLocaleString("en-US")} out`}>
+        <span className="text-foreground-dim">tokens</span> {compactN(tokens.in)} in · {compactN(tokens.out)} out
+      </span>,
+    );
+  }
+  if (repairAttempts) {
+    items.push(
+      <span key="repairs" className="inline-flex items-center gap-1 tabular-nums">
+        <Wrench className="size-3 text-foreground-dim" aria-hidden="true" /> {repairAttempts} repair{repairAttempts === 1 ? "" : "s"}
+      </span>,
+    );
+  }
+  if (!items.length) return null;
+  return <p className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[11.5px] text-muted-foreground">{items}</p>;
+}
+
+type CheckCell = { id: "typecheck" | "build" | "security"; label: string; state: "passed" | "failed" | "skipped" | "pending"; note?: string };
+
+/** Which check a validation command is: `tsc`/`typecheck` → typecheck, `build` → build. */
+function checkKind(command: string | undefined): "typecheck" | "build" | null {
+  if (!command) return null;
+  if (/tsc|typecheck|type-check|lint/i.test(command)) return "typecheck";
+  if (/build/i.test(command)) return "build";
+  return null;
+}
+
+/**
+ * The Checks row: Typecheck · Build · Security as three cells. The agent's validation fills the
+ * cell it ran (passed / failed); the others read "skipped" with the reason when the agent gave one.
+ * Security scans run before publishing (the Publish window), never silently.
+ */
+export function ChecksRow({ validation, running, onFix }: { validation?: RunValidation; running: boolean; onFix?: (v: RunValidation) => void }) {
+  const kind = checkKind(validation?.command);
+  const cells: CheckCell[] = (["typecheck", "build", "security"] as const).map((id) => {
+    const label = id === "typecheck" ? "Typecheck" : id === "build" ? "Build" : "Security";
+    if (running) return { id, label, state: "pending" };
+    if (id === "security") return { id, label, state: "skipped", note: "Runs in Publish" };
+    if (!validation) return { id, label, state: "skipped", note: "Not run" };
+    if (validation.skipped) return { id, label, state: "skipped", note: validation.skipped };
+    if (kind === id || (kind === null && id === "typecheck")) return { id, label, state: validation.ok ? "passed" : "failed", note: validation.command };
+    return { id, label, state: "skipped", note: "Not run" };
+  });
+  return (
+    <section aria-label="Checks" className="space-y-1.5">
+      <h3 className="text-[13px] font-semibold">Checks</h3>
+      <ul className="grid grid-cols-3 gap-1.5">
+        {cells.map((c) => {
+          const Icon = c.state === "passed" ? ShieldCheck : c.state === "failed" ? XCircle : c.state === "pending" ? Loader2 : CircleSlash;
+          return (
+            <li
+              key={c.id}
+              className={cn(
+                "flex min-w-0 items-start gap-2 rounded-lg border px-2 py-1.5 text-[12px]",
+                c.state === "passed" ? "border-success/25 bg-success/[0.06]" : c.state === "failed" ? "border-danger/30 bg-danger/[0.05]" : "border-border bg-surface/50",
+              )}
+              title={c.note}
+            >
+              <Icon className={cn("mt-0.5 size-3.5 shrink-0", c.state === "passed" ? "text-success" : c.state === "failed" ? "text-danger" : "text-muted-foreground", c.state === "pending" && "animate-spin")} aria-hidden="true" />
+              <span className="min-w-0">
+                <span className="block font-medium leading-tight">{c.label}</span>
+                <span className={cn("block truncate text-[11px] leading-tight", c.state === "failed" ? "text-danger" : c.state === "passed" ? "text-success" : "text-muted-foreground")}>
+                  {c.state === "pending" ? "Waiting" : c.state === "skipped" ? (c.note ?? "Skipped") : c.state === "passed" ? "Passed" : "Failed"}
+                </span>
+              </span>
+            </li>
+          );
+        })}
+      </ul>
+      {validation && !validation.ok && !validation.skipped ? <ChecksBlock validation={validation} onFix={onFix} /> : null}
+    </section>
   );
 }
 
@@ -429,6 +553,12 @@ export type RunCardMeta = {
   validation?: RunValidation;
   runError?: string | null;
   stats?: FileChangeStat[];
+  /** Client clock at which each server stage was first seen (streamed runs only). */
+  stageTimes?: Record<string, number>;
+  tokens?: { in: number; out: number };
+  repairAttempts?: number;
+  /** The persisted list of changed files (older messages have no file_change parts). */
+  changedFiles?: { path: string; action: string }[];
   onFix?: (v: RunValidation) => void;
   /** Plan mode: build the proposed plan (shown only on the latest finished plan). */
   onApprovePlan?: (steps: string[]) => void;
@@ -501,7 +631,8 @@ export function AssistantParts({ parts, status, streaming, meta = {} }: { parts:
             </div>
             <RunTimer startedAt={meta.startedAt} finishedAt={meta.finishedAt} running={running} className="mt-0.5 shrink-0" />
           </div>
-          <StageRail stages={stages} status={status} running={running} />
+          <StageRail stages={stages} status={status} running={running} stageTimes={meta.stageTimes} finishedAt={meta.finishedAt} />
+          {!running ? <RunMetaStrip changed={Math.max(files.length, meta.changedFiles?.length ?? 0)} stats={meta.stats} tokens={meta.tokens} repairAttempts={meta.repairAttempts} /> : null}
           {plan ? <PlanPart steps={plan} done={done && !planPending} pending={planPending} /> : null}
           {plan && planPending && done && meta.onApprovePlan ? (
             <div className="flex flex-wrap items-center gap-2 border-t border-border pt-3">
@@ -517,7 +648,10 @@ export function AssistantParts({ parts, status, streaming, meta = {} }: { parts:
           ) : null}
           <WritingFiles files={files} running={running} stats={meta.stats} />
           <ActionsSummary calls={calls} results={results} running={running} />
-          {validation ? <ChecksBlock validation={validation} onFix={meta.onFix} /> : null}
+          {/* The Checks row: shown for every run that edited files or validated, so "skipped" is said out loud. */}
+          {validation || (!running && (files.length > 0 || (meta.changedFiles?.length ?? 0) > 0)) || (running && stages.some((s) => s.stage === "validating")) ? (
+            <ChecksRow validation={validation} running={running && !validation} onFix={meta.onFix} />
+          ) : null}
         </div>
       ) : null}
       {prose.length ? <div className="space-y-2.5">{prose}</div> : null}

@@ -3,13 +3,14 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { FolderKanban, LayoutGrid, LayoutTemplate, List, Plus, Search, Sparkles, X } from "lucide-react";
+import { cn } from "@/lib/utils";
 import { readLocal, writeLocal } from "@/lib/client/workspace/storage";
 import { withViewTransition } from "@/lib/client/view-transition";
 import { buttonClasses } from "@/components/ui/button";
 import { EmptyState, Kbd } from "@/components/ui/misc";
 import { Segmented } from "@/components/ui/segmented";
 import { SelectMenu } from "@/components/ui/select-menu";
-import { ProjectCard, type ProjectCardItem } from "./project-card";
+import { ListHeader, ProjectCard, type ProjectCardItem } from "./project-card";
 
 type Sort = "recent" | "name" | "created";
 type Vis = "all" | "private" | "unlisted" | "public";
@@ -70,6 +71,17 @@ export function ProjectsBrowser({
     const c = { all: projects.length, private: 0, unlisted: 0, public: 0 };
     for (const p of projects) c[p.visibility] += 1;
     return c;
+  }, [projects]);
+
+  // Workspace facts for the strip under the toolbar, summed from the rows the page loaded.
+  const facts = useMemo(() => {
+    const live = projects.filter((p) => p.status?.live).length;
+    const previews = projects.filter((p) => p.status?.preview).length;
+    const failed = projects.filter((p) => p.status?.deploy === "failed").length;
+    const files = projects.reduce((a, p) => a + (p.fileCount ?? 0), 0);
+    const checkpoints = projects.reduce((a, p) => a + (p.checkpointCount ?? 0), 0);
+    const frameworks = new Set(projects.map((p) => p.framework)).size;
+    return { live, previews, failed, files, checkpoints, frameworks, drafts: projects.length - live };
   }, [projects]);
 
   const filtered = useMemo(() => {
@@ -204,8 +216,60 @@ export function ProjectsBrowser({
         </div>
       </div>
 
-      {/* The count is already in the title and the sidebar: "x of y" only while a filter or search narrows the list.
-          The live region stays mounted so screen readers hear the new count when one is applied. */}
+      {/* Facts strip: every number is summed from the loaded rows (live deployments, running previews, files, checkpoints). */}
+      {title ? (
+        <dl className="mb-4 flex flex-wrap items-center gap-x-5 gap-y-1.5 text-[12.5px] text-muted-foreground">
+          <div className="flex items-center gap-1.5">
+            <span className={cn("size-1.5 rounded-full", facts.live ? "bg-success" : "bg-muted-foreground/40")} aria-hidden="true" />
+            <dt className="sr-only">Live</dt>
+            <dd className="tabular-nums">
+              <span className="font-medium text-foreground">{facts.live}</span> live
+            </dd>
+          </div>
+          <div className="flex items-center gap-1.5">
+            <dt className="sr-only">Drafts</dt>
+            <dd className="tabular-nums">
+              <span className="font-medium text-foreground">{facts.drafts}</span> draft{facts.drafts === 1 ? "" : "s"}
+            </dd>
+          </div>
+          {facts.previews ? (
+            <div className="flex items-center gap-1.5">
+              <span className="live-dot" aria-hidden="true" />
+              <dt className="sr-only">Previews running</dt>
+              <dd className="tabular-nums">
+                <span className="font-medium text-foreground">{facts.previews}</span> preview{facts.previews === 1 ? "" : "s"} running
+              </dd>
+            </div>
+          ) : null}
+          {facts.failed ? (
+            <div className="flex items-center gap-1.5 text-danger">
+              <dt className="sr-only">Failed deploys</dt>
+              <dd className="tabular-nums">
+                <span className="font-medium">{facts.failed}</span> failed deploy{facts.failed === 1 ? "" : "s"}
+              </dd>
+            </div>
+          ) : null}
+          <div className="flex items-center gap-1.5">
+            <dt className="sr-only">Files</dt>
+            <dd className="tabular-nums">
+              <span className="font-medium text-foreground">{facts.files.toLocaleString("en-US")}</span> files
+            </dd>
+          </div>
+          <div className="flex items-center gap-1.5">
+            <dt className="sr-only">Checkpoints</dt>
+            <dd className="tabular-nums">
+              <span className="font-medium text-foreground">{facts.checkpoints.toLocaleString("en-US")}</span> checkpoints
+            </dd>
+          </div>
+          <div className="flex items-center gap-1.5">
+            <dt className="sr-only">Frameworks</dt>
+            <dd className="tabular-nums">
+              <span className="font-medium text-foreground">{facts.frameworks}</span> framework{facts.frameworks === 1 ? "" : "s"}
+            </dd>
+          </div>
+        </dl>
+      ) : null}
+      {/* "x of y" only while a filter or search narrows the list. The live region stays mounted so screen readers hear the new count. */}
       <p className={filtering ? "text-meta mb-3 text-muted-foreground" : "sr-only"} aria-live="polite">
         {filtering ? `${filtered.length} of ${projects.length} project${projects.length === 1 ? "" : "s"}` : ""}
       </p>
@@ -245,18 +309,7 @@ export function ProjectsBrowser({
         </ul>
       ) : (
         <div role="table" aria-label="Projects" aria-rowcount={filtered.length + 1} className="overflow-clip rounded-lg border border-border bg-card">
-          <div role="rowgroup" className="sticky top-[56px] z-10 hidden border-b border-border bg-surface md:block">
-            <div role="row" className="grid grid-cols-[minmax(0,2.2fr)_minmax(0,1.4fr)_minmax(0,1fr)_minmax(0,0.9fr)_minmax(0,1fr)_40px] items-center gap-3 px-4 py-1.5 text-[11.5px] font-medium text-muted-foreground">
-              <span role="columnheader">Name</span>
-              <span role="columnheader">Status</span>
-              <span role="columnheader">Framework</span>
-              <span role="columnheader">Visibility</span>
-              <span role="columnheader">Last edited</span>
-              <span role="columnheader">
-                <span className="sr-only">Actions</span>
-              </span>
-            </div>
-          </div>
+          <ListHeader sticky />
           <div role="rowgroup" ref={rowsRef} onKeyDown={onRowsKey}>
             {filtered.map((p) => (
               <ProjectCard key={p.id} project={p} layout="list" showWorkspace={showWorkspace} />

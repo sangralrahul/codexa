@@ -106,6 +106,108 @@ function FindingRow({ f }: { f: Finding }) {
   );
 }
 
+const VERSION_STATE: Record<DeploymentDto["status"], { label: string; tone: string }> = {
+  live: { label: "Live", tone: "text-success" },
+  failed: { label: "Failed", tone: "text-danger" },
+  queued: { label: "Queued", tone: "text-info" },
+  building: { label: "Building", tone: "text-info" },
+  deploying: { label: "Uploading", tone: "text-info" },
+  rolled_back: { label: "Previous", tone: "text-muted-foreground" },
+};
+const PROVIDER_NAME: Record<string, string> = { codexa: "Codexa hosting", vercel: "Vercel" };
+const hostOf = (url: string | null) => (url ? url.replace(/^https?:\/\//, "").split("/")[0] : null);
+const versionTime = (iso: string) => new Date(iso).toLocaleString(undefined, { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" });
+
+/**
+ * "Latest deployment" (status, host, provider, when, how long it took, the current checks summary)
+ * and the versions list (the newest five with Restore for versions that were live before).
+ * Everything comes from the deployments rows; Restore calls the rollback API.
+ */
+function VersionsSection({ deployments, live, scan, canRollback, rollingBack, onRollback }: { deployments: DeploymentDto[]; live: DeploymentDto | null; scan: ScanReport | null; canRollback: boolean; rollingBack: string | null; onRollback: (id: string) => void }) {
+  const [showAll, setShowAll] = useState(false);
+  if (!deployments.length) return null;
+  const latest = deployments[0];
+  const state = VERSION_STATE[latest.status];
+  const took = latest.finishedAt ? Date.parse(latest.finishedAt) - Date.parse(latest.createdAt) : null;
+  const versions = showAll ? deployments : deployments.slice(0, 5);
+  return (
+    <section aria-labelledby="versions-title" className="rounded-xl border border-border">
+      <div className="flex items-center gap-2 border-b border-border px-4 py-3">
+        <Rocket className="size-4 text-muted-foreground" aria-hidden="true" />
+        <h3 id="versions-title" className="text-[13.5px] font-semibold">
+          Latest deployment
+        </h3>
+        <span className={cn("ml-auto text-[12px] font-medium", state.tone)}>{state.label}</span>
+      </div>
+      <dl className="grid grid-cols-2 gap-x-4 gap-y-2 px-4 py-3 text-[12px] sm:grid-cols-4">
+        <div className="min-w-0">
+          <dt className="text-muted-foreground">Address</dt>
+          <dd className="truncate font-mono" title={latest.url ?? undefined}>
+            {hostOf(latest.url) ?? "—"}
+          </dd>
+        </div>
+        <div className="min-w-0">
+          <dt className="text-muted-foreground">Provider</dt>
+          <dd className="truncate">{PROVIDER_NAME[latest.provider] ?? latest.provider}</dd>
+        </div>
+        <div className="min-w-0">
+          <dt className="text-muted-foreground">When</dt>
+          <dd className="truncate tabular-nums" title={versionTime(latest.finishedAt ?? latest.createdAt)}>
+            {relativeTime(latest.finishedAt ?? latest.createdAt)}
+            {took !== null && took >= 0 ? <span className="text-muted-foreground"> · {formatElapsed(took)}</span> : null}
+          </dd>
+        </div>
+        <div className="min-w-0">
+          <dt className="text-muted-foreground">Checks now</dt>
+          <dd className="truncate tabular-nums">
+            {scan ? (
+              <>
+                {scan.counts.error ? <span className="text-danger">{scan.counts.error} to fix</span> : null}
+                {scan.counts.error && scan.counts.warning ? " · " : null}
+                {scan.counts.warning ? <span className="text-warning">{scan.counts.warning} suggestion{scan.counts.warning === 1 ? "" : "s"}</span> : null}
+                {!scan.counts.error && !scan.counts.warning ? <span className="text-success">{scan.counts.pass} passed</span> : null}
+              </>
+            ) : (
+              <span className="text-muted-foreground">Scanning…</span>
+            )}
+          </dd>
+        </div>
+      </dl>
+      {latest.error ? <p className="line-clamp-2 border-t border-border px-4 py-2 font-mono text-[11px] text-danger">{latest.error}</p> : null}
+      <ol className="border-t border-border" aria-label="Versions">
+        {versions.map((v, i) => {
+          const s = VERSION_STATE[v.status];
+          const restorable = canRollback && v.status === "rolled_back" && Boolean(v.url);
+          return (
+            <li key={v.id} className="flex items-center gap-3 border-b border-border px-4 py-2 text-[12px] last:border-b-0">
+              <span className={cn("size-1.5 shrink-0 rounded-full", v.status === "live" ? "bg-success" : v.status === "failed" ? "bg-danger" : IN_PROGRESS.includes(v.status) ? "bg-info" : "bg-muted-foreground/40")} aria-hidden="true" />
+              <span className="w-14 shrink-0 font-mono text-[11px] text-muted-foreground">#{deployments.length - i}</span>
+              <span className={cn("w-16 shrink-0 font-medium", s.tone)}>{s.label}</span>
+              <span className="min-w-0 flex-1 truncate font-mono text-[11px] text-muted-foreground">{hostOf(v.url) ?? (v.error ? v.error : PROVIDER_NAME[v.provider] ?? v.provider)}</span>
+              <time dateTime={v.createdAt} title={versionTime(v.createdAt)} className="shrink-0 tabular-nums text-muted-foreground">
+                {relativeTime(v.finishedAt ?? v.createdAt)}
+              </time>
+              {restorable ? (
+                <Button size="sm" variant="outline" appearance="app" className="h-6 px-2 text-[11px]" disabled={rollingBack !== null} loading={rollingBack === v.id} onClick={() => onRollback(v.id)}>
+                  Restore
+                </Button>
+              ) : v.id === live?.id ? (
+                <span className="inline-flex h-6 items-center px-2 text-[11px] text-success">Current</span>
+              ) : null}
+            </li>
+          );
+        })}
+      </ol>
+      {deployments.length > 5 ? (
+        <button type="button" onClick={() => setShowAll((s) => !s)} aria-expanded={showAll} className="flex w-full items-center gap-1 border-t border-border px-4 py-2 text-[12px] text-muted-foreground hover:text-foreground">
+          <ChevronDown className={cn("size-3.5 transition-transform", showAll && "rotate-180")} aria-hidden="true" />
+          {showAll ? "Show fewer" : `All ${deployments.length} versions`}
+        </button>
+      ) : null}
+    </section>
+  );
+}
+
 function ScoreRing({ value, label }: { value: number; label: string }) {
   const r = 22;
   const c = 2 * Math.PI * r;
@@ -479,6 +581,9 @@ export function PublishPopover({ projectId, onManage, className, compact, open: 
                   </div>
                 ) : null}
               </section>
+
+              {/* Latest deployment and the versions behind it, from the deployments table. */}
+              {d.data ? <VersionsSection deployments={d.data.deployments} live={live} scan={scan} canRollback={d.canDeploy} rollingBack={d.rollingBack} onRollback={(id) => void d.rollback(id)} /> : null}
 
               {d.loadError && !d.data ? <p className="text-[12.5px] text-danger" role="alert">{d.loadError}</p> : null}
               {d.publishError ? <p className="text-[12.5px] text-danger" role="alert">{d.publishError}</p> : null}

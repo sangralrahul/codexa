@@ -3,21 +3,21 @@ import { requireUser } from "@/lib/auth/guards";
 import { getCurrentWorkspace } from "@/lib/services/current-workspace";
 import { roleAtLeast } from "@/lib/services/access";
 import { listProjects } from "@/lib/services/projects";
-import { getMilestones, getProjectStatuses, getRecentActivity } from "@/lib/services/dashboard";
-import { serializeProject } from "@/app/api/v1/projects/_lib/serialize";
-import type { ProjectCardItem } from "@/components/projects/project-card";
+import { getMilestones, getRecentActivity } from "@/lib/services/dashboard";
+import { getDailySeries, getRecentDeployments } from "@/lib/services/dashboard-insights";
 import { getWorkspaceEntitlements } from "@/lib/services/usage";
 import { capabilities } from "@/lib/env";
 import { PLANS } from "@/config/plans";
 import { clampIdea } from "@/lib/client/pending-idea";
 import { getTemplate, summarizeTemplate, TEMPLATES } from "@/templates";
-import { DEFAULT_TEMPLATE_ID, listTemplateSummaries, templateCategory } from "@/components/projects/template-summaries";
+import { DEFAULT_TEMPLATE_ID, listTemplateSummaries } from "@/components/projects/template-summaries";
 import type { PromptPreset } from "@/components/projects/prompt-box";
 import { CHECKLIST_COOKIE } from "@/components/projects/getting-started";
-import { toStatusDto } from "@/components/projects/status";
+import { buildProjectCards } from "@/components/projects/card-data";
 import { DashboardCockpit } from "@/components/projects/dashboard-cockpit";
 import type { DeploymentRow } from "@/components/projects/deployments-card";
 import type { RiverItem } from "@/components/projects/activity-river";
+import type { KpiSeries } from "@/components/projects/kpi-row";
 import type { TemplateCardData } from "@/components/templates";
 
 export const metadata = { title: "Dashboard", robots: { index: false } };
@@ -29,45 +29,55 @@ const FIRST_RUN = ["vite-react-dashboard", "vite-react-storefront", "vite-react-
 /** Rows in the recent projects table. */
 const RECENT = 8;
 
+function hostOf(url: string | null) {
+  if (!url) return null;
+  try {
+    return new URL(url).host;
+  } catch {
+    return url.replace(/^https?:\/\//, "").split("/")[0];
+  }
+}
+
 export default async function DashboardPage({ searchParams }: { searchParams: SearchParams }) {
   const user = await requireUser("/dashboard");
   const sp = await searchParams;
   const { current, all } = await getCurrentWorkspace(user);
   const workspaceIds = all.map((w) => w.workspace.id);
-  const [milestones, entitlements, rows, activity] = await Promise.all([
+  const [milestones, entitlements, rows, activity, daily] = await Promise.all([
     getMilestones(workspaceIds),
     current ? getWorkspaceEntitlements(current.workspace) : null,
     current ? listProjects(current.workspace.id) : Promise.resolve([]),
     getRecentActivity(workspaceIds, 8),
+    current ? getDailySeries(current.workspace.id, 14) : null,
   ]);
   const projectCount = rows.length;
-  // Every project's real state (running preview, live deployment, newest deployment): the table shows
-  // the recent ones, the deployments card the newest deployments across the whole workspace.
-  const statuses = await getProjectStatuses(rows.map((p) => p.id));
+  // Every project's real state, file/checkpoint counts and the workspace members; the newest five
+  // deployments across the whole workspace for the right rail.
   const touched = (p: (typeof rows)[number]) => (p.lastOpenedAt ?? p.updatedAt).getTime();
   const recentRows = [...rows].sort((a, b) => touched(b) - touched(a)).slice(0, RECENT);
-  const projectItems: ProjectCardItem[] = recentRows.map((p) => {
-    const s = serializeProject(p);
-    return {
-      ...s,
-      lastOpenedAt: s.lastOpenedAt?.toISOString() ?? null,
-      createdAt: s.createdAt.toISOString(),
-      updatedAt: s.updatedAt.toISOString(),
-      workspaceName: current!.workspace.name,
-      role: current!.role,
-      category: templateCategory(s.templateId),
-      status: toStatusDto(statuses.get(p.id)),
-    };
-  });
-  const deployments: DeploymentRow[] = rows
-    .flatMap((p) => {
-      const s = statuses.get(p.id);
-      if (!s?.lastDeploy) return [];
-      const live = s.live && s.lastDeploy.status === "live" ? s.live : null;
-      return [{ projectId: p.id, projectName: p.name, status: s.lastDeploy.status, at: s.lastDeploy.at.toISOString(), url: live?.url ?? null, host: live?.host ?? null, error: s.lastDeploy.error }];
-    })
-    .sort((a, b) => Date.parse(b.at) - Date.parse(a.at))
-    .slice(0, 5);
+  const [{ items: projectItems }, recentDeploys] = await Promise.all([
+    current ? buildProjectCards(recentRows, { id: current.workspace.id, name: current.workspace.name, role: current.role }) : Promise.resolve({ items: [], statuses: new Map(), members: [] }),
+    getRecentDeployments(
+      rows.map((p) => p.id),
+      5,
+    ),
+  ]);
+  const canRollback = Boolean(current && roleAtLeast(current.role, "admin"));
+  const deployments: DeploymentRow[] = recentDeploys.map((d) => ({
+    id: d.id,
+    projectId: d.projectId,
+    projectName: d.projectName,
+    provider: d.provider,
+    status: d.status,
+    at: (d.finishedAt ?? d.createdAt).toISOString(),
+    url: d.url,
+    host: d.status === "live" || d.status === "rolled_back" ? hostOf(d.url) : null,
+    error: d.error,
+    canRollback,
+  }));
+  const series: KpiSeries | null = daily
+    ? { projects: daily.days.map((d) => d.projects), ai: daily.days.map((d) => d.ai), minutes: daily.days.map((d) => d.minutes), deploys: daily.days.map((d) => d.deploys), from: daily.from, to: daily.to }
+    : null;
   const river: RiverItem[] = activity.map((a) => ({
     id: a.id,
     projectId: a.projectId,
@@ -171,6 +181,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: Se
           ? { plan: entitlements.plan, periodStart: entitlements.periodStart, limits: entitlements.limits, used: entitlements.used }
           : null
       }
+      series={series}
       milestones={m}
       showChecklist={showChecklist}
       canCreate={canCreate}

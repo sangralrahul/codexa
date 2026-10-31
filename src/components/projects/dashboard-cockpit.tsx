@@ -1,9 +1,11 @@
+import { Suspense } from "react";
 import Link from "next/link";
 import { ArrowRight, ChevronRight, Compass, FolderGit2, LayoutTemplate, Plus, UserPlus, Zap } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { AppPage } from "@/components/app/app-shell";
 import { PlanPill } from "@/components/app/workspace-switcher";
 import { buttonClasses } from "@/components/ui/button";
+import { Kbd } from "@/components/ui/misc";
 import { TemplateTile, type TemplateCardData } from "@/components/templates";
 import { PromptBox } from "./prompt-box";
 import type { ProjectCardItem } from "./project-card";
@@ -11,16 +13,17 @@ import { RecentProjects } from "./recent-projects";
 import { GettingStarted, type ChecklistMilestones } from "./getting-started";
 import { ActivityRiver, type RiverItem } from "./activity-river";
 import { DeploymentsCard, type DeploymentRow } from "./deployments-card";
-import { KpiRow, type KpiEntitlements } from "./kpi-row";
+import { KpiRow, type KpiEntitlements, type KpiSeries } from "./kpi-row";
+import { SystemStatusCard, SystemStatusSkeleton } from "./system-status-card";
 import { PanelCard } from "./panel-card";
 
 const quietLink = "link-draw inline-flex items-center gap-1 text-[13px] font-medium text-muted-foreground hover:text-foreground";
 
 /** One-click entries to the places people otherwise hunt for (all real routes). */
 function QuickActions({ canCreate, templateCount }: { canCreate: boolean; templateCount: number }) {
-  const items: { href: string; icon: LucideIcon; title: string; detail: string }[] = [
-    ...(canCreate ? [{ href: "/new-project", icon: Plus, title: "New project", detail: "From a prompt, a template or GitHub" }] : []),
-    { href: "/dashboard/templates", icon: LayoutTemplate, title: "Browse templates", detail: `${templateCount} working starters` },
+  const items: { href: string; icon: LucideIcon; title: string; detail: string; keys?: string[] }[] = [
+    ...(canCreate ? [{ href: "/new-project", icon: Plus, title: "New project", detail: "From a prompt, a template or GitHub", keys: ["N"] }] : []),
+    { href: "/dashboard/templates", icon: LayoutTemplate, title: "Browse templates", detail: `${templateCount} working starters`, keys: ["G", "T"] },
     ...(canCreate ? [{ href: "/import-project", icon: FolderGit2, title: "Import from GitHub", detail: "Bring an existing repository" }] : []),
     { href: "/showcase", icon: Compass, title: "Community", detail: "Remix public apps" },
     { href: "/settings/members", icon: UserPlus, title: "Invite your team", detail: "Members and roles" },
@@ -28,7 +31,7 @@ function QuickActions({ canCreate, templateCount }: { canCreate: boolean; templa
   return (
     <PanelCard title="Quick actions" icon={Zap}>
       <ul className="p-2">
-        {items.map(({ href, icon: Icon, title, detail }) => (
+        {items.map(({ href, icon: Icon, title, detail, keys }) => (
           <li key={href}>
             <Link
               href={href}
@@ -41,6 +44,15 @@ function QuickActions({ canCreate, templateCount }: { canCreate: boolean; templa
                 <span className="block truncate text-[13.5px] font-medium text-foreground">{title}</span>
                 <span className="block truncate text-[12px] text-muted-foreground">{detail}</span>
               </span>
+              {keys ? (
+                <span className="hidden shrink-0 items-center gap-0.5 opacity-0 transition-opacity duration-(--dur-2) group-hover/qa:opacity-100 group-focus-visible/qa:opacity-100 md:flex [@media(hover:none)]:hidden" aria-hidden="true">
+                  {keys.map((k) => (
+                    <Kbd key={k} className="h-[18px] min-w-[18px] border border-border bg-muted px-1 text-[10.5px]">
+                      {k}
+                    </Kbd>
+                  ))}
+                </span>
+              ) : null}
               <ChevronRight className="size-4 shrink-0 text-foreground-dim transition-transform duration-(--dur-2) group-hover/qa:translate-x-0.5 calm:transition-none" aria-hidden="true" />
             </Link>
           </li>
@@ -65,6 +77,7 @@ export function DashboardCockpit({
   deployments,
   activity,
   entitlements,
+  series,
   milestones,
   showChecklist,
   canCreate,
@@ -82,6 +95,8 @@ export function DashboardCockpit({
   deployments: DeploymentRow[];
   activity: RiverItem[];
   entitlements: KpiEntitlements | null;
+  /** Fourteen days of real activity for the KPI sparklines (null without a workspace). */
+  series: KpiSeries | null;
   milestones: ChecklistMilestones;
   showChecklist: boolean;
   canCreate: boolean;
@@ -130,8 +145,11 @@ export function DashboardCockpit({
               <Link href="/import-project" className={buttonClasses("outline", "sm", "h-9 px-3.5")}>
                 <FolderGit2 className="size-4" aria-hidden="true" /> Import
               </Link>
-              <Link href="/new-project" className={buttonClasses("primary", "sm", "h-9 px-3.5")}>
+              <Link href="/new-project" className={buttonClasses("primary", "sm", "h-9 pl-3.5 pr-2")}>
                 <Plus className="size-4" aria-hidden="true" /> New project
+                <Kbd className="ml-1 border-0 bg-primary-foreground/15 text-primary-foreground [@media(hover:none)]:hidden" aria-hidden="true">
+                  N
+                </Kbd>
               </Link>
             </div>
           ) : null}
@@ -146,7 +164,7 @@ export function DashboardCockpit({
         <GettingStarted milestones={milestones} canCreate={canCreate} emailVerified={emailVerified} emailConfigured={emailConfigured} resumeHref={projects[0] ? `/projects/${projects[0].id}` : undefined} layout="strip" />
       ) : null}
 
-      {entitlements ? <KpiRow entitlements={entitlements} projectCount={projectCount} /> : null}
+      {entitlements ? <KpiRow entitlements={entitlements} projectCount={projectCount} series={series} /> : null}
 
       <div className="grid grid-cols-1 gap-8 lg:grid-cols-[minmax(0,1fr)_340px] lg:gap-6 xl:grid-cols-[minmax(0,1fr)_360px]">
         <div className="min-w-0 space-y-8">
@@ -175,6 +193,9 @@ export function DashboardCockpit({
         <div className="min-w-0 space-y-5">
           <DeploymentsCard rows={deployments} />
           <ActivityRiver items={activity} />
+          <Suspense fallback={<SystemStatusSkeleton />}>
+            <SystemStatusCard />
+          </Suspense>
           <QuickActions canCreate={canCreate} templateCount={templateCount} />
         </div>
       </div>

@@ -805,11 +805,13 @@ function Shell({
         {mounted && isDesktop ? (
           <StatusBar
             branch={project.githubRepo ? (project.githubBranch ?? "main") : null}
+            checkpoint={changes.snapshot ? { name: changes.snapshot.name, createdAt: changes.snapshot.createdAt, changed: changes.changes ? changes.changes.length : null, total: snapshots.count } : null}
             problems={problems}
             cursor={cursor}
             language={language}
             onOpenPreview={() => setView((v) => (v === "code" ? "split" : v))}
             onOpenGithub={() => setTool("github")}
+            onOpenHistory={() => setTool("history")}
             onOpenProblems={() => setDockOpen(true, "problems")}
             onGoToLine={() => runEditorAction("editor.action.gotoLine")}
             onOpenCommands={() => setPalette("commands")}

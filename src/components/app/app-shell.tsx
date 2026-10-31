@@ -6,7 +6,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Dialog as RD } from "radix-ui";
 import { MailWarning, Menu, Plus, Search } from "lucide-react";
-import { AppSidebar, type SidebarProject, type SidebarUpsell, type SidebarUsage, type SidebarUser, type SidebarWorkspace } from "./sidebar";
+import { AppSidebar, type SidebarBuild, type SidebarProject, type SidebarUpsell, type SidebarUsage, type SidebarUser, type SidebarWorkspace } from "./sidebar";
 import { LogoMark } from "@/components/logo";
 import { Alert, Kbd } from "@/components/ui/misc";
 import { buttonClasses } from "@/components/ui/button";
@@ -75,6 +75,7 @@ export function AppShell({
   usage,
   recent,
   upsell,
+  build = null,
   initialCollapsed,
   templates,
   defaultTemplate,
@@ -92,6 +93,8 @@ export function AppShell({
   usage: SidebarUsage | null;
   recent: SidebarProject[];
   upsell: SidebarUpsell;
+  /** Version and configured capabilities for the sidebar's bottom line. */
+  build?: SidebarBuild | null;
   initialCollapsed: boolean;
   templates: CommandTemplate[];
   defaultTemplate: { id: string; name: string; fileCount?: number };
@@ -173,7 +176,7 @@ export function AppShell({
   }
 
   const crumb = NESTED.find(([p]) => pathname === p || pathname.startsWith(p + "/"));
-  const sidebarProps = { workspaces, currentId: currentWorkspaceId, isStaff, user, usage, recent, upsell, canCreate };
+  const sidebarProps = { workspaces, currentId: currentWorkspaceId, isStaff, user, usage, recent, upsell, build, canCreate };
 
   return (
     <ActionsSlot.Provider value={slot}>

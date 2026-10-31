@@ -2,16 +2,14 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { ArrowRight, FolderGit2, FolderKanban, LayoutGrid, List } from "lucide-react";
+import { ArrowRight, Compass, FolderGit2, FolderKanban, LayoutGrid, LayoutTemplate, List, Plus } from "lucide-react";
 import { readLocal, writeLocal } from "@/lib/client/workspace/storage";
 import { withViewTransition } from "@/lib/client/view-transition";
 import { Segmented } from "@/components/ui/segmented";
-import { ProjectCard, type ProjectCardItem } from "./project-card";
+import { ListHeader, ProjectCard, type ProjectCardItem } from "./project-card";
 
 type Layout = "grid" | "list";
 const LAYOUT_KEY = "codexa:dashboard:layout";
-
-const COLUMNS = "md:grid-cols-[minmax(0,2.2fr)_minmax(0,1.4fr)_minmax(0,1fr)_minmax(0,0.9fr)_minmax(0,1fr)_40px]";
 
 /**
  * Recent projects on the dashboard: large cards with the starting template's screenshot in a
@@ -78,21 +76,42 @@ export function RecentProjects({ projects, projectCount, canCreate }: { projects
               <ProjectCard project={p} layout="grid" priority={i === 0} />
             </li>
           ))}
+          {/* An odd number of cards leaves a hole in the two-column grid: fill it with the real entry points. */}
+          {canCreate && projects.length < 4 && projects.length % 2 === 1 ? (
+            <li className="hidden sm:block">
+              <div className="flex h-full min-h-[240px] flex-col gap-4 rounded-2xl border border-dashed border-border-strong p-5">
+                <div>
+                  <p className="text-[15px] font-semibold">Start the next one</p>
+                  <p className="mt-1 text-[13px] text-muted-foreground">Describe it in the composer above, or pick a starting point.</p>
+                </div>
+                <ul className="my-auto space-y-1">
+                  {[
+                    { href: "/new-project", icon: Plus, label: "New project", detail: "Blank or from a template" },
+                    { href: "/import-project", icon: FolderGit2, label: "Import from GitHub", detail: "Bring an existing repository" },
+                    { href: "/dashboard/templates", icon: LayoutTemplate, label: "Browse templates", detail: "Working starters by category" },
+                    { href: "/showcase", icon: Compass, label: "Community", detail: "Remix a public app" },
+                  ].map(({ href, icon: Icon, label, detail }) => (
+                    <li key={href}>
+                      <Link href={href} className="group/next flex items-center gap-3 rounded-[10px] px-2 py-1.5 transition-colors hover:bg-surface focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-ring">
+                        <span className="icon-tile size-8 rounded-[9px]" aria-hidden="true">
+                          <Icon className="size-4" />
+                        </span>
+                        <span className="min-w-0 flex-1">
+                          <span className="block text-[13px] font-medium">{label}</span>
+                          <span className="block truncate text-[11.5px] text-muted-foreground">{detail}</span>
+                        </span>
+                        <ArrowRight className="size-3.5 text-foreground-dim transition-transform group-hover/next:translate-x-0.5" aria-hidden="true" />
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </li>
+          ) : null}
         </ul>
       ) : (
         <div role="table" aria-label="Recent projects" aria-rowcount={projects.length + 1} className="card-premium overflow-hidden">
-          <div role="rowgroup" className="hidden border-b border-border bg-surface md:block">
-            <div role="row" className={`grid items-center gap-3 px-4 py-2 text-[11.5px] font-medium text-muted-foreground ${COLUMNS}`}>
-              <span role="columnheader">Name</span>
-              <span role="columnheader">Status</span>
-              <span role="columnheader">Framework</span>
-              <span role="columnheader">Visibility</span>
-              <span role="columnheader">Last edited</span>
-              <span role="columnheader">
-                <span className="sr-only">Actions</span>
-              </span>
-            </div>
-          </div>
+          <ListHeader />
           <div role="rowgroup">
             {projects.map((p) => (
               <ProjectCard key={p.id} project={p} layout="list" />

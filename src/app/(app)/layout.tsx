@@ -4,13 +4,15 @@ import { requireUser } from "@/lib/auth/guards";
 import { isStaff } from "@/lib/auth/guards";
 import { getCurrentWorkspace } from "@/lib/services/current-workspace";
 import { countProjects, listRecentProjectsForUser } from "@/lib/services/projects";
+import { listMembers } from "@/lib/services/workspaces";
 import { getRunningProjectIds } from "@/lib/services/dashboard";
 import { getWorkspaceEntitlements } from "@/lib/services/usage";
 import { PLANS } from "@/config/plans";
-import { capabilities } from "@/lib/env";
+import { capabilities, env } from "@/lib/env";
 import { getTemplate } from "@/templates";
 import { AppShell } from "@/components/app/app-shell";
 import { DEFAULT_TEMPLATE_ID, listTemplateSummaries } from "@/components/projects/template-summaries";
+import pkg from "../../../package.json";
 
 /** The next plan up and what it adds, for the sidebar's upgrade card (numbers come from the plan config). */
 function upsellFor(plan: string) {
@@ -24,10 +26,11 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   const user = await requireUser();
   const { current, all } = await getCurrentWorkspace(user);
   const names = new Map(all.map((w) => [w.workspace.id, w.workspace.name]));
-  // Plan, project count and recent projects (with whether their preview is running) for the sidebar.
-  const [entitlements, projects, recent] = await Promise.all([
+  // Plan, project and member counts and recent projects (with whether their preview is running) for the sidebar.
+  const [entitlements, projects, members, recent] = await Promise.all([
     current ? getWorkspaceEntitlements(current.workspace) : null,
     current ? countProjects(current.workspace.id) : 0,
+    current ? listMembers(current.workspace.id) : [],
     listRecentProjectsForUser(
       all.map((w) => w.workspace.id),
       5,
@@ -37,6 +40,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   const collapsed = (await cookies()).get("codexa_sidebar")?.value === "collapsed";
   const templates = listTemplateSummaries();
   const starter = getTemplate(DEFAULT_TEMPLATE_ID);
+  const nodeEnv = env.NODE_ENV === "production" ? "production" : env.NODE_ENV === "test" ? "test" : "development";
   return (
     <AppShell
       user={{ name: user.name, email: user.email, avatarUrl: user.avatarUrl }}
@@ -46,7 +50,19 @@ export default async function AppLayout({ children }: { children: React.ReactNod
       emailVerified={Boolean(user.emailVerifiedAt)}
       emailConfigured={capabilities.email}
       devMailbox={process.env.NODE_ENV !== "production"}
-      usage={entitlements ? { plan: entitlements.plan, projects, projectLimit: entitlements.limits.projects } : null}
+      usage={
+        entitlements
+          ? {
+              plan: entitlements.plan,
+              projects,
+              projectLimit: entitlements.limits.projects,
+              members: members.length,
+              memberLimit: entitlements.limits.members,
+              ai: entitlements.used.ai_request,
+              aiLimit: entitlements.limits.aiRequestsPerMonth,
+            }
+          : null
+      }
       recent={recent.map((p) => ({
         id: p.id,
         name: p.name,
@@ -58,6 +74,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
         updatedAt: (p.lastOpenedAt ?? p.updatedAt).toISOString(),
       }))}
       upsell={entitlements ? upsellFor(entitlements.plan) : null}
+      build={{ version: pkg.version, env: nodeEnv, runner: capabilities.runner, ai: capabilities.ai || process.env.AI_MOCK === "1", aiMock: process.env.AI_MOCK === "1" }}
       initialCollapsed={collapsed}
       templates={templates.map((t) => ({ id: t.id, name: t.name, category: t.category, framework: t.framework, frameworkName: t.frameworkName }))}
       defaultTemplate={{ id: DEFAULT_TEMPLATE_ID, name: starter?.name ?? "React starter", fileCount: starter ? Object.keys(starter.files).length : undefined }}

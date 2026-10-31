@@ -3,80 +3,137 @@ import { Skeleton } from "@/components/ui/misc";
 
 /** Placeholders that match the real layouts (same sizes, so nothing shifts when the page arrives). */
 
+/** A right-rail panel placeholder: 48px header with an icon tile, then `rows` list rows. */
+function PanelSkeleton({ rows, title }: { rows: number; title: number }) {
+  return (
+    <div className="card-premium overflow-hidden">
+      <div className="flex h-12 items-center gap-2.5 border-b border-border px-4">
+        <Skeleton className="size-7 rounded-[8px]" />
+        <Skeleton className="h-3.5" style={{ width: title }} />
+        <Skeleton className="ml-auto h-3 w-12" />
+      </div>
+      <div className="divide-y divide-border">
+        {Array.from({ length: rows }).map((_, i) => (
+          <div key={i} className="flex items-center gap-3 px-4 py-2.5">
+            <Skeleton className="size-7 rounded-[8px]" />
+            <div className="flex-1 space-y-1.5">
+              <Skeleton className="h-3" style={{ width: `${62 - (i % 3) * 10}%` }} />
+              <Skeleton className="h-2.5" style={{ width: `${40 + (i % 2) * 12}%` }} />
+            </div>
+            <Skeleton className="h-3 w-12" />
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+/** Mirrors the cockpit: header card with the composer, four KPI cards with bars, the projects grid beside the right rail. */
 export function DashboardSkeleton() {
   return (
     <div role="status" aria-label="Loading dashboard" className="animate-fade-in">
-      <AppPage className="pb-4 pt-8 lg:pb-6 lg:pt-12">
-        <div className="mx-auto max-w-4xl">
-          <Skeleton className="mx-auto h-3 w-40" />
-          <Skeleton className="mx-auto mt-4 h-11 w-[min(520px,90%)] rounded-lg" />
-          <div className="mx-auto mt-7 max-w-3xl">
-            <div className="comet-border rounded-[20px]" data-active>
-              <div className="comet-border__inner rounded-[19px] bg-card p-4">
-                <Skeleton className="h-4 w-2/3" />
-                <Skeleton className="mt-2 h-4 w-1/3" />
-                <div className="mt-[68px] flex items-center gap-2">
-                  <Skeleton className="h-8 w-36 rounded-md" />
-                  <Skeleton className="h-8 w-24 rounded-md" />
-                  <Skeleton className="ml-auto h-9 w-24 rounded-md" />
-                </div>
-              </div>
+      <AppPage width="wide" className="space-y-8 py-6 lg:py-7">
+        <div className="card-premium rounded-[20px] px-5 pb-5 pt-6 sm:px-7 sm:pb-7 sm:pt-8">
+          <div className="flex items-end gap-6">
+            <div className="flex-1 space-y-3">
+              <Skeleton className="h-3 w-20" />
+              <Skeleton className="h-8 w-72 rounded-lg" />
+              <Skeleton className="h-3.5 w-64" />
             </div>
-            <Skeleton className="mx-auto mt-3 h-5 w-[min(560px,90%)] rounded-full" />
+            <Skeleton className="h-9 w-24 rounded-[10px]" />
+            <Skeleton className="h-9 w-32 rounded-[10px]" />
           </div>
-          <div className="mt-5 flex justify-center gap-2 overflow-hidden">
+          <div className="mt-6 rounded-[16px] border border-border bg-card p-4">
+            <Skeleton className="h-4 w-2/3" />
+            <div className="mt-[52px] flex items-center gap-2">
+              <Skeleton className="h-8 w-20 rounded-md" />
+              <Skeleton className="h-8 w-36 rounded-md" />
+              <Skeleton className="h-8 w-24 rounded-md" />
+              <Skeleton className="ml-auto h-9 w-24 rounded-md" />
+            </div>
+          </div>
+          <div className="mt-4 flex gap-2 overflow-hidden">
             {[0, 1, 2, 3, 4, 5].map((i) => (
-              <Skeleton key={i} className="h-10 w-32 shrink-0 rounded-lg" />
+              <Skeleton key={i} className="h-8 w-28 shrink-0 rounded-full" />
             ))}
           </div>
         </div>
-      </AppPage>
-      <AppPage className="space-y-10 pt-2">
-        <div>
-          <Skeleton className="mb-3 h-4 w-36" />
-          <div className="grid gap-4 lg:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
-            <div className="grid overflow-hidden rounded-lg border border-border bg-card md:grid-cols-[minmax(0,1.05fr)_minmax(0,1fr)]">
-              <Skeleton className="aspect-[16/10] rounded-none md:aspect-auto md:min-h-[236px]" />
-              <div className="space-y-3 p-6">
-                <Skeleton className="h-3 w-40" />
-                <Skeleton className="h-6 w-48" />
-                <Skeleton className="h-6 w-56 rounded-full" />
-                <Skeleton className="h-20 w-full rounded-md" />
-                <Skeleton className="h-9 w-32 rounded-md" />
+
+        <div className="grid grid-cols-2 gap-4 xl:grid-cols-4">
+          {[0, 1, 2, 3].map((i) => (
+            <div key={i} className="card-premium flex flex-col gap-3 p-4 sm:p-5">
+              <div className="flex items-center gap-3">
+                <Skeleton className="size-9 rounded-[10px]" />
+                <Skeleton className="h-3.5 w-24" />
               </div>
-            </div>
-            <div className="divide-y divide-border overflow-hidden rounded-lg border border-border bg-card">
-              {[0, 1, 2].map((i) => (
-                <div key={i} className="flex items-center gap-3 px-4 py-5">
-                  <Skeleton className="h-10 w-16 rounded-[8px]" />
-                  <div className="flex-1 space-y-2">
-                    <Skeleton className="h-3.5 w-2/3" />
-                    <Skeleton className="h-3 w-1/2" />
-                  </div>
+              <div className="flex items-end justify-between gap-3">
+                <Skeleton className="h-7 w-20 rounded-md" />
+                <div className="flex h-7 w-28 items-end gap-0.5">
+                  {[4, 7, 5, 9, 6, 10, 8, 12, 7, 11, 9, 13, 10, 14].map((h, j) => (
+                    <Skeleton key={j} className="flex-1 rounded-sm" style={{ height: h * 2 }} />
+                  ))}
                 </div>
-              ))}
+              </div>
+              <Skeleton className="h-1 w-full rounded-full" />
+              <div className="flex justify-between">
+                <Skeleton className="h-3 w-32" />
+                <Skeleton className="h-3 w-20" />
+              </div>
+            </div>
+          ))}
+        </div>
+
+        <div className="grid grid-cols-1 gap-8 lg:grid-cols-[minmax(0,1fr)_340px] lg:gap-6 xl:grid-cols-[minmax(0,1fr)_360px]">
+          <div className="min-w-0 space-y-8">
+            <div>
+              <div className="mb-3.5 flex items-center gap-3">
+                <Skeleton className="size-8 rounded-[10px]" />
+                <Skeleton className="h-4 w-36" />
+                <Skeleton className="ml-auto h-7 w-16 rounded-md" />
+              </div>
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                {[0, 1, 2, 3].map((i) => (
+                  <div key={i} className="card-premium overflow-hidden">
+                    <div className="flex h-9 items-center gap-2 border-b border-border bg-surface px-3">
+                      <Skeleton className="h-2 w-8 rounded-full" />
+                      <Skeleton className="h-5 flex-1 rounded-md" />
+                      <Skeleton className="h-5 w-12 rounded-full" />
+                    </div>
+                    <Skeleton className="aspect-[16/10] rounded-none" />
+                    <div className="space-y-2.5 p-4">
+                      <Skeleton className="h-4 w-2/3" />
+                      <Skeleton className="h-3 w-full" />
+                      <div className="flex gap-3 pt-1">
+                        <Skeleton className="h-3 w-14" />
+                        <Skeleton className="h-3 w-28" />
+                        <Skeleton className="ml-auto h-5 w-12 rounded-full" />
+                      </div>
+                      <div className="flex gap-3 border-t border-border pt-3">
+                        <Skeleton className="h-3 w-20" />
+                        <Skeleton className="ml-auto h-3 w-24" />
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+            <div>
+              <div className="mb-3.5 flex items-center gap-3">
+                <Skeleton className="size-8 rounded-[10px]" />
+                <Skeleton className="h-4 w-40" />
+              </div>
+              <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+                {[0, 1, 2, 3].map((i) => (
+                  <Skeleton key={i} className="aspect-[16/10] rounded-xl" />
+                ))}
+              </div>
             </div>
           </div>
-        </div>
-        <div className="grid gap-5 lg:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
-          <div className="space-y-4 rounded-lg border border-border bg-card p-5">
-            <Skeleton className="h-4 w-24" />
-            {[0, 1, 2, 3].map((i) => (
-              <div key={i} className="flex items-center gap-3">
-                <Skeleton className="size-6 rounded-full" />
-                <Skeleton className="h-3.5 flex-1" />
-                <Skeleton className="h-3 w-14" />
-              </div>
-            ))}
-          </div>
-          <div className="space-y-4 rounded-lg border border-border bg-card p-5">
-            <Skeleton className="h-4 w-28" />
-            {[0, 1, 2, 3].map((i) => (
-              <div key={i} className="space-y-1.5">
-                <Skeleton className="h-3 w-full" />
-                <Skeleton className="h-1 w-full rounded-full" />
-              </div>
-            ))}
+          <div className="min-w-0 space-y-5">
+            <PanelSkeleton rows={5} title={92} />
+            <PanelSkeleton rows={6} title={108} />
+            <PanelSkeleton rows={5} title={96} />
+            <PanelSkeleton rows={5} title={96} />
           </div>
         </div>
       </AppPage>

@@ -31,14 +31,14 @@ import {
   X,
 } from "lucide-react";
 import { emit } from "@/lib/client/events";
-import { useRuntime, useNow, formatElapsed } from "@/lib/client/workspace/runtime";
+import { useRuntime, useNow, formatElapsed, formatUptime } from "@/lib/client/workspace/runtime";
 import { useAgent } from "@/lib/client/workspace/agent";
 import { useOptionalDeployments } from "@/lib/client/workspace/deployments";
 import { useCalm } from "@/lib/client/motion";
 import type { LogLine } from "@/lib/runtime/types";
 import { stripAnsi } from "@/lib/client/workspace/problems";
 import { Button } from "@/components/ui/button";
-import { Skeleton } from "@/components/ui/misc";
+import { Skeleton, StatusDot } from "@/components/ui/misc";
 import { Switch } from "@/components/ui/switch";
 import { Tooltip } from "@/components/ui/tooltip";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -196,6 +196,22 @@ export function PreviewPanel({
   const width = DEVICES[device].width;
   const framed = device !== "desktop";
 
+  // Status chip in the toolbar: the real runtime state with uptime while running.
+  const startedAt = rt.session?.startedAt ? Date.parse(rt.session.startedAt) : null;
+  const tick = useNow(30_000, status === "running" && Boolean(startedAt));
+  const chip =
+    status === "running"
+      ? { dot: "ok" as const, label: startedAt ? `Running · ${formatUptime(tick - startedAt)}` : "Running", pulse: true }
+      : status === "starting"
+        ? { dot: "busy" as const, label: "Starting…", pulse: true }
+        : status === "error"
+          ? { dot: "error" as const, label: "Error", pulse: false }
+          : status === "unavailable"
+            ? { dot: "warn" as const, label: rt.configured ? "Unavailable" : "Not configured", pulse: false }
+            : status === "unknown"
+              ? { dot: "idle" as const, label: "Checking…", pulse: false }
+              : { dot: "idle" as const, label: "Stopped", pulse: false };
+
   return (
     <section className="@container/preview flex h-full min-h-0 flex-col" aria-label="Preview">
       <div className="relative flex min-h-0 flex-1 flex-col overflow-hidden bg-card">
@@ -206,6 +222,14 @@ export function PreviewPanel({
               <RotateCw className="size-3.5" aria-hidden="true" />
             </button>
           </Tooltip>
+          <span
+            role="status"
+            className="hidden h-7 shrink-0 items-center gap-1.5 rounded-full bg-muted px-2.5 text-[11.5px] font-medium tabular-nums text-muted-foreground shadow-[inset_0_0_0_1px_var(--border)] @[560px]/preview:inline-flex"
+            title={rt.session?.previewUrl ? `Dev server · ${rt.session.previewUrl}` : "Dev server"}
+          >
+            <StatusDot status={chip.dot} pulse={chip.pulse} />
+            {chip.label}
+          </span>
           <form
             className="flex h-7 min-w-0 flex-1 items-center gap-1.5 rounded-full bg-muted pl-2.5 pr-1 text-[11.5px] shadow-[inset_0_0_0_1px_var(--border)] focus-within:shadow-[inset_0_0_0_1px_var(--border-strong),0_0_0_3px_color-mix(in_oklab,var(--ring)_18%,transparent)]"
             onSubmit={(e) => {

@@ -12,6 +12,7 @@ import { CodeDiffEditor } from "@/components/editor/code-editor";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Alert, Skeleton } from "@/components/ui/misc";
+import { Segmented } from "@/components/ui/segmented";
 import { toast } from "@/components/ui/toast";
 import { relativeTime } from "@/components/projects/format";
 import { Drawer } from "./drawer";
@@ -78,6 +79,7 @@ export function HistoryDrawer({
   const [file, setFile] = useState<FileDiff | null>(null);
   const [diffNonce, setDiffNonce] = useState(0);
   const [restoring, setRestoring] = useState<SnapshotDto | null>(null);
+  const [kindFilter, setKindFilter] = useState<"all" | "ai" | "deploy" | "manual">("all");
 
   const load = useCallback(async () => {
     try {
@@ -147,16 +149,30 @@ export function HistoryDrawer({
     }
   };
 
+  // Counts by kind for the summary strip and the filter (the "manual" bucket holds checkpoints people named).
+  const counts = useMemo(() => {
+    const c = { all: 0, ai: 0, deploy: 0, manual: 0, other: 0 };
+    for (const s of snapshots ?? []) {
+      c.all += 1;
+      if (s.kind === "ai") c.ai += 1;
+      else if (s.kind === "deploy") c.deploy += 1;
+      else if (s.kind === "manual") c.manual += 1;
+      else c.other += 1;
+    }
+    return c;
+  }, [snapshots]);
+  const shown = useMemo(() => (snapshots ?? []).filter((s) => kindFilter === "all" || s.kind === kindFilter), [snapshots, kindFilter]);
   const groups = useMemo(() => {
     const out: { day: string; items: SnapshotDto[] }[] = [];
-    for (const s of snapshots ?? []) {
+    for (const s of shown) {
       const day = dayLabel(s.createdAt);
       const last = out[out.length - 1];
       if (last && last.day === day) last.items.push(s);
       else out.push({ day, items: [s] });
     }
     return out;
-  }, [snapshots]);
+  }, [shown]);
+  const oldest = snapshots?.length ? snapshots[snapshots.length - 1] : null;
 
   const stats = useMemo(() => new Map((diff ?? []).map((d) => [d.path, lineStats(d)])), [diff]);
 
@@ -246,11 +262,66 @@ export function HistoryDrawer({
             </Alert>
           ) : null}
           {!snapshots ? (
-            <div className="space-y-3">
-              <Skeleton className="h-14 rounded-xl" />
-              <Skeleton className="h-14 rounded-xl" />
+            <div className="space-y-3" aria-busy="true">
+              <div className="grid grid-cols-4 gap-2">
+                {[0, 1, 2, 3].map((i) => (
+                  <Skeleton key={i} className="h-14 rounded-xl" />
+                ))}
+              </div>
+              {[0, 1, 2].map((i) => (
+                <div key={i} className="flex items-start gap-3 py-1.5">
+                  <Skeleton className="size-[27px] rounded-full" />
+                  <div className="flex-1 space-y-2">
+                    <Skeleton className="h-3.5 w-1/2" />
+                    <Skeleton className="h-3 w-2/3" />
+                    <Skeleton className="h-7 w-40 rounded-md" />
+                  </div>
+                </div>
+              ))}
             </div>
           ) : (
+            <>
+              {snapshots.length ? (
+                <div className="mb-4 space-y-3">
+                  {/* Summary: counts by kind (every number is a snapshot row) and how far back the history goes. */}
+                  <dl className="grid grid-cols-4 gap-2">
+                    {(
+                      [
+                        ["Checkpoints", counts.all, Clock],
+                        ["AI runs", counts.ai, Sparkles],
+                        ["Deploys", counts.deploy, Rocket],
+                        ["Named", counts.manual, Flag],
+                      ] as const
+                    ).map(([label, n, Icon]) => (
+                      <div key={label} className="rounded-xl border border-border bg-surface/60 px-2.5 py-2">
+                        <dt className="flex items-center gap-1 text-[10.5px] font-medium uppercase tracking-[0.05em] text-foreground-dim">
+                          <Icon className="size-3" aria-hidden="true" /> {label}
+                        </dt>
+                        <dd className="mt-0.5 text-[18px] font-bold leading-none tabular-nums tracking-[-0.02em]">{n}</dd>
+                      </div>
+                    ))}
+                  </dl>
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <Segmented
+                      aria-label="Filter by kind"
+                      size="sm"
+                      value={kindFilter}
+                      onValueChange={setKindFilter}
+                      options={[
+                        { value: "all", label: "All", count: counts.all },
+                        { value: "ai", label: "AI", count: counts.ai },
+                        { value: "deploy", label: "Deploy", count: counts.deploy },
+                        { value: "manual", label: "Named", count: counts.manual },
+                      ]}
+                    />
+                    {oldest ? (
+                      <p className="text-[11.5px] tabular-nums text-foreground-dim">
+                        Since {new Date(oldest.createdAt).toLocaleDateString(undefined, { month: "short", day: "numeric" })} · {relativeTime(oldest.createdAt)}
+                      </p>
+                    ) : null}
+                  </div>
+                </div>
+              ) : null}
             <ol className="relative" aria-label="Version history">
               <span className="absolute bottom-3 left-[13px] top-3 w-px bg-border" aria-hidden="true" />
               <li className="relative flex items-start gap-3 pb-5">
@@ -269,6 +340,7 @@ export function HistoryDrawer({
                 </div>
               </li>
               {snapshots.length === 0 ? <li className="relative pl-10 text-[13px] text-muted-foreground">No checkpoints yet. The agent saves one before every change; you can save your own above.</li> : null}
+              {snapshots.length > 0 && shown.length === 0 ? <li className="relative pl-10 text-[13px] text-muted-foreground">No checkpoints of this kind yet.</li> : null}
               {groups.map((g) => (
                 <li key={g.day} className="relative">
                   <p className="relative z-[1] mb-2 ml-10 text-[11.5px] font-medium text-muted-foreground">{g.day}</p>
@@ -310,6 +382,7 @@ export function HistoryDrawer({
                 </li>
               ))}
             </ol>
+            </>
           )}
         </div>
       )}

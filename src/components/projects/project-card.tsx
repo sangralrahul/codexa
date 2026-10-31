@@ -3,10 +3,11 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ArrowUpRight, Copy, ExternalLink, Globe, Link2, Lock, MoreHorizontal, Pencil, Trash2 } from "lucide-react";
+import { ArrowUpRight, Atom, Bookmark, Braces, Copy, ExternalLink, FileCode2, Globe, Hexagon, Link2, Lock, MoreHorizontal, Pencil, Trash2, type LucideIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { projectsApi } from "@/lib/client/workspace/api";
 import type { ProjectListItem } from "@/lib/client/workspace/types";
+import { Avatar } from "@/components/ui/avatar";
 import { Button, buttonClasses } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogFooter } from "@/components/ui/dialog";
 import { Field, Input } from "@/components/ui/input";
@@ -19,14 +20,90 @@ import { needsTemplateCaption, ProjectThumb } from "@/components/app/project-thu
 import { absoluteTime, frameworkLabel, lastTouch, relativeTime, VISIBILITY_HINTS, VISIBILITY_LABELS } from "./format";
 import { StatusPills, type ProjectStatusDto } from "./status";
 
-/** A project row for lists, with its live state from the database when the page loaded it. */
-export type ProjectCardItem = ProjectListItem & { status?: ProjectStatusDto | null };
+/** A workspace member shown on the card (the people who can open the project). */
+export type Collaborator = { id: string; name: string; avatarUrl: string | null };
+
+/**
+ * A project row for lists, with its live state from the database when the page loaded it, plus
+ * optional facts from project_files / project_snapshots and the workspace member list.
+ */
+export type ProjectCardItem = ProjectListItem & {
+  status?: ProjectStatusDto | null;
+  fileCount?: number;
+  lastCheckpointAt?: string | null;
+  checkpointCount?: number;
+  collaborators?: Collaborator[];
+};
 
 const VisibilityIcon = ({ v, className }: { v: ProjectListItem["visibility"]; className?: string }) =>
   v === "public" ? <Globe className={className} aria-hidden="true" /> : v === "unlisted" ? <Link2 className={className} aria-hidden="true" /> : <Lock className={className} aria-hidden="true" />;
 
 /** Thumbnail layout when the project has no known template: by runtime framework. */
 const FRAMEWORK_CATEGORY: Record<string, string> = { "node-express": "apis", static: "websites", "vite-react": "web-apps", nextjs: "web-apps" };
+/** A generic glyph per runtime (lucide, no brand marks): React → atom, Next.js → hexagon, Express → braces, static → globe. */
+const FRAMEWORK_ICON: Record<string, LucideIcon> = { "vite-react": Atom, nextjs: Hexagon, "node-express": Braces, static: Globe };
+
+/** Framework glyph and label as one unit ("⚛ Vite + React"). */
+export function FrameworkTag({ framework, className }: { framework: string; className?: string }) {
+  const Icon = FRAMEWORK_ICON[framework] ?? FileCode2;
+  return (
+    <span className={cn("inline-flex min-w-0 items-center gap-1.5", className)}>
+      <Icon className="size-3.5 shrink-0 text-foreground-dim" aria-hidden="true" />
+      <span className="truncate">{frameworkLabel(framework)}</span>
+    </span>
+  );
+}
+
+/** Overlapping member avatars with a "+N" overflow; `labelled` exposes each name to assistive tech. */
+export function CollaboratorStack({ people, max = 3, size = "xs", className }: { people: Collaborator[]; max?: number; size?: "xs" | "sm"; className?: string }) {
+  if (!people.length) return null;
+  const shown = people.slice(0, max);
+  const extra = people.length - shown.length;
+  return (
+    <span className={cn("flex items-center", className)} role="group" aria-label={`${people.length} ${people.length === 1 ? "member" : "members"}: ${people.map((p) => p.name).join(", ")}`}>
+      {shown.map((p, i) => (
+        <span key={p.id} className={cn("rounded-full ring-2 ring-card", i > 0 && "-ml-1.5")} title={p.name}>
+          <Avatar name={p.name} src={p.avatarUrl} size={size} />
+        </span>
+      ))}
+      {extra > 0 ? <span className={cn("-ml-1.5 flex items-center justify-center rounded-full bg-muted font-mono text-[9px] tabular-nums ring-2 ring-card", size === "xs" ? "size-5" : "size-6")}>+{extra}</span> : null}
+    </span>
+  );
+}
+
+/** "Checkpoint 2 hours ago" with the absolute time on hover; null when the project has none. */
+function CheckpointNote({ at, count, className }: { at: string | null | undefined; count?: number; className?: string }) {
+  if (!at) return null;
+  return (
+    <span className={cn("flex min-w-0 max-w-full items-center gap-1 overflow-hidden", className)} title={`${count ? `${count} checkpoint${count === 1 ? "" : "s"} · ` : ""}latest ${absoluteTime(at)}`}>
+      <Bookmark className="size-3 shrink-0 text-foreground-dim" aria-hidden="true" />
+      <span className="min-w-0 truncate">
+        {count && count > 1 ? `${count} checkpoints` : "Checkpoint"} · {relativeTime(at)}
+      </span>
+    </span>
+  );
+}
+
+/** Table columns shared by the row and the header: Name · Status · Framework · Files · Visibility · Last edited · actions. */
+export const LIST_COLUMNS = "md:grid-cols-[minmax(0,2.1fr)_minmax(0,1.3fr)_minmax(0,1fr)_minmax(0,1fr)_minmax(0,0.8fr)_minmax(0,1.1fr)_40px]";
+
+export function ListHeader({ sticky }: { sticky?: boolean }) {
+  return (
+    <div role="rowgroup" className={cn("hidden border-b border-border bg-surface md:block", sticky && "sticky top-[56px] z-10")}>
+      <div role="row" className={cn("grid items-center gap-3 px-4 py-2 text-[11.5px] font-medium text-muted-foreground", LIST_COLUMNS)}>
+        <span role="columnheader">Name</span>
+        <span role="columnheader">Status</span>
+        <span role="columnheader">Framework</span>
+        <span role="columnheader">Files</span>
+        <span role="columnheader">Visibility</span>
+        <span role="columnheader">Last edited</span>
+        <span role="columnheader">
+          <span className="sr-only">Actions</span>
+        </span>
+      </div>
+    </div>
+  );
+}
 
 function Visibility({ v }: { v: ProjectListItem["visibility"] }) {
   return (
@@ -63,7 +140,7 @@ export function ProjectCard({ project, layout = "grid", showWorkspace, priority 
         role="row"
         data-testid="project-card"
         data-project-row
-        className="group/row relative grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3 border-b border-border px-3 py-2.5 transition-colors last:border-b-0 hover:bg-surface focus-within:bg-surface md:grid-cols-[minmax(0,2.2fr)_minmax(0,1.4fr)_minmax(0,1fr)_minmax(0,0.9fr)_minmax(0,1fr)_40px] md:px-4"
+        className={cn("group/row relative grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3 border-b border-border px-3 py-2.5 transition-colors last:border-b-0 hover:bg-surface focus-within:bg-surface md:px-4", LIST_COLUMNS)}
         style={{ viewTransitionName: `proj-${project.id}` }}
       >
         <div role="cell" className="flex min-w-0 items-center gap-3">
@@ -86,16 +163,36 @@ export function ProjectCard({ project, layout = "grid", showWorkspace, priority 
           </div>
         </div>
         <div role="cell" className="hidden min-w-0 md:block">
-          {status ? <StatusPills status={status} compact /> : <span className="text-[11.5px] text-foreground-dim">Idle</span>}
+          {status?.live ? (
+            <a href={status.live.url} target="_blank" rel="noopener noreferrer" className="relative z-[2] inline-flex min-w-0 max-w-full items-center gap-1.5 text-[12px] hover:underline" title={`Open ${status.live.url} in a new tab`}>
+              <span className="live-dot" aria-hidden="true" />
+              <span className="font-medium text-success">Live</span>
+              <span className="truncate font-mono text-[11px] text-muted-foreground">{status.live.host}</span>
+            </a>
+          ) : (
+            <span className="inline-flex items-center gap-1.5 text-[12px] text-muted-foreground">
+              <span className="size-1.5 rounded-full bg-muted-foreground/40" aria-hidden="true" /> Draft
+            </span>
+          )}
+          {status && (status.preview || status.deploy) ? <StatusPills status={{ ...status, live: null }} compact className="mt-1" /> : null}
         </div>
-        <div role="cell" className="hidden truncate text-xs text-muted-foreground md:block">
-          {frameworkLabel(project.framework)}
+        <div role="cell" className="hidden min-w-0 text-xs text-muted-foreground md:block">
+          <FrameworkTag framework={project.framework} />
+        </div>
+        <div role="cell" className="hidden min-w-0 text-xs text-muted-foreground md:block">
+          {typeof project.fileCount === "number" ? (
+            <span className="block truncate tabular-nums">
+              {project.fileCount} file{project.fileCount === 1 ? "" : "s"}
+            </span>
+          ) : null}
+          <CheckpointNote at={project.lastCheckpointAt} count={project.checkpointCount} className="text-[11px] text-foreground-dim" />
         </div>
         <div role="cell" className="hidden items-center gap-1.5 text-xs text-muted-foreground md:flex">
           <VisibilityIcon v={project.visibility} className="size-3.5" /> {VISIBILITY_LABELS[project.visibility]}
         </div>
-        <div role="cell" className="hidden text-meta text-muted-foreground md:block">
-          <time dateTime={when} title={absoluteTime(when)} suppressHydrationWarning>
+        <div role="cell" className="hidden min-w-0 items-center gap-2 text-meta text-muted-foreground md:flex">
+          {project.collaborators?.length ? <CollaboratorStack people={project.collaborators} max={2} className="relative z-[2] shrink-0" /> : null}
+          <time dateTime={when} title={absoluteTime(when)} suppressHydrationWarning className="truncate">
             {relativeTime(when)}
           </time>
         </div>
@@ -173,8 +270,21 @@ export function ProjectCard({ project, layout = "grid", showWorkspace, priority 
         </h3>
         {project.description ? <p className="mt-1 line-clamp-2 text-[13px] leading-snug text-muted-foreground">{project.description}</p> : null}
         {status?.preview || status?.deploy ? <StatusPills status={{ ...status, live: null }} className="mt-2.5" /> : null}
-        <div className="mt-auto flex items-center gap-2.5 pt-3 text-meta text-muted-foreground">
-          <span className="shrink-0">{frameworkLabel(project.framework)}</span>
+        {/* Facts row: files, checkpoints and who can open it, all from database rows. */}
+        {typeof project.fileCount === "number" || project.lastCheckpointAt || project.collaborators?.length ? (
+          <div className="mt-3 flex items-center gap-3 text-[11.5px] text-muted-foreground">
+            {typeof project.fileCount === "number" ? (
+              <span className="inline-flex shrink-0 items-center gap-1 tabular-nums" title="Files in this project">
+                <FileCode2 className="size-3 text-foreground-dim" aria-hidden="true" />
+                {project.fileCount} file{project.fileCount === 1 ? "" : "s"}
+              </span>
+            ) : null}
+            <CheckpointNote at={project.lastCheckpointAt} count={project.checkpointCount} className="min-w-0 flex-1" />
+            {project.collaborators?.length ? <CollaboratorStack people={project.collaborators} className="relative z-[2] ml-auto shrink-0" /> : null}
+          </div>
+        ) : null}
+        <div className="mt-auto flex items-center gap-2.5 border-t border-border pt-3 text-meta text-muted-foreground">
+          <FrameworkTag framework={project.framework} className="shrink-0" />
           <span aria-hidden="true" className="text-border-strong">
             ·
           </span>

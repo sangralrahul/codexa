@@ -110,7 +110,7 @@ export type SettingsOverview = {
     canManage: boolean;
     plan: { id: Plan; name: string; tagline: string };
     subscription: { status: string; provider: string; interval: "month" | "year"; periodEnd: string | null; cancelAtPeriodEnd: boolean } | null;
-    seats: { used: number; limit: number; pending: number; memberCount: number; people: { userId: string; name: string; email: string; avatarUrl: string | null }[] };
+    seats: { used: number; limit: number; pending: number; memberCount: number; people: { userId: string; name: string; email: string; avatarUrl: string | null; role: WorkspaceRole; joinedAt: string }[] };
     nextSeats: { name: string; seats: number } | null;
     usage: { periodStart: string; closest: UsageMetric | null };
     integrations: { total: number; errors: number; providers: string[] } | null;
@@ -167,7 +167,7 @@ export async function getSettingsOverview(user: User, workspaceId: string | null
         limit: PLANS[plan].limits.members,
         pending: seatCounts.pending,
         memberCount: members.length,
-        people: members.slice(0, 5).map((m) => ({ userId: m.userId, name: m.name || m.email, email: m.email, avatarUrl: m.avatarUrl })),
+        people: members.slice(0, 5).map((m) => ({ userId: m.userId, name: m.name || m.email, email: m.email, avatarUrl: m.avatarUrl, role: m.role, joinedAt: m.joinedAt.toISOString() })),
       },
       nextSeats: nextSeatsPlan(plan),
       usage: { periodStart: entitlements.periodStart.toISOString(), closest: closestToLimit(metrics) },

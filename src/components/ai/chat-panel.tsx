@@ -167,7 +167,7 @@ export function ChatPanel({
           return r.messages.map((m) => {
             const run = runsByMessage.get(m.id);
             const live = run ? liveById.get(run.id) : undefined;
-            return { ...m, run, validation: live?.validation, nextSteps: live?.nextSteps, startedAt: live?.startedAt };
+            return { ...m, run, validation: live?.validation, nextSteps: live?.nextSteps, startedAt: live?.startedAt, stageTimes: live?.stageTimes };
           });
         });
       } catch (err) {
@@ -290,7 +290,12 @@ export function ChatPanel({
             break;
           case "stage":
             textOpen = false;
-            updateStreaming(asstTemp, (m) => ({ ...m, parts: [...m.parts, { type: "stage", stage: ev.data.stage, detail: ev.data.detail }], run: m.run ? { ...m.run, stage: ev.data.stage } : m.run }));
+            updateStreaming(asstTemp, (m) => ({
+              ...m,
+              parts: [...m.parts, { type: "stage", stage: ev.data.stage, detail: ev.data.detail }],
+              stageTimes: { ...m.stageTimes, [ev.data.stage]: m.stageTimes?.[ev.data.stage] ?? Date.now() },
+              run: m.run ? { ...m.run, stage: ev.data.stage } : m.run,
+            }));
             report.stage(ev.data.stage, ev.data.detail);
             if (ev.data.stage !== "done" && ev.data.stage !== "failed" && ev.data.stage !== "cancelled") announce(stageLabel(ev.data.stage));
             break;
@@ -832,7 +837,21 @@ function AssistantMessage({
           parts={message.parts}
           status={status}
           streaming={message.streaming}
-          meta={{ startedAt, finishedAt, live, validation: message.validation, runError: run?.error, stats: details?.stats, onFix, onApprovePlan: latest ? onApprovePlan : undefined, onRevisePlan: latest ? onRevisePlan : undefined }}
+          meta={{
+            startedAt,
+            finishedAt,
+            live,
+            validation: message.validation,
+            runError: run?.error,
+            stats: details?.stats,
+            stageTimes: message.stageTimes,
+            tokens: run && (run.tokensIn || run.tokensOut) ? { in: run.tokensIn, out: run.tokensOut } : undefined,
+            repairAttempts: run?.repairAttempts,
+            changedFiles: run?.changedFiles,
+            onFix,
+            onApprovePlan: latest ? onApprovePlan : undefined,
+            onRevisePlan: latest ? onRevisePlan : undefined,
+          }}
         />
       ) : message.content ? (
         <p className="whitespace-pre-wrap text-[14px] leading-[1.65]">{message.content}</p>

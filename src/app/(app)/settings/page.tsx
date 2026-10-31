@@ -5,6 +5,7 @@ import { requireUser } from "@/lib/auth/guards";
 import { getCurrentSessionId } from "@/lib/auth/session";
 import { getCurrentWorkspace } from "@/lib/services/current-workspace";
 import { getSettingsOverview } from "@/lib/services/settings-overview";
+import { getUsageHistory } from "@/lib/services/usage-history";
 import { PageHeader } from "@/components/app/app-shell";
 import { EmptyState } from "@/components/ui/misc";
 import { buttonClasses } from "@/components/ui/button";
@@ -15,14 +16,16 @@ export const metadata = pageMetadata({ title: "Settings", description: "Manage y
 export default async function SettingsIndexPage() {
   const user = await requireUser("/settings");
   const { current } = await getCurrentWorkspace(user);
-  const data = await getSettingsOverview(user, current?.workspace.id ?? null, await getCurrentSessionId());
+  const workspaceId = current?.workspace.id ?? null;
+  // The usage tile's sparkline reads the same daily usage_events the Usage page shows.
+  const [data, history] = await Promise.all([getSettingsOverview(user, workspaceId, await getCurrentSessionId()), workspaceId ? getUsageHistory(user, workspaceId) : null]);
   return (
     <div className="settings-stack space-y-5">
       <PageHeader eyebrow="Account and workspace" title="Settings" description="Your account, security and workspace at a glance. Every number here is live." />
       <IdentityRow account={data.account} workspace={data.workspace} />
       <SetupChecklist items={data.checklist} emailConfigured={data.account.emailConfigured} />
       <section aria-label="Settings overview" className="settings-plain">
-        <OverviewBento data={data} />
+        <OverviewBento data={data} usageDays={history?.days} />
         {!data.workspace ? (
           <EmptyState
             className="mt-3"

@@ -1,6 +1,6 @@
 "use client";
 
-import { CircleAlert, FlaskConical, GitBranch, Sparkles, TriangleAlert, Users } from "lucide-react";
+import { Bookmark, CircleAlert, FlaskConical, GitBranch, Sparkles, TriangleAlert, Users } from "lucide-react";
 import { useRuntime, useNow, formatUptime } from "@/lib/client/workspace/runtime";
 import { useAgent } from "@/lib/client/workspace/agent";
 import type { Problem } from "@/lib/client/workspace/problems";
@@ -8,8 +8,12 @@ import { StatusDot } from "@/components/ui/misc";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Avatar } from "@/components/ui/avatar";
 import { languageLabel } from "@/components/editor/language";
+import { relativeTime } from "@/components/projects/format";
 import { cn } from "@/lib/utils";
 import { usePeers } from "./presence";
+
+/** The latest checkpoint and how many files differ from it (GET /changes). */
+export type CheckpointState = { name: string; createdAt: string; changed: number | null; total: number | null };
 
 const item =
   "inline-flex h-full shrink-0 items-center gap-1.5 rounded-md px-2 transition-colors hover:bg-muted hover:text-foreground focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-ring";
@@ -21,22 +25,27 @@ const item =
  */
 export function StatusBar({
   branch,
+  checkpoint,
   problems,
   cursor,
   language,
   onOpenPreview,
   onOpenGithub,
+  onOpenHistory,
   onOpenProblems,
   onGoToLine,
   onOpenCommands,
   onOpenAgent,
 }: {
   branch: string | null;
+  /** Latest checkpoint and the files changed since it; null while unknown or when there is none yet. */
+  checkpoint: CheckpointState | null;
   problems: Problem[];
   cursor: { line: number; column: number } | null;
   language: string | null;
   onOpenPreview: () => void;
   onOpenGithub: () => void;
+  onOpenHistory: () => void;
   onOpenProblems: () => void;
   onGoToLine: () => void;
   onOpenCommands: () => void;
@@ -77,6 +86,23 @@ export function StatusBar({
         <button type="button" onClick={onOpenGithub} className={item} title="GitHub">
           <GitBranch className="size-3.5" aria-hidden="true" />
           <span className="max-w-[10rem] truncate font-mono">{branch}</span>
+        </button>
+      ) : null}
+      {checkpoint ? (
+        <button
+          type="button"
+          onClick={onOpenHistory}
+          className={cn(item, "hidden md:inline-flex")}
+          title={`Latest checkpoint “${checkpoint.name}” · ${new Date(checkpoint.createdAt).toLocaleString()}${checkpoint.total !== null ? ` · ${checkpoint.total} checkpoint${checkpoint.total === 1 ? "" : "s"}` : ""}. Open version history.`}
+        >
+          <Bookmark className="size-3.5" aria-hidden="true" />
+          <span className="max-w-[12rem] truncate">{checkpoint.name}</span>
+          <span className="tabular-nums text-foreground-dim">{relativeTime(checkpoint.createdAt)}</span>
+          {checkpoint.changed !== null ? (
+            <span className={cn("rounded bg-muted px-1 font-mono text-[10.5px] tabular-nums shadow-[inset_0_0_0_1px_var(--border)]", checkpoint.changed > 0 ? "text-foreground" : "text-foreground-dim")} aria-label={`${checkpoint.changed} files changed since`}>
+              {checkpoint.changed > 0 ? `+${checkpoint.changed}` : "clean"}
+            </span>
+          ) : null}
         </button>
       ) : null}
       <button type="button" onClick={onOpenProblems} className={item} title="Open problems">

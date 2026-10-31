@@ -1,14 +1,10 @@
 import Link from "next/link";
 import { AppPage } from "@/components/app/app-shell";
-import { templateCategory } from "@/components/projects/template-summaries";
 import { requireUser } from "@/lib/auth/guards";
 import { getCurrentWorkspace } from "@/lib/services/current-workspace";
 import { listProjects } from "@/lib/services/projects";
-import { getProjectStatuses } from "@/lib/services/dashboard";
-import { serializeProject } from "@/app/api/v1/projects/_lib/serialize";
+import { buildProjectCards } from "@/components/projects/card-data";
 import { ProjectsBrowser } from "@/components/projects/projects-browser";
-import type { ProjectCardItem } from "@/components/projects/project-card";
-import { toStatusDto } from "@/components/projects/status";
 import { Alert } from "@/components/ui/misc";
 
 export const metadata = { title: "Projects", robots: { index: false } };
@@ -17,20 +13,8 @@ export default async function ProjectsPage() {
   const user = await requireUser("/projects");
   const { current } = await getCurrentWorkspace(user);
   const rows = current ? await listProjects(current.workspace.id) : [];
-  const statuses = await getProjectStatuses(rows.map((p) => p.id));
-  const items: ProjectCardItem[] = rows.map((p) => {
-    const s = serializeProject(p);
-    return {
-      ...s,
-      lastOpenedAt: s.lastOpenedAt?.toISOString() ?? null,
-      createdAt: s.createdAt.toISOString(),
-      updatedAt: s.updatedAt.toISOString(),
-      workspaceName: current!.workspace.name,
-      role: current!.role,
-      category: templateCategory(s.templateId),
-      status: toStatusDto(statuses.get(p.id)),
-    };
-  });
+  // Live state, file and checkpoint counts and the workspace members for every card.
+  const { items } = current ? await buildProjectCards(rows, { id: current.workspace.id, name: current.workspace.name, role: current.role }) : { items: [] };
   return (
     <AppPage>
       {!current ? (

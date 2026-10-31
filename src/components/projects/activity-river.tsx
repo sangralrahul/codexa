@@ -22,6 +22,7 @@ import {
   Undo2,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { Avatar } from "@/components/ui/avatar";
 import { absoluteTime, relativeTime } from "./format";
 import { PanelCard } from "./panel-card";
 
@@ -47,7 +48,7 @@ const VERBS: Record<string, Verb> = {
   "project.updated": { icon: Pencil, verb: () => "updated" },
   "project.duplicated": { icon: Copy, verb: () => "duplicated" },
   "project.deleted": { icon: Trash2, verb: () => "deleted" },
-  "ai.run": { icon: Sparkles, verb: () => "ran the AI agent on", tone: "accent" },
+  "ai.run": { icon: Sparkles, verb: () => "ran the agent on", tone: "accent" },
   "ai.reverted": { icon: Undo2, verb: () => "reverted an AI run in" },
   "deployment.queued": { icon: Rocket, verb: () => "started a deploy of", tone: "info" },
   "deployment.live": { icon: Globe, verb: () => "deployed", tone: "success" },
@@ -75,24 +76,49 @@ const VERBS: Record<string, Verb> = {
 
 const TONE = { success: "text-success", danger: "text-danger", accent: "text-primary", info: "text-info" } as const;
 
+/** The stored message, minus the part the verb line already says (the project name / "Project created from …"). */
+function detailOf(a: RiverItem): string | null {
+  const m = a.message.trim();
+  if (!m || m.length < 12) return null;
+  if (a.kind.startsWith("file.") && a.count > 1) return null;
+  return m.length > 90 ? `${m.slice(0, 88)}…` : m;
+}
+
 /**
- * Activity: the newest project_activity rows across the user's workspaces (who, what, which
- * project, when), one compact line each. The detail line is the stored message, verbatim. Server-safe.
+ * Activity: the newest project_activity rows across the user's workspaces as "who · did what · to
+ * which project · when": the person's avatar with the event icon badged on it, the verb line, the
+ * stored message underneath (verbatim) and the relative time. Server-safe.
  */
 export function ActivityRiver({ items, className }: { items: RiverItem[]; className?: string }) {
+  const people = new Set(items.map((a) => a.actorId ?? a.actorName)).size;
   return (
-    <PanelCard title="Recent activity" icon={Activity} aside={<span className="text-foreground-dim">All workspaces</span>} className={className}>
+    <PanelCard
+      title="Recent activity"
+      icon={Activity}
+      aside={<span className="text-foreground-dim">{items.length ? `${people} ${people === 1 ? "person" : "people"} · all workspaces` : "All workspaces"}</span>}
+      className={className}
+    >
       {items.length === 0 ? (
-        <p className="px-4 py-4 text-[13px] text-muted-foreground">Edits, AI runs, previews and deploys from your projects show up here as they happen.</p>
+        <div className="px-4 py-5 text-[13px] text-muted-foreground">
+          <p className="font-medium text-foreground">Nothing yet</p>
+          <p className="mt-0.5">Edits, AI runs, previews, checkpoints and deploys from your projects show up here as they happen.</p>
+        </div>
       ) : (
         <ol className="river-in divide-y divide-border">
           {items.map((a) => {
             const v = VERBS[a.kind] ?? { icon: Activity, verb: () => "updated" };
             const Icon = v.icon;
+            const detail = detailOf(a);
             return (
-              <li key={a.id} className="flex items-center gap-3 px-4 py-2.5">
-                <span className={cn("flex size-7 shrink-0 items-center justify-center rounded-[8px] bg-surface shadow-[inset_0_0_0_1px_var(--border)]", v.tone ? TONE[v.tone] : "text-muted-foreground")} aria-hidden="true">
-                  <Icon className="size-3.5" />
+              <li key={a.id} className="flex items-start gap-3 px-4 py-2.5">
+                <span className="relative mt-px shrink-0">
+                  <Avatar name={a.actorName} seed={a.actorSeed ?? a.actorName} src={a.actorAvatarUrl} size="md" />
+                  <span
+                    className={cn("absolute -bottom-1 -right-1 flex size-4 items-center justify-center rounded-full bg-card shadow-[0_0_0_1px_var(--border)]", v.tone ? TONE[v.tone] : "text-muted-foreground")}
+                    aria-hidden="true"
+                  >
+                    <Icon className="size-2.5" />
+                  </span>
                 </span>
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-[13px] leading-snug" title={a.message}>
@@ -101,10 +127,20 @@ export function ActivityRiver({ items, className }: { items: RiverItem[]; classN
                       {a.projectName}
                     </Link>
                   </p>
+                  <p className="mt-0.5 flex items-center gap-1.5 text-[11.5px] text-foreground-dim">
+                    <time dateTime={a.createdAt} title={absoluteTime(a.createdAt)} className="shrink-0 tabular-nums">
+                      {relativeTime(a.createdAt)}
+                    </time>
+                    {detail ? (
+                      <>
+                        <span aria-hidden="true" className="text-border-strong">
+                          ·
+                        </span>
+                        <span className="truncate text-muted-foreground">{detail}</span>
+                      </>
+                    ) : null}
+                  </p>
                 </div>
-                <time dateTime={a.createdAt} title={absoluteTime(a.createdAt)} className="text-meta shrink-0 text-foreground-dim">
-                  {relativeTime(a.createdAt)}
-                </time>
               </li>
             );
           })}

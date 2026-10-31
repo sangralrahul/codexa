@@ -1,12 +1,13 @@
 "use client";
 
-import { useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Tooltip as RT } from "radix-ui";
 import {
   ArrowUpRight,
   BookOpen,
+  ChevronDown,
   Compass,
   Copy,
   CreditCard,
@@ -26,8 +27,8 @@ import {
   X,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { readLocal, writeLocal } from "@/lib/client/workspace/storage";
 import { LogoMark } from "@/components/logo";
-import { Meter } from "@/components/ui/meter";
 import { Kbd } from "@/components/ui/misc";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown";
 import { toast } from "@/components/ui/toast";
@@ -38,12 +39,17 @@ import { ProjectThumb } from "./project-thumb";
 import { KeyHint } from "./hotkeys";
 
 export type SidebarWorkspace = { id: string; name: string; slug: string; role: string; plan: string };
-export type SidebarUsage = { plan: string; projects: number; projectLimit: number };
+/** Plan counters for the sidebar: counts from the database, limits from the plan config (-1 = unlimited). */
+export type SidebarUsage = { plan: string; projects: number; projectLimit: number; members: number; memberLimit: number; ai: number; aiLimit: number };
 export type SidebarUser = { name: string; email: string; avatarUrl: string | null };
 /** A recent project: its template (for the thumbnail) and whether its preview is running right now (DB row). */
 export type SidebarProject = { id: string; name: string; templateId: string | null; templateName: string | null; framework: string; running: boolean; workspaceName: string; updatedAt: string };
 /** What the next plan up adds, shown on the upgrade card (from the plan config, never invented). */
 export type SidebarUpsell = { plan: string; points: string[] } | null;
+/** The build line at the bottom: the package version and which capabilities this server has configured. */
+export type SidebarBuild = { version: string; env: "development" | "production" | "test"; runner: boolean; ai: boolean; aiMock: boolean };
+
+const RECENT_KEY = "codexa:sidebar:recent-open";
 
 type NavItem = { href: string; label: string; icon: typeof Home; exact?: boolean; keys?: string[] };
 const MAIN: NavItem[] = [
@@ -154,16 +160,21 @@ function RecentRow({ project: p, collapsed, onNavigate }: { project: SidebarProj
           className="flex h-full min-w-0 flex-1 items-center gap-2.5 rounded-[10px] pl-[9px] pr-2 text-[13px] text-muted-foreground outline-none transition-colors hover:text-foreground focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-ring"
         >
           <span title={p.templateName ? `Template preview · ${p.templateName}` : undefined} className="relative flex">
-            <ProjectThumb templateId={p.templateId} framework={p.framework} size="xs" />
+            <ProjectThumb templateId={p.templateId} framework={p.framework} size="sm" className={collapsed ? "scale-75" : undefined} />
             {p.running && collapsed ? <span className="live-dot absolute -right-1 -top-1 ring-2 ring-surface" /> : null}
           </span>
           <span className={cn("min-w-0 flex-1 truncate whitespace-nowrap", fade(collapsed))}>{p.name}</span>
-          {p.running ? (
-            <span className={cn("flex shrink-0 items-center", fade(collapsed))}>
-              <span className="live-dot" />
-              <span className="sr-only">Preview running</span>
-            </span>
-          ) : null}
+          <span className={cn("flex shrink-0 items-center gap-1.5 pr-5 text-[10.5px] tabular-nums text-foreground-dim group-hover/rec:opacity-0", fade(collapsed))}>
+            {p.running ? (
+              <>
+                <span className="live-dot" />
+                <span className="sr-only">Preview running</span>
+              </>
+            ) : null}
+            <time dateTime={p.updatedAt} suppressHydrationWarning>
+              {shortAgo(p.updatedAt)}
+            </time>
+          </span>
         </Link>
       </RailTip>
       <div inert={collapsed} className={cn("absolute right-1 top-1/2 -translate-y-1/2", fade(collapsed))}>
@@ -198,13 +209,72 @@ function RecentRow({ project: p, collapsed, onNavigate }: { project: SidebarProj
   );
 }
 
-function GroupLabel({ children, collapsed }: { children: React.ReactNode; collapsed: boolean }) {
+/** "2m", "3h", "5d": the compact relative time for the Recent rows (absolute time in the tooltip row). */
+function shortAgo(iso: string, now = Date.now()) {
+  const s = Math.max(0, Math.round((now - Date.parse(iso)) / 1000));
+  if (s < 60) return "now";
+  const m = Math.round(s / 60);
+  if (m < 60) return `${m}m`;
+  const h = Math.round(m / 60);
+  if (h < 24) return `${h}h`;
+  const d = Math.round(h / 24);
+  if (d < 30) return `${d}d`;
+  return `${Math.round(d / 30)}mo`;
+}
+
+function GroupLabel({ children, collapsed, trailing, onToggle, open, controls }: { children: React.ReactNode; collapsed: boolean; trailing?: React.ReactNode; onToggle?: () => void; open?: boolean; controls?: string }) {
+  const label = (
+    <span aria-hidden={collapsed} className={cn("text-[11px] font-medium uppercase tracking-[0.06em] text-foreground-dim", fade(collapsed))}>
+      {children}
+    </span>
+  );
   return (
     <div className="relative mb-1 mt-4 flex h-4 items-center px-2.5">
-      <span aria-hidden={collapsed} className={cn("text-[11px] font-medium uppercase tracking-[0.06em] text-foreground-dim", fade(collapsed))}>
-        {children}
-      </span>
+      {onToggle ? (
+        <button
+          type="button"
+          onClick={onToggle}
+          aria-expanded={open}
+          aria-controls={controls}
+          tabIndex={collapsed ? -1 : 0}
+          className={cn("group/grp -mx-1 flex h-5 items-center gap-1 rounded-md px-1 outline-none transition-colors hover:text-foreground focus-visible:outline-2 focus-visible:outline-ring", fade(collapsed))}
+        >
+          {label}
+          <ChevronDown className={cn("size-3 text-foreground-dim transition-transform duration-(--dur-2) calm:transition-none", !open && "-rotate-90")} aria-hidden="true" />
+        </button>
+      ) : (
+        label
+      )}
+      {trailing ? <span className={cn("ml-auto text-[10.5px] tabular-nums text-foreground-dim", fade(collapsed))}>{trailing}</span> : null}
       <span aria-hidden="true" className={cn("absolute inset-x-2.5 top-1/2 h-px bg-border transition-opacity duration-(--dur-2)", collapsed ? "opacity-100" : "opacity-0")} />
+    </div>
+  );
+}
+
+/** One thin bar of the plan card: label, "used / limit" and the fill (neutral; warning past 90% of a metered limit). */
+function MiniBar({ label, used, limit, metered }: { label: string; used: number; limit: number; metered?: boolean }) {
+  const unlimited = limit < 0;
+  const ratio = unlimited || limit <= 0 ? 0 : Math.min(1, used / limit);
+  const hot = metered && ratio >= 0.9;
+  return (
+    <div className="space-y-1">
+      <div className="flex items-baseline justify-between gap-2 text-[11px]">
+        <span className="truncate text-muted-foreground">{label}</span>
+        <span className={cn("shrink-0 tabular-nums", hot ? "text-danger" : "text-foreground")}>
+          {used.toLocaleString("en-US")}
+          <span className="text-foreground-dim"> / {unlimited ? "∞" : limit.toLocaleString("en-US")}</span>
+        </span>
+      </div>
+      <div
+        role="progressbar"
+        aria-label={label}
+        aria-valuemin={0}
+        aria-valuemax={unlimited ? undefined : limit}
+        aria-valuenow={unlimited ? undefined : Math.min(used, limit)}
+        className="relative h-1 overflow-hidden rounded-full bg-foreground/[0.08]"
+      >
+        <span className={cn("absolute inset-y-0 left-0 rounded-full", hot ? "bg-danger" : "bg-primary", unlimited && "opacity-25")} style={{ width: `${Math.round((unlimited ? 1 : ratio) * 100)}%` }} />
+      </div>
     </div>
   );
 }
@@ -223,6 +293,7 @@ export function AppSidebar({
   usage,
   recent,
   upsell,
+  build,
   canCreate,
   collapsed = false,
   onToggle,
@@ -236,6 +307,7 @@ export function AppSidebar({
   usage: SidebarUsage | null;
   recent: SidebarProject[];
   upsell: SidebarUpsell;
+  build: SidebarBuild | null;
   canCreate: boolean;
   collapsed?: boolean;
   onToggle?: () => void;
@@ -248,8 +320,26 @@ export function AppSidebar({
   const glide = useGlide(navRef, { selector: '[data-nav-row][aria-current="page"]', itemSelector: "[data-nav-row]", axis: "y", hover: true });
   const isActive = (href: string, exact?: boolean, except?: string | string[]) =>
     ![except ?? []].flat().some((x) => pathname === x || pathname.startsWith(x + "/")) && (exact ? pathname === href : pathname === href || pathname.startsWith(href + "/"));
-  const limited = usage && usage.projectLimit > 0;
   const nav: NavItem[] = isStaff ? [...MAIN, { href: "/admin", label: "Admin", icon: Shield }] : MAIN;
+  const trailingFor = (href: string) => {
+    if (!usage) return null;
+    const n = href === "/projects" ? usage.projects : href === "/settings/members" ? usage.members : null;
+    return n === null ? null : <span className="text-meta tabular-nums text-foreground-dim">{n}</span>;
+  };
+
+  // "Recent" collapses per browser; open by default.
+  const [recentOpen, setRecentOpen] = useState(true);
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- one-time hydration from localStorage after mount (SSR-safe)
+    if (readLocal<boolean>(RECENT_KEY, true) === false) setRecentOpen(false);
+  }, []);
+  const toggleRecent = () => {
+    setRecentOpen((o) => {
+      writeLocal(RECENT_KEY, !o);
+      return !o;
+    });
+  };
+  const planName = usage ? usage.plan.charAt(0).toUpperCase() + usage.plan.slice(1) : "";
 
   return (
     <div className="relative flex h-full flex-col">
@@ -312,7 +402,7 @@ export function AppSidebar({
                 collapsed={collapsed}
                 onNavigate={onNavigate}
                 current={it.href === "/admin" ? pathname.startsWith("/admin") : isActive(it.href, it.exact)}
-                trailing={it.href === "/projects" && usage ? <span className="text-meta tabular-nums text-foreground-dim">{usage.projects}</span> : null}
+                trailing={trailingFor(it.href)}
               />
             </li>
           ))}
@@ -322,37 +412,48 @@ export function AppSidebar({
         <ul className="space-y-px">
           {WORKSPACE.map((it) => (
             <li key={it.href}>
-              <NavRow item={it} collapsed={collapsed} onNavigate={onNavigate} current={isActive(it.href, it.exact, it.except)} />
+              <NavRow item={it} collapsed={collapsed} onNavigate={onNavigate} current={isActive(it.href, it.exact, it.except)} trailing={trailingFor(it.href)} />
             </li>
           ))}
         </ul>
 
-        <GroupLabel collapsed={collapsed}>Recent</GroupLabel>
-        {recent.length ? (
-          <ul className="space-y-px">
-            {recent.map((p) => (
-              <RecentRow key={p.id} project={p} collapsed={collapsed} onNavigate={onNavigate} />
-            ))}
-          </ul>
-        ) : (
-          <p className={cn("px-2.5 py-1 text-xs text-foreground-dim", fade(collapsed))}>Projects you open appear here.</p>
-        )}
+        <GroupLabel collapsed={collapsed} onToggle={toggleRecent} open={recentOpen} controls="sidebar-recent" trailing={recent.length ? recent.length : undefined}>
+          Recent
+        </GroupLabel>
+        <div id="sidebar-recent" hidden={!recentOpen && !collapsed}>
+          {recent.length ? (
+            <ul className="space-y-px">
+              {recent.map((p) => (
+                <RecentRow key={p.id} project={p} collapsed={collapsed} onNavigate={onNavigate} />
+              ))}
+            </ul>
+          ) : (
+            <p className={cn("px-2.5 py-1 text-xs text-foreground-dim", fade(collapsed))}>Projects you open appear here.</p>
+          )}
+        </div>
       </nav>
 
       <div className="relative shrink-0 space-y-2 border-t border-border px-2.5 pb-[max(10px,env(safe-area-inset-bottom))] pt-2.5">
-        {limited && !collapsed ? (
-          <div className="rounded-xl border border-border bg-surface p-3">
-            <Meter size="sm" label="Projects" value={usage.projects} max={usage.projectLimit} format={(n) => String(n)} neutral />
-            {upsell ? (
-              <div className="mt-2.5 flex items-end justify-between gap-2">
-                <p className="min-w-0 text-[11.5px] leading-snug text-muted-foreground">
-                  {upsell.plan}: {upsell.points.slice(0, 2).join(" · ")}
-                </p>
-                <Link href="/settings/billing" onClick={onNavigate} className="link-draw shrink-0 text-[12px] font-semibold text-primary">
+        {usage && !collapsed ? (
+          <div className="rounded-xl border border-border bg-surface px-3 py-2.5">
+            <div className="mb-2 flex items-center justify-between gap-2">
+              <Link href="/settings/usage" onClick={onNavigate} className="link-draw text-[12px] font-semibold hover:text-foreground">
+                {planName} plan
+              </Link>
+              {upsell ? (
+                <Link href="/settings/billing" onClick={onNavigate} className="link-draw shrink-0 text-[11.5px] font-semibold text-primary" title={`${upsell.plan}: ${upsell.points.join(" · ")}`}>
                   Upgrade
                 </Link>
-              </div>
-            ) : null}
+              ) : (
+                <span className="text-[11px] tabular-nums text-foreground-dim">
+                  {usage.members} / {usage.memberLimit < 0 ? "∞" : usage.memberLimit} seats
+                </span>
+              )}
+            </div>
+            <div className="space-y-1.5">
+              <MiniBar label="Projects" used={usage.projects} limit={usage.projectLimit} />
+              <MiniBar label="AI requests" used={usage.ai} limit={usage.aiLimit} metered />
+            </div>
           </div>
         ) : null}
 
@@ -396,7 +497,28 @@ export function AppSidebar({
         <div className={cn(collapsed && "flex justify-center")}>
           <UserMenu user={user} variant={collapsed ? "avatar" : "row"} side={collapsed ? "right" : "top"} align={collapsed ? "end" : "start"} />
         </div>
+        {build && !collapsed ? <BuildLine build={build} onNavigate={onNavigate} /> : null}
       </div>
     </div>
+  );
+}
+
+/**
+ * The bottom line: package version, the environment and whether a runner and an AI provider are
+ * configured on this server (facts from the environment, not a probe), linking to the status page.
+ */
+function BuildLine({ build, onNavigate }: { build: SidebarBuild; onNavigate?: () => void }) {
+  const parts = [build.runner ? "Runner on" : "No runner", build.aiMock ? "Mock AI" : build.ai ? "AI on" : "No AI"];
+  const ready = build.runner && build.ai && !build.aiMock;
+  return (
+    <p className="flex items-center gap-1.5 px-1 pt-1 font-mono text-[10.5px] text-foreground-dim" title={`${parts.join(" · ")} · ${build.env}`}>
+      <span className="tabular-nums">v{build.version}</span>
+      <span aria-hidden="true">·</span>
+      <span className="truncate">{build.env === "production" ? "prod" : build.env === "test" ? "test" : "dev"}</span>
+      <Link href="/status" onClick={onNavigate} className="ml-auto inline-flex min-w-0 items-center gap-1.5 rounded-md px-1 font-sans hover:text-foreground focus-visible:outline-2 focus-visible:outline-ring">
+        <span className={cn("size-1.5 shrink-0 rounded-full", ready ? "bg-success" : "bg-muted-foreground/45")} aria-hidden="true" />
+        <span className="truncate">{parts.join(" · ")}</span>
+      </Link>
+    </p>
   );
 }

@@ -1,8 +1,10 @@
 import Link from "next/link";
 import { ArrowUpRight, Check, CreditCard, Gauge, Mail, Plug, Plus, Settings2, ShieldCheck, UserRound, Users } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { isUnlimited } from "@/config/plans";
+import { isUnlimited, PLANS } from "@/config/plans";
 import type { ChecklistItem, SettingsOverview } from "@/lib/services/settings-overview";
+import type { UsageDay } from "@/lib/services/usage-history";
+import { Sparkline, weekDelta } from "@/components/projects/sparkline";
 import { Avatar } from "@/components/ui/avatar";
 import { StatusDot } from "@/components/ui/misc";
 import { BrandMark, hasBrandMark } from "@/components/brand/brand-mark";
@@ -208,8 +210,8 @@ function Fact({ status, children }: { status: "ok" | "warn" | "idle"; children: 
   );
 }
 
-/** Control-centre bento: every tile is live data and a link to its page. */
-export function OverviewBento({ data }: { data: SettingsOverview }) {
+/** Control-centre bento: every tile is live data and a link to its page. `usageDays` draws the usage sparkline (this period, UTC days). */
+export function OverviewBento({ data, usageDays }: { data: SettingsOverview; usageDays?: UsageDay[] }) {
   const { account, workspace } = data;
   const tz = account.timezone;
   const offset = utcOffset(tz);
@@ -247,18 +249,24 @@ export function OverviewBento({ data }: { data: SettingsOverview }) {
         </span>
       </Tile>
 
-      {workspace ? <WorkspaceTiles workspace={workspace} /> : null}
+      {workspace ? <WorkspaceTiles workspace={workspace} usageDays={usageDays} /> : null}
     </div>
   );
 }
 
-function WorkspaceTiles({ workspace: w }: { workspace: NonNullable<SettingsOverview["workspace"]> }) {
+const limitText = (n: number, unit?: string) => (isUnlimited(n) ? "Unlimited" : `${n.toLocaleString("en-US")}${unit ? ` ${unit}` : ""}`);
+
+function WorkspaceTiles({ workspace: w, usageDays }: { workspace: NonNullable<SettingsOverview["workspace"]>; usageDays?: UsageDay[] }) {
   const period = periodInfo(new Date(w.usage.periodStart));
   const resets = period.resetsAt.toLocaleDateString("en-US", { month: "short", day: "numeric", timeZone: "UTC" });
   const sub = w.subscription;
   const m = w.usage.closest;
   const seats = w.seats;
   const extra = Math.max(0, seats.memberCount - seats.people.length);
+  const limits = PLANS[w.plan.id].limits;
+  const aiSeries = usageDays?.map((d) => d.ai) ?? [];
+  const aiTotal = aiSeries.reduce((a, b) => a + b, 0);
+  const wk = aiSeries.length ? weekDelta(aiSeries) : null;
   return (
     <>
       <Tile
@@ -268,18 +276,41 @@ function WorkspaceTiles({ workspace: w }: { workspace: NonNullable<SettingsOverv
         className="lg:col-span-2"
         footer={sub ? `${sub.interval === "year" ? "Annual" : "Monthly"} · ${sub.provider === "stripe" ? "Stripe" : sub.provider === "razorpay" ? "Razorpay" : sub.provider}` : w.plan.id === "free" ? "No card on file" : "Assigned without an online subscription"}
       >
-        <span className="block w-fit text-[28px] font-bold leading-none tracking-[-0.03em]">{w.plan.name}</span>
-        <span className="mt-2 block text-[13px] text-muted-foreground">
-          {sub
-            ? sub.cancelAtPeriodEnd
-              ? `Ends ${sub.periodEnd ? date(sub.periodEnd, { month: "short", day: "numeric" }) : "at period end"}`
-              : sub.status === "past_due"
-                ? "Payment overdue"
-                : `Renews ${sub.periodEnd ? date(sub.periodEnd, { month: "short", day: "numeric" }) : "monthly"}`
-            : w.plan.id === "free"
-              ? "Free forever"
-              : w.plan.tagline}
+        <span className="flex items-baseline justify-between gap-3">
+          <span className="block w-fit text-[28px] font-bold leading-none tracking-[-0.03em]">{w.plan.name}</span>
+          <span className="truncate text-[12.5px] text-muted-foreground">
+            {sub
+              ? sub.cancelAtPeriodEnd
+                ? `Ends ${sub.periodEnd ? date(sub.periodEnd, { month: "short", day: "numeric" }) : "at period end"}`
+                : sub.status === "past_due"
+                  ? "Payment overdue"
+                  : `Renews ${sub.periodEnd ? date(sub.periodEnd, { month: "short", day: "numeric" }) : "monthly"}`
+              : w.plan.id === "free"
+                ? "Free forever"
+                : w.plan.tagline}
+          </span>
         </span>
+        {/* Plan limits straight from the plan configuration. */}
+        <table className="mt-3 w-full text-[12px]" aria-label={`${w.plan.name} plan limits`}>
+          <tbody>
+            {(
+              [
+                ["Projects", limitText(limits.projects)],
+                ["AI requests", `${limitText(limits.aiRequestsPerMonth)} / mo`],
+                ["Preview runtime", isUnlimited(limits.runtimeMinutesPerMonth) ? "Unlimited" : `${Math.round(limits.runtimeMinutesPerMonth / 60)} h / mo`],
+                ["Deployments", `${limitText(limits.deploymentsPerMonth)} / mo`],
+                ["Storage", isUnlimited(limits.storageMb) ? "Unlimited" : limits.storageMb >= 1000 ? `${limits.storageMb / 1000} GB` : `${limits.storageMb} MB`],
+              ] as const
+            ).map(([k, v]) => (
+              <tr key={k} className="border-t border-border/70 first:border-t-0">
+                <th scope="row" className="py-1 text-left font-normal text-muted-foreground">
+                  {k}
+                </th>
+                <td className="py-1 text-right font-medium tabular-nums">{v}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
       </Tile>
 
       <Tile href="/settings/usage" icon={Gauge} label="Usage" className="lg:col-span-2" footer={`Day ${period.day} of ${period.days} · resets ${resets}`}>
@@ -296,6 +327,20 @@ function WorkspaceTiles({ workspace: w }: { workspace: NonNullable<SettingsOverv
         ) : (
           <span className="text-[13px] text-muted-foreground">Every limit on this plan is unlimited.</span>
         )}
+        {aiSeries.length ? (
+          <span className="mt-4 block border-t border-border/70 pt-3">
+            <span className="flex items-baseline justify-between text-[12px]">
+              <span className="text-muted-foreground">AI requests per day · this period</span>
+              <span className="tabular-nums">
+                <span className="font-medium">{aiTotal.toLocaleString("en-US")}</span>
+                {wk ? <span className="text-muted-foreground"> · +{wk.thisWeek.toLocaleString("en-US")} this week</span> : null}
+              </span>
+            </span>
+            <span className="mt-2 block">
+              <Sparkline values={aiSeries} height={32} label={`AI requests per day this period: ${aiTotal.toLocaleString("en-US")} in total`} />
+            </span>
+          </span>
+        ) : null}
       </Tile>
 
       <Tile
@@ -321,6 +366,18 @@ function WorkspaceTiles({ workspace: w }: { workspace: NonNullable<SettingsOverv
         <span className="mt-3 flex items-baseline gap-1.5">
           <span className="font-display text-[28px] font-semibold leading-none tracking-[-0.03em] tabular-nums">{seats.used}</span>
           <span className="text-[13px] tabular-nums text-muted-foreground">/ {isUnlimited(seats.limit) ? "Unlimited" : seats.limit} seat{seats.limit === 1 ? "" : "s"}</span>
+        </span>
+        {/* Who holds the seats: name, role and when they joined (workspace_members rows). */}
+        <span className="mt-3 block border-t border-border/70">
+          {seats.people.slice(0, 3).map((p) => (
+            <span key={p.userId} className="flex items-center gap-2 border-b border-border/70 py-1.5 text-[12px] last:border-b-0">
+              <Avatar name={p.name} src={p.avatarUrl} size="xs" />
+              <span className="min-w-0 flex-1 truncate">{p.name}</span>
+              <span className="shrink-0 text-muted-foreground">{ROLE[p.role]}</span>
+              <span className="shrink-0 tabular-nums text-foreground-dim">{date(p.joinedAt, { month: "short", year: "2-digit" })}</span>
+            </span>
+          ))}
+          {seats.memberCount > 3 ? <span className="block py-1.5 text-[12px] text-muted-foreground">and {seats.memberCount - 3} more</span> : null}
         </span>
       </Tile>
 

@@ -52,6 +52,8 @@ export type MessageView = {
   validation?: RunValidation;
   /** Client clock when this run started streaming (for the live elapsed timer). */
   startedAt?: number;
+  /** Client clock when each server stage was first seen (runs streamed in this session only). */
+  stageTimes?: Record<string, number>;
   /** Data URLs of images attached to an optimistic (not yet persisted) user message. */
   localImages?: string[];
 };
