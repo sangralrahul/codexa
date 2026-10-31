@@ -1,58 +1,71 @@
 @import "tailwindcss";
-@import "@fontsource-variable/inter";
-@import "@fontsource-variable/inter-tight";
 
 @custom-variant dark (&:where(.dark, .dark *));
 
-/* Codexa desktop tokens: neutral surfaces, one warm accent, Windows-native type. */
-/* "Premium light": white surfaces, near-black type, an indigo→violet→pink brand gradient, soft slate depth. */
+/* Geist Sans + Geist Mono, bundled with the app (no CDN). SIL Open Font License (Vercel). */
+@font-face {
+  font-family: "Geist";
+  src: url("./assets/fonts/Geist-Variable.woff2") format("woff2");
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Geist Mono";
+  src: url("./assets/fonts/GeistMono-Variable.woff2") format("woff2");
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* "Monochrome Grid": black and white, hairlines instead of shadows, no gradients, no hue accents.
+   Status colours (success / warning / danger) are the only colour in the app. */
 :root {
   --bg: #ffffff;
-  --sidebar: #f7f8fc;
+  --sidebar: #ffffff;
   --card: #ffffff;
-  --surface: #f3f4f9;
-  --border: #e6e8ef;
-  --border-strong: #cdd2de;
-  --fg: #0b0f1a;
-  --muted: #5b6475;
-  --dim: #8a93a5;
-  --primary: #2563eb;
+  --panel: #fafafa;
+  --surface: #f2f2f2;
+  --track: #ebebeb;
+  --border: #e5e5e5;
+  --border-strong: #d4d4d4;
+  --fg: #0a0a0a;
+  --muted: #5c5c5c;
+  --dim: #8f8f8f;
+  --mark: #a3a3a3;
+  --primary: #0a0a0a;
   --primary-fg: #ffffff;
-  --accent: #2563eb;
-  --accent-soft: #e8f0fe;
-  --brand-a: #2563eb;
-  --brand-b: #3b82f6;
-  --brand-c: #60a5fa;
-  --success: #059669;
+  --accent: #0a0a0a;
+  --accent-soft: #f2f2f2;
+  --success: #16a34a;
   --warning: #d97706;
   --danger: #dc2626;
-  --ring: #2563eb;
-  --shadow: 0 1px 2px rgb(15 23 42 / 0.04), 0 12px 32px -12px rgb(15 23 42 / 0.14);
+  --ring: #0a0a0a;
+  --shadow: none;
   color-scheme: light;
 }
 .dark {
-  /* Editor-first dark, like bolt.new: neutral near-black, hairline borders, gradient only as accent. */
-  --bg: #0b0b0f;
-  --sidebar: #0f0f14;
-  --card: #15151b;
-  --surface: #1c1c24;
-  --border: #26262f;
-  --border-strong: #363642;
-  --fg: #f1f1f4;
-  --muted: #a0a1ad;
-  --dim: #6f7080;
-  --primary: #3b82f6;
-  --primary-fg: #ffffff;
-  --accent: #60a5fa;
-  --accent-soft: #172036;
-  --brand-a: #2563eb;
-  --brand-b: #3b82f6;
-  --brand-c: #60a5fa;
-  --success: #34d399;
-  --warning: #fbbf24;
-  --danger: #f87171;
-  --ring: #60a5fa;
-  --shadow: 0 1px 2px rgb(0 0 0 / 0.4), 0 16px 40px -16px rgb(0 0 0 / 0.7);
+  --bg: #000000;
+  --sidebar: #000000;
+  --card: #0a0a0a;
+  --panel: #0a0a0a;
+  --surface: #141414;
+  --track: #1a1a1a;
+  --border: #2b2b2b;
+  --border-strong: #3a3a3a;
+  --fg: #ededed;
+  --muted: #a1a1a1;
+  --dim: #6e6e6e;
+  --mark: #8a8a8a;
+  --primary: #ededed;
+  --primary-fg: #000000;
+  --accent: #ededed;
+  --accent-soft: #141414;
+  --success: #3ecf8e;
+  --warning: #f5a524;
+  --danger: #f2555a;
+  --ring: #ededed;
+  --shadow: none;
   color-scheme: dark;
 }
 
@@ -60,7 +73,9 @@
   --color-bg: var(--bg);
   --color-sidebar: var(--sidebar);
   --color-card: var(--card);
+  --color-panel: var(--panel);
   --color-surface: var(--surface);
+  --color-track: var(--track);
   --color-border: var(--border);
   --color-border-strong: var(--border-strong);
   --color-fg: var(--fg);
@@ -75,15 +90,19 @@
   --color-danger: var(--danger);
   --color-ring: var(--ring);
   --shadow-card: var(--shadow);
-  /* Tighter corners than Tailwind's defaults: the app reads as a tool, not a landing page. */
-  --radius-md: 8px;
-  --radius-lg: 10px;
-  --radius-xl: 12px;
-  --radius-2xl: 16px;
-  --radius-3xl: 20px;
-  --font-sans: "Inter Variable", "Segoe UI Variable Text", "Segoe UI", system-ui, sans-serif;
-  --font-display: "Inter Tight Variable", "Inter Variable", "Segoe UI", system-ui, sans-serif;
-  --font-mono: "Cascadia Code", "Cascadia Mono", Consolas, ui-monospace, monospace;
+  /* No elevation anywhere: hairlines do the work. */
+  --shadow-sm: 0 0 #0000;
+  --shadow-md: 0 0 #0000;
+  --shadow-lg: 0 0 #0000;
+  /* 6px controls, 8-10px boxes. */
+  --radius-md: 6px;
+  --radius-lg: 6px;
+  --radius-xl: 8px;
+  --radius-2xl: 10px;
+  --radius-3xl: 12px;
+  --font-sans: "Geist", "Segoe UI Variable Text", "Segoe UI", system-ui, sans-serif;
+  --font-display: "Geist", "Segoe UI", system-ui, sans-serif;
+  --font-mono: "Geist Mono", "Cascadia Mono", Consolas, ui-monospace, monospace;
 }
 
 html,
@@ -97,8 +116,8 @@ body {
   color: var(--fg);
   font-family: var(--font-sans);
   font-size: 13.5px;
-  letter-spacing: -0.005em;
-  font-feature-settings: "cv11", "ss01", "tnum";
+  line-height: 1.5;
+  letter-spacing: -0.003em;
   -webkit-font-smoothing: antialiased;
   overflow: hidden;
   user-select: none;
@@ -114,76 +133,134 @@ textarea,
   outline-offset: 2px;
 }
 ::selection {
-  background: color-mix(in oklab, var(--ring) 30%, transparent);
+  background: color-mix(in oklab, var(--fg) 22%, transparent);
+}
+#root {
+  position: relative;
+  z-index: 1;
 }
 
-/* App chrome: white, with a hairline and a soft shadow so it floats over content. */
+/* Mono for numbers, hashes, domains and uppercase labels. */
+.mono {
+  font-family: var(--font-mono);
+}
+.eyebrow {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 400;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--dim);
+}
+
+/* App chrome: the page colour with a single hairline. */
 .chrome {
-  background: var(--card);
+  background: var(--bg);
   color: var(--fg);
   border-bottom: 1px solid var(--border);
-  box-shadow: 0 1px 0 color-mix(in oklab, var(--fg) 3%, transparent), 0 6px 16px -14px rgb(15 23 42 / 0.25);
   position: relative;
   z-index: 5;
 }
 
-/* Brand signature utilities. */
-/* Brand accents: one restrained blue, no gradients (neutral dark like bolt.new). */
+/* Former brand utilities, kept as flat monochrome so older markup stays correct. */
 .brand-gradient {
-  background: var(--primary);
+  background: var(--fg);
+  color: var(--bg);
 }
 .brand-gradient-text {
-  color: var(--accent);
+  color: var(--dim);
 }
 .brand-mesh {
-  background: radial-gradient(60% 60% at 50% -10%, color-mix(in oklab, var(--fg) 4%, transparent), transparent 70%);
+  background: none;
 }
 .icon-tile {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  border-radius: 10px;
+  border-radius: 6px;
   color: var(--muted);
-  background: var(--surface);
-  box-shadow: inset 0 0 0 1px var(--border);
+  background: var(--card);
+  border: 1px solid var(--border);
 }
 .glow-frame {
   position: relative;
 }
-.glow-frame::before {
-  content: "";
-  position: absolute;
-  inset: -4% -3%;
-  border-radius: 32px;
-  background: var(--fg);
-  filter: blur(46px);
-  opacity: 0.06;
-  z-index: -1;
-}
 .btn-primary {
   background: var(--primary);
-  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.14), 0 1px 2px rgb(0 0 0 / 0.2);
+  color: var(--primary-fg);
+  border: 1px solid var(--primary);
 }
 .btn-primary:hover {
-  background: color-mix(in oklab, var(--primary) 88%, black);
+  background: color-mix(in oklab, var(--primary) 86%, var(--bg));
 }
 .brand-bar {
-  background: var(--primary);
+  background: var(--fg);
+}
+.card-edge {
+  box-shadow: none;
+}
+.accent-ring {
+  box-shadow: 0 0 0 1px var(--border-strong);
+}
+.hero-glow {
+  background: none;
 }
 
-/* A faint grain over dark surfaces so large areas don't read as flat. */
-.dark body::before {
-  content: "";
-  position: fixed;
-  inset: 0;
-  z-index: 0;
-  pointer-events: none;
-  opacity: 0.035;
-  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
+/* Construction grid: 1px lines on a fixed module, with crosshair marks at frame corners. */
+.grid-lines {
+  background-image:
+    linear-gradient(var(--border) 1px, transparent 1px),
+    linear-gradient(90deg, var(--border) 1px, transparent 1px);
+  background-size: 100px 100px;
+  background-position: -1px -1px;
 }
-#root {
-  position: relative;
-  z-index: 1;
+.dot-grid {
+  background-image:
+    linear-gradient(var(--border) 1px, transparent 1px),
+    linear-gradient(90deg, var(--border) 1px, transparent 1px);
+  background-size: 24px 24px;
+  background-position: -1px -1px;
+}
+.xmark {
+  position: absolute;
+  width: 21px;
+  height: 21px;
+  pointer-events: none;
+  z-index: 3;
+}
+.xmark::before,
+.xmark::after {
+  content: "";
+  position: absolute;
+  background: var(--mark);
+}
+.xmark::before {
+  left: 10px;
+  top: 0;
+  width: 1px;
+  height: 21px;
+}
+.xmark::after {
+  top: 10px;
+  left: 0;
+  height: 1px;
+  width: 21px;
+}
+.xmark.tl {
+  left: -11px;
+  top: -11px;
+}
+.xmark.tr {
+  right: -11px;
+  top: -11px;
+}
+.xmark.bl {
+  left: -11px;
+  bottom: -11px;
+}
+.xmark.br {
+  right: -11px;
+  bottom: -11px;
 }
 
 /* Window drag regions (our own title bar). */
@@ -208,7 +285,7 @@ textarea,
   }
 }
 .fade-in {
-  animation: fade-in 180ms ease-out both;
+  animation: fade-in 160ms ease-out both;
 }
 @keyframes spin {
   to {
@@ -226,96 +303,35 @@ textarea,
 .pulse {
   animation: pulse-dot 1.4s ease-in-out infinite;
 }
-/* Motion kit: entrances, screen transitions, ambient background, hover lift. */
 @keyframes rise {
   from {
     opacity: 0;
-    transform: translateY(14px) scale(0.985);
-    filter: blur(4px);
+    transform: translateY(8px);
   }
   to {
     opacity: 1;
     transform: none;
-    filter: blur(0);
   }
 }
 .rise {
-  animation: rise 560ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation: rise 420ms cubic-bezier(0.22, 1, 0.36, 1) both;
   animation-delay: var(--d, 0ms);
 }
 @keyframes page-enter {
   from {
     opacity: 0;
-    transform: translateY(8px);
+    transform: translateY(6px);
   }
 }
 .page-enter {
-  animation: page-enter 260ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation: page-enter 220ms cubic-bezier(0.22, 1, 0.36, 1) both;
 }
-@keyframes drift-a {
-  0%,
-  100% {
-    transform: translate(0, 0) scale(1);
-  }
-  50% {
-    transform: translate(60px, -40px) scale(1.12);
-  }
-}
-@keyframes drift-b {
-  0%,
-  100% {
-    transform: translate(0, 0) scale(1.05);
-  }
-  50% {
-    transform: translate(-50px, 50px) scale(0.95);
-  }
-}
-@keyframes drift-c {
-  0%,
-  100% {
-    transform: translate(0, 0);
-  }
-  50% {
-    transform: translate(30px, 60px) scale(1.08);
-  }
-}
+/* The ambient colour orbs are gone; the class is inert so stray markup renders nothing. */
 .orb {
-  position: absolute;
-  border-radius: 9999px;
-  filter: blur(70px);
-  pointer-events: none;
-  will-change: transform;
-}
-.orb-a {
-  background: color-mix(in oklab, var(--brand-b) 18%, transparent);
-  animation: drift-a 18s ease-in-out infinite;
-}
-.orb-b {
-  background: color-mix(in oklab, var(--fg) 8%, transparent);
-  animation: drift-b 22s ease-in-out infinite;
-}
-.orb-c {
-  background: color-mix(in oklab, var(--brand-c) 12%, transparent);
-  animation: drift-c 26s ease-in-out infinite;
-}
-.dark .orb {
-  opacity: 0.55;
-}
-@keyframes shimmer {
-  from {
-    background-position: 200% 0;
-  }
-  to {
-    background-position: -200% 0;
-  }
+  display: none;
 }
 .shimmer-text {
-  background: linear-gradient(100deg, var(--fg) 30%, var(--muted) 50%, var(--fg) 70%);
-  background-size: 200% 100%;
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
-  animation: shimmer 6s linear infinite;
+  color: var(--fg);
 }
 @keyframes word-in {
   from {
@@ -329,7 +345,7 @@ textarea,
 }
 .word-in {
   display: inline-block;
-  animation: word-in 420ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation: word-in 380ms cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 @keyframes caret {
   50% {
@@ -339,51 +355,40 @@ textarea,
 .caret::after {
   content: "";
   display: inline-block;
-  width: 2px;
-  height: 0.9em;
+  width: 1px;
+  height: 0.95em;
   margin-left: 2px;
   vertical-align: -0.1em;
   background: currentColor;
   animation: caret 1s steps(1) infinite;
 }
 .lift {
-  transition:
-    transform 220ms cubic-bezier(0.22, 1, 0.36, 1),
-    box-shadow 220ms,
-    border-color 160ms;
+  transition: border-color 160ms, background-color 160ms;
 }
 .lift:hover {
-  transform: translateY(-2px);
-  box-shadow: var(--shadow);
+  border-color: var(--border-strong);
 }
 .press:active {
-  transform: scale(0.98);
+  transform: scale(0.99);
 }
 @keyframes logo-breathe {
   0%,
   100% {
-    transform: scale(1);
-    opacity: 0.9;
+    opacity: 0.7;
   }
   50% {
-    transform: scale(1.06);
     opacity: 1;
   }
 }
 .logo-breathe {
   animation: logo-breathe 1.8s ease-in-out infinite;
 }
-/* A soft halo that fades in when a field or composer has focus. */
+/* Focus on a field or composer: the border steps up to the strong hairline, nothing glows. */
 .focus-halo {
-  transition:
-    box-shadow 240ms ease,
-    border-color 160ms;
+  transition: border-color 160ms;
 }
 .focus-halo:focus-within {
-  border-color: color-mix(in oklab, var(--brand-a) 45%, var(--border));
-  box-shadow:
-    0 0 0 4px color-mix(in oklab, var(--brand-a) 14%, transparent),
-    0 16px 40px -16px color-mix(in oklab, var(--brand-b) 45%, transparent);
+  border-color: var(--mark);
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -391,8 +396,6 @@ textarea,
   .pulse,
   .rise,
   .page-enter,
-  .orb,
-  .shimmer-text,
   .word-in,
   .logo-breathe,
   .caret::after {
@@ -401,10 +404,6 @@ textarea,
   .rise,
   .page-enter {
     opacity: 1;
-    transform: none;
-    filter: none;
-  }
-  .lift:hover {
     transform: none;
   }
 }
@@ -418,10 +417,10 @@ textarea,
 }
 .prose-chat code {
   font-family: var(--font-mono);
-  font-size: 0.92em;
+  font-size: 0.9em;
   background: var(--surface);
   border: 1px solid var(--border);
-  border-radius: 5px;
+  border-radius: 4px;
   padding: 0.05em 0.35em;
 }
 .prose-chat ul,
@@ -434,43 +433,4 @@ textarea,
 }
 .prose-chat ol {
   list-style: decimal;
-}
-
-/* Depth: a soft brand light behind hero areas, and a crisp card edge. */
-.hero-glow {
-  background:
-    radial-gradient(55% 50% at 50% 0%, color-mix(in oklab, var(--accent) 5%, transparent), transparent 70%),
-    radial-gradient(40% 40% at 85% 10%, color-mix(in oklab, var(--ring) 4%, transparent), transparent 70%);
-}
-.dark .hero-glow {
-  background:
-    radial-gradient(55% 50% at 50% 0%, color-mix(in oklab, var(--accent) 8%, transparent), transparent 70%),
-    radial-gradient(40% 40% at 85% 10%, color-mix(in oklab, var(--ring) 6%, transparent), transparent 70%);
-}
-.dark .brand-mesh {
-  background: radial-gradient(60% 60% at 50% -10%, color-mix(in oklab, white 6%, transparent), transparent 70%);
-}
-.dark .glow-frame::before {
-  background: white;
-  opacity: 0.05;
-}
-.dark .chrome {
-  box-shadow: 0 1px 0 rgb(255 255 255 / 0.03);
-}
-.card-edge {
-  box-shadow: 0 0 0 1px color-mix(in oklab, var(--border) 70%, transparent), var(--shadow);
-}
-.dark .card-edge {
-  box-shadow: inset 0 1px 0 color-mix(in oklab, white 5%, transparent), var(--shadow);
-}
-.accent-ring {
-  box-shadow: 0 0 0 1px color-mix(in oklab, var(--accent) 35%, transparent), 0 10px 30px -12px color-mix(in oklab, var(--accent) 45%, transparent);
-}
-.dot-grid {
-  background-image: radial-gradient(color-mix(in oklab, var(--fg) 7%, transparent) 1px, transparent 1px);
-  background-size: 20px 20px;
-}
-.orb {
-  filter: blur(90px);
-  opacity: 0.55;
 }

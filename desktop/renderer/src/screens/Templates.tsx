@@ -57,7 +57,10 @@ export function TemplatesScreen() {
     <div className="scroll h-full">
       <div className="mx-auto max-w-[1180px] px-10 py-10">
         <header>
-          <h1 className="font-[family-name:var(--font-display)] text-[26px] font-semibold tracking-[-0.02em]">Templates</h1>
+          <p className="eyebrow flex items-center gap-2">
+            <i className="block size-1.5 bg-fg" /> Starters
+          </p>
+          <h1 className="mt-1.5 text-[26px] font-semibold tracking-[-0.04em]">Templates</h1>
           <p className="mt-1 text-[13.5px] text-muted">Working starters you can run right away and change with AI.</p>
         </header>
 
@@ -73,10 +76,10 @@ export function TemplatesScreen() {
                 type="button"
                 aria-pressed={cat === c}
                 onClick={() => setCat(c)}
-                className={cn("inline-flex h-8 items-center gap-1.5 rounded-full border px-3 text-[12.5px] font-medium transition-colors", cat === c ? "border-primary bg-primary text-primary-fg" : "border-border bg-card text-muted hover:border-border-strong hover:text-fg")}
+                className={cn("mono inline-flex h-[26px] items-center gap-1.5 rounded-md border px-2.5 text-[11.5px] transition-colors", cat === c ? "border-fg bg-fg text-bg" : "border-border-strong text-muted hover:bg-surface hover:text-fg")}
               >
                 {label(c)}
-                <span className={cn("text-[11px] tabular-nums", cat === c ? "opacity-70" : "text-dim")}>{c === "all" ? (templates?.length ?? 0) : (templates ?? []).filter((t) => t.category === c).length}</span>
+                <span className={cn("text-[10.5px]", cat === c ? "opacity-60" : "text-dim")}>{c === "all" ? (templates?.length ?? 0) : (templates ?? []).filter((t) => t.category === c).length}</span>
               </button>
             ))}
           </div>
@@ -92,16 +95,16 @@ export function TemplatesScreen() {
           ) : (
             <ul className="grid grid-cols-2 gap-4 lg:grid-cols-3 2xl:grid-cols-4">
               {shown.map((t) => (
-                <li key={t.id} className="group flex flex-col overflow-hidden rounded-2xl border border-border bg-card shadow-sm transition-[border-color,box-shadow] hover:border-border-strong hover:shadow-card">
+                <li key={t.id} className="group flex flex-col overflow-hidden rounded-lg border border-border bg-bg transition-colors hover:border-border-strong hover:bg-card">
                   <div className="aspect-[16/10] overflow-hidden border-b border-border bg-surface">
                     <ProjectThumb templateId={t.id} name={t.name} big className="h-full w-full" />
                   </div>
                   <div className="flex flex-1 flex-col p-4">
-                    <p className="flex items-center gap-2 text-[11.5px] font-medium text-dim">
+                    <p className="mono flex items-center gap-2 text-[10.5px] uppercase tracking-[0.04em] text-dim">
                       <span className="truncate">
                         {label(t.category)} · {t.frameworkName}
                       </span>
-                      {t.difficulty ? <span className={cn("ml-auto shrink-0 rounded-md px-1.5 py-0.5 text-[10.5px] capitalize", t.difficulty === "beginner" ? "bg-success/10 text-success" : t.difficulty === "advanced" ? "bg-accent-soft text-accent" : "bg-surface text-muted")}>{t.difficulty}</span> : null}
+                      {t.difficulty ? <span className={cn("ml-auto shrink-0 rounded-md px-1.5 py-0.5 text-[10.5px] capitalize", t.difficulty === "beginner" ? "bg-success/10 text-success" : t.difficulty === "advanced" ? "border border-border-strong text-fg" : "bg-surface text-muted")}>{t.difficulty}</span> : null}
                     </p>
                     <h3 className="mt-1 truncate text-[14.5px] font-semibold">{t.name}</h3>
                     <p className="mt-1 line-clamp-2 text-[12.5px] leading-relaxed text-muted">{t.description}</p>

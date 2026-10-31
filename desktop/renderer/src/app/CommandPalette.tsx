@@ -56,8 +56,8 @@ export function CommandPalette({ open, onClose }: { open: boolean; onClose: () =
   let lastGroup = "";
 
   return createPortal(
-    <div className="fixed inset-0 z-[150] flex justify-center bg-black/30 pt-[12vh]" onMouseDown={(e) => e.target === e.currentTarget && onClose()}>
-      <div role="dialog" aria-label="Command palette" className="fade-in h-fit w-[600px] max-w-[92vw] overflow-hidden rounded-2xl border border-border bg-card shadow-card">
+    <div className="fixed inset-0 z-[150] flex justify-center bg-black/60 pt-[12vh]" onMouseDown={(e) => e.target === e.currentTarget && onClose()}>
+      <div role="dialog" aria-label="Command palette" className="fade-in h-fit w-[600px] max-w-[92vw] overflow-hidden rounded-[10px] border border-border-strong bg-card">
         <div className="flex items-center gap-2.5 border-b border-border px-4">
           <Search className="size-4 text-dim" />
           <input

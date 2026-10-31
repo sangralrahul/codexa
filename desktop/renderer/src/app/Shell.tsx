@@ -67,32 +67,35 @@ export function Shell() {
   );
 }
 
-/** Dark app chrome in both themes: brand, workspace, global search, help and the account, like a real tool. */
+/** Title bar: mark / workspace, global search, help and the account, on the page colour with one hairline. */
 function TitleBar({ onSearch }: { onSearch: () => void }) {
   const { route, back, canGoBack, workspace, user, go } = useApp();
   return (
     <header className="drag chrome relative flex h-11 shrink-0 items-center pl-3 pr-[150px]">
-      <div className="flex w-[228px] shrink-0 items-center gap-2">
-        <span className="brand-gradient flex size-7 items-center justify-center rounded-lg text-white shadow-sm">
-          <Logo size={15} />
+      <div className="flex w-[228px] shrink-0 items-center gap-2.5 pl-1">
+        <span className="text-fg">
+          <Logo size={18} />
         </span>
-        <span className="text-[14px] font-bold tracking-[-0.02em]">Codexa</span>
+        <span className="text-[14px] font-semibold tracking-[-0.01em]">Codexa</span>
         {route.name === "project" && canGoBack ? (
           <button type="button" onClick={back} aria-label="Back" className="no-drag ml-1 flex size-7 items-center justify-center rounded-md text-muted hover:bg-surface hover:text-fg">
             <ArrowLeft className="size-4" />
           </button>
         ) : workspace ? (
-          <span className="ml-1 truncate text-[12px] text-dim">/ {workspace.name}</span>
+          <>
+            <span aria-hidden="true" className="text-[18px] font-light text-border-strong">/</span>
+            <span className="min-w-0 truncate text-[12.5px] text-muted">{workspace.name}</span>
+          </>
         ) : null}
       </div>
       <div className="flex flex-1 justify-center">
         <button
           type="button"
           onClick={onSearch}
-          className="no-drag flex h-8 w-full max-w-[480px] items-center gap-2 rounded-lg border border-border bg-surface px-3 text-[12.5px] text-muted transition-colors hover:border-border-strong hover:bg-card hover:text-fg"
+          className="no-drag flex h-8 w-full max-w-[440px] items-center gap-2 rounded-md border border-border-strong bg-bg px-2.5 text-[13px] text-dim transition-colors hover:border-[var(--mark)] hover:text-muted"
         >
           <Search className="size-3.5" />
-          <span className="flex-1 text-left">Search projects, templates and commands</span>
+          <span className="flex-1 text-left">Find a project, template or command</span>
           <Kbd>Ctrl K</Kbd>
         </button>
       </div>
@@ -103,7 +106,7 @@ function TitleBar({ onSearch }: { onSearch: () => void }) {
         <button type="button" title="Help & docs" aria-label="Help & docs" onClick={() => void window.codexa.openWeb("/docs")} className="flex size-8 items-center justify-center rounded-md text-muted hover:bg-surface hover:text-fg">
           <BookOpen className="size-4" />
         </button>
-        <button type="button" title="Account settings" aria-label="Account settings" onClick={() => go({ name: "settings" })} className="ml-1 rounded-full ring-2 ring-border hover:ring-primary/40">
+        <button type="button" title="Account settings" aria-label="Account settings" onClick={() => go({ name: "settings" })} className="ml-1.5 rounded-full ring-1 ring-border-strong hover:ring-[var(--mark)]">
           <Avatar name={user.name || user.email} size={24} />
         </button>
       </div>
@@ -128,11 +131,11 @@ function Sidebar() {
           align="start"
           width={216}
           trigger={(open, toggle) => (
-            <button type="button" onClick={toggle} aria-expanded={open} className="flex h-11 w-full items-center gap-2.5 rounded-lg px-2 text-left hover:bg-surface">
-              <span className="brand-gradient flex size-7 items-center justify-center rounded-md text-[12px] font-semibold text-white">{(workspace?.name ?? "W")[0]?.toUpperCase()}</span>
+            <button type="button" onClick={toggle} aria-expanded={open} className="flex h-11 w-full items-center gap-2.5 rounded-md px-2 text-left hover:bg-surface">
+              <span className="flex size-6 items-center justify-center rounded-full bg-fg text-[11px] font-semibold text-bg">{(workspace?.name ?? "W")[0]?.toUpperCase()}</span>
               <span className="min-w-0 flex-1">
                 <span className="block truncate text-[13px] font-semibold">{workspace?.name ?? "Workspace"}</span>
-                <span className="block truncate text-[11.5px] capitalize text-muted">{workspace?.plan ?? "free"} plan</span>
+                <span className="mono block truncate text-[10.5px] uppercase tracking-[0.06em] text-dim">{workspace?.plan ?? "free"} plan</span>
               </span>
               <ChevronsUpDown className="size-3.5 text-dim" />
             </button>
@@ -172,7 +175,7 @@ function Sidebar() {
             go({ name: "home" });
             setTimeout(() => document.getElementById("composer")?.focus(), 50);
           }}
-          className="mt-2 flex h-9 w-full items-center gap-2 rounded-lg border border-border bg-card px-3 text-[13px] font-medium shadow-sm transition-colors hover:border-border-strong"
+          className="mt-2 flex h-8 w-full items-center gap-2 rounded-md border border-border-strong bg-bg px-2.5 text-[13px] font-medium transition-colors hover:bg-surface"
         >
           <Plus className="size-4" /> New project
           <span className="ml-auto">
@@ -182,7 +185,8 @@ function Sidebar() {
       </div>
 
       <nav className="scroll mt-3 min-h-0 flex-1 px-3" aria-label="Main">
-        <ul className="space-y-0.5">
+        <p className="eyebrow mb-1 px-2.5 pt-2">Workspace</p>
+        <ul className="space-y-px">
           {NAV.map((n) => {
             const active = route.name === n.name;
             return (
@@ -192,20 +196,21 @@ function Sidebar() {
                   onClick={() => go({ name: n.name } as Route)}
                   aria-current={active ? "page" : undefined}
                   className={cn(
-                    "group relative flex h-9 w-full items-center gap-2.5 rounded-lg px-2.5 text-[13.5px] transition-colors",
-                    active ? "bg-accent-soft font-semibold text-primary" : "text-muted hover:bg-surface hover:text-fg",
+                    "group relative flex h-8 w-full items-center gap-2.5 rounded-md px-2.5 text-[13.5px] transition-colors",
+                    active ? "bg-surface font-medium text-fg" : "text-muted hover:bg-surface hover:text-fg",
                   )}
                 >
-                  <n.icon className={cn("size-4", active ? "text-primary" : "")} />
+                  {active ? <span aria-hidden="true" className="absolute -left-3 top-1.5 h-5 w-[2px] bg-fg" /> : null}
+                  <n.icon className="size-4" />
                   <span className="flex-1 text-left">{n.label}</span>
-                  {n.name === "projects" && projects ? <span className="rounded-md bg-surface px-1.5 text-[11px] tabular-nums text-dim ring-1 ring-border">{projects.length}</span> : null}
+                  {n.name === "projects" && projects ? <span className="mono rounded-full border border-border-strong px-1.5 text-[10.5px] text-dim">{projects.length}</span> : null}
                 </button>
               </li>
             );
           })}
         </ul>
 
-        <ul className="mt-0.5 space-y-0.5">
+        <ul className="mt-px space-y-px">
           {(
             [
               ["/showcase", "Community", Compass],
@@ -213,7 +218,7 @@ function Sidebar() {
             ] as const
           ).map(([path, label, Icon]) => (
             <li key={path}>
-              <button type="button" onClick={() => void window.codexa.openWeb(path)} className="group flex h-8 w-full items-center gap-2.5 rounded-lg px-2.5 text-[13.5px] text-muted transition-colors hover:bg-surface hover:text-fg">
+              <button type="button" onClick={() => void window.codexa.openWeb(path)} className="group flex h-8 w-full items-center gap-2.5 rounded-md px-2.5 text-[13.5px] text-muted transition-colors hover:bg-surface hover:text-fg">
                 <Icon className="size-4" />
                 <span className="flex-1 text-left">{label}</span>
                 <ArrowUpRight className="size-3.5 text-dim opacity-0 transition-opacity group-hover:opacity-100" />
@@ -222,13 +227,13 @@ function Sidebar() {
           ))}
         </ul>
 
-        <p className="mb-1 mt-5 px-2.5 text-[11px] font-semibold uppercase tracking-wider text-dim">Recent</p>
+        <p className="eyebrow mb-1 mt-5 border-t border-border px-2.5 pt-4">Recent</p>
         {recent.length ? (
-          <ul className="space-y-0.5">
+          <ul className="space-y-px">
             {recent.map((p) => (
               <li key={p.id}>
-                <button type="button" onClick={() => go({ name: "project", id: p.id })} className="flex h-8 w-full items-center gap-2.5 rounded-lg px-2 text-[13px] text-muted hover:bg-surface hover:text-fg">
-                  <ProjectThumb templateId={p.templateId} name={p.name} className="h-[18px] w-[28px] rounded-[4px]" />
+                <button type="button" onClick={() => go({ name: "project", id: p.id })} className="flex h-8 w-full items-center gap-2.5 rounded-md px-2 text-[13px] text-muted hover:bg-surface hover:text-fg">
+                  <ProjectThumb templateId={p.templateId} name={p.name} className="h-[18px] w-[28px] rounded-[3px] border border-border-strong" />
                   <span className="min-w-0 flex-1 truncate text-left">{p.name}</span>
                 </button>
               </li>
@@ -240,27 +245,28 @@ function Sidebar() {
       </nav>
 
       {usage && usage.limits.projects > 0 ? <UsageCard usage={usage} /> : null}
-      <div className="space-y-0.5 border-t border-border p-3">
+      <div className="space-y-px border-t border-border p-3">
         <button
           type="button"
           onClick={() => go({ name: "settings" })}
           aria-current={route.name === "settings" ? "page" : undefined}
           className={cn(
-            "flex h-8 w-full items-center gap-2.5 rounded-lg px-2.5 text-[13.5px] transition-colors",
-            route.name === "settings" ? "bg-card font-medium text-fg shadow-sm ring-1 ring-border" : "text-muted hover:bg-surface hover:text-fg",
+            "relative flex h-8 w-full items-center gap-2.5 rounded-md px-2.5 text-[13.5px] transition-colors",
+            route.name === "settings" ? "bg-surface font-medium text-fg" : "text-muted hover:bg-surface hover:text-fg",
           )}
         >
+          {route.name === "settings" ? <span aria-hidden="true" className="absolute -left-3 top-1.5 h-5 w-[2px] bg-fg" /> : null}
           <Settings className="size-4" /> Settings
         </button>
         <Menu
           align="start"
           width={216}
           trigger={(open, toggle) => (
-            <button type="button" onClick={toggle} aria-expanded={open} className="flex h-11 w-full items-center gap-2.5 rounded-lg px-2 text-left hover:bg-surface">
+            <button type="button" onClick={toggle} aria-expanded={open} className="flex h-11 w-full items-center gap-2.5 rounded-md px-2 text-left hover:bg-surface">
               <Avatar name={user.name || user.email} size={26} />
               <span className="min-w-0 flex-1">
                 <span className="block truncate text-[13px] font-medium">{user.name || "You"}</span>
-                <span className="block truncate text-[11.5px] text-muted">{user.email}</span>
+                <span className="mono block truncate text-[11px] text-dim">{user.email}</span>
               </span>
             </button>
           )}
@@ -308,28 +314,30 @@ function UsageCard({ usage }: { usage: NonNullable<ReturnType<typeof useApp>["us
   ].filter((r) => r.limit > 0 && r.limit < 1e9);
   const paid = usage.plan !== "free";
   return (
-    <div className="mx-3 mb-3 rounded-xl border border-border bg-card p-3 card-edge">
-      <div className="flex items-center justify-between">
-        <span className="text-[12px] font-semibold capitalize">{usage.plan} plan</span>
-        {paid ? null : (
-          <button type="button" onClick={() => void window.codexa.openWeb("/settings/billing")} className="inline-flex items-center gap-1 text-[12px] font-semibold text-accent hover:underline">
-            <Sparkles className="size-3" /> Upgrade
+    <div className="mx-3 mb-3 rounded-lg border border-border">
+      <div className="flex items-center justify-between border-b border-border px-3 py-2">
+        <span className="text-[12.5px] font-medium">Usage</span>
+        {paid ? (
+          <span className="mono text-[10.5px] uppercase tracking-[0.06em] text-dim">{usage.plan}</span>
+        ) : (
+          <button type="button" onClick={() => void window.codexa.openWeb("/settings/billing")} className="text-[12px] font-medium text-fg underline-offset-2 hover:underline">
+            Upgrade
           </button>
         )}
       </div>
-      <div className="mt-2.5 space-y-2.5">
+      <div className="space-y-3 p-3">
         {rows.map((r) => {
           const pct = Math.min(100, (r.used / r.limit) * 100);
           return (
             <div key={r.label}>
-              <div className="flex justify-between text-[11.5px] text-muted">
+              <div className="flex justify-between text-[12px] text-muted">
                 <span>{r.label}</span>
-                <span className="tabular-nums">
+                <span className="mono text-[11px] text-fg">
                   {r.used.toLocaleString()} / {r.limit.toLocaleString()}
                 </span>
               </div>
-              <div className="mt-1 h-1 overflow-hidden rounded-full bg-surface">
-                <div className={cn("h-full rounded-full", pct > 90 ? "bg-danger" : pct > 70 ? "bg-warning" : "brand-bar")} style={{ width: `${Math.max(pct, 2)}%` }} />
+              <div className="mt-1.5 h-1 overflow-hidden rounded-sm bg-track">
+                <div className={cn("h-full rounded-sm", pct > 90 ? "bg-danger" : pct > 70 ? "bg-warning" : "bg-fg")} style={{ width: `${Math.max(pct, 2)}%` }} />
               </div>
             </div>
           );

@@ -46,9 +46,7 @@ function Root() {
     <>
       {boot.phase === "loading" ? (
         <div className="drag relative flex h-full flex-col items-center justify-center gap-5 overflow-hidden text-fg">
-          <span aria-hidden="true" className="orb orb-a left-[20%] top-[20%] size-[420px]" />
-          <span aria-hidden="true" className="orb orb-b right-[15%] bottom-[10%] size-[460px]" />
-          <span className="logo-breathe relative flex size-16 items-center justify-center rounded-2xl bg-primary text-primary-fg shadow-card">
+          <span className="logo-breathe relative text-fg">
             <Logo size={34} />
           </span>
           <Spinner className="relative" />

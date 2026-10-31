@@ -50,7 +50,10 @@ export function ProjectsScreen() {
       <div className="relative mx-auto max-w-[1240px] px-8 py-7">
         <header className="flex items-end justify-between gap-4">
           <div>
-            <h1 className="font-[family-name:var(--font-display)] text-[26px] font-bold tracking-[-0.03em]">Projects</h1>
+            <p className="eyebrow flex items-center gap-2">
+              <i className="block size-1.5 bg-fg" /> {workspace?.name ?? "Workspace"}
+            </p>
+            <h1 className="mt-1.5 text-[26px] font-semibold tracking-[-0.04em]">Projects</h1>
             <p className="mt-0.5 text-[13px] text-muted">{projects ? `${projects.length} project${projects.length === 1 ? "" : "s"} in ${workspace?.name ?? "this workspace"}` : "Loading…"}</p>
           </div>
           <Button variant="primary" onClick={newProject}>
@@ -58,10 +61,10 @@ export function ProjectsScreen() {
           </Button>
         </header>
 
-        <div className="card-edge mt-5 flex flex-wrap items-center gap-2 rounded-xl border border-border bg-card p-1.5">
+        <div className="mt-6 flex flex-wrap items-center gap-2 border-y border-border py-2.5">
           <div className="relative w-72">
             <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-dim" />
-            <Input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search projects" aria-label="Search projects" className="h-9 border-0 bg-surface pl-9 shadow-none" />
+            <Input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search projects" aria-label="Search projects" className="h-8 pl-9 text-[13px]" />
           </div>
           {frameworks.length > 1 ? (
             <div className="flex flex-wrap gap-1" role="group" aria-label="Framework">
@@ -71,7 +74,7 @@ export function ProjectsScreen() {
                   type="button"
                   aria-pressed={framework === f}
                   onClick={() => setFramework(f)}
-                  className={cn("h-8 rounded-lg px-3 text-[12.5px] font-medium transition-colors", framework === f ? "bg-surface text-fg ring-1 ring-border" : "text-muted hover:bg-surface hover:text-fg")}
+                  className={cn("mono h-[26px] rounded-md border px-2.5 text-[11.5px] transition-colors", framework === f ? "border-fg bg-fg text-bg" : "border-border-strong text-muted hover:bg-surface hover:text-fg")}
                 >
                   {label}
                 </button>
@@ -82,7 +85,7 @@ export function ProjectsScreen() {
           <Menu
             width={200}
             trigger={(open, toggle) => (
-              <button type="button" onClick={toggle} aria-expanded={open} className="inline-flex h-8 items-center gap-1.5 rounded-lg px-2.5 text-[12.5px] font-medium text-muted hover:bg-surface hover:text-fg">
+              <button type="button" onClick={toggle} aria-expanded={open} className="inline-flex h-[26px] items-center gap-1.5 rounded-md border border-border-strong px-2 text-[12px] text-muted hover:bg-surface hover:text-fg">
                 <current.icon className="size-3.5" /> {current.label} <ChevronDown className="size-3.5 text-dim" />
               </button>
             )}
@@ -95,14 +98,14 @@ export function ProjectsScreen() {
               ))
             }
           </Menu>
-          <div className="flex rounded-lg bg-surface p-0.5" role="group" aria-label="View">
+          <div className="flex rounded-md border border-border-strong p-0.5" role="group" aria-label="View">
             {(
               [
                 ["grid", LayoutGrid],
                 ["list", List],
               ] as const
             ).map(([v, Icon]) => (
-              <button key={v} type="button" aria-pressed={view === v} aria-label={v === "grid" ? "Grid view" : "List view"} onClick={() => setMode(v)} className={cn("flex size-7 items-center justify-center rounded-md transition-colors", view === v ? "bg-card text-fg shadow-sm" : "text-dim hover:text-fg")}>
+              <button key={v} type="button" aria-pressed={view === v} aria-label={v === "grid" ? "Grid view" : "List view"} onClick={() => setMode(v)} className={cn("flex size-6 items-center justify-center rounded-[4px] transition-colors", view === v ? "bg-surface text-fg" : "text-dim hover:text-fg")}>
                 <Icon className="size-4" />
               </button>
             ))}
@@ -130,17 +133,17 @@ export function ProjectsScreen() {
               ))}
             </ul>
           ) : (
-            <div className="card-edge overflow-hidden rounded-2xl border border-border bg-card">
-              <div className="grid grid-cols-[minmax(0,1fr)_160px_120px_44px] gap-4 border-b border-border bg-surface/50 px-4 py-2.5 text-[12px] font-medium text-dim">
+            <div className="overflow-hidden rounded-lg border border-border">
+              <div className="mono grid grid-cols-[minmax(0,1fr)_160px_120px_44px] gap-4 border-b border-border bg-card px-4 py-2.5 text-[11px] uppercase tracking-[0.05em] text-dim">
                 <span>Name</span>
                 <span>Framework</span>
                 <span>Edited</span>
                 <span />
               </div>
               {shown.map((p) => (
-                <div key={p.id} className="grid grid-cols-[minmax(0,1fr)_160px_120px_44px] items-center gap-4 border-b border-border px-4 py-2.5 last:border-b-0 hover:bg-surface/60">
+                <div key={p.id} className="grid grid-cols-[minmax(0,1fr)_160px_120px_44px] items-center gap-4 border-b border-border px-4 py-2.5 last:border-b-0 hover:bg-card">
                   <button type="button" onClick={() => go({ name: "project", id: p.id })} className="flex min-w-0 items-center gap-3 text-left">
-                    <ProjectThumb templateId={p.templateId} name={p.name} className="h-8 w-[52px] rounded-md border border-border" />
+                    <ProjectThumb templateId={p.templateId} name={p.name} className="h-10 w-16 rounded-[4px] border border-border-strong" />
                     <span className="min-w-0">
                       <span className="block truncate text-[13.5px] font-medium">{p.name}</span>
                       {p.description ? <span className="block truncate text-[12px] text-muted">{p.description}</span> : null}

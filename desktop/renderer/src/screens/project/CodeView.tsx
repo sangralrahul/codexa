@@ -34,24 +34,24 @@ function buildTree(files: FileEntry[]): Node[] {
 
 /** File-type icon and tint, like an IDE's explorer. */
 const KINDS: Record<string, { icon: typeof FileCode2; tint: string; label: string }> = {
-  tsx: { icon: Braces, tint: "text-[#3178c6]", label: "TypeScript React" },
-  ts: { icon: Braces, tint: "text-[#3178c6]", label: "TypeScript" },
-  jsx: { icon: Braces, tint: "text-[#e8a317]", label: "JavaScript React" },
-  js: { icon: Braces, tint: "text-[#e8a317]", label: "JavaScript" },
-  mjs: { icon: Braces, tint: "text-[#e8a317]", label: "JavaScript" },
-  cjs: { icon: Braces, tint: "text-[#e8a317]", label: "JavaScript" },
-  json: { icon: FileJson2, tint: "text-[#b8860b]", label: "JSON" },
-  css: { icon: Palette, tint: "text-[#7c4dff]", label: "CSS" },
-  scss: { icon: Palette, tint: "text-[#c6538c]", label: "SCSS" },
-  html: { icon: FileCode2, tint: "text-[#e44d26]", label: "HTML" },
+  tsx: { icon: Braces, tint: "text-muted", label: "TypeScript React" },
+  ts: { icon: Braces, tint: "text-muted", label: "TypeScript" },
+  jsx: { icon: Braces, tint: "text-muted", label: "JavaScript React" },
+  js: { icon: Braces, tint: "text-muted", label: "JavaScript" },
+  mjs: { icon: Braces, tint: "text-muted", label: "JavaScript" },
+  cjs: { icon: Braces, tint: "text-muted", label: "JavaScript" },
+  json: { icon: FileJson2, tint: "text-muted", label: "JSON" },
+  css: { icon: Palette, tint: "text-muted", label: "CSS" },
+  scss: { icon: Palette, tint: "text-muted", label: "SCSS" },
+  html: { icon: FileCode2, tint: "text-muted", label: "HTML" },
   md: { icon: FileText, tint: "text-muted", label: "Markdown" },
-  svg: { icon: Image, tint: "text-[#ff9800]", label: "SVG" },
-  png: { icon: Image, tint: "text-[#2a9d8f]", label: "Image" },
-  jpg: { icon: Image, tint: "text-[#2a9d8f]", label: "Image" },
-  webp: { icon: Image, tint: "text-[#2a9d8f]", label: "Image" },
-  yml: { icon: Hash, tint: "text-[#cb171e]", label: "YAML" },
-  yaml: { icon: Hash, tint: "text-[#cb171e]", label: "YAML" },
-  sql: { icon: FileType2, tint: "text-[#2a9d8f]", label: "SQL" },
+  svg: { icon: Image, tint: "text-muted", label: "SVG" },
+  png: { icon: Image, tint: "text-muted", label: "Image" },
+  jpg: { icon: Image, tint: "text-muted", label: "Image" },
+  webp: { icon: Image, tint: "text-muted", label: "Image" },
+  yml: { icon: Hash, tint: "text-muted", label: "YAML" },
+  yaml: { icon: Hash, tint: "text-muted", label: "YAML" },
+  sql: { icon: FileType2, tint: "text-muted", label: "SQL" },
 };
 function kindOf(path: string) {
   const name = path.split("/").pop() ?? "";
@@ -129,7 +129,7 @@ export function CodeView({ projectId, filesVersion, readOnly }: { projectId: str
     if (!hostRef.current) return;
     const editor = monaco.editor.create(hostRef.current, {
       automaticLayout: true,
-      fontFamily: '"Cascadia Code", Consolas, monospace',
+      fontFamily: '"Geist Mono", "Cascadia Code", Consolas, monospace',
       fontSize: 13,
       lineHeight: 20,
       minimap: { enabled: false },
@@ -281,7 +281,7 @@ export function CodeView({ projectId, filesVersion, readOnly }: { projectId: str
             className={cn("flex h-[26px] w-full items-center gap-1.5 rounded-md pr-2 text-left text-[12.5px]", active === n.path ? "bg-surface font-medium text-fg ring-1 ring-border" : "text-muted hover:bg-surface/70 hover:text-fg")}
           >
             {n.children ? <ChevronRight className={cn("size-3 shrink-0 text-dim transition-transform", isOpen && "rotate-90")} /> : <span className="w-3" />}
-            {n.children ? isOpen ? <FolderOpen className="size-3.5 shrink-0 text-[#d4a017]" /> : <Folder className="size-3.5 shrink-0 text-[#d4a017]" /> : <FileIcon path={n.path} />}
+            {n.children ? isOpen ? <FolderOpen className="size-3.5 shrink-0 text-dim" /> : <Folder className="size-3.5 shrink-0 text-dim" /> : <FileIcon path={n.path} />}
             <span className="truncate">{n.name}</span>
             {dirty.has(n.path) ? <span className="ml-auto size-1.5 shrink-0 rounded-full bg-accent" /> : null}
           </button>

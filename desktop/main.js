@@ -12,7 +12,7 @@ const APP_URL = (process.env.CODEXA_URL || "https://codexa.creditvault.tech").re
 const APP_ORIGIN = new URL(APP_URL).origin;
 const RENDERER_DIR = path.join(__dirname, "dist-renderer");
 const STATE_FILE = path.join(app.getPath("userData"), "window-state.json");
-const PALETTE = { dark: { bg: "#15151b", fg: "#f1f1f4" }, light: { bg: "#ffffff", fg: "#0b0f1a" } };
+const PALETTE = { dark: { bg: "#000000", fg: "#ededed" }, light: { bg: "#ffffff", fg: "#0a0a0a" } };
 
 protocol.registerSchemesAsPrivileged([{ scheme: "app", privileges: { standard: true, secure: true, supportFetchAPI: true, corsEnabled: false } }]);
 

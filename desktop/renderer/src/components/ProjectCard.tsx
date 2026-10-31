@@ -9,15 +9,15 @@ import { ProjectThumb } from "./ProjectThumb";
 export function ProjectCard({ project: p, live, checkpoints, members }: { project: Project; live?: string | null; checkpoints?: number; members?: { userId?: string; id?: string; name?: string | null; email?: string; user?: { name?: string | null; email?: string } }[] }) {
   const { go } = useApp();
   return (
-    <article className="group lift card-edge relative flex flex-col overflow-hidden rounded-2xl border border-border bg-card hover:border-border-strong">
+    <article className="group lift relative flex flex-col overflow-hidden rounded-lg border border-border bg-bg hover:bg-card">
       <button type="button" onClick={() => go({ name: "project", id: p.id })} className="text-left" aria-label={`Open ${p.name}`}>
         {/* Browser-frame thumbnail */}
-        <div className="border-b border-border bg-surface">
+        <div className="border-b border-border bg-card">
           <div className="flex h-6 items-center gap-1 px-2.5">
-            <span className="size-1.5 rounded-full bg-border-strong" />
-            <span className="size-1.5 rounded-full bg-border-strong" />
-            <span className="size-1.5 rounded-full bg-border-strong" />
-            <span className="ml-2 h-3 flex-1 rounded-sm bg-card/70" />
+            <span className="size-1.5 rounded-full border border-border-strong" />
+            <span className="size-1.5 rounded-full border border-border-strong" />
+            <span className="size-1.5 rounded-full border border-border-strong" />
+            <span className="mono ml-2 truncate text-[10px] text-dim">{p.slug}</span>
           </div>
           <div className="aspect-[16/9] overflow-hidden">
             <ProjectThumb templateId={p.templateId} name={p.name} big className="h-full w-full transition-transform duration-500 group-hover:scale-[1.02]" />
@@ -25,19 +25,21 @@ export function ProjectCard({ project: p, live, checkpoints, members }: { projec
         </div>
         <div className="px-4 pb-4 pt-3">
           <div className="flex items-center gap-2 pr-8">
-            <h3 className="min-w-0 flex-1 truncate text-[14.5px] font-semibold tracking-[-0.01em]">{p.name}</h3>
+            <h3 className="min-w-0 flex-1 truncate text-[14px] font-medium tracking-[-0.01em]">{p.name}</h3>
             {live ? (
-              <span className="inline-flex shrink-0 items-center gap-1 rounded-md bg-success/10 px-1.5 py-0.5 text-[11px] font-semibold text-success">
-                <span className="size-1.5 rounded-full bg-success" /> Live
+              <span className="inline-flex shrink-0 items-center gap-1.5 text-[12px] text-fg">
+                <span className="size-2 rounded-full bg-success" /> Live
               </span>
             ) : live === null ? (
-              <span className="shrink-0 rounded-md bg-surface px-1.5 py-0.5 text-[11px] font-medium text-dim">Draft</span>
+              <span className="inline-flex shrink-0 items-center gap-1.5 text-[12px] text-muted">
+                <span className="size-2 rounded-full bg-dim" /> Draft
+              </span>
             ) : null}
           </div>
           <p className="mt-1 flex items-center gap-1.5 text-[12.5px] text-muted">
             <span className="truncate">{p.description || frameworkLabel(p.framework)}</span>
           </p>
-          <p className="mt-1.5 flex items-center gap-1.5 text-[11.5px] text-dim">
+          <p className="mono mt-1.5 flex items-center gap-1.5 text-[11px] text-dim">
             <span className="truncate">
               {frameworkLabel(p.framework)} · Edited {relativeTime(p.updatedAt)}
               {checkpoints ? ` · ${checkpoints} checkpoint${checkpoints === 1 ? "" : "s"}` : ""}
@@ -45,7 +47,7 @@ export function ProjectCard({ project: p, live, checkpoints, members }: { projec
             {members && members.length > 0 ? (
               <span className="ml-auto flex shrink-0 items-center pr-7">
                 {members.slice(0, 3).map((m, i) => (
-                  <span key={m.userId ?? m.id ?? i} className={cn("rounded-full ring-2 ring-card", i > 0 && "-ml-1")}>
+                  <span key={m.userId ?? m.id ?? i} className={cn("rounded-full ring-2 ring-bg", i > 0 && "-ml-1")}>
                     <Avatar name={m.name || m.user?.name || m.email || m.user?.email || "?"} size={18} />
                   </span>
                 ))}

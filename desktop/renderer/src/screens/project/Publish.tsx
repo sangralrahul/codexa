@@ -189,8 +189,8 @@ export function PublishDialog({ projectId, open, onClose, canPublish, onChanged 
                   const state = i < idx ? "done" : i === idx ? "active" : "next";
                   return (
                     <li key={s.label} className="flex min-w-0 flex-1 items-center gap-2">
-                      <span className={cn("flex size-6 shrink-0 items-center justify-center rounded-full text-[11px] font-semibold", state === "done" ? "bg-success text-white" : state === "active" ? "bg-accent text-white" : "bg-surface text-dim ring-1 ring-border")}>
-                        {state === "done" ? <Check className="size-3.5" /> : state === "active" ? <Spinner className="size-3.5 text-white" /> : i + 1}
+                      <span className={cn("flex size-6 shrink-0 items-center justify-center rounded-full text-[11px] font-semibold", state === "done" ? "bg-success text-bg" : state === "active" ? "bg-fg text-bg" : "bg-surface text-dim ring-1 ring-border")}>
+                        {state === "done" ? <Check className="size-3.5" /> : state === "active" ? <Spinner className="size-3.5 text-bg" /> : i + 1}
                       </span>
                       <span className={cn("truncate text-[12.5px] font-medium", state === "next" ? "text-dim" : "text-fg")}>{s.label}</span>
                       {i < STEPS.length - 1 ? <span className={cn("h-px min-w-4 flex-1", state === "done" ? "bg-success" : "bg-border")} /> : null}

@@ -7,17 +7,17 @@ type Variant = "primary" | "secondary" | "ghost" | "danger" | "accent";
 type Size = "sm" | "md" | "lg" | "icon" | "icon-sm";
 
 const VARIANTS: Record<Variant, string> = {
-  primary: "btn-primary bg-primary text-primary-fg",
-  accent: "btn-primary bg-primary text-primary-fg",
-  secondary: "bg-card text-fg border border-border hover:bg-surface hover:border-border-strong shadow-sm",
+  primary: "btn-primary",
+  accent: "btn-primary",
+  secondary: "bg-bg text-fg border border-border-strong hover:bg-surface",
   ghost: "text-muted hover:text-fg hover:bg-surface",
   danger: "bg-danger text-white hover:brightness-110",
 };
 const SIZES: Record<Size, string> = {
-  sm: "h-8 px-3 text-[13px] gap-1.5 rounded-lg",
-  md: "h-9 px-3.5 text-[13.5px] gap-2 rounded-lg",
-  lg: "h-11 px-5 text-[14.5px] gap-2 rounded-xl",
-  icon: "size-9 rounded-lg",
+  sm: "h-8 px-3 text-[13px] gap-1.5 rounded-md",
+  md: "h-9 px-3.5 text-[13.5px] gap-2 rounded-md",
+  lg: "h-11 px-5 text-[14.5px] gap-2 rounded-md",
+  icon: "size-9 rounded-md",
   "icon-sm": "size-7 rounded-md",
 };
 
@@ -52,7 +52,7 @@ export function Input({ className, ...rest }: InputHTMLAttributes<HTMLInputEleme
   return (
     <input
       className={cn(
-        "h-10 w-full rounded-lg border border-border bg-card px-3 text-[14px] text-fg shadow-sm outline-none transition-colors placeholder:text-dim focus:border-border-strong focus-visible:outline-2 focus-visible:outline-offset-0 focus-visible:outline-ring",
+        "h-10 w-full rounded-md border border-border-strong bg-bg px-3 text-[14px] text-fg outline-none transition-colors placeholder:text-dim focus:border-[var(--mark)] focus-visible:outline-1 focus-visible:outline-offset-0 focus-visible:outline-ring",
         className,
       )}
       {...rest}
@@ -86,15 +86,21 @@ export function Spinner({ className }: { className?: string }) {
   return <Loader2 className={cn("spin size-4 text-muted", className)} aria-label="Loading" />;
 }
 
-const AVATAR_TONES = ["#e76f51", "#2a9d8f", "#6d5dfc", "#d4a017", "#3a86ff", "#c2185b", "#2e7d32"];
+// Monochrome avatars: a few greys, always with legible initials.
+const AVATAR_TONES = [
+  ["var(--fg)", "var(--bg)"],
+  ["var(--muted)", "var(--bg)"],
+  ["var(--border-strong)", "var(--fg)"],
+  ["var(--surface)", "var(--fg)"],
+];
 export function Avatar({ name, size = 28 }: { name: string; size?: number }) {
   let h = 0;
   for (const c of name) h = (h * 31 + c.charCodeAt(0)) >>> 0;
   return (
     <span
       aria-hidden="true"
-      className="inline-flex shrink-0 items-center justify-center rounded-full font-semibold text-white"
-      style={{ width: size, height: size, fontSize: size * 0.4, background: AVATAR_TONES[h % AVATAR_TONES.length] }}
+      className="inline-flex shrink-0 items-center justify-center rounded-full font-semibold"
+      style={{ width: size, height: size, fontSize: size * 0.4, background: AVATAR_TONES[h % AVATAR_TONES.length][0], color: AVATAR_TONES[h % AVATAR_TONES.length][1] }}
     >
       {initials(name)}
     </span>
@@ -107,19 +113,19 @@ export function Badge({ children, tone = "neutral", className }: { children: Rea
     success: "bg-success/10 text-success border-success/25",
     warning: "bg-warning/10 text-warning border-warning/25",
     danger: "bg-danger/10 text-danger border-danger/25",
-    accent: "bg-accent-soft text-accent border-accent/25",
+    accent: "bg-bg text-fg border-border-strong",
   };
-  return <span className={cn("inline-flex h-5 items-center gap-1 rounded-md border px-1.5 text-[11px] font-medium", tones[tone], className)}>{children}</span>;
+  return <span className={cn("inline-flex h-5 items-center gap-1 rounded-full border px-2 text-[11px] font-medium", tones[tone], className)}>{children}</span>;
 }
 
 export function Kbd({ children }: { children: ReactNode }) {
-  return <kbd className="inline-flex h-5 min-w-5 items-center justify-center rounded border border-border bg-surface px-1 font-sans text-[11px] text-muted">{children}</kbd>;
+  return <kbd className="inline-flex h-[18px] min-w-5 items-center justify-center rounded border border-border-strong px-1 font-mono text-[10.5px] text-muted">{children}</kbd>;
 }
 
 export function EmptyState({ icon, title, body, action }: { icon?: ReactNode; title: string; body?: ReactNode; action?: ReactNode }) {
   return (
-    <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-border-strong px-6 py-14 text-center">
-      {icon ? <div className="mb-4 flex size-11 items-center justify-center rounded-xl border border-border bg-card text-muted shadow-sm [&_svg]:size-5">{icon}</div> : null}
+    <div className="flex flex-col items-center justify-center rounded-lg border border-dashed border-border-strong px-6 py-14 text-center">
+      {icon ? <div className="mb-4 flex size-10 items-center justify-center rounded-md border border-border-strong bg-card text-muted [&_svg]:size-5">{icon}</div> : null}
       <p className="text-[15px] font-semibold">{title}</p>
       {body ? <p className="mx-auto mt-1.5 max-w-sm text-[13.5px] leading-relaxed text-muted">{body}</p> : null}
       {action ? <div className="mt-5">{action}</div> : null}
@@ -148,7 +154,7 @@ export function Menu({ trigger, children, align = "end", width = 200 }: { trigge
     <div ref={ref} className="relative">
       {trigger(open, () => setOpen((o) => !o))}
       {open ? (
-        <div role="menu" style={{ width }} className={cn("fade-in absolute top-full z-50 mt-1.5 rounded-xl border border-border bg-card p-1 shadow-card", align === "end" ? "right-0" : "left-0")}>
+        <div role="menu" style={{ width }} className={cn("fade-in absolute top-full z-50 mt-1.5 rounded-lg border border-border-strong bg-card p-1", align === "end" ? "right-0" : "left-0")}>
           {children(() => setOpen(false))}
         </div>
       ) : null}
@@ -162,7 +168,7 @@ export function MenuItem({ icon, children, onSelect, danger, checked }: { icon?:
       type="button"
       role="menuitem"
       onClick={onSelect}
-      className={cn("flex h-8 w-full items-center gap-2.5 rounded-lg px-2.5 text-left text-[13px] transition-colors hover:bg-surface [&_svg]:size-4", danger ? "text-danger" : "text-fg")}
+      className={cn("flex h-8 w-full items-center gap-2.5 rounded-md px-2.5 text-left text-[13px] transition-colors hover:bg-surface [&_svg]:size-4", danger ? "text-danger" : "text-fg")}
     >
       {icon ? <span className={cn("shrink-0", danger ? "" : "text-muted")}>{icon}</span> : null}
       <span className="min-w-0 flex-1 truncate">{children}</span>
@@ -184,8 +190,8 @@ export function Dialog({ open, onClose, title, description, children, width = 44
   }, [open, onClose]);
   if (!open) return null;
   return createPortal(
-    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/40 p-6 backdrop-blur-[2px]" onMouseDown={(e) => e.target === e.currentTarget && onClose()}>
-      <div role="dialog" aria-modal="true" aria-label={title} style={{ width }} className="fade-in max-w-full rounded-2xl border border-border bg-card p-6 shadow-card">
+    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 p-6" onMouseDown={(e) => e.target === e.currentTarget && onClose()}>
+      <div role="dialog" aria-modal="true" aria-label={title} style={{ width }} className="fade-in max-w-full rounded-[10px] border border-border-strong bg-card p-6">
         <div className="mb-4 flex items-start gap-4">
           <div className="min-w-0 flex-1">
             <h2 className="text-[16px] font-semibold tracking-[-0.01em]">{title}</h2>
@@ -225,7 +231,7 @@ export function Toaster() {
   return createPortal(
     <div className="pointer-events-none fixed bottom-4 right-4 z-[200] flex w-80 flex-col gap-2" aria-live="polite">
       {items.map((t) => (
-        <div key={t.id} className="fade-in pointer-events-auto rounded-xl border border-border bg-card px-4 py-3 shadow-card">
+        <div key={t.id} className="fade-in pointer-events-auto rounded-lg border border-border-strong bg-card px-4 py-3">
           <p className={cn("flex items-center gap-2 text-[13.5px] font-medium", t.tone === "error" ? "text-danger" : "text-fg")}>
             <span className={cn("size-1.5 rounded-full", t.tone === "error" ? "bg-danger" : t.tone === "success" ? "bg-success" : "bg-muted")} />
             {t.title}

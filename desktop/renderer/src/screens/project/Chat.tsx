@@ -324,7 +324,7 @@ const IDEAS = [
 function Welcome({ configured, onPick }: { configured: boolean; onPick: (t: string) => void }) {
   return (
     <div className="fade-in flex h-full flex-col justify-center px-1">
-      <div className="flex size-11 items-center justify-center rounded-xl bg-primary text-primary-fg shadow-sm">
+      <div className="flex size-11 items-center justify-center rounded-lg border border-border-strong bg-card text-fg">
         <Logo size={22} />
       </div>
       <h2 className="mt-4 font-[family-name:var(--font-display)] text-[19px] font-semibold tracking-[-0.02em]">What should we change?</h2>

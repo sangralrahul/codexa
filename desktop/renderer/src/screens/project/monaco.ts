@@ -29,14 +29,42 @@ for (const d of [ts?.typescriptDefaults, ts?.javascriptDefaults]) {
 monaco.editor.defineTheme("codexa-dark", {
   base: "vs-dark",
   inherit: true,
-  rules: [],
-  colors: { "editor.background": "#15151b", "editor.lineHighlightBackground": "#1c1c24", "editorGutter.background": "#15151b", "editorLineNumber.foreground": "#4e4f5c", "editorIndentGuide.background1": "#26262f" },
+  rules: [
+    { token: "", foreground: "d4d4d4" },
+    { token: "keyword", foreground: "ffffff" },
+    { token: "type", foreground: "ededed" },
+    { token: "type.identifier", foreground: "ededed" },
+    { token: "identifier", foreground: "d4d4d4" },
+    { token: "string", foreground: "a1a1a1" },
+    { token: "number", foreground: "ededed" },
+    { token: "comment", foreground: "6e6e6e", fontStyle: "italic" },
+    { token: "delimiter", foreground: "8a8a8a" },
+    { token: "tag", foreground: "ffffff" },
+    { token: "attribute.name", foreground: "bdbdbd" },
+    { token: "attribute.value", foreground: "a1a1a1" },
+    { token: "regexp", foreground: "a1a1a1" },
+  ],
+  colors: { "editor.background": "#000000", "editor.lineHighlightBackground": "#0a0a0a", "editorGutter.background": "#000000", "editorLineNumber.foreground": "#4a4a4a", "editorLineNumber.activeForeground": "#a1a1a1", "editorIndentGuide.background1": "#1f1f1f", "editor.selectionBackground": "#3a3a3a", "editorCursor.foreground": "#ededed", "editorWidget.background": "#0a0a0a", "editorWidget.border": "#2b2b2b", "editorBracketHighlight.foreground1": "#a1a1a1", "editorBracketHighlight.foreground2": "#a1a1a1", "editorBracketHighlight.foreground3": "#a1a1a1", "editorBracketHighlight.foreground4": "#a1a1a1", "editorBracketHighlight.foreground5": "#a1a1a1", "editorBracketHighlight.foreground6": "#a1a1a1", "editorBracketMatch.border": "#6e6e6e" },
 });
 monaco.editor.defineTheme("codexa-light", {
   base: "vs",
   inherit: true,
-  rules: [],
-  colors: { "editor.background": "#ffffff", "editor.lineHighlightBackground": "#f5f6f8", "editorLineNumber.foreground": "#b3b9c3", "editorIndentGuide.background1": "#e4e7eb" },
+  rules: [
+    { token: "", foreground: "262626" },
+    { token: "keyword", foreground: "000000" },
+    { token: "type", foreground: "0a0a0a" },
+    { token: "type.identifier", foreground: "0a0a0a" },
+    { token: "identifier", foreground: "262626" },
+    { token: "string", foreground: "5c5c5c" },
+    { token: "number", foreground: "0a0a0a" },
+    { token: "comment", foreground: "8f8f8f", fontStyle: "italic" },
+    { token: "delimiter", foreground: "737373" },
+    { token: "tag", foreground: "000000" },
+    { token: "attribute.name", foreground: "404040" },
+    { token: "attribute.value", foreground: "5c5c5c" },
+    { token: "regexp", foreground: "5c5c5c" },
+  ],
+  colors: { "editor.background": "#ffffff", "editor.lineHighlightBackground": "#fafafa", "editorLineNumber.foreground": "#b5b5b5", "editorLineNumber.activeForeground": "#5c5c5c", "editorIndentGuide.background1": "#ebebeb", "editor.selectionBackground": "#e0e0e0", "editorCursor.foreground": "#0a0a0a", "editorBracketHighlight.foreground1": "#5c5c5c", "editorBracketHighlight.foreground2": "#5c5c5c", "editorBracketHighlight.foreground3": "#5c5c5c", "editorBracketHighlight.foreground4": "#5c5c5c", "editorBracketHighlight.foreground5": "#5c5c5c", "editorBracketHighlight.foreground6": "#5c5c5c", "editorBracketMatch.border": "#a3a3a3" },
 });
 
 const LANG: Record<string, string> = {

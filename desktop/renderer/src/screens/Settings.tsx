@@ -18,7 +18,10 @@ export function SettingsScreen({ tab: initial }: { tab?: Tab }) {
   return (
     <div className="scroll h-full">
       <div className="mx-auto max-w-[820px] px-10 py-10">
-        <h1 className="font-[family-name:var(--font-display)] text-[26px] font-semibold tracking-[-0.02em]">Settings</h1>
+        <p className="eyebrow flex items-center gap-2">
+          <i className="block size-1.5 bg-fg" /> Account and app
+        </p>
+        <h1 className="mt-1.5 text-[26px] font-semibold tracking-[-0.04em]">Settings</h1>
         <div className="mt-6 flex gap-1 border-b border-border" role="tablist">
           {TABS.map((t) => (
             <button
@@ -45,13 +48,13 @@ export function SettingsScreen({ tab: initial }: { tab?: Tab }) {
 
 function Section({ title, description, children, footer }: { title: string; description?: ReactNode; children: ReactNode; footer?: ReactNode }) {
   return (
-    <section className="overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
+    <section className="overflow-hidden rounded-[10px] border border-border bg-bg">
       <div className="p-6">
         <h2 className="text-[15px] font-semibold">{title}</h2>
         {description ? <p className="mt-1 text-[13px] text-muted">{description}</p> : null}
         <div className="mt-5">{children}</div>
       </div>
-      {footer ? <div className="flex items-center justify-end gap-2 border-t border-border bg-surface/50 px-6 py-3">{footer}</div> : null}
+      {footer ? <div className="flex items-center justify-end gap-2 border-t border-border bg-card px-6 py-3">{footer}</div> : null}
     </section>
   );
 }
