@@ -23,10 +23,15 @@ function panelShot() {
 export function AuthPanel({ className }: { className?: string }) {
   const shot = panelShot();
   return (
-    <aside aria-labelledby="auth-panel-title" className={cn("auth-panel relative flex flex-col overflow-hidden rounded-[20px] border border-border bg-surface", className)}>
+    <aside aria-labelledby="auth-panel-title" className={cn("auth-panel relative flex flex-col overflow-hidden rounded-xl border border-border bg-background", className)}>
+      <div aria-hidden="true" className="auth-grid pointer-events-none absolute inset-0" />
       <div className="relative max-w-[34rem] px-12 pt-14 xl:px-16 xl:pt-16">
-        <h2 id="auth-panel-title" className="text-display-4 text-foreground">
-          From a sentence to a running app.
+        <p className="flex items-center gap-2.5 font-mono text-xs uppercase tracking-[0.06em] text-muted-foreground">
+          <span aria-hidden="true" className="size-1.5 bg-foreground" />
+          Codexa workspace
+        </p>
+        <h2 id="auth-panel-title" className="mt-4 text-display-4 text-foreground">
+          From a sentence <span className="text-muted-foreground">to a running app.</span>
         </h2>
         <ul className="mt-6 flex flex-col gap-3 text-[15px] text-muted-foreground">
           {POINTS.map((p) => (

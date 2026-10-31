@@ -17,68 +17,68 @@
 
 /* --------------------------------------------------------------------------
    Marketing dark scope. The website is dark by default, whatever the app theme:
-   neutral near-black page, #16161a panels, white and grey type, and ONE accent
-   (blue) for the primary button, links, focus rings and the live dot. The
-   tokens below shadow the app's light/dark sets for every page under the
-   site shell (and anything portalled out of it while such a page is open), so
-   components keep reading the same token names. globals.css is untouched.
-   Muted text is #9d9da8 on #0b0b0f (≈6.9:1) and on #16161a (≈6.1:1).
+   monochrome black page, #0a0a0a panels, #2b2b2b hairlines, white and grey type,
+   and a white primary button. Green is kept only for live status. The tokens
+   below shadow the app's light/dark sets for every page under the site shell
+   (and anything portalled out of it while such a page is open), so components
+   keep reading the same token names.
+   Muted text is #a1a1a1 on #000 (≈8.3:1) and on #0a0a0a (≈7.9:1).
    -------------------------------------------------------------------------- */
 :root:has(.site-shell) {
   color-scheme: dark;
-  --background: #0b0b0f;
-  --foreground: #f5f5f7;
-  --foreground-dim: #c2c2ca;
-  --surface: #111115;
-  --surface-2: #1b1b21;
-  --surface-3: #27272f;
-  --card: #16161a;
-  --card-foreground: #f5f5f7;
-  --muted: #1c1c22;
-  --muted-foreground: #9d9da8;
-  --border: #26262c;
-  --border-strong: #38383f;
-  --input: #121216;
-  --ring: #3b82f6;
-  --focus: #3b82f6;
-  --primary: #3b82f6;
-  --primary-hover: #2563eb;
-  --primary-foreground: #ffffff;
-  --accent: #3b82f6;
-  --accent-foreground: #ffffff;
-  --signal-ink: #c2c2ca;
-  /* Flat blue stands in wherever a shared component still asks for the brand gradient. */
-  --brand-from: #3b82f6;
-  --brand-via: #3b82f6;
-  --brand-to: #3b82f6;
-  --brand-gradient: linear-gradient(#3b82f6, #3b82f6);
-  --brand-gradient-soft: linear-gradient(rgba(59, 130, 246, 0.1), rgba(59, 130, 246, 0.1));
-  --brand-glow: rgba(59, 130, 246, 0.18);
-  --brand-ring: 0 0 0 4px rgba(59, 130, 246, 0.22);
-  --tile-bg: #1f1f25;
-  --tile-fg: #c2c2ca;
-  --success: #34d399;
-  --warning: #fbbf24;
+  --background: #000000;
+  --foreground: #ededed;
+  --foreground-dim: #a1a1a1;
+  --surface: #0a0a0a;
+  --surface-2: #111111;
+  --surface-3: #1a1a1a;
+  --card: #0a0a0a;
+  --card-foreground: #ededed;
+  --muted: #111111;
+  --muted-foreground: #a1a1a1;
+  --border: #2b2b2b;
+  --border-strong: #3a3a3a;
+  --input: #0a0a0a;
+  --ring: #ededed;
+  --focus: #ededed;
+  --primary: #ededed;
+  --primary-hover: #ffffff;
+  --primary-foreground: #000000;
+  --accent: #ededed;
+  --accent-foreground: #000000;
+  --signal-ink: #a1a1a1;
+  /* Flat white stands in wherever a shared component still asks for the brand gradient. */
+  --brand-from: #ededed;
+  --brand-via: #ededed;
+  --brand-to: #ededed;
+  --brand-gradient: linear-gradient(#ededed, #ededed);
+  --brand-gradient-soft: linear-gradient(rgba(255, 255, 255, 0.04), rgba(255, 255, 255, 0.04));
+  --brand-glow: rgba(255, 255, 255, 0.08);
+  --brand-ring: 0 0 0 4px rgba(255, 255, 255, 0.14);
+  --tile-bg: #111111;
+  --tile-fg: #a1a1a1;
+  --success: #3ecf8e;
+  --warning: #f5a524;
   --danger: #f87171;
-  --info: #60a5fa;
-  --code-bg: #0f0f13;
+  --info: #ededed;
+  --code-bg: #0a0a0a;
   --code-fg: #e6e6e6;
-  --code-border: #26262c;
-  --code-muted: #8f8f9a;
-  --selection: rgba(59, 130, 246, 0.28);
-  --selection-strong: rgba(59, 130, 246, 0.42);
-  --mark-ink-1: #f5f5f7;
-  --mark-ink-2: #9d9da8;
-  --hairline: rgba(255, 255, 255, 0.07);
-  --grid-line: rgba(255, 255, 255, 0.045);
-  --glass: rgba(11, 11, 15, 0.72);
+  --code-border: #2b2b2b;
+  --code-muted: #8a8a8a;
+  --selection: rgba(255, 255, 255, 0.2);
+  --selection-strong: rgba(255, 255, 255, 0.3);
+  --mark-ink-1: #ededed;
+  --mark-ink-2: #a1a1a1;
+  --hairline: rgba(255, 255, 255, 0.08);
+  --grid-line: rgba(255, 255, 255, 0.06);
+  --glass: rgba(0, 0, 0, 0.72);
   --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4);
   --shadow-md: 0 4px 14px rgba(0, 0, 0, 0.45);
   --shadow-lg: 0 1px 0 rgba(255, 255, 255, 0.05) inset, 0 24px 48px -16px rgba(0, 0, 0, 0.7), 0 4px 12px -4px rgba(0, 0, 0, 0.5);
   --shadow-xl: 0 1px 0 rgba(255, 255, 255, 0.06) inset, 0 40px 80px -24px rgba(0, 0, 0, 0.75);
   --shadow-stage: 0 1px 0 rgba(255, 255, 255, 0.06) inset, 0 80px 160px -60px rgba(0, 0, 0, 0.9), 0 0 0 1px rgba(255, 255, 255, 0.04);
-  --glow: #3b82f6;
-  --glow-2: #3b82f6;
+  --glow: #6e6e6e;
+  --glow-2: #3a3a3a;
   --silk-opacity: 0;
 }
 :root:has(.site-shell) body { background: var(--background); color: var(--foreground); }

@@ -29,50 +29,50 @@
 :root {
   /* Premium Light (DESIGN-PREMIUM.md): white page, near-black ink, indigo → violet → pink signature. */
   --background: #ffffff;
-  --foreground: #0b0f1a;
-  --foreground-dim: #4b5563;
-  --surface: #f7f8fc;
-  --surface-2: #eef0f6;
-  --surface-3: #e3e6ef;
+  --foreground: #0a0a0a;
+  --foreground-dim: #4d4d4d;
+  --surface: #fafafa;
+  --surface-2: #f2f2f2;
+  --surface-3: #ebebeb;
   --card: #ffffff;
-  --card-foreground: #0b0f1a;
-  --muted: #f7f8fc;
-  --muted-foreground: #6b7280;
-  --border: #e5e7eb;
-  --border-strong: #d1d5db;
+  --card-foreground: #0a0a0a;
+  --muted: #f5f5f5;
+  --muted-foreground: #666666;
+  --border: #e5e5e5;
+  --border-strong: #d4d4d4;
   --input: #ffffff;
-  --ring: #2563eb;
-  --focus: #2563eb; /* control focus — blue, never red, so it can't read as an error */
-  --primary: #2563eb;
-  --primary-hover: #1d4ed8;
+  --ring: #0a0a0a;
+  --focus: #0a0a0a; /* control focus — blue, never red, so it can't read as an error */
+  --primary: #0a0a0a;
+  --primary-hover: #2e2e2e;
   --primary-foreground: #ffffff;
   --signal: #f0512a; /* brand-only: the Codexa ember (logo). Not an app accent. */
   --signal-2: #f59e0b;
   --signal-ink: #c2410c;
-  --accent: #3b82f6;
+  --accent: #0a0a0a;
   --accent-foreground: #ffffff;
   /* Brand accent: blue only (bolt.new-style monochrome UI with one accent). The "gradient" tokens are
      kept for every caller but now resolve to a subtle blue sheen, never violet or pink. */
-  --brand-from: #2563eb;
-  --brand-via: #3b82f6;
-  --brand-to: #60a5fa;
-  --brand-gradient: linear-gradient(100deg, #2563eb, #3b82f6, #60a5fa);
-  --brand-gradient-soft: linear-gradient(100deg, rgba(37, 99, 235, 0.06), rgba(59, 130, 246, 0.06), rgba(96, 165, 250, 0.06));
-  --brand-glow: rgba(59, 130, 246, 0.22); /* soft blue, blurred-blob friendly */
-  --brand-ring: 0 0 0 4px rgba(37, 99, 235, 0.15);
+  --brand-from: #0a0a0a;
+  --brand-via: #0a0a0a;
+  --brand-to: #0a0a0a;
+  --brand-gradient: linear-gradient(#0a0a0a, #0a0a0a);
+  --brand-gradient-soft: linear-gradient(rgba(10, 10, 10, 0.04), rgba(10, 10, 10, 0.04));
+  --brand-glow: rgba(10, 10, 10, 0.08); /* soft blue, blurred-blob friendly */
+  --brand-ring: 0 0 0 4px rgba(10, 10, 10, 0.1);
   /* Icon tiles: a neutral surface with a grey glyph (no tinted fills). */
-  --tile-bg: #f3f4f6;
-  --tile-fg: #4b5563;
-  --success: #059669;
+  --tile-bg: #f2f2f2;
+  --tile-fg: #4d4d4d;
+  --success: #16a34a;
   --warning: #d97706;
   --danger: #dc2626;
   --danger-foreground: #ffffff;
-  --info: #2563eb;
-  --code-bg: #0b0f1a;
+  --info: #0a0a0a;
+  --code-bg: #0a0a0a;
   --code-fg: #e6e6e6;
-  --code-border: #1f2937;
+  --code-border: #2b2b2b;
   --code-muted: #8a8a8a; /* 5.5:1 on --code-bg */
-  --selection: rgba(37, 99, 235, 0.16);
+  --selection: rgba(10, 10, 10, 0.12);
   --selection-strong: color-mix(in oklab, var(--accent) 24%, transparent);
   /* Selection mark (.mark-select): gradient text ink. */
   --mark-ink-1: var(--signal-ink);
@@ -82,8 +82,8 @@
   --mark-edge: color-mix(in oklab, var(--signal) 42%, transparent);
   /* Comet border head: the leading spark stays in the signal hues (amber on paper). */
   --comet-head: color-mix(in oklab, var(--signal-2) 70%, var(--signal));
-  --hairline: rgba(15, 23, 42, 0.06);
-  --grid-line: rgba(15, 23, 42, 0.05);
+  --hairline: rgba(0, 0, 0, 0.08);
+  --grid-line: rgba(0, 0, 0, 0.07);
   --glass: rgba(255, 255, 255, 0.82);
   --ember-ink: #1a0b05;
   /* Soft slate-tinted depth (spec: card 0 1px 2px .04 + 0 12px 32px -12px .14). */
@@ -91,17 +91,17 @@
   --shadow-md: 0 1px 2px rgba(15, 23, 42, 0.04), 0 12px 32px -12px rgba(15, 23, 42, 0.14);
   --shadow-lg: 0 1px 2px rgba(15, 23, 42, 0.04), 0 20px 48px -16px rgba(15, 23, 42, 0.2);
   --shadow-xl: 0 40px 80px -30px rgba(15, 23, 42, 0.22);
-  --shadow-stage: 0 1px 0 #ffffff inset, 0 60px 120px -50px rgba(15, 23, 42, 0.22), 0 30px 60px -30px rgba(59, 130, 246, 0.14);
-  --radius: 0.75rem;
+  --shadow-stage: 0 0 0 1px rgba(0, 0, 0, 0.06), 0 30px 60px -30px rgba(0, 0, 0, 0.18);
+  --radius: 0.5rem;
   /* Silk / Horizon light: blue, blue, blue (one accent). */
   --silk-0: #ffffff;
-  --silk-1: #2563eb;
-  --silk-2: #3b82f6;
-  --silk-3: #60a5fa;
+  --silk-1: #d4d4d4;
+  --silk-2: #e5e5e5;
+  --silk-3: #f2f2f2;
   --silk-opacity: 0.35;
   /* Background glows and washes: the accent blue. */
-  --glow: #3b82f6;
-  --glow-2: #60a5fa;
+  --glow: #a1a1a1;
+  --glow-2: #d4d4d4;
   /* Syntax (code panes stay dark in both themes). */
   --syn-keyword: #c4a7ff;
   --syn-string: #9fe0b0;
@@ -123,57 +123,56 @@
   --dur-4: 420ms;
   --dur-5: 720ms;
   --dur-6: 1100ms;
-  /* Display face (next/font sets --font-inter-tight on <html>). */
-  --font-display: var(--font-inter-tight), var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  /* Display face (next/font sets --font-geist-sans on <html>). */
+  --font-display: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
   --header-h: 68px;
   color-scheme: light;
 }
 
 .dark {
-  /* Deep navy surfaces, same brand gradient. */
-  --background: #0b0f1a;
-  --foreground: #e6e9ef;
-  --foreground-dim: #9aa3b5;
-  /* Bolt-style panels: #141a2a cards on the #0b0f1a page, hairline borders, white type. */
-  --surface: #10162a;
-  --surface-2: #1a2136;
-  --surface-3: #222b44;
-  --card: #141a2a;
-  --card-foreground: #e6e9ef;
-  --muted: #1a2136;
-  --muted-foreground: #9aa4b8;
-  --border: #222b42;
-  --border-strong: #303a58;
-  --input: #0f1424;
-  --ring: #60a5fa;
-  --focus: #60a5fa;
-  --primary: #3b82f6;
-  --primary-hover: #2563eb;
-  --primary-foreground: #ffffff;
+  /* Monochrome: pure black page, #0a0a0a panels, #2b2b2b hairlines, white primary. */
+  --background: #000000;
+  --foreground: #ededed;
+  --foreground-dim: #a1a1a1;
+  --surface: #0a0a0a;
+  --surface-2: #111111;
+  --surface-3: #1a1a1a;
+  --card: #0a0a0a;
+  --card-foreground: #ededed;
+  --muted: #111111;
+  --muted-foreground: #a1a1a1;
+  --border: #2b2b2b;
+  --border-strong: #3a3a3a;
+  --input: #0a0a0a;
+  --ring: #ededed;
+  --focus: #ededed;
+  --primary: #ededed;
+  --primary-hover: #ffffff;
+  --primary-foreground: #000000;
   --signal: #ff5f3a; /* brand-only */
   --signal-2: #ffb23e;
   --signal-ink: #ff7a59;
-  --accent: #3b82f6;
-  --accent-foreground: #ffffff;
-  --brand-from: #2563eb;
-  --brand-via: #3b82f6;
-  --brand-to: #60a5fa;
-  --brand-gradient: linear-gradient(100deg, #2563eb, #3b82f6, #60a5fa);
-  --brand-gradient-soft: linear-gradient(100deg, rgba(59, 130, 246, 0.08), rgba(59, 130, 246, 0.08), rgba(96, 165, 250, 0.08));
-  --brand-glow: rgba(59, 130, 246, 0.28);
-  --brand-ring: 0 0 0 4px rgba(96, 165, 250, 0.22);
-  --tile-bg: #1f1f25;
-  --tile-fg: #a1a1aa;
-  --success: #34d399;
-  --warning: #fbbf24;
+  --accent: #ededed;
+  --accent-foreground: #000000;
+  --brand-from: #ededed;
+  --brand-via: #ededed;
+  --brand-to: #ededed;
+  --brand-gradient: linear-gradient(#ededed, #ededed);
+  --brand-gradient-soft: linear-gradient(rgba(255, 255, 255, 0.04), rgba(255, 255, 255, 0.04));
+  --brand-glow: rgba(255, 255, 255, 0.08);
+  --brand-ring: 0 0 0 4px rgba(255, 255, 255, 0.14);
+  --tile-bg: #111111;
+  --tile-fg: #a1a1a1;
+  --success: #3ecf8e;
+  --warning: #f5a524;
   --danger: #f87171;
   --danger-foreground: #ffffff;
-  --info: #60a5fa;
-  --code-bg: #070a12;
+  --info: #ededed;
+  --code-bg: #0a0a0a;
   --code-fg: #e6e6e6;
-  --code-border: #1f2740;
+  --code-border: #2b2b2b;
   --code-muted: #8a8a8a; /* 5.5:1 on --code-bg */
-  --selection: rgba(96, 165, 250, 0.28);
+  --selection: rgba(255, 255, 255, 0.2);
   --selection-strong: color-mix(in oklab, var(--accent) 42%, transparent);
   /* Higher alpha than on paper so the band reads as lit orange, not brown, over near-black; the
      amber end is pulled toward the signal so it never turns olive. */
@@ -184,8 +183,8 @@
   --mark-to: color-mix(in oklab, color-mix(in oklab, var(--signal-2) 55%, var(--signal)) 52%, transparent);
   --mark-edge: rgba(255, 217, 184, 0.75);
   --comet-head: rgba(255, 246, 236, 0.9);
-  --hairline: rgba(255, 255, 255, 0.07);
-  --grid-line: rgba(255, 255, 255, 0.045);
+  --hairline: rgba(255, 255, 255, 0.08);
+  --grid-line: rgba(255, 255, 255, 0.06);
   --glass: rgba(15, 18, 25, 0.72);
   --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4);
   --shadow-md: 0 4px 14px rgba(0, 0, 0, 0.45);
@@ -193,12 +192,12 @@
   --shadow-xl: 0 1px 0 rgba(255, 255, 255, 0.06) inset, 0 40px 80px -24px rgba(0, 0, 0, 0.75);
   --shadow-stage: 0 1px 0 rgba(255, 255, 255, 0.06) inset, 0 80px 160px -60px rgba(0, 0, 0, 0.9), 0 0 0 1px rgba(255, 255, 255, 0.04);
   /* Dark: the same blue, dimmed. */
-  --glow: #3b82f6;
-  --glow-2: #60a5fa;
-  --silk-0: #0b0f1a;
-  --silk-1: #2563eb;
-  --silk-2: #3b82f6;
-  --silk-3: #60a5fa;
+  --glow: #6e6e6e;
+  --glow-2: #3a3a3a;
+  --silk-0: #000000;
+  --silk-1: #2b2b2b;
+  --silk-2: #1a1a1a;
+  --silk-3: #111111;
   --silk-opacity: 0.3;
   color-scheme: dark;
 }
@@ -276,11 +275,11 @@ body:has(main [data-tone="company"]) { --silk-1: #ff8a66; --silk-2: #ffc070; --s
   --color-syn-comment: var(--syn-comment);
   --color-syn-attr: var(--syn-attr);
   --color-syn-type: var(--syn-type);
-  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
   --font-mono: var(--font-geist-mono), ui-monospace, SFMono-Regular, Menlo, monospace;
-  --font-display: var(--font-inter-tight), var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
   /* Accent serif: Instrument Serif italic, for the highlighted words of a page H1 (.mark-select). */
-  --font-serif: var(--font-instrument-serif), ui-serif, Georgia, serif;
+  --font-serif: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);

@@ -34,7 +34,7 @@
 }
 
 /* ---------- Side panel ---------- */
-.auth-shot { box-shadow: var(--shadow-lg); }
+.auth-shot { box-shadow: none; }
 
 /* ---------- Idea ticket ---------- */
 .idea-ticket { view-transition-name: idea; }
@@ -54,3 +54,12 @@
 }
 [data-motion="reduced"] :is(.auth-rise > *, .mail-tile__badge) { animation: none; }
 [data-motion="reduced"] .pw-rule__icon { transition: none; }
+
+/* Monochrome grid: faint 64px construction lines behind the panel, faded toward the edges. */
+.auth-grid {
+  background-image: linear-gradient(var(--border) 1px, transparent 1px), linear-gradient(90deg, var(--border) 1px, transparent 1px);
+  background-size: 64px 64px;
+  background-position: -1px -1px;
+  opacity: 0.55;
+  mask-image: radial-gradient(70% 60% at 30% 20%, #000 0%, transparent 100%);
+}
