@@ -7,6 +7,7 @@ import { cn } from "@/lib/utils";
 import { isSpaceSceneId, LIGHT_SPACE_SCENES, sceneFor, scenesFor, SPACE_SCENES, type DarkSceneId, type SpaceScene, type SpaceSceneId, type SpaceTheme } from "./scenes";
 import { Starfield } from "./starfield";
 import { Dustfield } from "./dustfield";
+import "./space.css";
 
 const ALL_SCENES: readonly SpaceScene[] = [...SPACE_SCENES, ...LIGHT_SPACE_SCENES];
 
@@ -85,7 +86,7 @@ function useOnScreen(ref: React.RefObject<HTMLElement | null>) {
 }
 
 /**
- * The live backdrop behind the dashboard hero and the page banners: the scene image (slow Ken Burns
+ * The live backdrop behind the dashboard hero, the page banners and the marketing home: the scene image (slow Ken Burns
  * drift, crossfading to the next scene every `interval` ms unless the viewer pinned one), a canvas on
  * top (stars in the dark theme, drifting dust and glints in the light theme), the optional parallax mist
  * veil, the legibility scrims, and a small scene picker.
@@ -107,8 +108,8 @@ export function SpaceBackdrop({
   interval?: number;
   /** Show this scene (its daylight pair in the light theme) instead of rotating; hides the picker. */
   scene?: DarkSceneId;
-  /** "banner" uses each scene's short-crop focus and a quieter canvas. */
-  variant?: "hero" | "banner";
+  /** "banner" uses each scene's short-crop focus and a quieter canvas; "stage" is the hero's canvas with a scrim its page styles (marketing home). */
+  variant?: "hero" | "banner" | "stage";
   className?: string;
 }) {
   const rootRef = useRef<HTMLDivElement>(null);

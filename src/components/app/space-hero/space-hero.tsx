@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { Avatar } from "@/components/ui/avatar";
-import { SpaceBackdrop } from "./space-backdrop";
+import { SpaceBackdrop } from "@/components/space/space-backdrop";
 
 export type SpaceHeroWorkspace = { id: string; name: string; plan: string };
 

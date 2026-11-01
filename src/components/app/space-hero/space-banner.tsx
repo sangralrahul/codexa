@@ -1,6 +1,6 @@
 import { cn } from "@/lib/utils";
-import { SpaceBackdrop } from "./space-backdrop";
-import type { DarkSceneId } from "./scenes";
+import { SpaceBackdrop } from "@/components/space/space-backdrop";
+import type { DarkSceneId } from "@/components/space/scenes";
 
 /**
  * A compact page header on a live scene (the dashboard hero's art, quieter): full bleed, about 168px

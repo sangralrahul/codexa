@@ -205,7 +205,8 @@
 .app-grid .text-app-title { font-size: 24px; font-weight: 600; letter-spacing: -0.02em; }
 
 /* ==========================================================================
-   Dashboard space hero and page banners (src/components/app/space-hero), over
+   Dashboard space hero and page banners (src/components/app/space-hero; the
+   shared backdrop and its base styles live in src/components/space), over
    generated art (public/space): night scenes in the dark theme, a daylight set
    in the light theme. Scene layers with a slow Ken Burns drift, a canvas
    (stars / dust and glints), an optional mist veil, legibility scrims and a
@@ -213,22 +214,8 @@
    ========================================================================== */
 .space-hero-wrap { --hero-page: var(--background); }
 .space-hero { position: relative; isolation: isolate; overflow: clip; background: var(--background); color: var(--foreground); }
-.space-backdrop { position: absolute; inset: 0; overflow: clip; } /* clip, not hidden: a hidden box can still be scrolled by focus, sliding the scrim off the image. */
-.space-backdrop__scenes, .space-backdrop__layer, .space-backdrop__drift { position: absolute; inset: 0; }
-.space-backdrop__scenes { pointer-events: none; user-select: none; }
-.space-backdrop__layer[data-top] { opacity: 0; transition: opacity 1.8s var(--ease-out); }
-.space-backdrop__layer[data-top][data-loaded] { opacity: 1; }
-.space-backdrop__drift { transform: scale(1.06); animation: space-drift 48s ease-in-out infinite alternate; will-change: transform; }
-.space-backdrop__drift img { width: 100%; height: 100%; max-width: none; object-fit: cover; }
-@keyframes space-drift {
-  from { transform: scale(1.06) translate3d(0, 0, 0); }
-  to { transform: scale(1.13) translate3d(var(--drift-x, 0), var(--drift-y, 0), 0); }
-}
-.space-backdrop[data-paused] .space-backdrop__drift { animation-play-state: paused; }
-.space-backdrop__stars { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
 /* Scrims: darken the centre column behind the copy, settle the top edge under the tab row, fade the bottom into the page. */
-.space-backdrop__scrim {
-  position: absolute; inset: 0; pointer-events: none;
+.space-backdrop[data-variant="hero"] .space-backdrop__scrim {
   background:
     radial-gradient(ellipse 46% 56% at 50% 48%, color-mix(in oklab, var(--background) 62%, transparent), color-mix(in oklab, var(--background) 22%, transparent) 70%, transparent),
     linear-gradient(to bottom, color-mix(in oklab, var(--background) 55%, transparent), transparent 24%),
@@ -304,45 +291,6 @@
 .space-pick:hover, .space-pick[aria-pressed="true"] { color: var(--foreground); border-color: color-mix(in oklab, var(--foreground) 28%, transparent); background: color-mix(in oklab, var(--background) 80%, transparent); }
 .space-pick:focus-visible { outline: 2px solid var(--ring); outline-offset: 2px; }
 .space-pick > span:first-child { border-radius: 3px; }
-
-/* Scene picker: bottom right, quiet until hovered. */
-.space-picker {
-  position: absolute; z-index: 20; right: 16px; bottom: 16px; display: flex; gap: 2px; padding: 3px;
-  border: 1px solid color-mix(in oklab, var(--foreground) 11%, transparent); border-radius: 999px;
-  background: color-mix(in oklab, var(--background) 55%, transparent); backdrop-filter: blur(8px);
-  animation: chip-in var(--dur-4) var(--ease-out) both;
-}
-.space-picker__btn {
-  display: inline-flex; align-items: center; justify-content: center; gap: 6px; height: 24px; min-width: 24px; padding: 0 9px; border-radius: 999px;
-  font-family: var(--font-mono); font-size: 10.5px; letter-spacing: 0.06em; text-transform: uppercase;
-  color: color-mix(in oklab, var(--foreground) 52%, transparent); transition: color 120ms, background-color 120ms;
-}
-.space-picker__btn:hover { color: var(--foreground); }
-.space-picker__btn[aria-pressed="true"] { color: var(--foreground); background: color-mix(in oklab, var(--foreground) 11%, transparent); }
-.space-picker__btn:focus-visible { outline: 2px solid var(--ring); outline-offset: 1px; }
-.space-picker__btn--icon { padding: 0; }
-.space-picker__dot { width: 5px; height: 5px; border-radius: 50%; background: currentColor; opacity: 0.55; }
-.space-picker__btn[aria-pressed="true"] .space-picker__dot { opacity: 1; }
-@media (max-width: 39.99rem) {
-  .space-picker { right: 50%; bottom: 12px; translate: 50% 0; }
-  .space-picker__btn { padding: 0 7px; }
-}
-
-/* Mist veil (light "Clouds" scene): one tileable alpha strip slid across at two speeds and scales for
-   parallax. Each track is exactly one tile wider than the frame (tile width = height x 24/11, via cqh). */
-.space-veil { position: absolute; inset: 0; overflow: hidden; pointer-events: none; container-type: size; }
-.space-veil__track {
-  position: absolute; left: 0; top: 0; height: 100%; width: calc(100% + 100cqh * 24 / 11);
-  background-image: var(--veil); background-repeat: repeat-x; background-size: auto 100%;
-  --veil-shift: calc(-100cqh * 24 / 11);
-  animation: space-veil 150s linear infinite; will-change: transform;
-}
-.space-veil__track--near {
-  top: -12%; height: 130%; width: calc(100% + 130cqh * 24 / 11); opacity: 0.75;
-  --veil-shift: calc(-130cqh * 24 / 11); animation-duration: 84s; animation-direction: reverse;
-}
-@keyframes space-veil { from { transform: translate3d(0, 0, 0); } to { transform: translate3d(var(--veil-shift), 0, 0); } }
-.space-backdrop[data-paused] .space-veil__track { animation-play-state: paused; }
 
 /* Light theme hero: daylight scenes, dark copy, white panels with one hairline and a soft lift. The
    scrim brightens the centre column behind the copy and dissolves the bottom into the white page. */

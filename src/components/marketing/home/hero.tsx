@@ -1,79 +1,76 @@
 import Link from "next/link";
-import { ArrowRight, FileCode2 } from "lucide-react";
-import { CAPTURES, ThemedImg, serverTheme } from "@/components/marketing/captures";
+import { ArrowRight, Monitor } from "lucide-react";
+import { SpaceBackdrop } from "@/components/space/space-backdrop";
+import { tokenize } from "@/components/vignettes/tokenize";
 import { Crosshairs } from "./frame";
+import { ProductTour, type TourScript } from "./product-tour";
+import { TOKEN_KINDS, type CompactToken } from "./types";
+import type { HomeTour } from "./data";
 
-/** Hero row: construction grid, "New" tag, the statement headline, two CTAs and the price line read from PLANS. */
-export function HomeHero({ signedIn, templateCount, priceLine }: { signedIn: boolean; templateCount: number; priceLine: string }) {
+/** Token runs as compact [kindIndex, text] tuples, so the tour's code crosses into the client small. */
+function compact(lines: string[]): CompactToken[][] {
+  return tokenize(lines.join("\n"), "tsx").map((line) => line.map((tok) => [Math.max(0, TOKEN_KINDS.indexOf(tok.k)), tok.v] as CompactToken));
+}
+
+/**
+ * The opening: a full-bleed live scene (the dashboard's backdrop, fixed to the orbit horizon in the
+ * dark theme and its daylight pair in the light theme), the frame's rails running through it, the
+ * "New" pill, the headline (the LCP: plain server text; the scene fades in after mount and never
+ * blocks it), two CTAs, the price line, and the product tour rising from the horizon.
+ */
+export function HomeHero({ signedIn, templateCount, priceLine, tour }: { signedIn: boolean; templateCount: number; priceLine: string; tour: HomeTour }) {
+  const script: TourScript = { ...tour, code: compact(tour.code) };
   return (
-    <section aria-labelledby="home-title" className="mkg-row mkg-hero">
-      <div aria-hidden="true" className="mkg-gridbg" />
-      <Link href="/download" className="mkg-tag">
-        <b>New</b>
-        <span>Native Windows desktop app is available</span>
-        <ArrowRight className="size-3.5" aria-hidden="true" />
-      </Link>
-      <h1 id="home-title" className="mkg-h1">
-        Describe the app.
-        <br />
-        Ship the code.
-      </h1>
-      <p className="mkg-lede">
-        An agent plans the files, writes <em>real TypeScript and React</em>, runs it in an isolated sandbox with a live preview, and publishes it to your domain.
-      </p>
-      <div className="mkg-ctas">
-        <Link href={signedIn ? "/dashboard" : "/signup"} className="mkb mkb--solid mkb--lg">
-          {signedIn ? "Open dashboard" : "Start building for free"}
+    <section aria-labelledby="home-title" className="hm-hero" data-space-hero data-space-host>
+      <SpaceBackdrop scene="orbit" variant="stage" />
+      <div aria-hidden="true" className="hm-hero__rails" />
+      <div className="hm-hero__copy">
+        <Link href="/download" className="hm-pill">
+          <b>New</b>
+          <Monitor className="size-3.5 shrink-0" aria-hidden="true" />
+          <span>Codexa for Windows</span>
+          <ArrowRight className="size-3.5 shrink-0" aria-hidden="true" />
         </Link>
-        <Link href="/templates" className="mkb mkb--lg">
-          Browse {templateCount} templates
-        </Link>
+        <h1 id="home-title" className="hm-h1">
+          Describe the app.
+          <br />
+          <span>Ship the code.</span>
+        </h1>
+        <p className="hm-lede">
+          An agent plans the files, writes <em>real TypeScript and React</em>, runs it in an isolated sandbox with a live preview, and publishes it to your domain.
+        </p>
+        <div className="hm-ctas">
+          <Link href={signedIn ? "/dashboard" : "/signup"} className="mkb mkb--solid mkb--lg">
+            {signedIn ? "Open dashboard" : "Start building for free"}
+            <ArrowRight className="size-4" aria-hidden="true" />
+          </Link>
+          <Link href="/templates" className="mkb mkb--lg hm-glassbtn">
+            Browse {templateCount} templates
+          </Link>
+        </div>
+        <p className="hm-cmd">{priceLine}</p>
       </div>
-      <p className="mkg-cmd">{priceLine}</p>
-      <Crosshairs />
+      <div className="hm-hero__stage">
+        <ProductTour script={script} />
+      </div>
     </section>
   );
 }
 
-/** The product window: a real capture of the workspace code view, in the site's theme. */
-export async function HomeShot() {
-  const c = CAPTURES.editor;
-  // Above the fold: the copy for the theme the server can see loads eagerly; "system" leaves both lazy.
-  const eager = await serverTheme();
+/** The facts strip under the hero: numbers read from code, no visitor or customer counts. */
+export function HomeFacts({ facts }: { facts: { value: string; label: string; note: string }[] }) {
   return (
-    <>
-      <figure className="mkg-row mkg-shot">
-        <div className="mkg-win">
-          <div className="mkg-winbar" aria-hidden="true">
-            <span className="mkg-winbar__dots">
-              <i />
-              <i />
-              <i />
-            </span>
-            <span className="mkg-winbar__url">
-              <FileCode2 className="size-3" />
-              Candle store / src / Cart.tsx
-            </span>
-            <span className="mkg-winbar__end">Code</span>
-          </div>
-          <ThemedImg src={c.src} alt={c.alt} width={c.width} height={c.height} eager={eager} />
-        </div>
-        <figcaption className="sr-only">{c.caption}</figcaption>
-      </figure>
-      <ul className="mkg-row mkg-shotcap" aria-label="In the workspace">
-        <li>
-          <b>Chat with the agent</b>Plans, writes and explains each change.
-        </li>
-        <li>
-          <b>Code or live preview</b>Monaco editor beside a sandboxed preview.
-        </li>
-        <li>
-          <b>Checkpoints</b>Restore any earlier version of every file.
-        </li>
-        <li>
-          <b>Console</b>Terminal and logs from the running app.
-        </li>
+    <section aria-label="Codexa at a glance" className="mkg-row">
+      <ul className="hm-facts">
+        {facts.map((f) => (
+          <li key={f.label}>
+            <p className="hm-facts__v">{f.value}</p>
+            <p className="hm-facts__l">{f.label}</p>
+            <p className="hm-facts__n">{f.note}</p>
+          </li>
+        ))}
       </ul>
-    </>
+      <Crosshairs corners={["tl", "tr"]} />
+    </section>
   );
 }
