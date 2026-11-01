@@ -18,23 +18,169 @@
 /* A block that staggers its own children does not rise as a whole as well. */
 .auth-rise > :has(> .auth-rise) { animation: none; }
 
-/* ---------- Form frame ---------- */
-/* Phones: the form sits straight on the page. Tablets: a calm card. Large screens: no card (the panel sits beside it). */
-@media (width >= 40rem) {
-  .auth-card {
-    border-radius: 20px;
-    border: 1px solid var(--border);
-    background: var(--card);
-    box-shadow: var(--shadow-sm), 0 12px 32px -20px color-mix(in oklab, var(--foreground) 22%, transparent);
-    padding: 2.25rem;
-  }
+/* ---------- Shell ---------- */
+/* Always the house (dark) theme: the layout root carries `.dark`. `clip` keeps the construction
+   lines and the wall from ever adding scroll, in either axis. */
+.auth-shell { overflow: clip; --btn-radius: 8px; }
+
+/* ---------- The wall: real screenshots on a tilted plane, columns scrolling ---------- */
+.auth-wall {
+  --wall-col: clamp(270px, 20vw, 480px);
+  --wall-gap: 24px;
+  --wall-bar: 22px;
+  /* One tile including its gap; a column is 5 tiles, the track holds them twice. */
+  --wall-tile: calc(var(--wall-col) * 0.625 + var(--wall-bar) + 2px + var(--wall-gap));
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+  user-select: none;
+  perspective: 2000px;
+  perspective-origin: 50% 40%;
+  contain: strict;
 }
-@media (width >= 64rem) {
-  .auth-card { border: 0; background: none; box-shadow: none; padding: 0; border-radius: 0; }
+.auth-wall__plane {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  display: grid;
+  grid-template-columns: repeat(6, var(--wall-col));
+  gap: var(--wall-gap);
+  height: calc(var(--wall-tile) * 5);
+  transform: translate(-50%, -50%) rotateX(32deg) rotateZ(-16deg) scale(1.28);
+  transform-origin: 50% 50%;
+  opacity: 0.85;
+}
+.auth-wall__col { position: relative; min-width: 0; }
+.auth-wall__track {
+  display: flex;
+  flex-direction: column;
+  will-change: transform;
+  animation: auth-wall-scroll var(--wall-dur, 110s) linear var(--wall-delay, 0s) infinite;
+}
+/* Alternate columns run the other way; speeds and phases differ so rows never line up. */
+.auth-wall__col[data-col="0"] { --wall-dur: 120s; --wall-delay: -14s; --wall-rest: -9%; }
+.auth-wall__col[data-col="1"] { --wall-dur: 96s; --wall-delay: -52s; --wall-rest: -31%; }
+.auth-wall__col[data-col="2"] { --wall-dur: 138s; --wall-delay: -30s; --wall-rest: -18%; }
+.auth-wall__col[data-col="3"] { --wall-dur: 104s; --wall-delay: -71s; --wall-rest: -40%; }
+.auth-wall__col[data-col="4"] { --wall-dur: 128s; --wall-delay: -8s; --wall-rest: -4%; }
+.auth-wall__col[data-col="5"] { --wall-dur: 92s; --wall-delay: -44s; --wall-rest: -26%; }
+.auth-wall__col:nth-child(even) .auth-wall__track { animation-direction: reverse; }
+@keyframes auth-wall-scroll {
+  from { transform: translate3d(0, 0, 0); }
+  to { transform: translate3d(0, -50%, 0); }
 }
 
-/* ---------- Side panel ---------- */
-.auth-shot { box-shadow: none; }
+/* Each tile's gap is its own margin, so half the track is exactly one set (a seamless loop). */
+.auth-wall__tile {
+  flex: none;
+  margin-bottom: var(--wall-gap);
+  overflow: hidden;
+  border: 1px solid var(--border-strong);
+  border-radius: 6px;
+  background: var(--card);
+}
+.auth-wall__tile img {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 16 / 10;
+  object-fit: cover;
+  object-position: top;
+  background: var(--muted);
+}
+.auth-wall__bar {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  height: var(--wall-bar);
+  padding: 0 9px;
+  border-bottom: 1px solid var(--border);
+  background: var(--card);
+}
+.auth-wall__bar span { width: 6px; height: 6px; border-radius: 9999px; background: var(--border-strong); }
+.auth-wall__bar em {
+  margin-left: 6px;
+  overflow: hidden;
+  font: 500 10px/1 var(--font-geist-mono), ui-monospace, monospace;
+  font-style: normal;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  color: var(--muted-foreground);
+}
+
+/* The vignette: near-solid page colour behind the form, the wall showing only toward the edges. */
+.auth-wall::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(ellipse 38% 58% at 50% 50%, var(--background) 0%, color-mix(in oklab, var(--background) 92%, transparent) 55%, transparent 100%),
+    radial-gradient(ellipse 85% 95% at 50% 50%, color-mix(in oklab, var(--background) 72%, transparent) 30%, color-mix(in oklab, var(--background) 40%, transparent) 100%),
+    linear-gradient(to bottom, var(--background), transparent 14%, transparent 86%, var(--background));
+}
+
+/* Phones: three narrower columns, tilted less; the rest are display:none (their lazy images never load). */
+@media (width < 40rem) {
+  .auth-wall { --wall-col: 180px; --wall-gap: 14px; --wall-bar: 16px; }
+  .auth-wall__plane { grid-template-columns: repeat(3, var(--wall-col)); transform: translate(-50%, -50%) rotateX(24deg) rotateZ(-14deg) scale(1.3); opacity: 0.7; }
+  .auth-wall__col:is([data-col="0"], [data-col="4"], [data-col="5"]) { display: none; }
+  .auth-wall__bar em { display: none; }
+  .auth-wall::after {
+    background:
+      radial-gradient(ellipse 70% 60% at 50% 48%, var(--background) 0%, color-mix(in oklab, var(--background) 90%, transparent) 60%, color-mix(in oklab, var(--background) 55%, transparent) 100%),
+      linear-gradient(to bottom, transparent 70%, var(--background));
+  }
+}
+
+/* ---------- The form panel ---------- */
+.auth-panel {
+  position: relative;
+  border: 1px solid var(--border);
+  background: var(--card);
+  box-shadow: 0 0 0 1px var(--background), 0 30px 80px -20px var(--background);
+}
+/* Construction lines: the panel's edges run on, faintly, across the page. */
+.auth-panel::before,
+.auth-panel::after {
+  content: "";
+  position: absolute;
+  pointer-events: none;
+}
+.auth-panel::before {
+  inset: -1px -100vw;
+  border-block: 1px solid var(--border);
+  mask-image: linear-gradient(to right, transparent, black 35%, black 65%, transparent);
+  z-index: -1;
+}
+.auth-panel::after {
+  inset: -100vh -1px;
+  border-inline: 1px solid var(--border);
+  mask-image: linear-gradient(to bottom, transparent, black 30%, black 70%, transparent);
+  z-index: -1;
+}
+/* Crosshair "+" marks on the four corners. */
+.auth-cross {
+  position: absolute;
+  width: 13px;
+  height: 13px;
+  pointer-events: none;
+  background:
+    linear-gradient(var(--muted-foreground), var(--muted-foreground)) center / 100% 1px no-repeat,
+    linear-gradient(var(--muted-foreground), var(--muted-foreground)) center / 1px 100% no-repeat;
+}
+.auth-cross[data-pos="tl"] { top: -7px; left: -7px; }
+.auth-cross[data-pos="tr"] { top: -7px; right: -7px; }
+.auth-cross[data-pos="bl"] { bottom: -7px; left: -7px; }
+.auth-cross[data-pos="br"] { bottom: -7px; right: -7px; }
+
+/* Phones: no page-wide construction lines (the panel is nearly full width already). */
+@media (width < 40rem) {
+  .auth-panel::before, .auth-panel::after { display: none; }
+}
 
 /* ---------- Idea ticket ---------- */
 .idea-ticket { view-transition-name: idea; }
@@ -50,16 +196,10 @@
 /* ---------- Calm: final frames ---------- */
 @media (prefers-reduced-motion: reduce) {
   .auth-rise > *, .mail-tile__badge { animation: none; }
+  .auth-wall__track { animation: none; will-change: auto; transform: translate3d(0, var(--wall-rest, 0%), 0); }
   .pw-rule__icon { transition: none; }
 }
 [data-motion="reduced"] :is(.auth-rise > *, .mail-tile__badge) { animation: none; }
 [data-motion="reduced"] .pw-rule__icon { transition: none; }
-
-/* Monochrome grid: faint 64px construction lines behind the panel, faded toward the edges. */
-.auth-grid {
-  background-image: linear-gradient(var(--border) 1px, transparent 1px), linear-gradient(90deg, var(--border) 1px, transparent 1px);
-  background-size: 64px 64px;
-  background-position: -1px -1px;
-  opacity: 0.55;
-  mask-image: radial-gradient(70% 60% at 30% 20%, #000 0%, transparent 100%);
-}
+/* Calm: the wall stands still, each column at its own resting offset. */
+[data-motion="reduced"] .auth-wall__track { animation: none; will-change: auto; transform: translate3d(0, var(--wall-rest, 0%), 0); }

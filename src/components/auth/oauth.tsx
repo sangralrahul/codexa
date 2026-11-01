@@ -68,12 +68,12 @@ export function GitHubButton({ href, onNavigate }: { href: string; onNavigate?: 
         rememberAuthMethod("github");
         onNavigate?.();
       }}
-      className={buttonClasses("outline", "lg", "h-11 w-full text-[15px]")}
+      className={buttonClasses("outline", "lg", "h-12 w-full bg-background text-[15px] hover:bg-muted")}
     >
       <BrandMark id="github" className="size-[18px]" />
       Continue with GitHub
       {/* A tag sitting on the top border, so it never covers the label on a narrow phone. */}
-      {last === "github" ? <LastUsed className="absolute -top-2.5 right-4 bg-background shadow-[inset_0_0_0_1px_var(--border-strong)]" /> : null}
+      {last === "github" ? <LastUsed className="absolute -top-2.5 right-4 bg-card shadow-[inset_0_0_0_1px_var(--border-strong)]" /> : null}
     </a>
   );
 }
@@ -82,10 +82,10 @@ export function GitHubButton({ href, onNavigate }: { href: string; onNavigate?: 
 export function OrDivider({ showLastUsed = true }: { showLastUsed?: boolean }) {
   const last = useLastAuthMethod();
   return (
-    <div className="flex items-center gap-3 text-xs text-muted-foreground">
+    <div className="flex items-center gap-3 font-mono text-[11px] uppercase tracking-[0.08em] text-muted-foreground">
       <span aria-hidden="true" className="h-px flex-1 bg-border" />
       <span className="inline-flex items-center gap-2">
-        or continue with email
+        or with email
         {showLastUsed && last === "email" ? <LastUsed /> : null}
       </span>
       <span aria-hidden="true" className="h-px flex-1 bg-border" />

@@ -9,6 +9,9 @@ import { PLANS } from "@/config/plans";
 
 export const metadata = authMetadata("/signup");
 
+const HEADLINE = ["Describe your idea.", "Ship a real app."] as const;
+const IDEA_HEADLINE = ["You described it.", "Now ship it."] as const;
+
 type SearchParams = Promise<{ next?: string | string[]; email?: string | string[]; prompt?: string | string[]; template?: string | string[] }>;
 
 /** "Free plan, no card. 3 projects, 50 AI requests a month." — from the plan config, so it stays true. */
@@ -28,10 +31,7 @@ export default async function SignupPage({ searchParams }: { searchParams: Searc
   const email = one(sp.email)?.slice(0, 254);
 
   return (
-    <AuthCard
-      title={idea ? "Create an account to build this" : "Create your account"}
-      description={freePlanLine()}
-    >
+    <AuthCard headline={idea ? IDEA_HEADLINE : HEADLINE} title={idea ? "Create an account to build this" : "Create your account"} description={freePlanLine()}>
       <SignupForm githubEnabled={capabilities.github} next={next ? safeNext(next, "") || undefined : undefined} email={email} idea={idea} />
     </AuthCard>
   );
