@@ -212,8 +212,8 @@
    fade into the page. Calm = static image.
    ========================================================================== */
 .space-hero-wrap { --hero-page: var(--background); }
-.space-hero { position: relative; isolation: isolate; overflow: hidden; background: var(--background); color: var(--foreground); }
-.space-backdrop { position: absolute; inset: 0; }
+.space-hero { position: relative; isolation: isolate; overflow: clip; background: var(--background); color: var(--foreground); }
+.space-backdrop { position: absolute; inset: 0; overflow: clip; } /* clip, not hidden: a hidden box can still be scrolled by focus, sliding the scrim off the image. */
 .space-backdrop__scenes, .space-backdrop__layer, .space-backdrop__drift { position: absolute; inset: 0; }
 .space-backdrop__scenes { pointer-events: none; user-select: none; }
 .space-backdrop__layer[data-top] { opacity: 0; transition: opacity 1.8s var(--ease-out); }
@@ -378,7 +378,7 @@
 
 /* Page banner: a compact header on the same scenes, copy on the left, actions on the right, a hairline
    underneath. The scrim settles the side the copy sits on (dark in dark, paper-white in light). */
-.space-banner { position: relative; isolation: isolate; overflow: hidden; background: var(--background); color: var(--foreground); border-bottom: 1px solid var(--border); }
+.space-banner { position: relative; isolation: isolate; overflow: clip; background: var(--background); color: var(--foreground); border-bottom: 1px solid var(--border); }
 .space-backdrop[data-variant="banner"] .space-backdrop__scrim {
   background:
     linear-gradient(to right, color-mix(in oklab, var(--background) 80%, transparent), color-mix(in oklab, var(--background) 48%, transparent) 42%, color-mix(in oklab, var(--background) 8%, transparent) 78%, transparent),

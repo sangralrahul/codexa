@@ -6,6 +6,7 @@ import { cn } from "../lib/util";
 import { Button, EmptyState, Input, Spinner, toast } from "../ui";
 import { ProjectThumb } from "../components/ProjectThumb";
 import { createProject } from "../components/create";
+import { SpaceBanner } from "../components/space/SpaceBanner";
 
 const LABELS: Record<string, string> = {
   all: "All",
@@ -55,16 +56,9 @@ export function TemplatesScreen() {
 
   return (
     <div className="scroll h-full">
-      <div className="mx-auto max-w-[1180px] px-10 py-10">
-        <header>
-          <p className="eyebrow flex items-center gap-2">
-            <i className="block size-1.5 bg-fg" /> Starters
-          </p>
-          <h1 className="mt-1.5 text-[26px] font-semibold tracking-[-0.04em]">Templates</h1>
-          <p className="mt-1 text-[13.5px] text-muted">Working starters you can run right away and change with AI.</p>
-        </header>
-
-        <div className="mt-6 flex flex-wrap items-center gap-3">
+      <SpaceBanner scene="nebula" eyebrow="Starters" title="Templates" subtitle="Working starters you can run right away and change with AI." width={1180} />
+      <div className="mx-auto max-w-[1180px] px-8 pb-10 pt-6">
+        <div className="flex flex-wrap items-center gap-3">
           <div className="relative w-72">
             <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-dim" />
             <Input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search templates" aria-label="Search templates" className="h-9 pl-9" />

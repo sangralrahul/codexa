@@ -5,6 +5,7 @@ import { frameworkLabel, relativeTime, cn } from "../lib/util";
 import { Button, EmptyState, Input, Menu, MenuItem, Spinner } from "../ui";
 import { ProjectCard, ProjectMenu } from "../components/ProjectCard";
 import { ProjectThumb } from "../components/ProjectThumb";
+import { SpaceBanner } from "../components/space/SpaceBanner";
 
 type Sort = "recent" | "name";
 const SORTS: { id: Sort; label: string; icon: typeof Clock }[] = [
@@ -47,21 +48,19 @@ export function ProjectsScreen() {
 
   return (
     <div className="scroll relative h-full">
-      <div className="relative mx-auto max-w-[1240px] px-8 py-7">
-        <header className="flex items-end justify-between gap-4">
-          <div>
-            <p className="eyebrow flex items-center gap-2">
-              <i className="block size-1.5 bg-fg" /> {workspace?.name ?? "Workspace"}
-            </p>
-            <h1 className="mt-1.5 text-[26px] font-semibold tracking-[-0.04em]">Projects</h1>
-            <p className="mt-0.5 text-[13px] text-muted">{projects ? `${projects.length} project${projects.length === 1 ? "" : "s"} in ${workspace?.name ?? "this workspace"}` : "Loading…"}</p>
-          </div>
+      <SpaceBanner
+        scene="galaxy"
+        eyebrow={workspace?.name ?? "Workspace"}
+        title="Projects"
+        subtitle={projects ? `${projects.length} project${projects.length === 1 ? "" : "s"} in ${workspace?.name ?? "this workspace"}` : "Loading…"}
+        actions={
           <Button variant="primary" onClick={newProject}>
             <Plus /> New project
           </Button>
-        </header>
-
-        <div className="mt-6 flex flex-wrap items-center gap-2 border-y border-border py-2.5">
+        }
+      />
+      <div className="relative mx-auto max-w-[1240px] px-8 pb-7 pt-5">
+        <div className="flex flex-wrap items-center gap-2 border-b border-border py-2.5">
           <div className="relative w-72">
             <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-dim" />
             <Input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search projects" aria-label="Search projects" className="h-8 pl-9 text-[13px]" />

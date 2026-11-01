@@ -3,9 +3,9 @@ import { Avatar } from "../../ui";
 import { SpaceBackdrop } from "./SpaceBackdrop";
 
 /**
- * Home's opening hero (a port of the web dashboard's SpaceHero): a full-width live space scene, always
- * dark (a `.dark` token island), with the workspace chip, the question and the composer centred on
- * top. The bottom edge fades into the page colour (captured outside the island as --hero-page).
+ * Home's opening hero (a port of the web dashboard's SpaceHero): a full-width live scene that follows
+ * the app theme (night space in dark, a daylight set in light), with the workspace chip, the question
+ * and the composer centred on top. The bottom edge fades into the page colour (--hero-page).
  */
 export function SpaceHero({
   workspace,
@@ -20,7 +20,7 @@ export function SpaceHero({
 }) {
   return (
     <div className="space-hero-wrap">
-      <section data-space-hero aria-labelledby="space-hero-title" className="space-hero dark">
+      <section data-space-hero aria-labelledby="space-hero-title" data-space-host className="space-hero">
         <SpaceBackdrop />
         <div className="space-hero__content">
           {workspace ? (

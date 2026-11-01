@@ -6,6 +6,7 @@ import { cn } from "../lib/util";
 import { Avatar, Button, Field, Input, Kbd, Spinner, toast } from "../ui";
 import { applyTheme, getThemeMode, type ThemeMode } from "../app/theme";
 import { applyMotion, getMotionMode, type MotionMode } from "../lib/motion";
+import { SpaceBanner } from "../components/space/SpaceBanner";
 
 type Tab = "account" | "workspace" | "app";
 const TABS: { id: Tab; label: string }[] = [
@@ -18,12 +19,9 @@ export function SettingsScreen({ tab: initial }: { tab?: Tab }) {
   const [tab, setTab] = useState<Tab>(initial ?? "account");
   return (
     <div className="scroll h-full">
-      <div className="mx-auto max-w-[820px] px-10 py-10">
-        <p className="eyebrow flex items-center gap-2">
-          <i className="block size-1.5 bg-fg" /> Account and app
-        </p>
-        <h1 className="mt-1.5 text-[26px] font-semibold tracking-[-0.04em]">Settings</h1>
-        <div className="mt-6 flex gap-1 border-b border-border" role="tablist">
+      <SpaceBanner scene="orbit" eyebrow="Account and app" title="Settings" subtitle="Your profile, this workspace's usage, and how the app looks and behaves." width={820} />
+      <div className="mx-auto max-w-[820px] px-8 pb-10 pt-6">
+        <div className="flex gap-1 border-b border-border" role="tablist">
           {TABS.map((t) => (
             <button
               key={t.id}

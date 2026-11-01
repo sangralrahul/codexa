@@ -448,11 +448,11 @@ textarea,
 }
 
 /* ==========================================================================
-   Home space hero (components/space), ported from the web dashboard
-   (src/components/app/app.css). A `.dark` token island over the generated space
-   art: scene layers with a slow Ken Burns drift, a canvas starfield, legibility
-   scrims and a fade into the page (--hero-page is captured outside the island).
-   Calm = static image.
+   Home space hero and screen banners (components/space), ported from the web
+   dashboard (src/components/app/app.css), over generated art: night scenes in
+   the dark theme, a daylight set in the light theme. Scene layers with a slow
+   Ken Burns drift, a canvas (stars / dust and glints), an optional mist veil,
+   legibility scrims and a fade into the page. Calm = static image.
    ========================================================================== */
 .space-hero-wrap {
   --hero-page: var(--bg);
@@ -464,10 +464,12 @@ textarea,
   background: var(--bg);
   color: var(--fg);
 }
+/* clip, not hidden: an overflow:hidden box can still be scrolled (focus or scroll-into-view on the
+   picker), which would slide the scrim and picker off the drifting image. */
 .space-backdrop {
   position: absolute;
   inset: 0;
-  overflow: hidden;
+  overflow: clip;
 }
 .space-backdrop__scenes,
 .space-backdrop__layer,
@@ -1026,21 +1028,228 @@ textarea,
   will-change: auto;
   transform: translate3d(0, var(--wall-rest, 0%), 0);
 }
-/* Light theme: the wall a touch quieter, so dark product captures don't muddy the white vignette. */
+/* Light theme: Codexa's own captures come in both themes (same crop and size), so the wall shows the
+   light ones on white tiles and needs no dimming. Each tile shows the copy matching the app theme. */
 html:not(.dark) .auth-wall__plane {
-  opacity: 0.72;
+  opacity: 0.9;
 }
-/* Light theme: the scene stays dark (it is a picture), but its fade into the white page starts lower,
-   so the quick picks and the scene picker still sit on the scene, not on the fog. */
-html:not(.dark) .space-hero__content {
-  padding-bottom: 168px;
+html:not(.dark) .auth-wall__tile {
+  border-color: var(--border);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
 }
-html:not(.dark) .space-backdrop__scrim {
+html:not(.dark) .auth-wall__bar span {
+  background: var(--border);
+}
+html:not(.dark) .auth-wall__tile img[data-theme-img="dark"],
+html.dark .auth-wall__tile img[data-theme-img="light"] {
+  display: none;
+}
+
+/* Mist veil (light "Clouds" scene; after the calm rules above, so it carries its own): one tileable alpha strip slid across at two speeds and scales for
+   parallax. Each track is exactly one tile wider than the frame (tile width = height x 24/11, via cqh). */
+.space-veil {
+  position: absolute;
+  inset: 0;
+  overflow: clip;
+  pointer-events: none;
+  container-type: size;
+}
+.space-veil__track {
+  position: absolute;
+  left: 0;
+  top: 0;
+  height: 100%;
+  width: calc(100% + 100cqh * 24 / 11);
+  background-image: var(--veil);
+  background-repeat: repeat-x;
+  background-size: auto 100%;
+  --veil-shift: calc(-100cqh * 24 / 11);
+  animation: space-veil 150s linear infinite;
+  will-change: transform;
+}
+.space-veil__track--near {
+  top: -12%;
+  height: 130%;
+  width: calc(100% + 130cqh * 24 / 11);
+  opacity: 0.75;
+  --veil-shift: calc(-130cqh * 24 / 11);
+  animation-duration: 84s;
+  animation-direction: reverse;
+}
+@keyframes space-veil {
+  from {
+    transform: translate3d(0, 0, 0);
+  }
+  to {
+    transform: translate3d(var(--veil-shift), 0, 0);
+  }
+}
+.space-backdrop[data-paused] .space-veil__track {
+  animation-play-state: paused;
+}
+@media (prefers-reduced-motion: reduce) {
+  .space-veil__track {
+    animation: none;
+  }
+}
+[data-motion="reduced"] .space-veil__track {
+  animation: none;
+}
+
+/* Light theme hero: daylight scenes, dark copy, white panels with one hairline and a soft lift. The
+   scrim brightens the centre column behind the copy and dissolves the bottom into the white page. */
+html:not(.dark) .space-backdrop[data-variant="hero"] .space-backdrop__scrim {
   background:
-    radial-gradient(ellipse 46% 56% at 50% 46%, color-mix(in oklab, var(--bg) 62%, transparent), color-mix(in oklab, var(--bg) 22%, transparent) 70%, transparent),
-    linear-gradient(to bottom, color-mix(in oklab, var(--bg) 55%, transparent), transparent 24%),
-    linear-gradient(to bottom, transparent 80%, color-mix(in oklab, var(--hero-page) 55%, transparent) 91%, var(--hero-page) 99%);
+    radial-gradient(ellipse 44% 50% at 50% 40%, color-mix(in oklab, var(--bg) 58%, transparent), color-mix(in oklab, var(--bg) 18%, transparent) 70%, transparent),
+    linear-gradient(to bottom, color-mix(in oklab, var(--bg) 45%, transparent), transparent 20%),
+    linear-gradient(to bottom, transparent 74%, color-mix(in oklab, var(--hero-page) 60%, transparent) 90%, var(--hero-page) 99%);
+}
+html:not(.dark) .space-hero__title {
+  color: var(--fg);
+  text-shadow: 0 1px 30px color-mix(in oklab, var(--bg) 92%, transparent);
+}
+html:not(.dark) .space-hero__chip {
+  background: color-mix(in oklab, var(--card) 86%, transparent);
+  border-color: var(--border);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+}
+html:not(.dark) .space-hero__chip:hover {
+  background: var(--card);
+  border-color: var(--border-strong);
+}
+html:not(.dark) .space-hero__plan {
+  background: var(--surface);
+}
+html:not(.dark) .space-mode {
+  color: color-mix(in oklab, var(--fg) 62%, transparent);
+}
+html:not(.dark) .space-mode:hover {
+  background: color-mix(in oklab, var(--card) 70%, transparent);
+}
+html:not(.dark) .space-mode[aria-pressed="true"] {
+  color: var(--fg);
+  background: var(--card);
+  border-color: var(--border);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+}
+html:not(.dark) .space-composer {
+  background: var(--card);
+  border-color: var(--border);
+  backdrop-filter: none;
+  box-shadow:
+    0 1px 2px color-mix(in oklab, var(--fg) 5%, transparent),
+    0 10px 24px -14px color-mix(in oklab, var(--fg) 14%, transparent),
+    0 32px 72px -32px color-mix(in oklab, var(--fg) 22%, transparent);
+}
+html:not(.dark) .space-composer:focus-within {
+  border-color: var(--border-strong);
+  box-shadow:
+    0 1px 2px color-mix(in oklab, var(--fg) 5%, transparent),
+    0 32px 72px -32px color-mix(in oklab, var(--fg) 22%, transparent),
+    0 0 0 4px color-mix(in oklab, var(--fg) 5%, transparent);
+}
+html:not(.dark) .space-chip {
+  background: var(--card);
+  border-color: var(--border);
+}
+html:not(.dark) .space-chip:hover,
+html:not(.dark) .space-chip[aria-expanded="true"] {
+  background: var(--surface);
+}
+html:not(.dark) .space-pick {
+  background: color-mix(in oklab, var(--card) 88%, transparent);
+  border-color: var(--border);
+  color: #4d4d4d;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+}
+html:not(.dark) .space-pick:hover,
+html:not(.dark) .space-pick[aria-pressed="true"] {
+  background: var(--card);
+  border-color: var(--border-strong);
+  color: var(--fg);
 }
 html:not(.dark) .space-picker {
-  bottom: 64px;
+  background: color-mix(in oklab, var(--card) 88%, transparent);
+  border-color: var(--border);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+}
+html:not(.dark) .space-picker__btn {
+  color: var(--muted);
+}
+html:not(.dark) .space-picker__btn:hover,
+html:not(.dark) .space-picker__btn[aria-pressed="true"] {
+  color: var(--fg);
+}
+html:not(.dark) .space-picker__btn[aria-pressed="true"] {
+  background: var(--surface);
+}
+
+/* Screen banner (components/space/SpaceBanner): a compact header on the same scenes, copy on the left,
+   actions on the right, a hairline underneath. The scrim settles the side the copy sits on (dark in
+   dark, paper-white in light). */
+.space-banner {
+  position: relative;
+  isolation: isolate;
+  overflow: clip;
+  background: var(--bg);
+  color: var(--fg);
+  border-bottom: 1px solid var(--border);
+}
+.space-backdrop[data-variant="banner"] .space-backdrop__scrim {
+  background:
+    linear-gradient(to right, color-mix(in oklab, var(--bg) 80%, transparent), color-mix(in oklab, var(--bg) 48%, transparent) 42%, color-mix(in oklab, var(--bg) 8%, transparent) 78%, transparent),
+    linear-gradient(to top, color-mix(in oklab, var(--bg) 40%, transparent), transparent 60%);
+}
+html:not(.dark) .space-backdrop[data-variant="banner"] .space-backdrop__scrim {
+  background:
+    linear-gradient(to right, color-mix(in oklab, var(--bg) 82%, transparent), color-mix(in oklab, var(--bg) 50%, transparent) 42%, color-mix(in oklab, var(--bg) 6%, transparent) 80%, transparent),
+    linear-gradient(to top, color-mix(in oklab, var(--bg) 45%, transparent), transparent 60%);
+}
+.space-banner__content {
+  position: relative;
+  z-index: 10;
+  margin-inline: auto;
+  display: flex;
+  flex-direction: row;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px;
+  min-height: 172px;
+  padding: 32px 32px 26px;
+}
+.space-banner__eyebrow {
+  margin-bottom: 8px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.space-banner__title {
+  font-weight: 600;
+  font-size: 32px;
+  line-height: 1.06;
+  letter-spacing: -0.035em;
+  text-wrap: balance;
+  color: var(--fg);
+  text-shadow: 0 1px 24px color-mix(in oklab, var(--bg) 70%, transparent);
+}
+.space-banner__subtitle {
+  margin-top: 8px;
+  max-width: 44rem;
+  font-size: 13.5px;
+  line-height: 1.5;
+  color: var(--muted);
+  text-wrap: pretty;
+  text-shadow: 0 1px 14px color-mix(in oklab, var(--bg) 85%, transparent);
+}
+html:not(.dark) .space-banner__subtitle {
+  color: #4d4d4d;
+}
+.space-banner__actions {
+  display: flex;
+  flex-shrink: 0;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
 }

@@ -167,7 +167,7 @@ export function Starfield({ running, density = 1, meteors = true, className }: {
     };
 
     // Parallax follows the pointer anywhere over the hero (its content sits above the canvas).
-    const host = canvas.closest<HTMLElement>("[data-space-hero]") ?? canvas.parentElement;
+    const host = canvas.closest<HTMLElement>("[data-space-host]") ?? canvas.parentElement;
     const onMove = (e: PointerEvent) => {
       if (e.pointerType !== "mouse" || !host) return;
       const rect = host.getBoundingClientRect();

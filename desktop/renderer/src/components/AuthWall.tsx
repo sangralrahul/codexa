@@ -4,6 +4,8 @@
  *
  * The screenshots are bundled with the app (renderer/src/assets/wall, 640×400 webp cut from the web's
  * public/templates and public/marketing captures), so nothing loads from the network before sign-in.
+ * Codexa's own captures come in both themes (`app-*.webp` dark, `app-*-light.webp` light); each tile
+ * holds both and styles.css shows the one matching the app theme.
  *
  * Structure (all decorative, aria-hidden, alt=""):
  *   .auth-wall            absolute, fills the screen, perspective; the vignette is its ::after
@@ -19,14 +21,14 @@
 const FILES = import.meta.glob<string>("../assets/wall/*.webp", { eager: true, import: "default" });
 const src = (key: string) => FILES[`../assets/wall/${key}.webp`];
 
-type Shot = { key: string; label: string };
+type Shot = { key: string; label: string; themed?: boolean };
 
-/** Codexa's own product captures. */
+/** Codexa's own product captures, each in a dark and a light copy. */
 const PRODUCT: Shot[] = [
-  { key: "app-editor", label: "Codexa editor" },
-  { key: "app-dashboard", label: "Codexa dashboard" },
-  { key: "app-agent", label: "Codexa agent" },
-  { key: "app-publish", label: "Codexa publish" },
+  { key: "app-editor", label: "Codexa editor", themed: true },
+  { key: "app-dashboard", label: "Codexa dashboard", themed: true },
+  { key: "app-agent", label: "Codexa agent", themed: true },
+  { key: "app-publish", label: "Codexa publish", themed: true },
 ];
 
 /** Starter templates, picked for variety (apps, dashboards, stores, sites, portfolios). */
@@ -74,7 +76,14 @@ function Tile({ shot }: { shot: Shot }) {
         <span />
         <em>{shot.label}</em>
       </div>
-      <img src={src(shot.key)} alt="" width={640} height={400} decoding="async" draggable={false} />
+      {shot.themed && src(`${shot.key}-light`) ? (
+        <>
+          <img src={src(shot.key)} alt="" width={640} height={400} decoding="async" draggable={false} data-theme-img="dark" />
+          <img src={src(`${shot.key}-light`)} alt="" width={640} height={400} decoding="async" draggable={false} data-theme-img="light" />
+        </>
+      ) : (
+        <img src={src(shot.key)} alt="" width={640} height={400} decoding="async" draggable={false} />
+      )}
     </div>
   );
 }
