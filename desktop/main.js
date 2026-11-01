@@ -181,18 +181,25 @@ async function signedIn() {
 }
 
 /**
- * Sign in or sign up in a small window on the Codexa site (needed for Google/GitHub sign-in and
- * for creating an account). It shares the app's cookie store, so once the site lands on the
+ * Sign in or sign up in a small window on the Codexa site (needed for GitHub sign-in and for
+ * creating an account). It shares the app's cookie store, so once the site lands on the
  * dashboard or onboarding the app is signed in and the window closes.
+ * `page`: "login" | "signup" open those pages; "github" starts the site's GitHub OAuth flow
+ * directly (/api/auth/github/start). If GitHub isn't configured on the server (503), the window
+ * shows the sign-in page with the site's own explanation instead.
  */
 function browserAuth(page) {
+  const start =
+    page === "github"
+      ? `${APP_URL}/api/auth/github/start?next=${encodeURIComponent("/dashboard")}`
+      : `${APP_URL}/${page === "signup" ? "signup" : "login"}`;
   return new Promise((resolve) => {
     const win = new BrowserWindow({
       parent: mainWindow ?? undefined,
       modal: Boolean(mainWindow),
       width: 520,
       height: 760,
-      title: page === "signup" ? "Create your Codexa account" : "Sign in to Codexa",
+      title: page === "signup" ? "Create your Codexa account" : page === "github" ? "Sign in with GitHub" : "Sign in to Codexa",
       autoHideMenuBar: true,
       backgroundColor: nativeTheme.shouldUseDarkColors ? PALETTE.dark.bg : PALETTE.light.bg,
       webPreferences: { contextIsolation: true, nodeIntegration: false, sandbox: true },
@@ -210,14 +217,20 @@ function browserAuth(page) {
         // ignore
       }
     };
-    // OAuth providers (GitHub, Google) are allowed inside this window; other links open outside.
+    // OAuth providers (GitHub) are allowed inside this window; other links open outside.
     guardNavigation(win.webContents, (url) => /^https:\/\//i.test(url) || isAppUrl(url));
-    win.webContents.on("did-navigate", (_e, url) => check(url));
+    win.webContents.on("did-navigate", (_e, url, code) => {
+      if (page === "github" && code === 503 && url.startsWith(`${APP_URL}/api/auth/github/start`)) {
+        win.loadURL(`${APP_URL}/login?error=github_not_configured`);
+        return;
+      }
+      check(url);
+    });
     win.webContents.on("did-redirect-navigation", (_e, url) => check(url));
     win.on("closed", () => {
       if (!finished) resolve(false);
     });
-    win.loadURL(`${APP_URL}/${page === "signup" ? "signup" : "login"}`);
+    win.loadURL(start);
   });
 }
 

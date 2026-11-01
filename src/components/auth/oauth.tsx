@@ -54,7 +54,8 @@ function LastUsed({ className }: { className?: string }) {
 }
 
 /**
- * GitHub first (PLAN §5.5): a full-width 44px outline link with the real GitHub mark.
+ * GitHub sign-in (PLAN §5.5): a full-width 44px outline link with the real GitHub mark (GitHub is the
+ * only OAuth provider the server implements; see /api/auth/github).
  * It stays an <a> (the e2e contract counts the buttons). Hidden by the caller when GitHub
  * sign-in is not configured.
  */
@@ -68,7 +69,7 @@ export function GitHubButton({ href, onNavigate }: { href: string; onNavigate?: 
         rememberAuthMethod("github");
         onNavigate?.();
       }}
-      className={buttonClasses("outline", "lg", "h-12 w-full bg-background text-[15px] hover:bg-muted")}
+      className={buttonClasses("outline", "lg", "h-11 w-full bg-background text-[15px] hover:bg-muted")}
     >
       <BrandMark id="github" className="size-[18px]" />
       Continue with GitHub

@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { Eye, EyeOff } from "lucide-react";
+import { ArrowBigUpDash, Eye, EyeOff } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Input } from "@/components/ui/input";
 
@@ -31,9 +31,33 @@ export const PasswordInput = React.forwardRef<HTMLInputElement, React.InputHTMLA
   ref,
 ) {
   const [shown, setShown] = React.useState(false);
+  const [caps, setCaps] = React.useState(false);
+  const { onKeyDown, onKeyUp, onBlur } = props;
+  // Caps Lock hint: read from the key event (no global listener); cleared when the field loses focus.
+  const track = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (typeof e.getModifierState === "function") setCaps(e.getModifierState("CapsLock"));
+  };
   return (
     <div className="relative">
-      <Input ref={ref} {...props} type={shown ? "text" : "password"} maxLength={PASSWORD_MAX} className={cn("h-11 pr-12 text-[15px]", className)} />
+      <Input
+        ref={ref}
+        {...props}
+        type={shown ? "text" : "password"}
+        maxLength={PASSWORD_MAX}
+        className={cn("h-11 pr-12 text-[15px]", caps && "pr-36", className)}
+        onKeyDown={(e) => {
+          track(e);
+          onKeyDown?.(e);
+        }}
+        onKeyUp={(e) => {
+          track(e);
+          onKeyUp?.(e);
+        }}
+        onBlur={(e) => {
+          setCaps(false);
+          onBlur?.(e);
+        }}
+      />
       <button
         type="button"
         onClick={() => setShown((v) => !v)}
@@ -46,6 +70,12 @@ export const PasswordInput = React.forwardRef<HTMLInputElement, React.InputHTMLA
       >
         {shown ? <EyeOff className="size-4" aria-hidden="true" /> : <Eye className="size-4" aria-hidden="true" />}
       </button>
+      {caps ? (
+        <p role="status" className="pop-in pointer-events-none absolute inset-y-0 right-12 my-auto flex h-6 items-center gap-1 rounded-sm bg-muted px-1.5 text-[11px] font-medium leading-4 text-foreground">
+          <ArrowBigUpDash className="size-3.5" aria-hidden="true" />
+          Caps Lock on
+        </p>
+      ) : null}
     </div>
   );
 });

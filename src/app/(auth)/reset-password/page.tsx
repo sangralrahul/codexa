@@ -11,7 +11,7 @@ export const metadata = authMetadata("/reset-password");
 export default async function ResetPasswordPage({ searchParams }: { searchParams: Promise<{ token?: string }> }) {
   const { token } = await searchParams;
   return (
-    <AuthCard title="Choose a new password" label="New password" description={token ? "Use at least 8 characters with a letter and a number. You'll be signed out everywhere else." : undefined}>
+    <AuthCard title="Choose a new password" description={token ? "Use at least 8 characters with a letter and a number. You'll be signed out everywhere else." : undefined}>
       {token ? (
         <ResetPasswordForm token={token} />
       ) : (

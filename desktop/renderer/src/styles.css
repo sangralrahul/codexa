@@ -807,11 +807,24 @@ textarea,
 /* ==========================================================================
    Sign-in wall (components/AuthWall), ported from the web's auth.css: real
    screenshots on a tilted plane, columns scrolling at different speeds and in
-   alternate directions, a heavy vignette toward the centre.
+   alternate directions, a soft vignette toward the centre. The screen sits on
+   --auth-bg: true black in dark, an off-white in light (so the white card lifts).
    ========================================================================== */
+.auth-screen {
+  --auth-bg: var(--bg);
+  background: var(--auth-bg);
+}
+html:not(.dark) .auth-screen {
+  --auth-bg: color-mix(in oklab, var(--surface) 45%, var(--bg));
+}
+/* The sign-in screen's top bar and footer: solid page colour on a hairline. */
+.auth-bar {
+  border-color: var(--border);
+  background: color-mix(in oklab, var(--auth-bg) 94%, transparent);
+}
 .auth-wall {
   --wall-col: clamp(270px, 20vw, 480px);
-  --wall-gap: 24px;
+  --wall-gap: 28px;
   --wall-bar: 22px;
   /* One tile including its gap. The plane is five tiles tall. */
   --wall-tile: calc(var(--wall-col) * 0.625 + var(--wall-bar) + 2px + var(--wall-gap));
@@ -821,7 +834,7 @@ textarea,
   overflow: hidden;
   pointer-events: none;
   user-select: none;
-  perspective: 2000px;
+  perspective: 2200px;
   perspective-origin: 50% 40%;
   contain: strict;
 }
@@ -835,7 +848,8 @@ textarea,
   height: calc(var(--wall-tile) * 5);
   transform: translate(-50%, -50%) rotateX(32deg) rotateZ(-16deg) scale(1.28);
   transform-origin: 50% 50%;
-  opacity: 0.85;
+  /* Dark: dim screenshots, so the wall is texture, never content. */
+  opacity: 0.42;
 }
 /* Each column holds its set three times and starts a tile and a half above the plane, so the
    visible window is always covered while the track moves by one set (-33.333%). */
@@ -851,32 +865,32 @@ textarea,
   animation: auth-wall-scroll var(--wall-dur, 110s) linear var(--wall-delay, 0s) infinite;
 }
 .auth-wall__col[data-col="0"] {
-  --wall-dur: 96s;
+  --wall-dur: 124s;
   --wall-delay: -14s;
   --wall-rest: -6%;
 }
 .auth-wall__col[data-col="1"] {
-  --wall-dur: 77s;
+  --wall-dur: 100s;
   --wall-delay: -52s;
   --wall-rest: -21%;
 }
 .auth-wall__col[data-col="2"] {
-  --wall-dur: 110s;
+  --wall-dur: 142s;
   --wall-delay: -30s;
   --wall-rest: -12%;
 }
 .auth-wall__col[data-col="3"] {
-  --wall-dur: 83s;
+  --wall-dur: 108s;
   --wall-delay: -61s;
   --wall-rest: -27%;
 }
 .auth-wall__col[data-col="4"] {
-  --wall-dur: 102s;
+  --wall-dur: 132s;
   --wall-delay: -8s;
   --wall-rest: -3%;
 }
 .auth-wall__col[data-col="5"] {
-  --wall-dur: 74s;
+  --wall-dur: 96s;
   --wall-delay: -44s;
   --wall-rest: -17%;
 }
@@ -895,8 +909,8 @@ textarea,
   flex: none;
   margin-bottom: var(--wall-gap);
   overflow: hidden;
-  border: 1px solid var(--border-strong);
-  border-radius: 6px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
   background: var(--card);
 }
 .auth-wall__tile img {
@@ -934,42 +948,43 @@ textarea,
   text-overflow: ellipsis;
   color: var(--muted);
 }
-/* The vignette: near-solid page colour behind the form, the wall showing only toward the edges. */
+/* The vignette: solid page colour behind the card, easing out softly so the wall shows only toward the
+   edges; the top and bottom fade into the bars. */
 .auth-wall::after {
   content: "";
   position: absolute;
   inset: 0;
   background:
-    radial-gradient(ellipse 38% 58% at 50% 50%, var(--bg) 0%, color-mix(in oklab, var(--bg) 92%, transparent) 55%, transparent 100%),
-    radial-gradient(ellipse 85% 95% at 50% 50%, color-mix(in oklab, var(--bg) 72%, transparent) 30%, color-mix(in oklab, var(--bg) 40%, transparent) 100%),
-    linear-gradient(to bottom, var(--bg), transparent 14%, transparent 86%, var(--bg));
+    radial-gradient(ellipse 34% 62% at 50% 50%, var(--auth-bg, var(--bg)) 0%, var(--auth-bg, var(--bg)) 45%, color-mix(in oklab, var(--auth-bg, var(--bg)) 82%, transparent) 72%, transparent 100%),
+    radial-gradient(ellipse 90% 100% at 50% 50%, color-mix(in oklab, var(--auth-bg, var(--bg)) 55%, transparent) 20%, color-mix(in oklab, var(--auth-bg, var(--bg)) 20%, transparent) 100%),
+    linear-gradient(to bottom, var(--auth-bg, var(--bg)), transparent 18%, transparent 82%, var(--auth-bg, var(--bg)));
 }
 
-/* The sign-in panel: a solid card, hairline edge, crosshair corners, construction lines across the screen. */
+/* The sign-in card: solid, hairline edge, crosshair corners. */
 .auth-panel {
+  --panel-pad: 32px;
   position: relative;
   border: 1px solid var(--border);
   background: var(--card);
   box-shadow:
-    0 0 0 1px var(--bg),
-    0 30px 80px -20px var(--bg);
+    0 0 0 1px var(--auth-bg, var(--bg)),
+    0 32px 80px -24px var(--auth-bg, var(--bg));
 }
-.auth-panel::before,
-.auth-panel::after {
-  content: "";
-  position: absolute;
-  pointer-events: none;
-  z-index: -1;
+html:not(.dark) .auth-panel {
+  box-shadow:
+    0 1px 2px rgba(0, 0, 0, 0.04),
+    0 8px 16px -8px rgba(0, 0, 0, 0.06),
+    0 32px 64px -32px rgba(0, 0, 0, 0.14);
 }
-.auth-panel::before {
-  inset: -1px -100vw;
-  border-block: 1px solid var(--border);
-  mask-image: linear-gradient(to right, transparent, black 35%, black 65%, transparent);
+.auth-panel__body {
+  padding: var(--panel-pad);
 }
-.auth-panel::after {
-  inset: -100vh -1px;
-  border-inline: 1px solid var(--border);
-  mask-image: linear-gradient(to bottom, transparent, black 30%, black 70%, transparent);
+/* The card's last band (the switch line): full-bleed, on a hairline, a step quieter than the card. */
+.auth-panel__foot {
+  margin: 24px calc(-1 * var(--panel-pad)) calc(-1 * var(--panel-pad));
+  padding: 16px var(--panel-pad);
+  border-top: 1px solid var(--border);
+  background: color-mix(in oklab, var(--surface) 55%, var(--card));
 }
 .auth-cross {
   position: absolute;
@@ -979,6 +994,10 @@ textarea,
   background:
     linear-gradient(var(--muted), var(--muted)) center / 100% 1px no-repeat,
     linear-gradient(var(--muted), var(--muted)) center / 1px 100% no-repeat;
+  opacity: 0.55;
+}
+.dark .auth-cross {
+  opacity: 0.7;
 }
 .auth-cross[data-pos="tl"] {
   top: -7px;
@@ -1028,14 +1047,16 @@ textarea,
   will-change: auto;
   transform: translate3d(0, var(--wall-rest, 0%), 0);
 }
-/* Light theme: Codexa's own captures come in both themes (same crop and size), so the wall shows the
-   light ones on white tiles and needs no dimming. Each tile shows the copy matching the app theme. */
+/* Light theme: soft screenshots on the off-white screen, each tile lifted by a faint neutral shadow.
+   Codexa's own captures come in both themes (same crop and size); each tile shows the app theme's. */
 html:not(.dark) .auth-wall__plane {
-  opacity: 0.9;
+  opacity: 0.72;
 }
 html:not(.dark) .auth-wall__tile {
   border-color: var(--border);
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
+  box-shadow:
+    0 1px 2px rgba(0, 0, 0, 0.04),
+    0 12px 32px -16px rgba(0, 0, 0, 0.16);
 }
 html:not(.dark) .auth-wall__bar span {
   background: var(--border);

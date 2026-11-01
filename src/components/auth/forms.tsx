@@ -60,8 +60,9 @@ function ideaTarget(serverNext: string, idea: Idea, stored: boolean) {
   return ideaHref("/dashboard", idea.text, idea.templateId);
 }
 
+/** The card's closing band: the way to the other form. */
 function SwitchLine({ children }: { children: React.ReactNode }) {
-  return <p className="text-center text-sm text-muted-foreground">{children}</p>;
+  return <p className="auth-panel__foot text-center text-sm text-muted-foreground">{children}</p>;
 }
 
 const switchLink = "font-medium text-foreground underline decoration-border-strong underline-offset-4 transition-colors hover:decoration-foreground";
@@ -144,10 +145,10 @@ export function SignupForm({
   }
 
   return (
-    <form ref={formRef} onSubmit={onSubmit} className="auth-rise flex flex-col gap-5" noValidate>
+    <form ref={formRef} onSubmit={onSubmit} className="auth-rise flex flex-col gap-4" noValidate>
       {idea ? <IdeaTicket text={idea.text} templateName={idea.templateName} onChange={(text) => setIdea((i) => (i ? { ...i, text } : i))} /> : null}
       {githubEnabled ? (
-        <div className="flex flex-col gap-5">
+        <div className="flex flex-col gap-6">
           <GitHubButton href={`/api/auth/github/start?next=${encodeURIComponent(githubNext)}`} onNavigate={() => stashIdea(idea)} />
           <OrDivider />
         </div>
@@ -198,7 +199,7 @@ export function SignupForm({
         </Field>
         <PasswordRules id="password-rules" value={password} />
       </div>
-      <Button type="submit" size="lg" className="h-11 w-full text-[15px]" state={phase} loadingLabel="Creating account…" successLabel={arrivalLabel(target)}>
+      <Button type="submit" size="lg" className="mt-2 h-11 w-full text-[15px]" state={phase} loadingLabel="Creating account…" successLabel={arrivalLabel(target)}>
         Create account
       </Button>
       <SwitchLine>
@@ -283,9 +284,9 @@ export function LoginForm({
   const mailForLinks = EMAIL_RE.test(typedEmail.trim()) ? typedEmail.trim() : email;
 
   return (
-    <form ref={formRef} onSubmit={onSubmit} className="auth-rise flex flex-col gap-5" noValidate>
+    <form ref={formRef} onSubmit={onSubmit} className="auth-rise flex flex-col gap-4" noValidate>
       {githubEnabled ? (
-        <div className="flex flex-col gap-5">
+        <div className="flex flex-col gap-6">
           <GitHubButton href={`/api/auth/github/start?next=${encodeURIComponent(safeNext(next, idea ? IDEA_ROUTE : "/dashboard"))}`} />
           <OrDivider />
         </div>
@@ -330,7 +331,7 @@ export function LoginForm({
           }}
         />
       </Field>
-      <Button type="submit" size="lg" className="h-11 w-full text-[15px]" state={phase} loadingLabel="Signing in…" successLabel={arrivalLabel(target)}>
+      <Button type="submit" size="lg" className="mt-2 h-11 w-full text-[15px]" state={phase} loadingLabel="Signing in…" successLabel={arrivalLabel(target)}>
         Sign in
       </Button>
       <SwitchLine>
@@ -475,7 +476,7 @@ export function ForgotPasswordForm({ emailConfigured, email: initialEmail }: { e
   }
 
   return (
-    <form ref={formRef} onSubmit={onSubmit} className="auth-rise flex flex-col gap-5" noValidate>
+    <form ref={formRef} onSubmit={onSubmit} className="auth-rise flex flex-col gap-4" noValidate>
       <div className="empty:hidden">{error ? <Alert variant="danger">{error}</Alert> : null}</div>
       <Field label="Email" htmlFor="email" error={fieldError}>
         <Input
@@ -500,7 +501,7 @@ export function ForgotPasswordForm({ emailConfigured, email: initialEmail }: { e
           Email delivery isn&apos;t configured on this deployment, so reset links are not sent. Ask the workspace operator.
         </Alert>
       )}
-      <Button type="submit" size="lg" className="h-11 w-full text-[15px]" state={phase} loadingLabel="Sending…">
+      <Button type="submit" size="lg" className="mt-2 h-11 w-full text-[15px]" state={phase} loadingLabel="Sending…">
         Send reset link
       </Button>
       <BackToSignIn />
@@ -510,10 +511,12 @@ export function ForgotPasswordForm({ emailConfigured, email: initialEmail }: { e
 
 function BackToSignIn() {
   return (
-    <Link href="/login" className="group inline-flex items-center justify-center gap-1.5 self-center text-sm font-medium text-muted-foreground transition-colors hover:text-foreground">
-      <ArrowLeft className="size-3.5 transition-transform duration-200 group-hover:-translate-x-0.5" aria-hidden="true" />
-      Back to sign in
-    </Link>
+    <div className="auth-panel__foot flex justify-center">
+      <Link href="/login" className="group inline-flex items-center gap-1.5 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground">
+        <ArrowLeft className="size-3.5 transition-transform duration-200 group-hover:-translate-x-0.5" aria-hidden="true" />
+        Back to sign in
+      </Link>
+    </div>
   );
 }
 
@@ -560,7 +563,7 @@ export function ResetPasswordForm({ token }: { token: string }) {
   }
 
   return (
-    <form ref={formRef} onSubmit={onSubmit} className="auth-rise flex flex-col gap-5" noValidate>
+    <form ref={formRef} onSubmit={onSubmit} className="auth-rise flex flex-col gap-4" noValidate>
       <div className="empty:hidden">
         {expired ? (
           <Alert variant="danger" title="This link has expired">
@@ -611,7 +614,7 @@ export function ResetPasswordForm({ token }: { token: string }) {
         </Field>
         {fields.confirm ? null : <PasswordMatch id="confirm-match" password={password} confirm={confirm} />}
       </div>
-      <Button type="submit" size="lg" className="h-11 w-full text-[15px]" state={phase} loadingLabel="Updating…" successLabel="Password updated">
+      <Button type="submit" size="lg" className="mt-2 h-11 w-full text-[15px]" state={phase} loadingLabel="Updating…" successLabel="Password updated">
         Update password
       </Button>
       <BackToSignIn />

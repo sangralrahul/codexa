@@ -41,7 +41,7 @@ export function InviteView({ token, preview, user, now }: { token: string; previ
 
   if (!preview) {
     return (
-      <AuthCard title="Invitation not found" label="Workspace invitation" description="This link is invalid or was revoked. Ask the workspace owner to send a new invitation.">
+      <AuthCard title="Invitation not found" description="This link is invalid or was revoked. Ask the workspace owner to send a new invitation.">
         <div className="flex flex-col gap-3">
           <Link href="/dashboard" className={buttonClasses("primary", "lg", "h-11 w-full text-[15px]")}>
             Go to dashboard
@@ -61,7 +61,6 @@ export function InviteView({ token, preview, user, now }: { token: string; previ
   return (
     <AuthCard
       title={`Join ${ws.name}`}
-      label="Invitation"
       eyebrow={
         <div className="flex items-center gap-3.5">
           <Avatar name={ws.name} seed={ws.id} shape="square" size="xl" />

@@ -8,8 +8,6 @@ import { Alert } from "@/components/ui/misc";
 
 export const metadata = authMetadata("/login");
 
-const HEADLINE = ["Describe your idea.", "Ship a real app."] as const;
-
 type SearchParams = Promise<{
   reset?: string;
   verified?: string;
@@ -36,7 +34,7 @@ export default async function LoginPage({ searchParams }: { searchParams: Search
   const prompt = clampIdea(one(sp.prompt)) || undefined;
 
   return (
-    <AuthCard headline={HEADLINE} title="Sign in to Codexa" description="Welcome back. Pick up your projects, previews and deploys.">
+    <AuthCard title="Sign in to Codexa" description="Welcome back. Pick up where you left off.">
       {sp.reset ? (
         <Alert variant="success" className="mb-5">
           Your password was updated. Sign in with your new password.

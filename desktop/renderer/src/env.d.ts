@@ -8,7 +8,7 @@ interface Window {
     request: <T = unknown>(req: { method?: string; path: string; body?: unknown }) => Promise<ApiResult<T>>;
     stream: (req: { method?: string; path: string; body?: unknown }, onMessage: (msg: StreamMessage) => void) => () => void;
     login: (email: string, password: string) => Promise<ApiResult<{ user?: SessionUser; error?: { message: string } }>>;
-    browserAuth: (page: "login" | "signup") => Promise<SessionUser | null>;
+    browserAuth: (page: "login" | "signup" | "github") => Promise<SessionUser | null>;
     me: () => Promise<SessionUser | null>;
     logout: () => Promise<boolean>;
     openExternal: (url: string) => Promise<void>;
