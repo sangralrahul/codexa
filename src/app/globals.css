@@ -104,6 +104,16 @@
   --glow: #a1a1a1;
   --glow-2: #d4d4d4;
   /* Syntax (code panes stay dark in both themes). */
+  /* File-type colours for the editor's file tree and tabs (the familiar editor conventions). */
+  --file-ts: #2f74c0;
+  --file-js: #b7860b;
+  --file-json: #a16207;
+  --file-css: #7c3aed;
+  --file-html: #d9480f;
+  --file-image: #0f8a7e;
+  --file-pkg: #15803d;
+  --file-env: #b45309;
+  --file-folder: #b8860b;
   --syn-keyword: #c4a7ff;
   --syn-string: #9fe0b0;
   --syn-fn: #8fb8ff;
@@ -201,6 +211,15 @@
   --silk-3: #111111;
   --silk-opacity: 0.3;
   color-scheme: dark;
+  --file-ts: #4d9de0;
+  --file-js: #e8c547;
+  --file-json: #d4a72c;
+  --file-css: #a78bfa;
+  --file-html: #f0764a;
+  --file-image: #3cc2b4;
+  --file-pkg: #4ade80;
+  --file-env: #f5a524;
+  --file-folder: #d4a72c;
 }
 
 /* Composite tokens. Declared on both selectors so a nested `.dark` island (the auth panel) recomputes them. */
@@ -268,6 +287,15 @@ body:has(main [data-tone="company"]) { --silk-1: #ff8a66; --silk-2: #ffc070; --s
   --color-hairline: var(--hairline);
   --color-grid-line: var(--grid-line);
   --color-glass: var(--glass);
+  --color-file-ts: var(--file-ts);
+  --color-file-js: var(--file-js);
+  --color-file-json: var(--file-json);
+  --color-file-css: var(--file-css);
+  --color-file-html: var(--file-html);
+  --color-file-image: var(--file-image);
+  --color-file-pkg: var(--file-pkg);
+  --color-file-env: var(--file-env);
+  --color-file-folder: var(--file-folder);
   --color-syn-keyword: var(--syn-keyword);
   --color-syn-string: var(--syn-string);
   --color-syn-fn: var(--syn-fn);

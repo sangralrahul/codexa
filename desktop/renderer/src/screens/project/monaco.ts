@@ -26,45 +26,89 @@ for (const d of [ts?.typescriptDefaults, ts?.javascriptDefaults]) {
   d?.setCompilerOptions({ jsx: 4, allowJs: true, target: 99, module: 99, moduleResolution: 2, allowNonTsExtensions: true, esModuleInterop: true });
 }
 
+// Syntax colours: the same palette as the web editor (--syn-* in src/app/globals.css). The app chrome
+// stays monochrome; code keeps its colours so it reads at a glance. Light mode uses deeper versions
+// of each hue so they hold contrast on white.
+const DARK = { fg: "e6e6e6", keyword: "c4a7ff", string: "9fe0b0", fn: "8fb8ff", tag: "ff9f7a", number: "ffcf7a", comment: "7d8594", attr: "7fd8d0", type: "8fe3e0", delim: "a1a1aa" };
+const LIGHT = { fg: "1f2328", keyword: "7c3aed", string: "15803d", fn: "1d4ed8", tag: "c2410c", number: "b45309", comment: "6b7280", attr: "0f766e", type: "0e7490", delim: "57606a" };
+
+function rules(c: typeof DARK) {
+  return [
+    { token: "", foreground: c.fg },
+    { token: "comment", foreground: c.comment, fontStyle: "italic" },
+    { token: "keyword", foreground: c.keyword },
+    { token: "keyword.control", foreground: c.keyword },
+    { token: "storage", foreground: c.keyword },
+    { token: "string", foreground: c.string },
+    { token: "string.escape", foreground: c.number },
+    { token: "number", foreground: c.number },
+    { token: "regexp", foreground: c.string },
+    { token: "type", foreground: c.type },
+    { token: "type.identifier", foreground: c.type },
+    { token: "identifier", foreground: c.fg },
+    { token: "delimiter", foreground: c.delim },
+    { token: "tag", foreground: c.tag },
+    { token: "metatag", foreground: c.tag },
+    { token: "attribute.name", foreground: c.attr },
+    { token: "attribute.value", foreground: c.string },
+    { token: "variable.predefined", foreground: c.fn },
+    { token: "function", foreground: c.fn },
+    { token: "key", foreground: c.attr },
+    { token: "string.key.json", foreground: c.attr },
+    { token: "string.value.json", foreground: c.string },
+    { token: "keyword.json", foreground: c.keyword },
+    { token: "selector", foreground: c.tag },
+    { token: "attribute.value.number", foreground: c.number },
+    { token: "attribute.value.unit", foreground: c.number },
+    { token: "markup.heading", foreground: c.fn, fontStyle: "bold" },
+  ];
+}
+
 monaco.editor.defineTheme("codexa-dark", {
   base: "vs-dark",
   inherit: true,
-  rules: [
-    { token: "", foreground: "d4d4d4" },
-    { token: "keyword", foreground: "ffffff" },
-    { token: "type", foreground: "ededed" },
-    { token: "type.identifier", foreground: "ededed" },
-    { token: "identifier", foreground: "d4d4d4" },
-    { token: "string", foreground: "a1a1a1" },
-    { token: "number", foreground: "ededed" },
-    { token: "comment", foreground: "6e6e6e", fontStyle: "italic" },
-    { token: "delimiter", foreground: "8a8a8a" },
-    { token: "tag", foreground: "ffffff" },
-    { token: "attribute.name", foreground: "bdbdbd" },
-    { token: "attribute.value", foreground: "a1a1a1" },
-    { token: "regexp", foreground: "a1a1a1" },
-  ],
-  colors: { "editor.background": "#000000", "editor.lineHighlightBackground": "#0a0a0a", "editorGutter.background": "#000000", "editorLineNumber.foreground": "#4a4a4a", "editorLineNumber.activeForeground": "#a1a1a1", "editorIndentGuide.background1": "#1f1f1f", "editor.selectionBackground": "#3a3a3a", "editorCursor.foreground": "#ededed", "editorWidget.background": "#0a0a0a", "editorWidget.border": "#2b2b2b", "editorBracketHighlight.foreground1": "#a1a1a1", "editorBracketHighlight.foreground2": "#a1a1a1", "editorBracketHighlight.foreground3": "#a1a1a1", "editorBracketHighlight.foreground4": "#a1a1a1", "editorBracketHighlight.foreground5": "#a1a1a1", "editorBracketHighlight.foreground6": "#a1a1a1", "editorBracketMatch.border": "#6e6e6e" },
+  rules: rules(DARK),
+  colors: {
+    "editor.background": "#000000",
+    "editor.foreground": "#e6e6e6",
+    "editor.lineHighlightBackground": "#0a0a0a",
+    "editorGutter.background": "#000000",
+    "editorLineNumber.foreground": "#4a4a4a",
+    "editorLineNumber.activeForeground": "#a1a1a1",
+    "editorIndentGuide.background1": "#1f1f1f",
+    "editorIndentGuide.activeBackground1": "#3a3a3a",
+    "editor.selectionBackground": "#264f78",
+    "editor.inactiveSelectionBackground": "#3a3d41",
+    "editorCursor.foreground": "#ededed",
+    "editorWidget.background": "#0a0a0a",
+    "editorWidget.border": "#2b2b2b",
+    "editorBracketHighlight.foreground1": "#ffd700",
+    "editorBracketHighlight.foreground2": "#da70d6",
+    "editorBracketHighlight.foreground3": "#179fff",
+    "editorBracketMatch.border": "#6e6e6e",
+  },
 });
+
 monaco.editor.defineTheme("codexa-light", {
   base: "vs",
   inherit: true,
-  rules: [
-    { token: "", foreground: "262626" },
-    { token: "keyword", foreground: "000000" },
-    { token: "type", foreground: "0a0a0a" },
-    { token: "type.identifier", foreground: "0a0a0a" },
-    { token: "identifier", foreground: "262626" },
-    { token: "string", foreground: "666666" },
-    { token: "number", foreground: "0a0a0a" },
-    { token: "comment", foreground: "8f8f8f", fontStyle: "italic" },
-    { token: "delimiter", foreground: "737373" },
-    { token: "tag", foreground: "000000" },
-    { token: "attribute.name", foreground: "404040" },
-    { token: "attribute.value", foreground: "666666" },
-    { token: "regexp", foreground: "666666" },
-  ],
-  colors: { "editor.background": "#ffffff", "editor.lineHighlightBackground": "#fafafa", "editorLineNumber.foreground": "#b5b5b5", "editorLineNumber.activeForeground": "#666666", "editorIndentGuide.background1": "#ebebeb", "editor.selectionBackground": "#e0e0e0", "editorCursor.foreground": "#0a0a0a", "editorBracketHighlight.foreground1": "#666666", "editorBracketHighlight.foreground2": "#666666", "editorBracketHighlight.foreground3": "#666666", "editorBracketHighlight.foreground4": "#666666", "editorBracketHighlight.foreground5": "#666666", "editorBracketHighlight.foreground6": "#666666", "editorBracketMatch.border": "#a3a3a3" },
+  rules: rules(LIGHT),
+  colors: {
+    "editor.background": "#ffffff",
+    "editor.foreground": "#1f2328",
+    "editor.lineHighlightBackground": "#fafafa",
+    "editorLineNumber.foreground": "#b5b5b5",
+    "editorLineNumber.activeForeground": "#666666",
+    "editorIndentGuide.background1": "#ebebeb",
+    "editorIndentGuide.activeBackground1": "#c8c8c8",
+    "editor.selectionBackground": "#add6ff",
+    "editor.inactiveSelectionBackground": "#e5ebf1",
+    "editorCursor.foreground": "#0a0a0a",
+    "editorBracketHighlight.foreground1": "#0431fa",
+    "editorBracketHighlight.foreground2": "#319331",
+    "editorBracketHighlight.foreground3": "#7b3814",
+    "editorBracketMatch.border": "#a3a3a3",
+  },
 });
 
 const LANG: Record<string, string> = {
