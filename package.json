@@ -47,7 +47,7 @@
     "@xterm/xterm": "^6.0.0",
     "clsx": "^2.1.1",
     "drizzle-orm": "^0.45.4",
-    "fflate": "^0.8.2",
+    "fflate": "^0.8.3",
     "geist": "^1.8.2",
     "gray-matter": "^4.0.3",
     "http-proxy": "^1.18.1",
@@ -90,6 +90,7 @@
     "drizzle-kit": "^0.31.11",
     "eslint": "^9",
     "eslint-config-next": "16.4.3",
+    "minimatch": "file:./vendor/minimatch",
     "playwright": "1.63.0",
     "playwright-core": "1.63.0",
     "simple-icons": "16.36.0",
@@ -104,14 +105,14 @@
   },
   "overrides": {
     "dompurify": "3.4.17",
-    "@node-minify/core": {
-      "glob": "10.5.0"
-    },
     "@esbuild-kit/core-utils": {
       "esbuild": "0.25.12"
     },
     "miniflare": {
       "undici": "7.30.1"
-    }
+    },
+    "minimatch": "$minimatch",
+    "glob": "14.0.3",
+    "follow-redirects": "1.16.2"
   }
 }

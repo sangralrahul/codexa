@@ -1,0 +1,20 @@
+{
+  "name": "minimatch",
+  "version": "11.0.3",
+  "description": "minimatch 11.0.3 with a callable default export, so ESLint and its plugins (written for minimatch 3) run on the patched release. Wired in through \"overrides\" in the root package.json.",
+  "license": "BlueOak-1.0.0",
+  "main": "./compat.cjs",
+  "types": "./dist/commonjs/index.d.ts",
+  "exports": {
+    "./package.json": "./package.json",
+    ".": {
+      "import": { "types": "./dist/esm/index.d.ts", "default": "./compat.mjs" },
+      "require": { "types": "./dist/commonjs/index.d.ts", "default": "./compat.cjs" }
+    }
+  },
+  "engines": { "node": "18 || 20 || >=22" },
+  "dependencies": {
+    "@isaacs/nonrecursive-glob-match": "^1.0.3",
+    "brace-expansion": "^5.0.12"
+  }
+}

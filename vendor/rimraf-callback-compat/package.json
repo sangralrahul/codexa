@@ -1,0 +1,9 @@
+{
+  "name": "rimraf-callback-compat",
+  "version": "1.0.0",
+  "private": true,
+  "description": "rimraf 2's callback API implemented with fs.rm. Replaces the rimraf 2 that `temp` depends on (it pulls in a flagged glob 7). See desktop/package.json overrides.",
+  "license": "MIT",
+  "main": "./index.js",
+  "engines": { "node": ">=14.14" }
+}
