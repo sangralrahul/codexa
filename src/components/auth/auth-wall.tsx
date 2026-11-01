@@ -16,14 +16,15 @@ import { TEMPLATE_SHOTS, templateShotSrc, templateShotSrcSet } from "@/component
  * Browsers already stop CSS animations in hidden tabs, so no visibility listener is needed.
  */
 
-type Shot = { key: string; src: string; srcSet?: string; label: string };
+type Shot = { key: string; src: string; srcSet?: string; label: string; dark?: boolean };
 
-/** Codexa's own product captures (public/marketing, 16:10). */
+/** Codexa's own product captures (public/marketing, 16:10). They are dark-theme captures, so the light
+ * theme shows them inverted (auth.css) rather than as grey slabs through the white vignette. */
 const PRODUCT: Shot[] = [
-  { key: "app-editor", src: "/marketing/app-editor.webp", label: "Codexa editor" },
-  { key: "app-dashboard", src: "/marketing/app-dashboard.webp", label: "Codexa dashboard" },
-  { key: "app-agent", src: "/marketing/app-agent.webp", label: "Codexa agent" },
-  { key: "app-publish", src: "/marketing/app-publish.webp", label: "Codexa publish" },
+  { key: "app-editor", dark: true, src: "/marketing/app-editor.webp", label: "Codexa editor" },
+  { key: "app-dashboard", dark: true, src: "/marketing/app-dashboard.webp", label: "Codexa dashboard" },
+  { key: "app-agent", dark: true, src: "/marketing/app-agent.webp", label: "Codexa agent" },
+  { key: "app-publish", dark: true, src: "/marketing/app-publish.webp", label: "Codexa publish" },
 ];
 
 /** Starter templates, picked for variety (apps, dashboards, stores, sites, portfolios). */
@@ -79,7 +80,7 @@ function columns(): Shot[][] {
 
 function Tile({ shot }: { shot: Shot }) {
   return (
-    <div className="auth-wall__tile">
+    <div className="auth-wall__tile" data-dark={shot.dark ? "" : undefined}>
       <div className="auth-wall__bar">
         <span />
         <span />

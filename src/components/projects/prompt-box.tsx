@@ -719,7 +719,14 @@ export function PromptBox({
 
         {atLimit && atLimit.workspaceId === wsId && !error ? (
           // A neutral inline hint with the two real ways out (not a warning dot): the limit is a plan fact, not an error.
-          <p className={cn("mt-3 flex flex-wrap items-center gap-x-3 gap-y-1 text-pretty text-xs text-muted-foreground", start ? "justify-start text-left" : "justify-center text-center")}>
+          <p
+            className={cn(
+              "mt-3 flex flex-wrap items-center gap-x-3 gap-y-1 text-pretty text-xs text-muted-foreground",
+              start ? "justify-start text-left" : "justify-center text-center",
+              // Over the space scene: a solid chip so the line stays readable where it crosses a bright planet rim.
+              hero && "mx-auto w-fit max-w-full rounded-md border border-border bg-background px-3 py-1.5",
+            )}
+          >
             <span className="inline-flex items-center gap-1.5">
               <Info className="size-3.5 shrink-0 text-foreground-dim" aria-hidden="true" />
               {atLimit.used} of {atLimit.limit} projects on the {atLimit.plan} plan are in use in this workspace.

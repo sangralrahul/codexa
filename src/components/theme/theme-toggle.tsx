@@ -60,3 +60,30 @@ export function ThemeToggle({ className }: { className?: string }) {
     </div>
   );
 }
+
+/**
+ * One-click theme switch (icon button): flips between light and dark from whatever is showing now,
+ * and stores the explicit choice. The icon is chosen by CSS from the `.dark` class, so it is right on
+ * the first paint; the label names the theme it switches to.
+ */
+export function ThemeSwitch({ className }: { className?: string }) {
+  const { resolved, setTheme } = useTheme();
+  const next = resolved === "dark" ? "light" : "dark";
+  const label = `Switch to ${next} theme`;
+  return (
+    <button
+      type="button"
+      aria-label={label}
+      title={label}
+      data-no-ripple
+      onClick={() => setTheme(next)}
+      className={cn(
+        "inline-flex size-8 shrink-0 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-surface-2 hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus",
+        className,
+      )}
+    >
+      <Sun className="hidden size-4 dark:block" aria-hidden="true" />
+      <Moon className="size-4 dark:hidden" aria-hidden="true" />
+    </button>
+  );
+}

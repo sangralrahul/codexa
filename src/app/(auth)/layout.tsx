@@ -7,8 +7,8 @@ import { AuthLegal } from "@/components/auth/auth-legal";
 /**
  * Account pages (sign in, sign up, password reset, verification, invites), PLAN §5.5.
  *
- * Always the house (dark) theme: a slow wall of real template screenshots tilted in perspective
- * (AuthWall, decorative and aria-hidden), dimmed toward the centre, with one centred column on
+ * Follows the site theme (dark by default): a slow wall of real template screenshots tilted in perspective
+ * (AuthWall, decorative and aria-hidden), faded into the page colour toward the centre, with one centred column on
  * top: brand mark, heading, the form on a solid hairline panel, and the legal line.
  * Phones get a lighter three-column wall and a full-width panel.
  *
@@ -16,7 +16,7 @@ import { AuthLegal } from "@/components/auth/auth-legal";
  */
 export default function AuthLayout({ children }: { children: React.ReactNode }) {
   return (
-    <div className="dark auth-shell relative isolate min-h-dvh bg-background text-foreground">
+    <div className="auth-shell relative isolate min-h-dvh bg-background text-foreground">
       <AuthWall />
       <div className="relative z-10 flex min-h-dvh flex-col px-4 sm:px-8">
         <header className="flex h-14 items-center sm:h-16">

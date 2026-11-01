@@ -27,7 +27,8 @@
    the redesign is kept; new ones are marked ★ in docs/DESIGN.md.
    -------------------------------------------------------------------------- */
 :root {
-  /* Premium Light (DESIGN-PREMIUM.md): white page, near-black ink, indigo → violet → pink signature. */
+  /* Light ("paper", Monochrome Grid): white page, #fafafa/#f2f2f2 panels, #e5e5e5/#d4d4d4 hairlines,
+     near-black ink, #666 muted (5.7:1 on white), black primary. Depth comes from hairlines; shadows are a whisper. */
   --background: #ffffff;
   --foreground: #0a0a0a;
   --foreground-dim: #4d4d4d;
@@ -64,7 +65,7 @@
   --tile-bg: #f2f2f2;
   --tile-fg: #4d4d4d;
   --success: #16a34a;
-  --warning: #d97706;
+  --warning: #b45309; /* 5.0:1 on white */
   --danger: #dc2626;
   --danger-foreground: #ffffff;
   --info: #0a0a0a;
@@ -86,12 +87,12 @@
   --grid-line: rgba(0, 0, 0, 0.07);
   --glass: rgba(255, 255, 255, 0.82);
   --ember-ink: #1a0b05;
-  /* Soft slate-tinted depth (spec: card 0 1px 2px .04 + 0 12px 32px -12px .14). */
-  --shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.04), 0 1px 3px rgba(15, 23, 42, 0.04);
-  --shadow-md: 0 1px 2px rgba(15, 23, 42, 0.04), 0 12px 32px -12px rgba(15, 23, 42, 0.14);
-  --shadow-lg: 0 1px 2px rgba(15, 23, 42, 0.04), 0 20px 48px -16px rgba(15, 23, 42, 0.2);
-  --shadow-xl: 0 40px 80px -30px rgba(15, 23, 42, 0.22);
-  --shadow-stage: 0 0 0 1px rgba(0, 0, 0, 0.06), 0 30px 60px -30px rgba(0, 0, 0, 0.18);
+  /* Neutral, near-invisible depth: hairlines do the work, a shadow only separates floating layers. */
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.04);
+  --shadow-md: 0 1px 2px rgba(0, 0, 0, 0.04), 0 8px 20px -10px rgba(0, 0, 0, 0.08);
+  --shadow-lg: 0 1px 2px rgba(0, 0, 0, 0.04), 0 16px 36px -16px rgba(0, 0, 0, 0.12);
+  --shadow-xl: 0 1px 2px rgba(0, 0, 0, 0.04), 0 28px 56px -28px rgba(0, 0, 0, 0.16);
+  --shadow-stage: 0 0 0 1px rgba(0, 0, 0, 0.05), 0 24px 48px -24px rgba(0, 0, 0, 0.14);
   --radius: 0.5rem;
   /* Silk / Horizon light: blue, blue, blue (one accent). */
   --silk-0: #ffffff;

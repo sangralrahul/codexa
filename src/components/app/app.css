@@ -234,6 +234,27 @@
     linear-gradient(to bottom, transparent 56%, color-mix(in oklab, var(--hero-page) 72%, transparent) 84%, var(--hero-page) 98%);
 }
 
+/* Light page: the scene stays dark down through the composer and quick picks, then dissolves into
+   the white page over the last stretch (the planet's lit rim is already pale there, so the hand-off
+   reads as atmosphere, not a smear). The scene picker sits on a solid dark chip above the fade. */
+:root:not(.dark) .space-backdrop__scrim {
+  background:
+    radial-gradient(ellipse 46% 56% at 50% 48%, color-mix(in oklab, var(--background) 62%, transparent), color-mix(in oklab, var(--background) 22%, transparent) 70%, transparent),
+    linear-gradient(to bottom, color-mix(in oklab, var(--background) 55%, transparent), transparent 24%),
+    linear-gradient(to bottom, transparent 66%, color-mix(in oklab, var(--background) 40%, transparent) 76%, color-mix(in oklab, var(--hero-page) 55%, transparent) 89%, var(--hero-page) 99%);
+}
+:root:not(.dark) .space-picker { bottom: 28px; background: color-mix(in oklab, var(--background) 88%, transparent); }
+/* Phones: the hero is short and the quick picks sit low, so the hand-off starts later. */
+@media (max-width: 39.99rem) {
+  :root:not(.dark) .space-backdrop__scrim {
+    background:
+      radial-gradient(ellipse 46% 56% at 50% 48%, color-mix(in oklab, var(--background) 62%, transparent), color-mix(in oklab, var(--background) 22%, transparent) 70%, transparent),
+      linear-gradient(to bottom, color-mix(in oklab, var(--background) 55%, transparent), transparent 24%),
+      linear-gradient(to bottom, transparent 80%, color-mix(in oklab, var(--hero-page) 50%, transparent) 92%, var(--hero-page) 99.5%);
+  }
+  :root:not(.dark) .space-picker { bottom: 14px; }
+}
+
 .space-hero__content {
   position: relative; z-index: 10; margin-inline: auto; display: flex; flex-direction: column; align-items: center;
   max-width: 1080px; padding: 56px 16px 96px; text-align: center;

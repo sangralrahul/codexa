@@ -122,16 +122,18 @@ export function UserMenu({ user, variant = "avatar", side, align }: { user: Menu
           </button>
         </div>
         <div className="mt-1.5 space-y-2.5 border-t border-border px-2 pb-1 pt-3">
-          <div className="flex items-center justify-between gap-3">
-            <span id="um-theme" className="text-xs text-muted-foreground">
+          <div className="space-y-1.5">
+            <span id="um-theme" className="block text-xs text-muted-foreground">
               Theme
             </span>
             <Segmented<Theme>
               aria-labelledby="um-theme"
               size="sm"
+              fullWidth
+              className="w-full"
               value={theme}
               onValueChange={setTheme}
-              options={THEMES.map(({ value, label, Icon }) => ({ value, title: label, icon: <Icon />, label: <span className="sr-only">{label}</span> }))}
+              options={THEMES.map(({ value, label, Icon }) => ({ value, title: label, icon: <Icon />, label }))}
             />
           </div>
           <MotionToggle className="w-full justify-between" />

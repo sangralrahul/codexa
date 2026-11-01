@@ -16,15 +16,15 @@
 @media (width < 40rem) { .site-shell .container-x { max-width: calc(1200px + 2rem); } }
 
 /* --------------------------------------------------------------------------
-   Marketing dark scope. The website is dark by default, whatever the app theme:
-   monochrome black page, #0a0a0a panels, #2b2b2b hairlines, white and grey type,
-   and a white primary button. Green is kept only for live status. The tokens
-   below shadow the app's light/dark sets for every page under the site shell
-   (and anything portalled out of it while such a page is open), so components
-   keep reading the same token names.
+   Marketing theme scopes. The website follows the site theme (dark by default,
+   see DEFAULT_THEME). Dark: monochrome black page, #0a0a0a panels, #2b2b2b
+   hairlines, white and grey type, and a white primary button. Green is kept
+   only for live status. The tokens below shadow the app's dark set for every
+   page under the site shell (and anything portalled out of it while such a
+   page is open), so components keep reading the same token names.
    Muted text is #a1a1a1 on #000 (≈8.3:1) and on #0a0a0a (≈7.9:1).
    -------------------------------------------------------------------------- */
-:root:has(.site-shell) {
+:root.dark:has(.site-shell) {
   color-scheme: dark;
   --background: #000000;
   --foreground: #ededed;
@@ -81,7 +81,32 @@
   --glow-2: #3a3a3a;
   --silk-opacity: 0;
 }
-:root:has(.site-shell) body { background: var(--background); color: var(--foreground); }
+:root.dark:has(.site-shell) body { background: var(--background); color: var(--foreground); }
+
+/* Light: the app's paper set (white page, #fafafa/#f2f2f2 panels, #e5e5e5 hairlines,
+   near-black type and a black primary button) with the same monochrome rules as dark:
+   no silk, no orange ink, no tinted shadows. Hairline-led depth; shadows barely there. */
+:root:not(.dark):has(.site-shell) {
+  --signal-ink: #666666;
+  --mark-ink-1: #0a0a0a;
+  --mark-ink-2: #666666;
+  --selection-strong: rgba(10, 10, 10, 0.16);
+  --glass: rgba(255, 255, 255, 0.78);
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.04);
+  --shadow-md: 0 1px 2px rgba(0, 0, 0, 0.04), 0 6px 16px -8px rgba(0, 0, 0, 0.06);
+  --shadow-lg: 0 1px 2px rgba(0, 0, 0, 0.04), 0 16px 32px -16px rgba(0, 0, 0, 0.1);
+  --shadow-xl: 0 1px 2px rgba(0, 0, 0, 0.04), 0 24px 48px -24px rgba(0, 0, 0, 0.12);
+  --shadow-stage: 0 0 0 1px rgba(0, 0, 0, 0.04), 0 24px 48px -24px rgba(0, 0, 0, 0.12);
+  --silk-opacity: 0;
+}
+/* Light: the white-on-black washes and rims below become ink at a whisper, or nothing. */
+:root:not(.dark) .mk-mesh { background: radial-gradient(60% 55% at 50% 0%, color-mix(in oklab, var(--foreground) 3%, transparent), transparent 70%); }
+:root:not(.dark) :is(.mk-mesh--soft, .mk-mesh--band) { background: none; }
+:root:not(.dark) .mk-glow::before { display: none; }
+:root:not(.dark) .mk-browser { box-shadow: var(--shadow-xl); }
+:root:not(.dark) .mk-btn--primary { box-shadow: var(--shadow-sm); }
+:root:not(.dark) .mk-btn--secondary:hover { border-color: var(--muted-foreground); }
+:root:not(.dark) .mk-composer:focus-within { border-color: var(--border-strong); box-shadow: 0 0 0 4px color-mix(in oklab, var(--foreground) 6%, transparent), var(--shadow-lg); }
 
 /* --------------------------------------------------------------------------
    Type: page H1 56–64px / 800 / -0.04em, section H2 40–44px / 700 / -0.03em,
@@ -870,6 +895,8 @@ a.mk-pill:hover { border-color: var(--border-strong); color: var(--foreground); 
 }
 .site-shell > * { position: relative; z-index: 1; }
 .site-shell > .mk-header { z-index: 50; }
+/* The area wash (404) is a backdrop, not a flow child: keep it absolute under everything. */
+.site-shell > .site-backdrop { position: absolute; z-index: 0; }
 .mk-kbd {
   display: inline-flex;
   align-items: center;

@@ -34,7 +34,7 @@ import {
 import { LogoMark } from "@/components/logo";
 import { NAV, type NavItem } from "@/config/routes";
 import { Kbd } from "@/components/ui/misc";
-import { ThemeToggle } from "@/components/theme/theme-toggle";
+import { ThemeSwitch, ThemeToggle } from "@/components/theme/theme-toggle";
 import { MotionToggle } from "@/components/motion/motion-toggle";
 import { GlideIndicator, useGlide } from "@/components/motion/glide";
 import { SearchDialog, openSearch } from "@/components/search/search-dialog";
@@ -417,6 +417,7 @@ export function MarketingHeader({ signedIn, wells }: { signedIn: boolean; wells?
             </div>
             <div className="hidden items-center gap-2 lg:flex">
               <SearchPill iconOnlyBelow="always" className={cn("h-8 border-transparent bg-transparent shadow-none hover:border-transparent hover:shadow-none", TRIGGER_IDLE)} />
+              <ThemeSwitch />
               {signedIn ? (
                 <>
                   <Link href="/contact" className="mkb">
@@ -442,6 +443,7 @@ export function MarketingHeader({ signedIn, wells }: { signedIn: boolean; wells?
             </div>
             <div className="flex items-center gap-1 lg:hidden">
               <SearchPill iconOnlyBelow="xl" className={cn("border-transparent bg-transparent shadow-none", TRIGGER_IDLE)} />
+              <ThemeSwitch className="size-9" />
               <button
                 ref={menuButtonRef}
                 type="button"

@@ -13,6 +13,11 @@
   font-size: 14px;
   line-height: 1.5;
 }
+/* Light: text-grade dim ink (#666, 5.7:1 on white) and quiet crosshairs a step above the hairlines. */
+:root:not(.dark) [data-page="home"] {
+  --g-dim: var(--muted-foreground);
+  --g-cross: color-mix(in oklab, var(--foreground) 32%, var(--background));
+}
 @media (width < 64rem) { [data-page="home"] { --g-pad: 32px; } }
 @media (width < 40rem) { [data-page="home"] { --g-pad: 20px; } }
 
@@ -102,6 +107,8 @@
   padding: var(--g-pad) var(--g-pad) 0;
   background: linear-gradient(var(--background), var(--background) 60%, color-mix(in oklab, var(--card) 50%, var(--background)));
 }
+/* Light: the window rises off a faint panel-grey floor rather than a white-on-white mix. */
+:root:not(.dark) .mkg-shot { background: linear-gradient(var(--background), var(--background) 55%, var(--surface)); }
 .mkg-win { overflow: hidden; border: 1px solid var(--border-strong); border-bottom: 0; border-radius: 12px 12px 0 0; background: var(--card); }
 .mkg-winbar { display: flex; height: 40px; align-items: center; gap: 10px; padding: 0 14px; border-bottom: 1px solid var(--border-strong); font-family: var(--font-mono); font-size: 12px; color: var(--g-dim); }
 .mkg-winbar__dots { display: flex; gap: 6px; }
@@ -166,6 +173,7 @@
 .mkg-tpl li { background: var(--background); }
 .mkg-tpl__link { display: block; padding: 20px; transition: background-color var(--dur-2); }
 .mkg-tpl__link:hover { background: var(--card); }
+:root:not(.dark) .mkg-tpl__link:hover { background: var(--surface); }
 .mkg-tpl img { display: block; width: 100%; height: auto; aspect-ratio: 16 / 10; object-fit: cover; object-position: top; border: 1px solid var(--border); border-radius: 6px; }
 .mkg-tpl__cap { display: flex; justify-content: space-between; gap: 12px; margin-top: 14px; font-size: 13px; color: var(--foreground); }
 .mkg-tpl__cap span { font-family: var(--font-mono); font-size: 11px; text-transform: uppercase; color: var(--g-dim); }
@@ -191,6 +199,8 @@
 .mkg-price { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 1px; border-top: 1px solid var(--border); background: var(--border); }
 .mkg-price > li { display: flex; min-height: 320px; flex-direction: column; gap: 6px; padding: 32px; background: var(--background); }
 .mkg-price > li.mkg-price__hl { background: var(--card); box-shadow: inset 0 1px 0 var(--foreground); }
+/* Light: --card is the page white, so the highlighted plan sits on the panel grey instead. */
+:root:not(.dark) .mkg-price > li.mkg-price__hl { background: var(--surface); }
 .mkg-price__n { font-family: var(--font-mono); font-size: 12px; font-weight: 400; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted-foreground); }
 .mkg-price__hl .mkg-price__n { color: var(--foreground); }
 .mkg-price__v { margin-top: 18px; font-size: 40px; font-weight: 600; line-height: 1.2; letter-spacing: -0.04em; color: var(--foreground); }
