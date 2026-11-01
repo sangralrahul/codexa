@@ -8,7 +8,7 @@ import { ProjectMenu } from "../components/ProjectCard";
 import { ProjectThumb } from "../components/ProjectThumb";
 import { createProject, DEFAULT_TEMPLATE } from "../components/create";
 import { ProjectFilters } from "../components/ProjectFilters";
-import { SpaceHero } from "../components/space/SpaceHero";
+import { SPACE_MODE_EVENT, SpaceHero } from "../components/space/SpaceHero";
 import { useCalm } from "../lib/motion";
 
 const IDEAS = [
@@ -376,7 +376,7 @@ export function HomeScreen() {
         <div className="mx-auto w-full max-w-[760px]">
           <div role="group" aria-label="What are you building?" className="space-modes">
             {modes.map((m) => (
-              <button key={m.id} type="button" aria-pressed={template === m.templateId} disabled={busy} onClick={() => pickTemplate(m.templateId)} className="space-mode" title={`Start from the ${byId.get(m.templateId)?.name ?? m.label} starter`}>
+              <button key={m.id} type="button" aria-pressed={template === m.templateId} disabled={busy} onClick={() => (pickTemplate(m.templateId), window.dispatchEvent(new CustomEvent(SPACE_MODE_EVENT, { detail: m.id })))} className="space-mode" title={`Start from the ${byId.get(m.templateId)?.name ?? m.label} starter`}>
                 {m.label}
               </button>
             ))}

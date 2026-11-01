@@ -145,7 +145,7 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  max-width: 980px;
+  max-width: 1120px;
   margin-inline: auto;
   padding: 104px 20px 64px;
   text-align: center;
@@ -181,8 +181,33 @@
   color: var(--foreground);
   text-wrap: balance;
 }
-.hm-h1 span { color: color-mix(in oklab, var(--foreground) 52%, transparent); }
-:root:not(.dark) .hm-h1 span { color: color-mix(in oklab, var(--foreground) 42%, transparent); }
+/* Line 1: "Describe" + a cycling phrase (RotatingText); the phrase drops to its own line on phones.
+   Line 2: the muted line with a slow monochrome light sheen (muted → foreground → muted) sweeping
+   across it every few seconds. Calm: plain muted text, no sweep. */
+.hm-h1 { --h1-muted: color-mix(in oklab, var(--foreground) 52%, transparent); }
+:root:not(.dark) .hm-h1 { --h1-muted: color-mix(in oklab, var(--foreground) 42%, transparent); }
+.hm-h1__br { display: none; }
+@media (width < 48rem) { .hm-h1__br { display: inline; } }
+.hm-h1__sheen {
+  display: inline-block;
+  /* Room for descenders inside the clipped background. */
+  padding-bottom: 0.08em;
+  margin-bottom: -0.08em;
+  color: var(--h1-muted);
+  background: linear-gradient(105deg, var(--h1-muted) 0%, var(--h1-muted) 41%, var(--foreground) 50%, var(--h1-muted) 59%, var(--h1-muted) 100%) 100% 0 / 300% 100% no-repeat;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: hm-sheen 7s cubic-bezier(0.45, 0, 0.25, 1) 1.6s infinite;
+}
+@keyframes hm-sheen {
+  0% { background-position: 100% 0; }
+  32%, 100% { background-position: 0% 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .hm-h1__sheen { animation: none; background: none; -webkit-text-fill-color: currentColor; }
+}
+[data-motion="reduced"] .hm-h1__sheen { animation: none; background: none; -webkit-text-fill-color: currentColor; }
 .hm-lede {
   max-width: 640px;
   font-size: clamp(1.0625rem, 0.95rem + 0.45vw, 1.25rem);

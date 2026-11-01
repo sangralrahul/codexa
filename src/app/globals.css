@@ -936,27 +936,52 @@ body:has(main [data-tone="company"]) { --silk-1: #ff8a66; --silk-2: #ffc070; --s
 .horizon__canvas:is([data-lost="true"], [data-calm="true"]) { opacity: 0; }
 .horizon__canvas { @variant calm { opacity: 0; } }
 
-/* Word cycle (src/components/motion/word-cycle.tsx): words share one slot whose width eases
-   to the active word; the old word lifts away as the next rises in. */
-.word-cycle {
+/* Headline motion (src/components/motion/rise-words.tsx and rotating-text.tsx).
+   .rise-word: words rise in on first paint, blur → sharp, staggered by --rise-i (60ms apart).
+   .rt: one slot for a cycling phrase. The active phrase is in flow (so the server render has the
+   right width), the rest stack on it; the slot's width eases to the measured active phrase so a
+   centred line re-centres without a jump. Old phrase lifts out, the next rises in from below. */
+.rise-word {
+  display: inline-block;
+  animation: rise-word 680ms var(--ease-out) both;
+  animation-delay: calc(var(--rise-delay, 80ms) + var(--rise-i, 0) * 60ms);
+}
+@keyframes rise-word {
+  from { opacity: 0.01; transform: translateY(0.32em); filter: blur(12px); }
+  to { opacity: 1; transform: none; filter: blur(0); }
+}
+.rt {
   position: relative;
-  display: inline-grid;
-  vertical-align: bottom;
-  text-align: left;
-  transition: width 500ms var(--ease-out);
-}
-.word-cycle__word {
-  grid-area: 1 / 1;
+  display: inline-block;
   white-space: nowrap;
-  transition: transform 600ms var(--ease-out), opacity 450ms var(--ease-out), filter 450ms var(--ease-out);
+  text-align: left;
+  vertical-align: baseline;
+  transition: width 640ms var(--ease-out);
 }
-.word-cycle__word[data-state="out"] { opacity: 0; transform: translateY(-0.45em); filter: blur(6px); pointer-events: none; }
-.word-cycle__word[data-state="in"] { opacity: 1; transform: none; filter: none; }
-/* A word on its way in starts below; the out-going one leaves upward (state flips after paint). */
-.word-cycle__word[data-state="out"]:not(:has(~ [data-state="in"])) { transform: translateY(0.45em); }
-.word-cycle__measure { position: absolute; visibility: hidden; height: 0; overflow: hidden; white-space: nowrap; }
-.word-cycle__measure > span { display: inline-block; }
-.word-cycle__word, .word-cycle { @variant calm { transition: none; } }
+.rt__phrase {
+  display: inline-block;
+  white-space: nowrap;
+  transition: transform 720ms var(--ease-out), opacity 520ms var(--ease-out), filter 520ms var(--ease-out);
+}
+.rt__phrase:not([data-state="in"]) { position: absolute; left: 0; top: 0; pointer-events: none; user-select: none; }
+.rt__phrase[data-state="in"] { transition-delay: 90ms; }
+.rt__phrase[data-state="out"] {
+  opacity: 0; transform: translateY(-0.42em); filter: blur(8px);
+  transition-duration: 520ms, 340ms, 340ms;
+}
+.rt__phrase[data-state="wait"] { opacity: 0; transform: translateY(0.42em); filter: blur(8px); transition: none; }
+.rt--underline::after {
+  content: "";
+  position: absolute;
+  left: 0.04em;
+  right: 0.04em;
+  bottom: -0.1em;
+  height: max(2px, 0.035em);
+  border-radius: 999px;
+  background: linear-gradient(90deg, transparent, currentColor 18%, currentColor 82%, transparent);
+  opacity: 0.22;
+}
+:is(.rise-word, .rt, .rt__phrase) { @variant calm { animation: none; transition: none; } }
 
 .bg-noise {
   background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/></filter><rect width='100%' height='100%' filter='url(%23n)' opacity='0.5'/></svg>");

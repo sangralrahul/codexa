@@ -28,6 +28,7 @@ import { api } from "@/lib/client/api";
 import { addImages, dataUrlOf, IMAGE_ACCEPT, imageFilesFrom, MAX_PROMPT_IMAGES, stashInitialImages, type PromptImage } from "@/lib/client/attachments";
 import { createFromPrompt, describeCreateError, PROMPT_MAX, type CreateError } from "./create-from-prompt";
 import { VISIBILITY_HINTS, VISIBILITY_LABELS } from "./format";
+import { SPACE_MODE_EVENT } from "@/components/app/space-hero/space-hero";
 
 export type PromptTemplate = {
   id: string;
@@ -360,6 +361,8 @@ export function PromptBox({
                 onClick={() => {
                   setTemplateId(m.templateId);
                   setError(null);
+                  // The hero headline jumps to a phrase that matches the runtime (SpaceHero).
+                  window.dispatchEvent(new CustomEvent(SPACE_MODE_EVENT, { detail: m.id }));
                 }}
                 className="space-mode"
                 title={`Start from the ${m.detail} starter`}

@@ -463,6 +463,9 @@ textarea,
   isolation: isolate;
   background: var(--bg);
   color: var(--fg);
+  /* The headline's queued phrases stack inside its slot and can be wider than the visible one;
+     clip sideways so they never widen the page (vertical stays visible for menus). */
+  overflow-x: clip;
 }
 /* clip, not hidden: an overflow:hidden box can still be scrolled (focus or scroll-into-view on the
    picker), which would slide the scrim and picker off the drifting image. */
@@ -587,6 +590,55 @@ textarea,
   color: color-mix(in oklab, var(--fg), white 70%);
   text-shadow: 0 2px 32px color-mix(in oklab, var(--bg) 65%, transparent);
 }
+
+/* Headline motion (components/RotatingText.tsx, a port of the web app's globals.css rules).
+   .rise-word: words rise in on mount, blur → sharp, 60ms apart (--rise-i). .rt: one slot for the
+   cycling phrase; the active phrase is in flow, the rest stack on it; the slot's width eases to the
+   measured phrase so the centred line re-centres without a jump. */
+.rise-word {
+  display: inline-block;
+  animation: rise-word 680ms cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation-delay: calc(var(--rise-delay, 80ms) + var(--rise-i, 0) * 60ms);
+}
+@keyframes rise-word {
+  from { opacity: 0.01; transform: translateY(0.32em); filter: blur(12px); }
+  to { opacity: 1; transform: none; filter: blur(0); }
+}
+.rt {
+  position: relative;
+  display: inline-block;
+  white-space: nowrap;
+  text-align: left;
+  vertical-align: baseline;
+  transition: width 640ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+.rt__phrase {
+  display: inline-block;
+  white-space: nowrap;
+  transition: transform 720ms cubic-bezier(0.16, 1, 0.3, 1), opacity 520ms cubic-bezier(0.16, 1, 0.3, 1), filter 520ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+.rt__phrase:not([data-state="in"]) { position: absolute; left: 0; top: 0; pointer-events: none; user-select: none; }
+.rt__phrase[data-state="in"] { transition-delay: 90ms; }
+.rt__phrase[data-state="out"] {
+  opacity: 0; transform: translateY(-0.42em); filter: blur(8px);
+  transition-duration: 520ms, 340ms, 340ms;
+}
+.rt__phrase[data-state="wait"] { opacity: 0; transform: translateY(0.42em); filter: blur(8px); transition: none; }
+.rt--underline::after {
+  content: "";
+  position: absolute;
+  left: 0.04em;
+  right: 0.04em;
+  bottom: -0.1em;
+  height: max(2px, 0.035em);
+  border-radius: 999px;
+  background: linear-gradient(90deg, transparent, currentColor 18%, currentColor 82%, transparent);
+  opacity: 0.22;
+}
+@media (prefers-reduced-motion: reduce) {
+  :is(.rise-word, .rt, .rt__phrase) { animation: none; transition: none; }
+}
+[data-motion="reduced"] :is(.rise-word, .rt, .rt__phrase) { animation: none; transition: none; }
 
 /* Runtime tabs above the composer. */
 .space-modes {

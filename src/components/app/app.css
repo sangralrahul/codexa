@@ -247,6 +247,9 @@
   color: color-mix(in oklab, var(--foreground), white 70%);
   text-shadow: 0 2px 32px color-mix(in oklab, var(--background) 65%, transparent);
 }
+/* "Let's build" + the cycling phrase (RotatingText): one line from sm up, the phrase on its own line on phones. */
+.space-hero__br { display: none; }
+@media (width < 40rem) { .space-hero__br { display: inline; } }
 
 /* Runtime tabs above the composer: scroll inside themselves on phones, centred otherwise. */
 .space-modes { display: flex; gap: 4px; margin: 0 -16px 12px; padding: 2px 16px; overflow-x: auto; scrollbar-width: none; overscroll-behavior-x: contain; }
