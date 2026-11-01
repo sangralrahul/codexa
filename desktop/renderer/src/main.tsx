@@ -4,12 +4,16 @@ import { createRoot } from "react-dom/client";
 import { setAppUrl } from "./lib/util";
 import { accountApi } from "./lib/api";
 import { applyTheme, getThemeMode } from "./app/theme";
+import { applyMotion } from "./lib/motion";
 import { AppProvider } from "./app/state";
 import { Shell } from "./app/Shell";
 import { SignIn } from "./screens/SignIn";
 import { Logo, Spinner, Toaster } from "./ui";
 
 type Boot = { phase: "loading" } | { phase: "signed-out" } | { phase: "signed-in"; user: SessionUser };
+
+// Before the first paint, so a reduced-motion choice never shows a frame of animation.
+applyMotion();
 
 function Root() {
   const [boot, setBoot] = useState<Boot>({ phase: "loading" });

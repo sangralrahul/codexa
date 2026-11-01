@@ -30,7 +30,7 @@
   --border: #e5e5e5;
   --border-strong: #d4d4d4;
   --fg: #0a0a0a;
-  --muted: #5c5c5c;
+  --muted: #666666;
   --dim: #8f8f8f;
   --mark: #a3a3a3;
   --primary: #0a0a0a;
@@ -38,7 +38,7 @@
   --accent: #0a0a0a;
   --accent-soft: #f2f2f2;
   --success: #16a34a;
-  --warning: #d97706;
+  --warning: #b45309;
   --danger: #dc2626;
   --ring: #0a0a0a;
   --shadow: none;
@@ -128,9 +128,12 @@ textarea,
 .selectable {
   user-select: text;
 }
-:focus-visible {
-  outline: 2px solid var(--ring);
-  outline-offset: 2px;
+/* In the base layer, so a component's own `outline-none` / focus utilities can replace it. */
+@layer base {
+  :focus-visible {
+    outline: 2px solid var(--ring);
+    outline-offset: 2px;
+  }
 }
 ::selection {
   background: color-mix(in oklab, var(--fg) 22%, transparent);
@@ -433,4 +436,611 @@ textarea,
 }
 .prose-chat ol {
   list-style: decimal;
+}
+
+/* Calm set inside the app (Settings > App > Motion): the same final frames as Windows' reduced motion. */
+[data-motion="reduced"] :is(.fade-in, .pulse, .rise, .page-enter, .word-in, .logo-breathe, .caret::after) {
+  animation: none;
+}
+[data-motion="reduced"] :is(.rise, .page-enter) {
+  opacity: 1;
+  transform: none;
+}
+
+/* ==========================================================================
+   Home space hero (components/space), ported from the web dashboard
+   (src/components/app/app.css). A `.dark` token island over the generated space
+   art: scene layers with a slow Ken Burns drift, a canvas starfield, legibility
+   scrims and a fade into the page (--hero-page is captured outside the island).
+   Calm = static image.
+   ========================================================================== */
+.space-hero-wrap {
+  --hero-page: var(--bg);
+}
+.space-hero {
+  position: relative;
+  z-index: 2;
+  isolation: isolate;
+  background: var(--bg);
+  color: var(--fg);
+}
+.space-backdrop {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+}
+.space-backdrop__scenes,
+.space-backdrop__layer,
+.space-backdrop__drift {
+  position: absolute;
+  inset: 0;
+}
+.space-backdrop__scenes {
+  pointer-events: none;
+  user-select: none;
+}
+.space-backdrop__layer[data-top] {
+  opacity: 0;
+  transition: opacity 1.8s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.space-backdrop__layer[data-top][data-loaded] {
+  opacity: 1;
+}
+.space-backdrop__drift {
+  transform: scale(1.06);
+  animation: space-drift 48s ease-in-out infinite alternate;
+  will-change: transform;
+}
+.space-backdrop__drift img {
+  width: 100%;
+  height: 100%;
+  max-width: none;
+  object-fit: cover;
+}
+@keyframes space-drift {
+  from {
+    transform: scale(1.06) translate3d(0, 0, 0);
+  }
+  to {
+    transform: scale(1.13) translate3d(var(--drift-x, 0), var(--drift-y, 0), 0);
+  }
+}
+.space-backdrop[data-paused] .space-backdrop__drift {
+  animation-play-state: paused;
+}
+.space-backdrop__stars {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+/* Scrims: darken the centre column behind the copy, settle the top edge under the title bar, fade the bottom into the page. */
+.space-backdrop__scrim {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(ellipse 46% 56% at 50% 48%, color-mix(in oklab, var(--bg) 62%, transparent), color-mix(in oklab, var(--bg) 22%, transparent) 70%, transparent),
+    linear-gradient(to bottom, color-mix(in oklab, var(--bg) 55%, transparent), transparent 24%),
+    linear-gradient(to bottom, transparent 56%, color-mix(in oklab, var(--hero-page) 72%, transparent) 84%, var(--hero-page) 98%);
+}
+.space-hero__content {
+  position: relative;
+  z-index: 10;
+  margin-inline: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  max-width: 1080px;
+  padding: 84px 32px 124px;
+  text-align: center;
+}
+@media (min-height: 860px) {
+  .space-hero__content {
+    padding: 96px 32px 136px;
+  }
+}
+.space-hero__chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  max-width: 100%;
+  height: 30px;
+  padding: 0 5px 0 5px;
+  border: 1px solid color-mix(in oklab, var(--fg) 14%, transparent);
+  border-radius: 999px;
+  background: color-mix(in oklab, var(--bg) 62%, transparent);
+  backdrop-filter: blur(8px);
+  font-size: 13px;
+  transition:
+    border-color 120ms,
+    background-color 120ms;
+}
+.space-hero__chip:hover {
+  border-color: color-mix(in oklab, var(--fg) 30%, transparent);
+  background: color-mix(in oklab, var(--bg) 80%, transparent);
+}
+.space-hero__plan {
+  display: inline-flex;
+  align-items: center;
+  height: 20px;
+  padding: 0 8px;
+  border-radius: 999px;
+  flex: none;
+  background: color-mix(in oklab, var(--fg) 9%, transparent);
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.space-hero__title {
+  margin-top: 22px;
+  font-weight: 600;
+  font-size: clamp(40px, 5.2vw, 68px);
+  line-height: 1.02;
+  letter-spacing: -0.045em;
+  text-wrap: balance;
+  color: color-mix(in oklab, var(--fg), white 70%);
+  text-shadow: 0 2px 32px color-mix(in oklab, var(--bg) 65%, transparent);
+}
+
+/* Runtime tabs above the composer. */
+.space-modes {
+  display: flex;
+  justify-content: center;
+  gap: 4px;
+  margin: 0 0 12px;
+  padding: 2px 0;
+}
+.space-mode {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  height: 32px;
+  padding: 0 14px;
+  border-radius: 999px;
+  border: 1px solid transparent;
+  font-size: 13.5px;
+  font-weight: 500;
+  white-space: nowrap;
+  color: color-mix(in oklab, var(--fg) 64%, transparent);
+  transition:
+    color 120ms,
+    background-color 120ms,
+    border-color 120ms;
+}
+.space-mode:hover {
+  color: var(--fg);
+  background: color-mix(in oklab, var(--fg) 7%, transparent);
+}
+.space-mode[aria-pressed="true"] {
+  color: var(--fg);
+  background: color-mix(in oklab, var(--card) 80%, transparent);
+  border-color: color-mix(in oklab, var(--fg) 20%, transparent);
+}
+.space-mode:focus-visible {
+  outline-offset: 1px;
+}
+.space-mode:disabled {
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+/* The composer panel: solid enough for contrast over any scene, one hairline, a lift of shadow. */
+.space-composer {
+  text-align: left;
+  border: 1px solid color-mix(in oklab, var(--fg) 15%, transparent);
+  border-radius: 16px;
+  background: color-mix(in oklab, var(--card) 90%, transparent);
+  backdrop-filter: blur(16px);
+  box-shadow:
+    inset 0 1px 0 color-mix(in oklab, var(--fg) 7%, transparent),
+    0 30px 90px -30px var(--bg),
+    0 12px 32px -16px color-mix(in oklab, var(--bg) 80%, transparent);
+  transition:
+    border-color 160ms,
+    box-shadow 160ms;
+}
+.space-composer:focus-within {
+  border-color: color-mix(in oklab, var(--fg) 32%, transparent);
+  box-shadow:
+    inset 0 1px 0 color-mix(in oklab, var(--fg) 7%, transparent),
+    0 30px 90px -30px var(--bg),
+    0 0 0 4px color-mix(in oklab, var(--fg) 6%, transparent);
+}
+.space-chip {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  gap: 6px;
+  height: 28px;
+  padding: 0 9px;
+  border-radius: 6px;
+  border: 1px solid color-mix(in oklab, var(--fg) 14%, transparent);
+  font-size: 12.5px;
+  color: var(--muted);
+  white-space: nowrap;
+  transition:
+    color 120ms,
+    background-color 120ms;
+}
+.space-chip:hover,
+.space-chip[aria-expanded="true"] {
+  color: var(--fg);
+  background: color-mix(in oklab, var(--fg) 7%, transparent);
+}
+
+/* Quick picks under the composer (recent projects, or ideas on a first run). */
+.space-pick {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  height: 30px;
+  padding: 0 12px;
+  border-radius: 999px;
+  border: 1px solid color-mix(in oklab, var(--fg) 13%, transparent);
+  background: color-mix(in oklab, var(--bg) 55%, transparent);
+  font-size: 12.5px;
+  color: var(--muted);
+  white-space: nowrap;
+  transition:
+    color 120ms,
+    border-color 120ms,
+    background-color 120ms;
+}
+.space-pick:hover,
+.space-pick[aria-pressed="true"] {
+  color: var(--fg);
+  border-color: color-mix(in oklab, var(--fg) 28%, transparent);
+  background: color-mix(in oklab, var(--bg) 80%, transparent);
+}
+.space-pick:disabled {
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+/* Scene picker: bottom right, quiet until hovered. */
+@keyframes space-fade {
+  from {
+    opacity: 0;
+  }
+}
+.space-picker {
+  position: absolute;
+  z-index: 20;
+  right: 16px;
+  bottom: 16px;
+  display: flex;
+  gap: 2px;
+  padding: 3px;
+  border: 1px solid color-mix(in oklab, var(--fg) 11%, transparent);
+  border-radius: 999px;
+  background: color-mix(in oklab, var(--bg) 55%, transparent);
+  backdrop-filter: blur(8px);
+  animation: space-fade 320ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+.space-picker__btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  height: 24px;
+  min-width: 24px;
+  padding: 0 9px;
+  border-radius: 999px;
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: color-mix(in oklab, var(--fg) 52%, transparent);
+  transition:
+    color 120ms,
+    background-color 120ms;
+}
+.space-picker__btn:hover {
+  color: var(--fg);
+}
+.space-picker__btn[aria-pressed="true"] {
+  color: var(--fg);
+  background: color-mix(in oklab, var(--fg) 11%, transparent);
+}
+.space-picker__btn:focus-visible {
+  outline-offset: 1px;
+}
+.space-picker__btn--icon {
+  padding: 0;
+}
+.space-picker__dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: currentColor;
+  opacity: 0.55;
+}
+.space-picker__btn[aria-pressed="true"] .space-picker__dot {
+  opacity: 1;
+}
+
+/* Home: All / Live / Drafts filter tabs over the projects table. */
+.ov-filters {
+  display: inline-flex;
+  gap: 2px;
+  padding: 2px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}
+.ov-filter {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 26px;
+  padding: 0 10px;
+  border-radius: 6px;
+  flex: none;
+  font-size: 13px;
+  color: var(--muted);
+  transition:
+    color 120ms,
+    background-color 120ms;
+}
+.ov-filter:hover {
+  color: var(--fg);
+}
+.ov-filter[aria-selected="true"] {
+  color: var(--fg);
+  background: var(--surface);
+}
+.ov-filter:focus-visible {
+  outline-offset: 1px;
+}
+.ov-filter__count {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+  color: var(--dim);
+}
+
+/* ==========================================================================
+   Sign-in wall (components/AuthWall), ported from the web's auth.css: real
+   screenshots on a tilted plane, columns scrolling at different speeds and in
+   alternate directions, a heavy vignette toward the centre.
+   ========================================================================== */
+.auth-wall {
+  --wall-col: clamp(270px, 20vw, 480px);
+  --wall-gap: 24px;
+  --wall-bar: 22px;
+  /* One tile including its gap. The plane is five tiles tall. */
+  --wall-tile: calc(var(--wall-col) * 0.625 + var(--wall-bar) + 2px + var(--wall-gap));
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+  user-select: none;
+  perspective: 2000px;
+  perspective-origin: 50% 40%;
+  contain: strict;
+}
+.auth-wall__plane {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  display: grid;
+  grid-template-columns: repeat(6, var(--wall-col));
+  gap: var(--wall-gap);
+  height: calc(var(--wall-tile) * 5);
+  transform: translate(-50%, -50%) rotateX(32deg) rotateZ(-16deg) scale(1.28);
+  transform-origin: 50% 50%;
+  opacity: 0.85;
+}
+/* Each column holds its set three times and starts a tile and a half above the plane, so the
+   visible window is always covered while the track moves by one set (-33.333%). */
+.auth-wall__col {
+  position: relative;
+  min-width: 0;
+  margin-top: calc(var(--wall-tile) * -1.5);
+}
+.auth-wall__track {
+  display: flex;
+  flex-direction: column;
+  will-change: transform;
+  animation: auth-wall-scroll var(--wall-dur, 110s) linear var(--wall-delay, 0s) infinite;
+}
+.auth-wall__col[data-col="0"] {
+  --wall-dur: 96s;
+  --wall-delay: -14s;
+  --wall-rest: -6%;
+}
+.auth-wall__col[data-col="1"] {
+  --wall-dur: 77s;
+  --wall-delay: -52s;
+  --wall-rest: -21%;
+}
+.auth-wall__col[data-col="2"] {
+  --wall-dur: 110s;
+  --wall-delay: -30s;
+  --wall-rest: -12%;
+}
+.auth-wall__col[data-col="3"] {
+  --wall-dur: 83s;
+  --wall-delay: -61s;
+  --wall-rest: -27%;
+}
+.auth-wall__col[data-col="4"] {
+  --wall-dur: 102s;
+  --wall-delay: -8s;
+  --wall-rest: -3%;
+}
+.auth-wall__col[data-col="5"] {
+  --wall-dur: 74s;
+  --wall-delay: -44s;
+  --wall-rest: -17%;
+}
+.auth-wall__col:nth-child(even) .auth-wall__track {
+  animation-direction: reverse;
+}
+@keyframes auth-wall-scroll {
+  from {
+    transform: translate3d(0, 0, 0);
+  }
+  to {
+    transform: translate3d(0, -33.3333%, 0);
+  }
+}
+.auth-wall__tile {
+  flex: none;
+  margin-bottom: var(--wall-gap);
+  overflow: hidden;
+  border: 1px solid var(--border-strong);
+  border-radius: 6px;
+  background: var(--card);
+}
+.auth-wall__tile img {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 16 / 10;
+  object-fit: cover;
+  object-position: top;
+  background: var(--surface);
+}
+.auth-wall__bar {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  height: var(--wall-bar);
+  padding: 0 9px;
+  border-bottom: 1px solid var(--border);
+  background: var(--card);
+}
+.auth-wall__bar span {
+  width: 6px;
+  height: 6px;
+  border-radius: 9999px;
+  background: var(--border-strong);
+}
+.auth-wall__bar em {
+  margin-left: 6px;
+  overflow: hidden;
+  font: 500 10px/1 var(--font-mono);
+  font-style: normal;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  color: var(--muted);
+}
+/* The vignette: near-solid page colour behind the form, the wall showing only toward the edges. */
+.auth-wall::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(ellipse 38% 58% at 50% 50%, var(--bg) 0%, color-mix(in oklab, var(--bg) 92%, transparent) 55%, transparent 100%),
+    radial-gradient(ellipse 85% 95% at 50% 50%, color-mix(in oklab, var(--bg) 72%, transparent) 30%, color-mix(in oklab, var(--bg) 40%, transparent) 100%),
+    linear-gradient(to bottom, var(--bg), transparent 14%, transparent 86%, var(--bg));
+}
+
+/* The sign-in panel: a solid card, hairline edge, crosshair corners, construction lines across the screen. */
+.auth-panel {
+  position: relative;
+  border: 1px solid var(--border);
+  background: var(--card);
+  box-shadow:
+    0 0 0 1px var(--bg),
+    0 30px 80px -20px var(--bg);
+}
+.auth-panel::before,
+.auth-panel::after {
+  content: "";
+  position: absolute;
+  pointer-events: none;
+  z-index: -1;
+}
+.auth-panel::before {
+  inset: -1px -100vw;
+  border-block: 1px solid var(--border);
+  mask-image: linear-gradient(to right, transparent, black 35%, black 65%, transparent);
+}
+.auth-panel::after {
+  inset: -100vh -1px;
+  border-inline: 1px solid var(--border);
+  mask-image: linear-gradient(to bottom, transparent, black 30%, black 70%, transparent);
+}
+.auth-cross {
+  position: absolute;
+  width: 13px;
+  height: 13px;
+  pointer-events: none;
+  background:
+    linear-gradient(var(--muted), var(--muted)) center / 100% 1px no-repeat,
+    linear-gradient(var(--muted), var(--muted)) center / 1px 100% no-repeat;
+}
+.auth-cross[data-pos="tl"] {
+  top: -7px;
+  left: -7px;
+}
+.auth-cross[data-pos="tr"] {
+  top: -7px;
+  right: -7px;
+}
+.auth-cross[data-pos="bl"] {
+  bottom: -7px;
+  left: -7px;
+}
+.auth-cross[data-pos="br"] {
+  bottom: -7px;
+  right: -7px;
+}
+
+/* Calm: the scene and the wall hold still, no fades. */
+@media (prefers-reduced-motion: reduce) {
+  .space-backdrop__drift {
+    animation: none;
+  }
+  .space-backdrop__layer[data-top] {
+    transition: none;
+  }
+  .space-picker {
+    animation: none;
+  }
+  .auth-wall__track {
+    animation: none;
+    will-change: auto;
+    transform: translate3d(0, var(--wall-rest, 0%), 0);
+  }
+}
+[data-motion="reduced"] .space-backdrop__drift {
+  animation: none;
+}
+[data-motion="reduced"] .space-backdrop__layer[data-top] {
+  transition: none;
+}
+[data-motion="reduced"] .space-picker {
+  animation: none;
+}
+[data-motion="reduced"] .auth-wall__track {
+  animation: none;
+  will-change: auto;
+  transform: translate3d(0, var(--wall-rest, 0%), 0);
+}
+/* Light theme: the wall a touch quieter, so dark product captures don't muddy the white vignette. */
+html:not(.dark) .auth-wall__plane {
+  opacity: 0.72;
+}
+/* Light theme: the scene stays dark (it is a picture), but its fade into the white page starts lower,
+   so the quick picks and the scene picker still sit on the scene, not on the fog. */
+html:not(.dark) .space-hero__content {
+  padding-bottom: 168px;
+}
+html:not(.dark) .space-backdrop__scrim {
+  background:
+    radial-gradient(ellipse 46% 56% at 50% 46%, color-mix(in oklab, var(--bg) 62%, transparent), color-mix(in oklab, var(--bg) 22%, transparent) 70%, transparent),
+    linear-gradient(to bottom, color-mix(in oklab, var(--bg) 55%, transparent), transparent 24%),
+    linear-gradient(to bottom, transparent 80%, color-mix(in oklab, var(--hero-page) 55%, transparent) 91%, var(--hero-page) 99%);
+}
+html:not(.dark) .space-picker {
+  bottom: 64px;
 }

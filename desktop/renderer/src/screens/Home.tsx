@@ -1,12 +1,15 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { ArrowRight, ArrowUpRight, BarChart3, Bot, Briefcase, Check, CheckCircle2, ChevronDown, Circle, ExternalLink, GitBranch, GitFork, Globe, LayoutTemplate, Rocket, Server, ShoppingBag, X } from "lucide-react";
 import { useApp } from "../app/state";
 import { deployApi, historyApi, membersApi, showcaseApi, statusApi, templatesApi, type Deployment, type Project, type ShowcaseItem, type Snapshot, type SystemStatus, type TeamMember, type Template } from "../lib/api";
 import { cn, frameworkLabel, relativeTime } from "../lib/util";
-import { Avatar, Button, EmptyState, Kbd, Menu, Spinner, Textarea } from "../ui";
+import { Avatar, Button, EmptyState, Menu, Spinner } from "../ui";
 import { ProjectMenu } from "../components/ProjectCard";
 import { ProjectThumb } from "../components/ProjectThumb";
 import { createProject, DEFAULT_TEMPLATE } from "../components/create";
+import { ProjectFilters } from "../components/ProjectFilters";
+import { SpaceHero } from "../components/space/SpaceHero";
+import { useCalm } from "../lib/motion";
 
 const IDEAS = [
   { label: "SaaS product", icon: Rocket, prompt: "A SaaS app for booking studio time, with plans, sign-in and a billing page", template: "vite-react-saas" },
@@ -18,21 +21,42 @@ const IDEAS = [
   { label: "Backend API", icon: Server, prompt: "A REST API for a library: books, members and loans with validation", template: "node-express-api" },
 ];
 const FEATURED = ["vite-react-saas", "vite-react-dashboard", "vite-react-storefront", "vite-react-landing", "vite-react-ai-chat", "vite-react-portfolio"];
-const STARTERS = [DEFAULT_TEMPLATE, ...FEATURED, "node-express-api"];
+const STARTERS = [DEFAULT_TEMPLATE, "static-site", ...FEATURED, "node-express-api"];
+/** The hero's runtime tabs: each sets a real starter template (shown once the template list confirms it exists). */
+const MODES = [
+  { id: "web", label: "Web app", templateId: DEFAULT_TEMPLATE },
+  { id: "site", label: "Website", templateId: "static-site" },
+  { id: "api", label: "API", templateId: "node-express-api" },
+] as const;
+const MODE_IDS: ReadonlySet<string> = new Set(MODES.map((m) => m.templateId));
 const PLACEHOLDERS = [
-  "Build a habit tracker with streaks and weekly charts…",
-  "A landing page for my bakery with online orders…",
-  "An invoice app for freelancers with PDF export…",
-  "A recipe box with search, tags and a shopping list…",
-  "A team dashboard with tasks, owners and due dates…",
+  "Ask Codexa to build a habit tracker with streaks and weekly charts",
+  "Ask Codexa to build an invoice app for freelancers with PDF export",
+  "Ask Codexa to build a recipe box with search, tags and a shopping list",
+  "Ask Codexa to build a team dashboard with tasks, owners and due dates",
 ];
+/** Placeholder ideas that fit the selected runtime. */
+const PLACEHOLDERS_BY_TEMPLATE: Record<string, string[]> = {
+  "static-site": [
+    "Ask Codexa to build a landing page for my bakery with opening hours and a menu",
+    "Ask Codexa to build a one-page site for a yoga studio with a class timetable",
+    "Ask Codexa to build a portfolio site with a project gallery and a contact section",
+  ],
+  "node-express-api": [
+    "Ask Codexa to build a REST API for a library with books, members and loans",
+    "Ask Codexa to build an API for a todo app with users, lists and due dates",
+    "Ask Codexa to build a webhook receiver that stores events and lists them by type",
+  ],
+};
 const LEARN = [
   { title: "Prompting that works", body: "Describe features so the agent gets them right the first time.", path: "/docs/prompting" },
   { title: "Preview and debug", body: "Run your app, read the console, let Fix mode repair errors.", path: "/docs/editor" },
   { title: "Publish to a domain", body: "Put your app on the web and connect a custom domain.", path: "/docs/custom-domains" },
 ];
-/** How many projects the dashboard table shows (and loads deployments and checkpoints for). */
+/** How many projects each filter's table shows (checkpoints load for these rows only). */
 const TABLE_ROWS = 8;
+/** How many of the most recent projects get their deployments loaded (Live / Drafts filters, Status, Domain, activity). */
+const DEPLOY_SCAN = 40;
 const SETUP_KEY = "codexa:setup-dismissed";
 const DEPLOY_LABEL: Record<Deployment["status"], string> = { queued: "Queued", building: "Building", deploying: "Deploying", live: "Live", failed: "Failed", rolled_back: "Rolled back" };
 const DEPLOY_DOT: Record<Deployment["status"], string> = { queued: "bg-warning", building: "bg-warning", deploying: "bg-warning", live: "bg-success", failed: "bg-danger", rolled_back: "bg-dim" };
@@ -54,8 +78,23 @@ const hostOf = (url: string | null | undefined) => {
 };
 const shortTime = (iso: string) => relativeTime(iso).replace(" ago", "");
 
+/** Runs `fn` over `items`, at most `limit` at a time (keeps Home from firing dozens of requests at once). */
+async function mapLimit<T, R>(items: T[], limit: number, fn: (item: T) => Promise<R>): Promise<R[]> {
+  const out: R[] = new Array(items.length);
+  let next = 0;
+  const worker = async () => {
+    while (next < items.length) {
+      const i = next++;
+      out[i] = await fn(items[i]);
+    }
+  };
+  await Promise.all(Array.from({ length: Math.min(limit, items.length) }, worker));
+  return out;
+}
+
 export function HomeScreen() {
   const { user, workspace, projects, usage, go } = useApp();
+  const calm = useCalm();
   const [prompt, setPrompt] = useState("");
   const [template, setTemplate] = useState<string>(DEFAULT_TEMPLATE);
   const [busy, setBusy] = useState(false);
@@ -66,10 +105,11 @@ export function HomeScreen() {
   const [showcase, setShowcase] = useState<ShowcaseItem[]>([]);
   const [members, setMembers] = useState<TeamMember[]>([]);
   const [setupHidden, setSetupHidden] = useState(() => localStorage.getItem(SETUP_KEY) === "1");
-  const [snapshots, setSnapshots] = useState<ProjectSnapshot[] | null>(null);
+  const [snapMap, setSnapMap] = useState<Record<string, ProjectSnapshot[]>>({});
+  const requested = useRef(new Set<string>());
   const [status, setStatus] = useState<SystemStatus | null>(null);
   const [statusFailed, setStatusFailed] = useState(false);
-  const first = (user.name || user.email).split(/[\s@]/)[0];
+  const composerRef = useRef<HTMLTextAreaElement>(null);
 
   useEffect(() => {
     statusApi
@@ -77,19 +117,22 @@ export function HomeScreen() {
       .then(setStatus)
       .catch(() => setStatusFailed(true));
   }, []);
-  // Checkpoints for the projects in the table: the Checkpoint column and the activity feed.
+  // Deployments for the most recent projects (the API is per project): the Live / Drafts filters, the
+  // Status and Domain columns, and the activity feed.
   useEffect(() => {
     if (!projects) return;
-    Promise.all(projects.slice(0, TABLE_ROWS).map((p) => historyApi.list(p.id).then((r) => r.snapshots.map((s) => ({ ...s, project: p }))).catch(() => [] as ProjectSnapshot[])))
-      .then((all) => setSnapshots(all.flat().sort((a, b) => b.createdAt.localeCompare(a.createdAt))))
-      .catch(() => setSnapshots([]));
-  }, [projects]);
-  // Deployments for the same projects (the API is per project): Status and Domain columns, and the feed.
-  useEffect(() => {
-    if (!projects) return;
-    Promise.all(projects.slice(0, TABLE_ROWS).map((p) => deployApi.list(p.id).then((r) => r.deployments.slice(0, 3).map((d) => ({ ...d, project: p }))).catch(() => [] as ProjectDeploy[])))
-      .then((all) => setDeploys(all.flat().sort((a, b) => b.createdAt.localeCompare(a.createdAt))))
-      .catch(() => setDeploys([]));
+    let live = true;
+    mapLimit(projects.slice(0, DEPLOY_SCAN), 6, (p) =>
+      deployApi
+        .list(p.id)
+        .then((r) => r.deployments.slice(0, 3).map((d) => ({ ...d, project: p })))
+        .catch(() => [] as ProjectDeploy[]),
+    )
+      .then((all) => live && setDeploys(all.flat().sort((a, b) => b.createdAt.localeCompare(a.createdAt))))
+      .catch(() => live && setDeploys([]));
+    return () => {
+      live = false;
+    };
   }, [projects]);
 
   useEffect(() => {
@@ -109,16 +152,19 @@ export function HomeScreen() {
       .then((r) => setMembers(r.members))
       .catch(() => setMembers([]));
   }, [workspace]);
+  const ideas = PLACEHOLDERS_BY_TEMPLATE[template] ?? PLACEHOLDERS;
   useEffect(() => {
-    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
-    const t = setInterval(() => setPh((p) => (p + 1) % PLACEHOLDERS.length), 3200);
+    if (calm) return;
+    const t = setInterval(() => setPh((p) => p + 1), 3600);
     return () => clearInterval(t);
-  }, []);
+  }, [calm]);
 
   const byId = new Map((templates ?? []).map((t) => [t.id, t]));
   const featured = FEATURED.map((id) => byId.get(id)).filter((t): t is Template => Boolean(t));
   const starters = STARTERS.map((id) => byId.get(id)).filter((t): t is Template => Boolean(t));
   const picked = byId.get(template);
+  // Before the template list arrives, show every tab so the row doesn't jump; afterwards only real starters.
+  const modes = templates === null ? MODES : MODES.filter((m) => byId.has(m.templateId));
 
   // Per project: newest deployment, newest live deployment, newest checkpoint.
   const latestDeploy = new Map<string, ProjectDeploy>();
@@ -127,8 +173,37 @@ export function HomeScreen() {
     if (!latestDeploy.has(d.project.id)) latestDeploy.set(d.project.id, d);
     if (d.status === "live" && !liveDeploy.has(d.project.id)) liveDeploy.set(d.project.id, d);
   }
+
+  // Filters: All is every project; Live / Drafts cover the projects whose deployments were loaded.
+  const all = projects ?? [];
+  const scanned = all.slice(0, DEPLOY_SCAN);
+  const liveList = deploys ? scanned.filter((p) => liveDeploy.has(p.id)) : null;
+  const draftList = deploys ? scanned.filter((p) => !liveDeploy.has(p.id)) : null;
+  const partialScan = all.length > DEPLOY_SCAN;
+
+  // Checkpoints for the rows any filter shows: the Checkpoint column and the activity feed.
+  const rowIds = [...new Set([...all.slice(0, TABLE_ROWS), ...(liveList ?? []).slice(0, TABLE_ROWS), ...(draftList ?? []).slice(0, TABLE_ROWS)].map((p) => p.id))];
+  const rowKey = rowIds.join(",");
+  useEffect(() => {
+    if (!projects) return;
+    const want = rowKey ? rowKey.split(",") : [];
+    const missing = want.filter((id) => !requested.current.has(id));
+    if (!missing.length) return;
+    missing.forEach((id) => requested.current.add(id));
+    const byPid = new Map(projects.map((p) => [p.id, p]));
+    void mapLimit(missing, 6, (id) =>
+      historyApi
+        .list(id)
+        .then((r) => r.snapshots.map((s) => ({ ...s, project: byPid.get(id)! })))
+        .catch(() => [] as ProjectSnapshot[]),
+    ).then((lists) => setSnapMap((m) => ({ ...m, ...Object.fromEntries(missing.map((id, i) => [id, lists[i]])) })));
+  }, [projects, rowKey]);
+  const snapsLoaded = projects !== null && rowIds.every((id) => id in snapMap);
+  const snapshots = Object.values(snapMap)
+    .flat()
+    .sort((a, b) => b.createdAt.localeCompare(a.createdAt));
   const latestSnapshot = new Map<string, ProjectSnapshot>();
-  for (const s of snapshots ?? []) if (!latestSnapshot.has(s.project.id)) latestSnapshot.set(s.project.id, s);
+  for (const s of snapshots) if (!latestSnapshot.has(s.project.id)) latestSnapshot.set(s.project.id, s);
 
   const build = async () => {
     const text = prompt.trim();
@@ -147,12 +222,17 @@ export function HomeScreen() {
   const applyIdea = (i: (typeof IDEAS)[number]) => {
     setPrompt(i.prompt);
     setTemplate(i.template);
-    document.getElementById("composer")?.focus();
+    composerRef.current?.focus();
+  };
+  const pickTemplate = (id: string) => {
+    setTemplate(id);
+    setPh(0);
+    composerRef.current?.focus({ preventScroll: true });
   };
 
   // Setup checklist: every item is a real signal from the account, never a guess.
   const setup = [
-    { label: "Create your first project", done: (projects?.length ?? 0) > 0, run: () => document.getElementById("composer")?.focus() },
+    { label: "Create your first project", done: (projects?.length ?? 0) > 0, run: () => composerRef.current?.focus() },
     { label: "Run a live preview", done: (usage?.used.runtime_minutes ?? 0) > 0, run: () => projects?.[0] && go({ name: "project", id: projects[0].id }) },
     { label: "Publish an app", done: (deploys?.some((d) => d.status === "live") ?? false) || (usage?.used.deployment ?? 0) > 0, run: () => projects?.[0] && go({ name: "project", id: projects[0].id }) },
     { label: "Verify your email", done: Boolean(user.emailVerifiedAt), run: () => void window.codexa.openWeb("/settings/security") },
@@ -164,7 +244,7 @@ export function HomeScreen() {
   // Activity: deployments and checkpoints, newest first.
   const feed: Feed[] = [
     ...(deploys ?? []).map((d) => ({ id: `d:${d.id}`, at: d.createdAt, dot: DEPLOY_DOT[d.status], title: d.project.name, detail: d.status === "live" ? `Published${hostOf(d.url) ? ` to ${hostOf(d.url)}` : ""}` : d.status === "failed" ? "Publish failed" : DEPLOY_LABEL[d.status], project: d.project })),
-    ...(snapshots ?? []).map((s) => ({ id: `s:${s.id}`, at: s.createdAt, dot: "bg-dim", title: s.project.name, detail: SNAPSHOT_VERB[s.kind] ?? "Checkpoint saved", project: s.project })),
+    ...snapshots.map((s) => ({ id: `s:${s.id}`, at: s.createdAt, dot: "bg-dim", title: s.project.name, detail: SNAPSHOT_VERB[s.kind] ?? "Checkpoint saved", project: s.project })),
   ]
     .sort((a, b) => b.at.localeCompare(a.at))
     .slice(0, 6);
@@ -178,25 +258,149 @@ export function HomeScreen() {
         { label: "Deployments", value: usage.used.deployment ?? 0, limit: usage.limits.deploymentsPerMonth },
       ]
     : null;
-  const rows = (projects ?? []).slice(0, TABLE_ROWS);
+  const recent = all.slice(0, 4);
+
+  const starterMenu = (close: () => void) => (
+    <>
+      <p className="eyebrow px-2.5 pb-1 pt-1.5">Build on</p>
+      {starters.map((t) => (
+        <button key={t.id} type="button" role="menuitemradio" aria-checked={template === t.id} onClick={() => (pickTemplate(t.id), close())} className="flex w-full items-center gap-2.5 rounded-md px-2 py-1.5 text-left hover:bg-surface">
+          <ProjectThumb templateId={t.id} name={t.name} className="h-7 w-11 rounded-[4px] border border-border-strong" />
+          <span className="min-w-0 flex-1">
+            <span className="block truncate text-[13px] font-medium">{t.name}</span>
+            <span className="block truncate text-[11.5px] text-muted">{t.frameworkName}</span>
+          </span>
+          {template === t.id ? <Check className="size-4 text-muted" /> : null}
+        </button>
+      ))}
+      <button type="button" onClick={() => (close(), go({ name: "templates" }))} className="mt-1 flex w-full items-center justify-between border-t border-border px-2.5 pb-1.5 pt-2.5 text-[12.5px] font-medium text-muted hover:text-fg">
+        Browse all templates <ArrowRight className="size-3.5" />
+      </button>
+    </>
+  );
+
+  /** One filter's table (Status, Domain, Checkpoint from the loaded deployments and checkpoints). */
+  const table = (list: Project[] | null, label: string, empty: React.ReactNode) => (
+    <div className="overflow-hidden rounded-lg border border-border">
+      <table className="w-full border-collapse text-[13px]" aria-label={label}>
+        <thead>
+          <tr className="bg-card">
+            {["Project", "Runtime", "Status", "Domain", "Checkpoint", "Updated"].map((h) => (
+              <th key={h} scope="col" className="mono border-b border-border px-3.5 py-2.5 text-left text-[11px] font-normal uppercase tracking-[0.05em] text-dim">
+                {h}
+              </th>
+            ))}
+            <th scope="col" className="w-10 border-b border-border">
+              <span className="sr-only">Actions</span>
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+          {list === null ? (
+            Array.from({ length: 4 }, (_, i) => (
+              <tr key={i} className="border-b border-border last:border-0">
+                <td colSpan={7} className="px-3.5 py-2.5">
+                  <span className="pulse block h-10 rounded-[4px] bg-surface" />
+                </td>
+              </tr>
+            ))
+          ) : list.length === 0 ? (
+            <tr>
+              <td colSpan={7} className="px-6 py-9 text-center text-[13px] text-muted">
+                {empty}
+              </td>
+            </tr>
+          ) : (
+            list.slice(0, TABLE_ROWS).map((p) => {
+              const latest = latestDeploy.get(p.id);
+              const live = liveDeploy.get(p.id);
+              const snap = latestSnapshot.get(p.id);
+              const domain = hostOf(live?.url);
+              const loaded = deploys !== null;
+              const state = !loaded ? null : latest && latest.status !== "live" && latest.status !== "rolled_back" ? latest.status : live ? "live" : "draft";
+              return (
+                <tr key={p.id} onClick={() => go({ name: "project", id: p.id })} className="group cursor-default border-b border-border text-muted transition-colors last:border-0 hover:bg-card">
+                  <td className="px-3.5 py-2.5">
+                    <button type="button" onClick={(e) => (e.stopPropagation(), go({ name: "project", id: p.id }))} className="flex min-w-0 items-center gap-3 text-left">
+                      <ProjectThumb templateId={p.templateId} name={p.name} className="h-10 w-16 rounded-[4px] border border-border-strong" />
+                      <span className="min-w-0">
+                        <span className="block truncate font-medium text-fg group-hover:underline group-hover:underline-offset-2">{p.name}</span>
+                        <span className="mono block truncate text-[11px] text-dim">{p.slug}</span>
+                      </span>
+                    </button>
+                  </td>
+                  <td className="whitespace-nowrap px-3.5 py-2.5">{frameworkLabel(p.framework)}</td>
+                  <td className="whitespace-nowrap px-3.5 py-2.5">
+                    {state === null ? (
+                      <span className="text-dim">…</span>
+                    ) : (
+                      <span className="inline-flex items-center gap-2 text-fg">
+                        <span className={cn("size-2 rounded-full", state === "draft" ? "bg-dim" : DEPLOY_DOT[state], (state === "queued" || state === "building" || state === "deploying") && "pulse")} />
+                        {state === "draft" ? "Draft" : DEPLOY_LABEL[state]}
+                      </span>
+                    )}
+                  </td>
+                  <td className="mono px-3.5 py-2.5 text-[12px]">
+                    {domain ? (
+                      <button type="button" onClick={(e) => (e.stopPropagation(), void window.codexa.openExternal(live!.url!))} className="block max-w-[190px] truncate text-left hover:text-fg hover:underline" title={`Open ${domain}`}>
+                        {domain}
+                      </button>
+                    ) : (
+                      <span className="text-dim">{loaded ? "Not published" : "…"}</span>
+                    )}
+                  </td>
+                  <td className="mono whitespace-nowrap px-3.5 py-2.5 text-[12px]" title={snap ? `${snap.name} · ${new Date(snap.createdAt).toLocaleString()}` : undefined}>
+                    {snap ? snap.id.replace(/[^a-z0-9]/gi, "").slice(-7).toLowerCase() : <span className="text-dim">{p.id in snapMap ? "None" : "…"}</span>}
+                  </td>
+                  <td className="whitespace-nowrap px-3.5 py-2.5">{relativeTime(p.updatedAt)}</td>
+                  <td className="px-1.5 py-2.5" onClick={(e) => e.stopPropagation()}>
+                    <ProjectMenu project={p} />
+                  </td>
+                </tr>
+              );
+            })
+          )}
+        </tbody>
+      </table>
+      {list && list.length > TABLE_ROWS ? (
+        <button type="button" onClick={() => go({ name: "projects" })} className="flex w-full items-center justify-center gap-1.5 border-t border-border py-2.5 text-[12.5px] text-muted hover:bg-card hover:text-fg">
+          Showing the {TABLE_ROWS} most recent of {list.length}. View all projects <ArrowRight className="size-3.5" />
+        </button>
+      ) : null}
+    </div>
+  );
 
   return (
     <div className="scroll h-full">
-      <div className="mx-auto grid max-w-[1280px] grid-cols-[minmax(0,1fr)_320px] gap-8 px-8 pb-14 pt-7">
-        <div className="min-w-0">
-          <div className="mb-3 flex items-baseline justify-between gap-4">
-            <h1 className="text-[20px] font-semibold tracking-[-0.03em]">What are we building, {first}?</h1>
-            <p className="eyebrow shrink-0">
-              {workspace?.name ?? "Workspace"} / {usage?.plan ?? workspace?.plan ?? "free"}
-            </p>
+      <SpaceHero workspace={workspace ? { id: workspace.id, name: workspace.name, plan: usage?.plan ?? workspace.plan ?? "free" } : null} onWorkspace={() => go({ name: "settings", tab: "workspace" })}>
+        <div className="mx-auto w-full max-w-[760px]">
+          <div role="group" aria-label="What are you building?" className="space-modes">
+            {modes.map((m) => (
+              <button key={m.id} type="button" aria-pressed={template === m.templateId} disabled={busy} onClick={() => pickTemplate(m.templateId)} className="space-mode" title={`Start from the ${byId.get(m.templateId)?.name ?? m.label} starter`}>
+                {m.label}
+              </button>
+            ))}
+            {starters.length > modes.length ? (
+              <Menu
+                align="start"
+                width={300}
+                trigger={(open, toggle) => (
+                  <button type="button" onClick={toggle} aria-pressed={!MODE_IDS.has(template)} aria-haspopup="menu" aria-expanded={open} disabled={busy} className="space-mode" title="Pick one of the templates to start from">
+                    From template
+                  </button>
+                )}
+              >
+                {starterMenu}
+              </Menu>
+            ) : null}
           </div>
 
-          {/* Prompt */}
-          <div className="focus-halo rounded-[10px] border border-border-strong bg-card">
-            <Textarea
+          <div className="space-composer">
+            <textarea
               id="composer"
+              ref={composerRef}
               value={prompt}
-              rows={2}
+              rows={3}
               maxLength={4000}
               onChange={(e) => setPrompt(e.target.value)}
               onKeyDown={(e) => {
@@ -205,62 +409,66 @@ export function HomeScreen() {
                   void build();
                 }
               }}
-              placeholder={PLACEHOLDERS[ph]}
+              placeholder={ideas[ph % ideas.length]}
               aria-label="Describe what you want to build"
-              className="min-h-[76px] px-4 pb-2 pt-4 text-[15px]"
+              className="block min-h-[96px] w-full resize-none bg-transparent px-5 pb-3 pt-5 text-[16px] leading-relaxed text-fg outline-none placeholder:text-dim"
             />
-            <div className="flex items-center gap-2 border-t border-border px-2.5 py-2">
+            <div className="flex items-center gap-1.5 px-3 pb-3 pt-1">
               <Menu
                 align="start"
                 width={300}
                 trigger={(open, toggle) => (
-                  <button type="button" onClick={toggle} aria-expanded={open} aria-label="Starter" className={chip("max-w-[220px]")}>
+                  <button type="button" onClick={toggle} aria-expanded={open} aria-haspopup="menu" aria-label={`Starter: ${picked?.name ?? "React starter"}. Change starter`} className="space-chip max-w-[240px]">
                     <ProjectThumb templateId={picked?.id ?? template} name={picked?.name ?? "Starter"} className="h-3.5 w-6 rounded-[2px]" />
                     <span className="truncate">{picked?.name ?? "React starter"}</span>
                     <ChevronDown className="size-3 shrink-0 text-dim" />
                   </button>
                 )}
               >
-                {(close) => (
-                  <>
-                    <p className="eyebrow px-2.5 pb-1 pt-1.5">Build on</p>
-                    {starters.map((t) => (
-                      <button key={t.id} type="button" onClick={() => (setTemplate(t.id), close())} className="flex w-full items-center gap-2.5 rounded-md px-2 py-1.5 text-left hover:bg-surface">
-                        <ProjectThumb templateId={t.id} name={t.name} className="h-7 w-11 rounded-[4px] border border-border-strong" />
-                        <span className="min-w-0 flex-1">
-                          <span className="block truncate text-[13px] font-medium">{t.name}</span>
-                          <span className="block truncate text-[11.5px] text-muted">{t.frameworkName}</span>
-                        </span>
-                        {template === t.id ? <Check className="size-4 text-muted" /> : null}
-                      </button>
-                    ))}
-                    <button type="button" onClick={() => (close(), go({ name: "templates" }))} className="mt-1 flex w-full items-center justify-between border-t border-border px-2.5 pb-1.5 pt-2.5 text-[12.5px] font-medium text-muted hover:text-fg">
-                      Browse all templates <ArrowRight className="size-3.5" />
-                    </button>
-                  </>
-                )}
+                {starterMenu}
               </Menu>
-              <ul className="hidden items-center gap-2 xl:flex" aria-label="Ideas">
-                {IDEAS.slice(0, 3).map((i) => (
-                  <li key={i.label}>
-                    <button type="button" onClick={() => applyIdea(i)} className={chip()}>
-                      <i.icon className="size-3.5" /> {i.label}
-                    </button>
-                  </li>
-                ))}
-              </ul>
-              <button type="button" onClick={() => void window.codexa.openWeb("/dashboard/github")} className={chip()}>
+              <button type="button" onClick={() => void window.codexa.openWeb("/dashboard/github")} className="space-chip">
                 <GitBranch className="size-3.5" /> Import from GitHub
               </button>
-              <Button variant="primary" size="sm" className="ml-auto h-7 gap-2 px-2.5" onClick={() => void build()} disabled={!prompt.trim()} loading={busy}>
+              <Button variant="primary" size="sm" className="ml-auto h-8 gap-2 rounded-lg px-3.5 text-[13.5px]" onClick={() => void build()} disabled={!prompt.trim()} loading={busy}>
                 Build
                 <kbd className="mono rounded border border-primary-fg/25 px-1 text-[10.5px] font-normal text-primary-fg/60">Enter</kbd>
               </Button>
             </div>
           </div>
+        </div>
 
+        {recent.length ? (
+          <nav aria-label="Recent projects" className="mx-auto mt-5 flex max-w-[760px] items-center justify-center gap-2">
+            <span className="mono shrink-0 text-[10.5px] uppercase tracking-[0.06em] text-muted">Jump back in</span>
+            <ul className="flex min-w-0 flex-wrap justify-center gap-1.5">
+              {recent.map((p) => (
+                <li key={p.id} className="shrink-0">
+                  <button type="button" onClick={() => go({ name: "project", id: p.id })} className="space-pick" title={`Open ${p.name}`}>
+                    <ProjectThumb templateId={p.templateId} name={p.name} className="h-3.5 w-6 rounded-[3px]" />
+                    <span className="max-w-[160px] truncate">{p.name}</span>
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </nav>
+        ) : projects !== null ? (
+          <ul aria-label="Ideas" className="mx-auto mt-5 flex max-w-[760px] flex-wrap justify-center gap-1.5">
+            {IDEAS.map((i) => (
+              <li key={i.label}>
+                <button type="button" onClick={() => applyIdea(i)} aria-pressed={prompt === i.prompt} title={i.prompt} disabled={busy} className="space-pick">
+                  <i.icon className="size-3.5" aria-hidden="true" /> {i.label}
+                </button>
+              </li>
+            ))}
+          </ul>
+        ) : null}
+      </SpaceHero>
+
+      <div className="mx-auto grid max-w-[1280px] grid-cols-[minmax(0,1fr)_320px] gap-8 px-8 pb-14 pt-2">
+        <div className="min-w-0">
           {showSetup ? (
-            <section className="mt-4 rounded-lg border border-border" aria-labelledby="setup">
+            <section className="mb-7 rounded-lg border border-border" aria-labelledby="setup">
               <div className="flex items-center gap-3 border-b border-border px-3.5 py-2.5">
                 <h2 id="setup" className="text-[13px] font-medium">
                   Get set up
@@ -288,106 +496,68 @@ export function HomeScreen() {
             </section>
           ) : null}
 
-          {/* Projects table */}
-          <div className="mb-3 mt-7 flex items-center gap-2.5">
-            <h2 id="projects" className="text-[16px] font-semibold tracking-[-0.01em]">
-              Projects
-            </h2>
-            {projects ? <span className="mono rounded-full border border-border-strong px-1.5 text-[11px] text-muted">{projects.length}</span> : null}
-            <div className="ml-auto flex gap-2">
-              <button type="button" onClick={() => go({ name: "templates" })} className={chip()}>
-                <LayoutTemplate className="size-3.5" /> Templates
-              </button>
-              {projects && projects.length > 0 ? (
-                <button type="button" onClick={() => go({ name: "projects" })} className={chip()}>
-                  All projects <ArrowRight className="size-3.5" />
-                </button>
-              ) : null}
-            </div>
-          </div>
-          {projects !== null && projects.length === 0 ? (
-            <EmptyState icon={<Rocket />} title="No projects yet" body="Describe your first app above, or start from one of 111 working templates." action={<Button variant="primary" onClick={() => go({ name: "templates" })}>Browse templates</Button>} />
-          ) : (
-            <div className="overflow-hidden rounded-lg border border-border">
-              <table className="w-full border-collapse text-[13px]" aria-labelledby="projects">
-                <thead>
-                  <tr className="bg-card">
-                    {["Project", "Runtime", "Status", "Domain", "Checkpoint", "Updated"].map((h) => (
-                      <th key={h} scope="col" className="mono border-b border-border px-3.5 py-2.5 text-left text-[11px] font-normal uppercase tracking-[0.05em] text-dim">
-                        {h}
-                      </th>
-                    ))}
-                    <th scope="col" className="w-10 border-b border-border">
-                      <span className="sr-only">Actions</span>
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {projects === null
-                    ? Array.from({ length: 4 }, (_, i) => (
-                        <tr key={i} className="border-b border-border last:border-0">
-                          <td colSpan={7} className="px-3.5 py-2.5">
-                            <span className="pulse block h-10 rounded-[4px] bg-surface" />
-                          </td>
-                        </tr>
-                      ))
-                    : rows.map((p) => {
-                        const latest = latestDeploy.get(p.id);
-                        const live = liveDeploy.get(p.id);
-                        const snap = latestSnapshot.get(p.id);
-                        const domain = hostOf(live?.url);
-                        const loaded = deploys !== null;
-                        const state = !loaded ? null : latest && latest.status !== "live" && latest.status !== "rolled_back" ? latest.status : live ? "live" : "draft";
-                        return (
-                          <tr key={p.id} onClick={() => go({ name: "project", id: p.id })} className="group cursor-default border-b border-border text-muted transition-colors last:border-0 hover:bg-card">
-                            <td className="px-3.5 py-2.5">
-                              <button type="button" onClick={(e) => (e.stopPropagation(), go({ name: "project", id: p.id }))} className="flex min-w-0 items-center gap-3 text-left">
-                                <ProjectThumb templateId={p.templateId} name={p.name} className="h-10 w-16 rounded-[4px] border border-border-strong" />
-                                <span className="min-w-0">
-                                  <span className="block truncate font-medium text-fg group-hover:underline group-hover:underline-offset-2">{p.name}</span>
-                                  <span className="mono block truncate text-[11px] text-dim">{p.slug}</span>
-                                </span>
-                              </button>
-                            </td>
-                            <td className="whitespace-nowrap px-3.5 py-2.5">{frameworkLabel(p.framework)}</td>
-                            <td className="whitespace-nowrap px-3.5 py-2.5">
-                              {state === null ? (
-                                <span className="text-dim">…</span>
-                              ) : (
-                                <span className="inline-flex items-center gap-2 text-fg">
-                                  <span className={cn("size-2 rounded-full", state === "draft" ? "bg-dim" : DEPLOY_DOT[state], (state === "queued" || state === "building" || state === "deploying") && "pulse")} />
-                                  {state === "draft" ? "Draft" : DEPLOY_LABEL[state]}
-                                </span>
-                              )}
-                            </td>
-                            <td className="mono px-3.5 py-2.5 text-[12px]">
-                              {domain ? (
-                                <button type="button" onClick={(e) => (e.stopPropagation(), void window.codexa.openExternal(live!.url!))} className="block max-w-[190px] truncate text-left hover:text-fg hover:underline" title={`Open ${domain}`}>
-                                  {domain}
-                                </button>
-                              ) : (
-                                <span className="text-dim">{loaded ? "Not published" : "…"}</span>
-                              )}
-                            </td>
-                            <td className="mono whitespace-nowrap px-3.5 py-2.5 text-[12px]" title={snap ? `${snap.name} · ${new Date(snap.createdAt).toLocaleString()}` : undefined}>
-                              {snap ? snap.id.replace(/[^a-z0-9]/gi, "").slice(-7).toLowerCase() : <span className="text-dim">{snapshots === null ? "…" : "None"}</span>}
-                            </td>
-                            <td className="whitespace-nowrap px-3.5 py-2.5">{relativeTime(p.updatedAt)}</td>
-                            <td className="px-1.5 py-2.5" onClick={(e) => e.stopPropagation()}>
-                              <ProjectMenu project={p} />
-                            </td>
-                          </tr>
-                        );
-                      })}
-                </tbody>
-              </table>
-              {projects && projects.length > TABLE_ROWS ? (
-                <button type="button" onClick={() => go({ name: "projects" })} className="flex w-full items-center justify-center gap-1.5 border-t border-border py-2.5 text-[12.5px] text-muted hover:bg-card hover:text-fg">
-                  View all {projects.length} projects <ArrowRight className="size-3.5" />
-                </button>
-              ) : null}
-            </div>
-          )}
+          {/* Projects, filtered */}
+          <section aria-labelledby="projects">
+            {projects !== null && projects.length === 0 ? (
+              <>
+                <h2 id="projects" className="mb-3 text-[16px] font-semibold tracking-[-0.01em]">
+                  Projects
+                </h2>
+                <EmptyState icon={<Rocket />} title="No projects yet" body="Describe your first app above, or start from one of 111 working templates." action={<Button variant="primary" onClick={() => go({ name: "templates" })}>Browse templates</Button>} />
+              </>
+            ) : (
+              <ProjectFilters
+                label="Filter projects"
+                heading={
+                  <h2 id="projects" className="text-[16px] font-semibold tracking-[-0.01em]">
+                    Projects
+                  </h2>
+                }
+                actions={
+                  <>
+                    <button type="button" onClick={() => go({ name: "templates" })} className={chip()}>
+                      <LayoutTemplate className="size-3.5" /> Templates
+                    </button>
+                    {projects && projects.length > 0 ? (
+                      <button type="button" onClick={() => go({ name: "projects" })} className={chip()}>
+                        All projects <ArrowRight className="size-3.5" />
+                      </button>
+                    ) : null}
+                  </>
+                }
+                tabs={[
+                  { id: "all", label: "All", count: projects?.length ?? null, panel: table(projects, "Recent projects", "No projects yet.") },
+                  {
+                    id: "live",
+                    label: "Live",
+                    count: liveList?.length ?? null,
+                    panel: table(
+                      liveList,
+                      "Live projects",
+                      <>
+                        <span className="block font-medium text-fg">Nothing is live yet</span>
+                        <span className="mt-1 block">Publish a project from the editor and it shows up here with its domain.</span>
+                      </>,
+                    ),
+                  },
+                  {
+                    id: "drafts",
+                    label: "Drafts",
+                    count: draftList?.length ?? null,
+                    panel: table(
+                      draftList,
+                      "Draft projects",
+                      <>
+                        <span className="block font-medium text-fg">No drafts</span>
+                        <span className="mt-1 block">Every project in this workspace is published.</span>
+                      </>,
+                    ),
+                  },
+                ]}
+              />
+            )}
+            {partialScan && deploys ? <p className="mt-2.5 text-[12px] text-dim">Live and Drafts cover your {DEPLOY_SCAN} most recently opened projects.</p> : null}
+          </section>
 
           {/* Templates */}
           {featured.length ? (
@@ -483,7 +653,7 @@ export function HomeScreen() {
         </div>
 
         {/* Aside */}
-        <aside className="flex flex-col gap-5 pt-[42px]">
+        <aside className="flex flex-col gap-5">
           <Box title="Usage" meta={usage ? <><span className="capitalize">{usage.plan}</span> plan · this month</> : null}>
             {meters ? (
               <div className="flex flex-col gap-3.5 px-3.5 py-3">
@@ -516,7 +686,7 @@ export function HomeScreen() {
           </Box>
 
           <Box title="Recent activity" meta={feed.length ? "Deploys and checkpoints" : null}>
-            {deploys === null || snapshots === null ? (
+            {deploys === null || !snapsLoaded ? (
               <BoxLoading />
             ) : feed.length === 0 ? (
               <p className="px-3.5 py-3 text-[12.5px] text-muted">Nothing yet. Checkpoints and publishes from your projects show up here.</p>

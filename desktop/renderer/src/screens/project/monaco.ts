@@ -55,16 +55,16 @@ monaco.editor.defineTheme("codexa-light", {
     { token: "type", foreground: "0a0a0a" },
     { token: "type.identifier", foreground: "0a0a0a" },
     { token: "identifier", foreground: "262626" },
-    { token: "string", foreground: "5c5c5c" },
+    { token: "string", foreground: "666666" },
     { token: "number", foreground: "0a0a0a" },
     { token: "comment", foreground: "8f8f8f", fontStyle: "italic" },
     { token: "delimiter", foreground: "737373" },
     { token: "tag", foreground: "000000" },
     { token: "attribute.name", foreground: "404040" },
-    { token: "attribute.value", foreground: "5c5c5c" },
-    { token: "regexp", foreground: "5c5c5c" },
+    { token: "attribute.value", foreground: "666666" },
+    { token: "regexp", foreground: "666666" },
   ],
-  colors: { "editor.background": "#ffffff", "editor.lineHighlightBackground": "#fafafa", "editorLineNumber.foreground": "#b5b5b5", "editorLineNumber.activeForeground": "#5c5c5c", "editorIndentGuide.background1": "#ebebeb", "editor.selectionBackground": "#e0e0e0", "editorCursor.foreground": "#0a0a0a", "editorBracketHighlight.foreground1": "#5c5c5c", "editorBracketHighlight.foreground2": "#5c5c5c", "editorBracketHighlight.foreground3": "#5c5c5c", "editorBracketHighlight.foreground4": "#5c5c5c", "editorBracketHighlight.foreground5": "#5c5c5c", "editorBracketHighlight.foreground6": "#5c5c5c", "editorBracketMatch.border": "#a3a3a3" },
+  colors: { "editor.background": "#ffffff", "editor.lineHighlightBackground": "#fafafa", "editorLineNumber.foreground": "#b5b5b5", "editorLineNumber.activeForeground": "#666666", "editorIndentGuide.background1": "#ebebeb", "editor.selectionBackground": "#e0e0e0", "editorCursor.foreground": "#0a0a0a", "editorBracketHighlight.foreground1": "#666666", "editorBracketHighlight.foreground2": "#666666", "editorBracketHighlight.foreground3": "#666666", "editorBracketHighlight.foreground4": "#666666", "editorBracketHighlight.foreground5": "#666666", "editorBracketHighlight.foreground6": "#666666", "editorBracketMatch.border": "#a3a3a3" },
 });
 
 const LANG: Record<string, string> = {

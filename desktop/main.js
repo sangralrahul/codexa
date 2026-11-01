@@ -28,7 +28,7 @@ function loadState() {
 
 function saveState(win) {
   try {
-    fs.writeFileSync(STATE_FILE, JSON.stringify({ ...win.getNormalBounds(), maximized: win.isMaximized() }));
+    fs.writeFileSync(STATE_FILE, JSON.stringify({ ...win.getNormalBounds(), maximized: win.isMaximized(), theme: nativeTheme.themeSource }));
   } catch {
     // Window state is a convenience; never fail on it.
   }
@@ -72,6 +72,9 @@ function guardNavigation(wc, allowOrigin) {
 
 function createWindow() {
   const state = loadState();
+  // The renderer's theme choice from last time (dark by default, like the renderer), applied before the
+  // window exists so the first frame, the background and the title bar buttons already match it.
+  nativeTheme.themeSource = state.theme === "light" || state.theme === "system" ? state.theme : "dark";
   const theme = nativeTheme.shouldUseDarkColors ? PALETTE.dark : PALETTE.light;
   mainWindow = new BrowserWindow({
     x: state.x,

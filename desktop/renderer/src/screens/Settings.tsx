@@ -1,10 +1,11 @@
 import { useEffect, useState, type ReactNode } from "react";
-import { ExternalLink, LogOut, Monitor, Moon, RefreshCw, Sun } from "lucide-react";
+import { ExternalLink, LogOut, Monitor, Moon, Pause, RefreshCw, Sun } from "lucide-react";
 import { useApp } from "../app/state";
 import { accountApi, ApiError } from "../lib/api";
 import { cn } from "../lib/util";
 import { Avatar, Button, Field, Input, Kbd, Spinner, toast } from "../ui";
 import { applyTheme, getThemeMode, type ThemeMode } from "../app/theme";
+import { applyMotion, getMotionMode, type MotionMode } from "../lib/motion";
 
 type Tab = "account" | "workspace" | "app";
 const TABS: { id: Tab; label: string }[] = [
@@ -181,6 +182,7 @@ function WorkspaceTab() {
 function AppTab() {
   const { version, appUrl } = useApp();
   const [theme, setTheme] = useState<ThemeMode>(getThemeMode());
+  const [motion, setMotion] = useState<MotionMode>(getMotionMode());
   const [checking, setChecking] = useState(false);
   const [updateMsg, setUpdateMsg] = useState<string | null>(null);
   return (
@@ -204,6 +206,30 @@ function AppTab() {
                 void applyTheme(m);
               }}
               className={cn("flex h-20 flex-col items-center justify-center gap-2 rounded-xl border text-[13px] font-medium transition-colors", theme === m ? "border-fg bg-surface" : "border-border hover:border-border-strong")}
+            >
+              <Icon className="size-5 text-muted" /> {label}
+            </button>
+          ))}
+        </div>
+      </Section>
+      <Section title="Motion" description="Home's space scene, the sign-in wall and other ambient animation. Reduced motion shows still images instead.">
+        <div className="grid grid-cols-2 gap-3" role="radiogroup" aria-label="Motion">
+          {(
+            [
+              ["system", "Follow Windows", Monitor],
+              ["reduced", "Reduce motion", Pause],
+            ] as const
+          ).map(([m, label, Icon]) => (
+            <button
+              key={m}
+              type="button"
+              role="radio"
+              aria-checked={motion === m}
+              onClick={() => {
+                setMotion(m);
+                applyMotion(m);
+              }}
+              className={cn("flex h-20 flex-col items-center justify-center gap-2 rounded-xl border text-[13px] font-medium transition-colors", motion === m ? "border-fg bg-surface" : "border-border hover:border-border-strong")}
             >
               <Icon className="size-5 text-muted" /> {label}
             </button>
