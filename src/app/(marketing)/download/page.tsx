@@ -63,7 +63,7 @@ export default function DownloadPage() {
       >
         <div data-reveal style={{ "--reveal-delay": "260ms" } as React.CSSProperties} className="mt-8 flex flex-col gap-4">
           <div className="flex flex-wrap items-center gap-3">
-            <a href={DESKTOP.downloadUrl} download className={cn(buttonClasses("primary", "lg", "group"), "btn-ember gap-2")}>
+            <a href={DESKTOP.downloadUrl} download className={cn(buttonClasses("primary", "lg", "group"), "gap-2")}>
               <Download className="size-4" aria-hidden="true" />
               Download for Windows
             </a>
@@ -82,7 +82,7 @@ export default function DownloadPage() {
         <ul className="mt-10 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {FEATURES.map((f) => (
             <li key={f.title} className="e1 rounded-[18px] p-6">
-              <f.icon className="size-5 text-signal-ink" aria-hidden="true" />
+              <f.icon className="size-5 text-muted-foreground" aria-hidden="true" />
               <h3 className="mt-4 font-semibold">{f.title}</h3>
               <p className="mt-1.5 text-sm leading-relaxed text-muted-foreground">{f.body}</p>
             </li>
@@ -118,7 +118,7 @@ export default function DownloadPage() {
             </p>
           </div>
           <div className="e1 flex gap-3 rounded-[18px] p-5 text-sm">
-            <MonitorDown className="mt-0.5 size-4 shrink-0 text-signal-ink" aria-hidden="true" />
+            <MonitorDown className="mt-0.5 size-4 shrink-0 text-muted-foreground" aria-hidden="true" />
             <p className="leading-relaxed text-muted-foreground">
               <span className="font-medium text-foreground">Needs an internet connection.</span> The app&apos;s screens run on your computer; projects, AI runs, previews and
               deployments happen on Codexa&apos;s servers, as on the web. Not on Windows?{" "}
