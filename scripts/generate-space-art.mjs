@@ -1,13 +1,16 @@
 #!/usr/bin/env node
 /**
- * Procedural space art for the dashboard hero (public/space/*.webp).
+ * Procedural art for the dashboard hero and page banners (public/space/*.webp).
  *
- * Every pixel is computed here: no photos, no external images. Each scene is rendered in linear light
- * into a float buffer, desaturated to the site's monochrome palette (a faint cool tint survives), tone
- * mapped, dithered and encoded as WebP with sharp.
+ * Every pixel is computed here: no photos, no external images. Night scenes (dark theme) are rendered in
+ * linear light into a float buffer, desaturated to the site's monochrome palette (a faint cool tint
+ * survives), tone mapped, dithered and encoded as WebP with sharp. The daylight set (light theme,
+ * light-*.webp) is composed display-referred; the star chart is SVG linework over generated paper.
  *
- *   node scripts/generate-space-art.mjs            # all scenes
- *   node scripts/generate-space-art.mjs moon       # one scene (orbit | moon | nebula | galaxy)
+ *   node scripts/generate-space-art.mjs                  # all scenes
+ *   node scripts/generate-space-art.mjs moon             # one scene: orbit | moon | nebula | galaxy |
+ *                                                        #   light-daylight | light-clouds | light-lunar |
+ *                                                        #   light-chart | light-clouds-veil
  *
  * Scenes are 2400x1100 and kept under 350 KB. The output is committed; rerun only to change the art.
  */
@@ -323,15 +326,14 @@ async function orbit() {
 
 /* ---------------------------------------------------------------- (b) cratered moon */
 
-async function moon() {
-  const img = new Img();
+/**
+ * Renders a cratered moon disc additively into `img` (radiance x `gain`, tinted by `tint`) and returns
+ * its anti-aliased coverage mask. Shared by the night moon and the daytime moon.
+ */
+function moonDisc(img, { cx, cy, R, L, gain = 1, tint = [1, 0.985, 0.96], earthshine = 0.012 }) {
   const n = perlin(21);
   const n2 = perlin(22);
   const r = rng(23);
-  const cx = 1900;
-  const cy = 520;
-  const R = 390;
-  const L = norm3([0.86, -0.3, 0.42]);
   const K = 1.0; // relief exaggeration
 
   const bx = Math.floor(cx - R - 2);
@@ -506,12 +508,20 @@ async function moon() {
         shade *= smooth(0, 0.06, mu0);
       }
       // Earthshine on the night side.
-      const es = 0.012 * Math.max(0, -0.25 * N[0] + 0.97 * N[2]);
+      const es = earthshine * Math.max(0, -0.25 * N[0] + 0.97 * N[2]);
       const a = clamp(alb[k], 0.05, 1);
-      const v = (a * shade * 1.9 + a * es) * cov;
-      img.add(Y * W + X, v * 1.0, v * 0.985, v * 0.96);
+      const v = (a * shade * 1.9 + a * es) * cov * gain;
+      img.add(Y * W + X, v * tint[0], v * tint[1], v * tint[2]);
     }
+  return moonMask;
+}
 
+async function moon() {
+  const img = new Img();
+  const cx = 1900;
+  const cy = 520;
+  const R = 390;
+  const moonMask = moonDisc(img, { cx, cy, R, L: norm3([0.86, -0.3, 0.42]) });
   const sky = new Float32Array(W * H);
   for (let i = 0; i < W * H; i++) sky[i] = 1 - moonMask[i];
   starfield(img, 202, {
@@ -675,7 +685,689 @@ async function galaxy() {
   await save(img, "galaxy", { exposure: 1.25, sat: 0.3 });
 }
 
-const SCENES = { orbit, moon, nebula, galaxy };
+/* ================================================================ light (daylight) set
+ * The light theme's scenes, public/space/light-*.webp. These are composed in display-referred linear
+ * light (0 = black, 1 = paper white) instead of being tone mapped from HDR: the frame is mostly pale,
+ * so the encoder only clamps, desaturates to a whisper of cool blue and applies the sRGB curve.
+ */
+
+async function saveLight(img, name, { sat = 0.35, quality = 88, grain = 0.9, gamma = 1 } = {}) {
+  const out = Buffer.alloc(W * H * 3);
+  const r = rng(4321);
+  const d = img.d;
+  for (let i = 0; i < W * H; i++) {
+    const k = i * 3;
+    const l = 0.2126 * d[k] + 0.7152 * d[k + 1] + 0.0722 * d[k + 2];
+    const dither = (r() + r() - 1) * grain;
+    for (let j = 0; j < 3; j++) {
+      let t = clamp(l + (d[k + j] - l) * sat);
+      if (gamma !== 1) t = Math.pow(t, gamma);
+      t = t <= 0.0031308 ? 12.92 * t : 1.055 * Math.pow(t, 1 / 2.4) - 0.055;
+      out[k + j] = clamp(Math.round(t * 255 + dither), 0, 255);
+    }
+  }
+  return encode(out, name, quality);
+}
+
+async function encode(raw, name, quality, channels = 3) {
+  mkdirSync(OUT, { recursive: true });
+  const file = join(OUT, `${name}.webp`);
+  let q = quality;
+  for (;;) {
+    await sharp(raw, { raw: { width: W, height: H, channels } })
+      .webp({ quality: q, alphaQuality: 80, effort: 6, smartSubsample: true })
+      .toFile(file);
+    const size = statSync(file).size;
+    if (size <= MAX_BYTES || q <= 40) {
+      console.log(`${name}.webp  ${W}x${H}  ${(size / 1024).toFixed(0)} KB  (q${q})`);
+      return;
+    }
+    q -= 4;
+  }
+}
+
+/** sRGB (0..255 or 0..1 hex-ish) to linear. */
+const lin = (v) => (v <= 0.04045 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4));
+const linRGB = (r, g, b) => [lin(r / 255), lin(g / 255), lin(b / 255)];
+const mix3 = (a, b, t) => [mix(a[0], b[0], t), mix(a[1], b[1], t), mix(a[2], b[2], t)];
+
+/* ---------------------------------------------------------------- (a) daylight limb */
+
+async function daylight() {
+  const img = new Img();
+  const n = perlin(51);
+  const n2 = perlin(52);
+  const n3 = perlin(53);
+  const R = 2700;
+  const cx = 1240;
+  const top = 735;
+  const cy = top + R;
+  // The sun is high, in front and to the right: the whole disc is in daylight.
+  const L = norm3([0.42, -0.42, 0.8]);
+  const skyTop = linRGB(250, 251, 252);
+  const skyLow = linRGB(232, 237, 243);
+  const band = linRGB(158, 184, 216);
+  const rim = linRGB(246, 249, 253);
+  const ocean = linRGB(84, 102, 124);
+  const deep = linRGB(58, 72, 92);
+  const haze = linRGB(206, 218, 232);
+  const cloudLit = linRGB(255, 255, 255);
+  const cloudShade = linRGB(178, 188, 202);
+
+  // Turbulence (sum of |noise|): cauliflower cumulus edges.
+  const turb = (x, y, z, oct) => {
+    let t = 0;
+    let a = 1;
+    let f = 1;
+    let w = 0;
+    for (let o = 0; o < oct; o++) {
+      t += a * Math.abs(n3(x * f, y * f, z * f + o * 5.3));
+      w += a;
+      a *= 0.52;
+      f *= 2.07;
+    }
+    return t / w;
+  };
+  const cloudAt = (x, y, z) => {
+    const wx = fbm(n2, x * 0.5, y * 0.5, z * 0.5, 4);
+    const wy = fbm(n2, x * 0.5 + 5.1, y * 0.5, z * 0.5 + 2.3, 4);
+    // Weather systems sheared along latitude, cloud streets inside them, cumulus texture eroding the edges.
+    const sys = fbm(n, x * 0.42 + wx * 1.5, y * 1.3 + wy * 0.6, z * 0.42 + wx * 1.5, 6);
+    const streets = 0.5 + 0.5 * Math.sin((x + 0.6 * z) * 9 + wx * 6 + 2 * fbm(n2, x * 2, y * 2, z * 2, 3));
+    const cum = turb(x * 4.2 + wx, y * 4.2 + wy, z * 4.2, 7);
+    const v = sys + 0.05 + 0.16 * (streets - 0.5) + 0.55 * (cum - 0.3);
+    const cov = smooth(-0.02, 0.2, v);
+    return cov * (0.62 + 0.38 * smooth(0.1, 0.5, cum + 0.4 * sys));
+  };
+
+  for (let y = 0; y < H; y++) {
+    for (let x = 0; x < W; x++) {
+      const i = y * W + x;
+      const dx = x + 0.5 - cx;
+      const dy = y + 0.5 - cy;
+      const d = Math.hypot(dx, dy);
+      const h = d - R;
+      const k = i * 3;
+      // Sky: paper white at the top, a cool blue-grey band hugging the limb, a hairline of bright rim.
+      const hh = Math.max(0, h);
+      const glow = Math.exp(-hh / 70) * 0.85 + Math.exp(-hh / 260) * 0.35;
+      const sunSide = 0.5 + 0.5 * smooth(-1400, 1400, dx);
+      let c = mix3(skyTop, skyLow, smooth(0, top, y) * 0.8);
+      c = mix3(c, band, clamp(glow * (0.8 + 0.25 * sunSide)));
+      c = mix3(c, rim, Math.exp(-(((hh - 3) / 4.5) ** 2)) * 0.9);
+      // A second, fainter haze layer higher up (the stratospheric aerosol line).
+      c = mix3(c, rim, Math.exp(-(((hh - 22) / 5) ** 2)) * 0.28);
+      // Sun glow from the upper right (off frame).
+      const sg = Math.exp(-Math.hypot(x - 2500, y + 200) / 900) * 0.18;
+      c = [c[0] + sg, c[1] + sg, c[2] + sg * 0.98];
+      const cov = clamp(R - d + 0.5);
+      if (cov > 0) {
+        const nx = dx / R;
+        const ny = dy / R;
+        const nz = Math.sqrt(Math.max(1e-6, 1 - nx * nx - ny * ny));
+        const s = 9;
+        const px = nx * s;
+        const py = ny * s;
+        const pz = nz * s;
+        const cl = cloudAt(px, py, pz);
+        // Cloud relief: brighter where the cover thickens towards the sun.
+        const e = 0.012;
+        const cl2 = cloudAt(px - L[0] * e * s, py - L[1] * e * s, pz);
+        const relief = clamp(0.5 + (cl - cl2) * 5);
+        const shadow = cloudAt(px + L[0] * 0.035, py + L[1] * 0.035, pz - 0.01);
+        const lam = Math.max(0, nx * L[0] + ny * L[1] + nz * L[2]);
+        const sea = mix3(deep, ocean, 0.5 + 0.5 * fbm(n, px * 2, py * 2, pz * 2 + 9, 3));
+        // Sun glint on the water.
+        const ripple = 0.75 + 0.5 * fbm(n2, px * 14, py * 40, pz * 14, 3);
+        const spec = (Math.exp(-(((x - 1840) / 330) ** 2 + ((y - 930) / 95) ** 2)) * 0.7 + Math.exp(-(((x - 1840) / 900) ** 2 + ((y - 930) / 260) ** 2)) * 0.12) * ripple;
+        const sh = 1 - 0.55 * shadow * (1 - cl);
+        let sfc = [sea[0] * sh + spec, sea[1] * sh + spec, sea[2] * sh + spec];
+        const cc = mix3(cloudShade, cloudLit, clamp(0.25 + 0.75 * relief));
+        sfc = mix3(sfc, cc, clamp(cl * 1.15));
+        // Thin cirrus veils, stretched along latitude.
+        const ci = smooth(0.05, 0.55, fbm(n2, px * 0.9 + 3, py * 4.5, pz * 0.9, 6)) * (0.6 + 0.4 * fbm(n3, px * 6, py * 22, pz * 6, 3));
+        sfc = mix3(sfc, cloudLit, clamp(ci * 0.32 * (1 - cl)));
+        sfc = sfc.map((v) => v * (0.55 + 0.5 * lam));
+        // Aerial perspective: looking through more air towards the limb.
+        const air = 1 - Math.exp(-0.085 / nz);
+        const hz = mix3(haze, rim, Math.exp(-Math.max(0, R - d) / 6));
+        sfc = mix3(sfc, hz, clamp(air * 1.05));
+        c = mix3(c, sfc, cov);
+      }
+      img.d[k] = c[0];
+      img.d[k + 1] = c[1];
+      img.d[k + 2] = c[2];
+    }
+  }
+  await saveLight(img, "light-daylight", { sat: 0.45 });
+}
+
+/* ---------------------------------------------------------------- (b) cloud deck at sunrise */
+
+/** Hash two ints to [0, 1). */
+function hash2(i, j, s) {
+  let h = Math.imul(i, 374761393) ^ Math.imul(j, 668265263) ^ Math.imul(s, 1442695041);
+  h = Math.imul(h ^ (h >>> 13), 1274126177);
+  return ((h ^ (h >>> 16)) >>> 0) / 4294967296;
+}
+
+/** A field of jittered spheres seen from above (cumulus heads): height of the tallest dome over (x, z). */
+function domes(x, z, cell, seed, fill = 0.85) {
+  const gx = Math.floor(x / cell);
+  const gz = Math.floor(z / cell);
+  let best = 0;
+  for (let j = -1; j <= 1; j++)
+    for (let i = -1; i <= 1; i++) {
+      const a = gx + i;
+      const b = gz + j;
+      if (hash2(a, b, seed + 7) > fill) continue;
+      const px = (a + 0.15 + 0.7 * hash2(a, b, seed)) * cell;
+      const pz = (b + 0.15 + 0.7 * hash2(a, b, seed + 1)) * cell;
+      const r = cell * (0.55 + 0.4 * hash2(a, b, seed + 2));
+      const d2 = (x - px) ** 2 + (z - pz) ** 2;
+      if (d2 < r * r) {
+        const h = Math.sqrt(r * r - d2);
+        if (h > best) best = h;
+      }
+    }
+  return best;
+}
+
+/** In-place separable gaussian blur of the float image (softens column-marched silhouettes). */
+function blur(img, sigma) {
+  const r = Math.ceil(sigma * 3);
+  const k = Array.from({ length: 2 * r + 1 }, (_, i) => Math.exp(-((i - r) ** 2) / (2 * sigma * sigma)));
+  const sum = k.reduce((a, b) => a + b, 0);
+  const tmp = new Float32Array(img.d.length);
+  for (const [src, dst, horiz] of [
+    [img.d, tmp, true],
+    [tmp, img.d, false],
+  ]) {
+    for (let y = 0; y < H; y++)
+      for (let x = 0; x < W; x++)
+        for (let c = 0; c < 3; c++) {
+          let v = 0;
+          for (let i = -r; i <= r; i++) {
+            const xx = horiz ? clamp(x + i, 0, W - 1) : x;
+            const yy = horiz ? y : clamp(y + i, 0, H - 1);
+            v += src[(yy * W + xx) * 3 + c] * k[i + r];
+          }
+          dst[(y * W + x) * 3 + c] = v / sum;
+        }
+  }
+}
+
+async function clouds() {
+  const img = new Img();
+  const n = perlin(61);
+  const n2 = perlin(62);
+  const hz = 455; // horizon row
+  const cxs = W / 2;
+  const f = 1250;
+  const S = norm3([0.88, 0.2, 0.42]); // low sun, to the right and a little ahead
+  const sunX = cxs + (S[0] / S[2]) * f * 0.42;
+  const sunY = hz - 70;
+
+  const skyTop = linRGB(214, 224, 236);
+  const skyHz = linRGB(247, 248, 250);
+  const lit = linRGB(255, 255, 254);
+  const shade = linRGB(178, 189, 204);
+  const deepShade = linRGB(138, 151, 170);
+  const fogC = linRGB(246, 247, 249);
+
+  // Sky first (everything above the clouds keeps it).
+  for (let y = 0; y < H; y++)
+    for (let x = 0; x < W; x++) {
+      const t = smooth(0, hz + 40, y);
+      let c = mix3(skyTop, skyHz, Math.pow(t, 1.6));
+      const dsx = (x - sunX) / 1.0;
+      const dsy = (y - sunY) * 2.2;
+      const g = Math.exp(-Math.hypot(dsx, dsy) / 620) * 0.3 + Math.exp(-Math.hypot(dsx, dsy) / 140) * 0.2;
+      c = [c[0] + g, c[1] + g, c[2] + g * 0.97];
+      // High, faint cirrus bands in the upper sky.
+      const u = x / H;
+      const v = y / H;
+      const ci = smooth(0.05, 0.55, fbm(n2, u * 1.4 + 2, v * 7, 3.3, 6)) * smooth(0.05, 0.3, v) * smooth(hz / H, 0.2, v);
+      c = mix3(c, lit, ci * 0.35);
+      const k = (y * W + x) * 3;
+      img.d[k] = c[0];
+      img.d[k + 1] = c[1];
+      img.d[k + 2] = c[2];
+    }
+
+  // Soft dome profile (no vertical walls, so the shading never aliases into stripes).
+  const dome = (X, Z, cell, seed, fill) => {
+    const h = domes(X, Z, cell, seed, fill);
+    return h * h / (cell * 0.95);
+  };
+  const lowAt = (X, Z) => {
+    const cov = smooth(-0.12, 0.3, fbm(n, X * 0.01, Z * 0.01, 1.7, 4));
+    const roll = 1.6 * fbm(n2, X * 0.018, Z * 0.018, 4.2, 5);
+    return { cov, base: roll + cov * (dome(X, Z, 16, 11, 0.8) * 0.75 + dome(X + 3, Z + 2, 7, 13, 0.75) * 0.7) - (1 - cov) * 2.4 };
+  };
+  const heightAt = (X, Z) => {
+    const { cov, base } = lowAt(X, Z);
+    const mid = dome(X + 0.7, Z, 2.8, 23, 0.85) * (0.25 + 0.75 * cov);
+    const small = dome(X, Z + 0.3, 1.1, 37, 0.9) * (0.3 + 0.5 * cov);
+    const fine = 0.22 * fbm(n, X * 0.7, Z * 0.7, 8.8, 4);
+    return base + mid * 0.9 + small * 0.4 + fine;
+  };
+
+  const camH2 = 8.5;
+  const ybuf = new Float32Array(W);
+  for (let x = 0; x < W; x++) {
+    ybuf[x] = H;
+    const dir = (x + 0.5 - cxs) / f;
+    let z = 10;
+    while (z < 2400) {
+      const X = dir * z + 40;
+      const Z = z;
+      const h = heightAt(X, Z);
+      const sy = hz + ((camH2 - h) / z) * f;
+      if (sy < ybuf[x]) {
+        const e = Math.max(0.02, z * 0.0011);
+        const hx = (heightAt(X + e, Z) - h) / e;
+        const hzz = (heightAt(X, Z + e) - h) / e;
+        const N = norm3([-hx, 1, -hzz]);
+        const ndl = N[0] * S[0] + N[1] * S[1] + N[2] * S[2];
+        let occ = 0;
+        for (const t of [0.6, 1.8]) {
+          const hh = heightAt(X + S[0] * t, Z + S[2] * t) - (h + S[1] * t);
+          occ = Math.max(occ, smooth(0, 0.4, hh));
+        }
+        // Crevices between heads sit in their neighbours' shade.
+        const ao = smooth(-0.6, 0.9, h - lowAt(X, Z).base - 0.3);
+        const diffuse = clamp((ndl + 0.45) / 1.45) * (1 - 0.6 * occ);
+        const sky = 0.5 + 0.5 * N[1];
+        let c = mix3(deepShade, shade, sky * (0.45 + 0.55 * ao));
+        c = mix3(c, lit, Math.pow(diffuse, 1.1) * (0.55 + 0.45 * ao));
+        const fog = 1 - Math.exp(-((z / 420) ** 1.25));
+        const sunFog = Math.exp(-Math.abs(x - sunX) / 700) * 0.4;
+        c = mix3(c, fogC, clamp(fog * (1 + sunFog)));
+        const y0 = Math.max(0, Math.floor(sy));
+        const y1 = Math.min(H, Math.ceil(ybuf[x]));
+        for (let y = y0; y < y1; y++) {
+          const k = (y * W + x) * 3;
+          const a = y === y0 ? 1 - (sy - y0) : 1;
+          img.d[k] = mix(img.d[k], c[0], a);
+          img.d[k + 1] = mix(img.d[k + 1], c[1], a);
+          img.d[k + 2] = mix(img.d[k + 2], c[2], a);
+        }
+        ybuf[x] = sy;
+      }
+      z += Math.max(0.01, z * 0.0022);
+    }
+  }
+  blur(img, 1.4);
+  await saveLight(img, "light-clouds", { sat: 0.4 });
+}
+
+/* ---------------------------------------------------------------- (c) the moon in a daytime sky */
+
+async function lunar() {
+  const img = new Img();
+  const n = perlin(71);
+  const n2 = perlin(72);
+  const top = linRGB(170, 190, 216);
+  const mid = linRGB(214, 224, 236);
+  const low = linRGB(246, 248, 250);
+  const white = linRGB(255, 255, 255);
+  for (let y = 0; y < H; y++)
+    for (let x = 0; x < W; x++) {
+      const v = y / H;
+      // Deeper silver-blue overhead, paling to near white at the horizon; brighter towards the (off-frame) sun on the left.
+      let c = v < 0.55 ? mix3(top, mid, smooth(0, 0.55, v)) : mix3(mid, low, smooth(0.55, 1, v));
+      const sun = Math.exp(-Math.hypot(x + 300, y - 900) / 1300) * 0.12;
+      c = [c[0] + sun, c[1] + sun, c[2] + sun * 0.95];
+      const k = (y * W + x) * 3;
+      img.d[k] = c[0];
+      img.d[k + 1] = c[1];
+      img.d[k + 2] = c[2];
+    }
+  // The moon adds its light to the sky: the dark limb vanishes into the blue, the maria read as blue-grey.
+  moonDisc(img, { cx: 1830, cy: 330, R: 210, L: norm3([0.5, -0.16, 0.85]), gain: 0.31, tint: [1, 1, 1], earthshine: 0 });
+  // Cirrus in front of everything (a strand crosses the moon's lower limb), applied after the moon.
+  for (let y = 0; y < H; y++)
+    for (let x = 0; x < W; x++) {
+      const u = x / H;
+      const v = y / H;
+      const warp = fbm(n2, u * 0.8, v * 0.8, 1.1, 3);
+      const strand = smooth(0.06, 0.45, fbm(n, u * 1.1 + warp * 0.6, v * 6.5 + warp * 1.5, 2.2, 6));
+      // Fibres: fine, strongly stretched streaks that follow the strand's slant.
+      const fib = Math.pow(clamp(0.5 + 0.9 * fbm(n2, u * 3 + v * 2.2, v * 70 + warp * 8, 5.5, 4)), 1.6);
+      const fray = 0.3 + 0.9 * fib;
+      const zone = smooth(0.18, 0.7, v) * smooth(2.0, 0.5, u) + 0.4 * Math.exp(-(((v - 0.42) / 0.07) ** 2)) * smooth(0.9, 1.6, u);
+      const a = clamp(strand * fray * zone * 0.62);
+      const k = (y * W + x) * 3;
+      img.d[k] = mix(img.d[k], white[0], a);
+      img.d[k + 1] = mix(img.d[k + 1], white[1], a);
+      img.d[k + 2] = mix(img.d[k + 2], white[2], a);
+    }
+  await saveLight(img, "light-lunar", { sat: 0.5 });
+}
+
+/* ---------------------------------------------------------------- (d) a celestial chart on paper */
+
+/**
+ * The Winter Hexagon (Orion, Taurus, Gemini, Auriga, the Dogs, Lepus) at J2000, stereographic
+ * projection. Positions and magnitudes are real (rounded); the faint background dots are decorative.
+ * [name, RA hours, Dec degrees, magnitude, label?]
+ */
+const CHART_STARS = {
+  betelgeuse: [5.919, 7.41, 0.5, "Betelgeuse"],
+  rigel: [5.242, -8.2, 0.13, "Rigel"],
+  bellatrix: [5.419, 6.35, 1.64, "Bellatrix"],
+  saiph: [5.796, -9.67, 2.06],
+  alnitak: [5.679, -1.94, 1.77],
+  alnilam: [5.603, -1.2, 1.69],
+  mintaka: [5.533, -0.3, 2.23],
+  meissa: [5.585, 9.93, 3.4],
+  aldebaran: [4.599, 16.51, 0.85, "Aldebaran"],
+  elnath: [5.438, 28.61, 1.65, "Elnath"],
+  zetaTau: [5.627, 21.14, 3.0],
+  gammaTau: [4.33, 15.63, 3.65],
+  deltaTau: [4.382, 17.54, 3.76],
+  epsTau: [4.477, 19.18, 3.53],
+  thetaTau: [4.478, 15.87, 3.4],
+  lambdaTau: [4.011, 12.49, 3.4],
+  omicronTau: [3.414, 9.03, 3.6],
+  alcyone: [3.791, 24.11, 2.87],
+  electra: [3.748, 24.11, 3.7],
+  atlas: [3.82, 24.05, 3.6],
+  maia: [3.764, 24.37, 3.9],
+  merope: [3.772, 23.95, 4.1],
+  taygeta: [3.754, 24.47, 4.3],
+  castor: [7.577, 31.89, 1.58, "Castor"],
+  pollux: [7.755, 28.03, 1.14, "Pollux"],
+  alhena: [6.628, 16.4, 1.93, "Alhena"],
+  mebsuta: [6.732, 25.13, 3.06],
+  tejat: [6.383, 22.51, 2.87],
+  propus: [6.248, 22.51, 3.3],
+  wasat: [7.335, 21.98, 3.5],
+  mekbuda: [7.068, 20.57, 3.9],
+  alzirr: [6.755, 12.9, 3.35],
+  capella: [5.278, 46.0, 0.08, "Capella"],
+  menkalinan: [5.992, 44.95, 1.9],
+  thetaAur: [5.995, 37.21, 2.6],
+  iotaAur: [4.95, 33.17, 2.7],
+  epsAur: [5.033, 43.82, 3.0],
+  sirius: [6.752, -16.72, -1.46, "Sirius"],
+  mirzam: [6.378, -17.96, 1.98],
+  wezen: [7.14, -26.39, 1.83],
+  adhara: [6.977, -28.97, 1.5, "Adhara"],
+  aludra: [7.402, -29.3, 2.45],
+  furud: [6.338, -30.06, 3.0],
+  procyon: [7.655, 5.22, 0.34, "Procyon"],
+  gomeisa: [7.453, 8.29, 2.9],
+  arneb: [5.545, -17.82, 2.6],
+  nihal: [5.47, -20.76, 2.8],
+  epsLep: [5.091, -22.37, 3.2],
+  muLep: [5.216, -16.21, 3.3],
+  deltaLep: [5.855, -20.88, 3.8],
+  gammaLep: [5.741, -22.45, 3.6],
+};
+const CHART_LINES = [
+  ["meissa", "betelgeuse"], ["meissa", "bellatrix"], ["betelgeuse", "alnitak"], ["bellatrix", "mintaka"],
+  ["alnitak", "alnilam"], ["alnilam", "mintaka"], ["alnitak", "saiph"], ["mintaka", "rigel"], ["betelgeuse", "bellatrix"],
+  ["elnath", "epsTau"], ["epsTau", "deltaTau"], ["deltaTau", "gammaTau"], ["gammaTau", "thetaTau"], ["thetaTau", "aldebaran"], ["aldebaran", "zetaTau"],
+  ["gammaTau", "lambdaTau"], ["lambdaTau", "omicronTau"],
+  ["castor", "pollux"], ["castor", "mebsuta"], ["mebsuta", "tejat"], ["tejat", "propus"], ["pollux", "wasat"], ["wasat", "mekbuda"], ["mekbuda", "alhena"], ["wasat", "alzirr"],
+  ["capella", "menkalinan"], ["menkalinan", "thetaAur"], ["thetaAur", "elnath"], ["elnath", "iotaAur"], ["iotaAur", "epsAur"], ["epsAur", "capella"],
+  ["mirzam", "sirius"], ["sirius", "wezen"], ["wezen", "aludra"], ["wezen", "adhara"], ["adhara", "furud"],
+  ["procyon", "gomeisa"],
+  ["muLep", "arneb"], ["arneb", "nihal"], ["nihal", "epsLep"], ["arneb", "gammaLep"], ["gammaLep", "deltaLep"],
+];
+const CHART_NAMES = [
+  ["ORION", 5.25, 3.2],
+  ["TAURUS", 4.15, 22.0],
+  ["GEMINI", 7.0, 31.0],
+  ["AURIGA", 5.6, 40.6],
+  ["CANIS MAJOR", 6.55, -23.6],
+  ["CANIS MINOR", 7.65, 9.6],
+  ["LEPUS", 5.4, -25.4],
+  ["PLEIADES", 3.6, 26.6],
+];
+
+async function chart() {
+  const n = perlin(81);
+  const n2 = perlin(82);
+  const r = rng(83);
+  const D = Math.PI / 180;
+  const a0 = 6.0 * 15 * D;
+  const d0 = 10 * D;
+  const S = 11.2 / D; // px per radian at the centre
+  const ccx = 1580;
+  const ccy = 560;
+  const proj = (raH, decDeg) => {
+    const a = raH * 15 * D;
+    const d = decDeg * D;
+    const cosc = Math.sin(d0) * Math.sin(d) + Math.cos(d0) * Math.cos(d) * Math.cos(a - a0);
+    const k = 2 / (1 + cosc);
+    const x = k * Math.cos(d) * Math.sin(a - a0);
+    const y = k * (Math.cos(d0) * Math.sin(d) - Math.sin(d0) * Math.cos(d) * Math.cos(a - a0));
+    // Sky charts are drawn as seen from below: east (increasing RA) is on the left.
+    return [ccx - x * S, ccy - y * S];
+  };
+  const f1 = (v) => v.toFixed(1);
+  const poly = (pts) => pts.map(([x, y], i) => `${i ? "L" : "M"}${f1(x)} ${f1(y)}`).join("");
+  const parts = [];
+  const mono = `font-family="JetBrains Mono, DejaVu Sans Mono, monospace"`;
+
+  // Coordinate grid: declination circles every 10 deg, hour circles every 1h.
+  const grid = [];
+  for (let dec = -60; dec <= 80; dec += 10) {
+    const pts = [];
+    for (let ra = -2; ra <= 14; ra += 0.05) pts.push(proj(ra, dec));
+    grid.push(poly(pts));
+  }
+  for (let ra = 0; ra < 24; ra += 1) {
+    const pts = [];
+    for (let dec = -80; dec <= 80; dec += 0.5) pts.push(proj(ra, dec));
+    grid.push(poly(pts));
+  }
+  parts.push(`<path d="${grid.join("")}" fill="none" stroke="#0a0a0a" stroke-opacity="0.11" stroke-width="1"/>`);
+  // Finer half-hour / 5 deg lines, fainter still.
+  const fine = [];
+  for (let dec = -55; dec <= 75; dec += 10) {
+    const pts = [];
+    for (let ra = -2; ra <= 14; ra += 0.05) pts.push(proj(ra, dec));
+    fine.push(poly(pts));
+  }
+  for (let ra = 0.5; ra < 24; ra += 1) {
+    const pts = [];
+    for (let dec = -80; dec <= 80; dec += 0.5) pts.push(proj(ra, dec));
+    fine.push(poly(pts));
+  }
+  parts.push(`<path d="${fine.join("")}" fill="none" stroke="#0a0a0a" stroke-opacity="0.05" stroke-width="1"/>`);
+  // The celestial equator a little stronger, the ecliptic dashed.
+  {
+    const pts = [];
+    for (let ra = -2; ra <= 14; ra += 0.05) pts.push(proj(ra, 0));
+    parts.push(`<path d="${poly(pts)}" fill="none" stroke="#0a0a0a" stroke-opacity="0.24" stroke-width="1"/>`);
+    const eps = 23.44 * D;
+    const ec = [];
+    for (let lam = -10; lam <= 210; lam += 0.5) {
+      const l = lam * D;
+      const ra = (Math.atan2(Math.sin(l) * Math.cos(eps), Math.cos(l)) / D / 15 + 24) % 24;
+      const dec = Math.asin(Math.sin(l) * Math.sin(eps)) / D;
+      ec.push(proj(ra > 18 ? ra - 24 : ra, dec));
+    }
+    parts.push(`<path d="${poly(ec)}" fill="none" stroke="#0a0a0a" stroke-opacity="0.32" stroke-width="1" stroke-dasharray="7 6"/>`);
+    const [ex, ey] = proj(8.6, 18.9);
+    parts.push(`<text x="${f1(ex)}" y="${f1(ey - 10)}" ${mono} font-size="13" letter-spacing="2.4" fill="#0a0a0a" fill-opacity="0.42" transform="rotate(-14 ${f1(ex)} ${f1(ey)})">ECLIPTIC</text>`);
+    const [qx, qy] = proj(8.55, 0);
+    parts.push(`<text x="${f1(qx)}" y="${f1(qy - 9)}" ${mono} font-size="13" letter-spacing="2.4" fill="#0a0a0a" fill-opacity="0.42" transform="rotate(-6 ${f1(qx)} ${f1(qy)})">EQUATOR</text>`);
+  }
+  // Grid labels: hours along the bottom, declinations up the right-hand side.
+  for (let ra = 2; ra <= 10; ra++) {
+    // Find where this hour circle crosses y = 1050.
+    let best = null;
+    for (let dec = -80; dec <= 80; dec += 0.1) {
+      const [x, y] = proj(ra, dec);
+      if (!best || Math.abs(y - 1050) < Math.abs(best[1] - 1050)) best = [x, y];
+    }
+    if (best && best[0] > 30 && best[0] < W - 60) parts.push(`<text x="${f1(best[0] + 7)}" y="1050" ${mono} font-size="14" fill="#0a0a0a" fill-opacity="0.5">${ra}h</text>`);
+  }
+  for (let dec = -20; dec <= 50; dec += 10) {
+    const [x, y] = proj(3.05, dec);
+    if (y > 30 && y < H - 30) parts.push(`<text x="${f1(x + 8)}" y="${f1(y - 6)}" ${mono} font-size="14" fill="#0a0a0a" fill-opacity="0.5">${dec > 0 ? "+" : dec < 0 ? "−" : ""}${Math.abs(dec)}°</text>`);
+  }
+
+  // Stars, with a paper-coloured gap around each so the figure lines stop short of them.
+  const rad = (m) => clamp(1.3 + (3.6 - m) * 1.15, 1.2, 7.4);
+  const P = Object.fromEntries(Object.entries(CHART_STARS).map(([k, [ra, dec, m, label]]) => [k, { xy: proj(ra, dec), m, label }]));
+  const lines = [];
+  for (const [a, b] of CHART_LINES) {
+    const A = P[a];
+    const B = P[b];
+    const dx = B.xy[0] - A.xy[0];
+    const dy = B.xy[1] - A.xy[1];
+    const len = Math.hypot(dx, dy);
+    const ga = rad(A.m) + 6;
+    const gb = rad(B.m) + 6;
+    if (len < ga + gb + 4) continue;
+    const ux = dx / len;
+    const uy = dy / len;
+    lines.push(`M${f1(A.xy[0] + ux * ga)} ${f1(A.xy[1] + uy * ga)}L${f1(B.xy[0] - ux * gb)} ${f1(B.xy[1] - uy * gb)}`);
+  }
+  // The Winter Hexagon itself: a faint dotted asterism through its six first-magnitude stars.
+  {
+    const hex = ["sirius", "procyon", "pollux", "capella", "aldebaran", "rigel", "sirius"].map((k) => P[k].xy);
+    parts.push(`<path d="${poly(hex)}" fill="none" stroke="#0a0a0a" stroke-opacity="0.3" stroke-width="1" stroke-dasharray="1 5" stroke-linecap="round"/>`);
+  }
+  parts.push(`<path d="${lines.join("")}" fill="none" stroke="#0a0a0a" stroke-opacity="0.72" stroke-width="1.25" stroke-linecap="round"/>`);
+  // Decorative faint field stars (kept tiny and grey so they never read as named objects).
+  const field = [];
+  for (let i = 0; i < 900; i++) {
+    const x = r() * W;
+    const y = r() * H;
+    const m = 4.2 + Math.pow(r(), 0.6) * 2.4;
+    field.push(`<circle cx="${f1(x)}" cy="${f1(y)}" r="${(0.5 + (6.6 - m) * 0.42).toFixed(2)}"/>`);
+  }
+  parts.push(`<g fill="#0a0a0a" fill-opacity="0.38">${field.join("")}</g>`);
+  for (const { xy, m } of Object.values(P)) {
+    const rr = rad(m);
+    if (m < 1) parts.push(`<circle cx="${f1(xy[0])}" cy="${f1(xy[1])}" r="${(rr + 4).toFixed(2)}" fill="none" stroke="#0a0a0a" stroke-opacity="0.5" stroke-width="0.9"/>`);
+    parts.push(`<circle cx="${f1(xy[0])}" cy="${f1(xy[1])}" r="${rr.toFixed(2)}" fill="#0a0a0a"/>`);
+  }
+  // M42, the Orion Nebula: a dashed ring below the belt.
+  {
+    const [x, y] = proj(5.588, -5.39);
+    parts.push(`<circle cx="${f1(x)}" cy="${f1(y)}" r="9" fill="none" stroke="#0a0a0a" stroke-opacity="0.55" stroke-width="1" stroke-dasharray="2.5 2.5"/>`);
+    parts.push(`<text x="${f1(x + 15)}" y="${f1(y + 4)}" ${mono} font-size="12" fill="#0a0a0a" fill-opacity="0.5">M42</text>`);
+  }
+  // Label placement per star: [dx, dy, anchor].
+  const at = { capella: [14, -10, "start"], aldebaran: [-14, 22, "end"], castor: [-12, -8, "end"], pollux: [-14, 6, "end"], elnath: [14, 6, "start"], betelgeuse: [-14, 4, "end"], adhara: [14, 4, "start"], sirius: [-16, 4, "end"] };
+  for (const [key, { xy, label }] of Object.entries(P)) {
+    if (!label) continue;
+    const [dx, dy, anchor] = at[key] ?? [12, 18, "start"];
+    parts.push(`<text x="${f1(xy[0] + dx)}" y="${f1(xy[1] + dy)}" ${mono} font-size="13" text-anchor="${anchor}" fill="#0a0a0a" fill-opacity="0.62">${label}</text>`);
+  }
+  for (const [name, ra, dec] of CHART_NAMES) {
+    const [x, y] = proj(ra, dec);
+    parts.push(`<text x="${f1(x)}" y="${f1(y)}" ${mono} font-size="${name === "PLEIADES" ? 11 : 15}" letter-spacing="${name === "PLEIADES" ? 2 : 4.5}" text-anchor="middle" fill="#0a0a0a" fill-opacity="0.55">${name}</text>`);
+  }
+  // A graduated ring (planisphere style) around the field.
+  {
+    const R0 = 560;
+    const ticks = [];
+    for (let deg = 0; deg < 360; deg += 2) {
+      const a = deg * D;
+      const len = deg % 30 === 0 ? 16 : deg % 10 === 0 ? 9 : 5;
+      ticks.push(`M${f1(ccx + Math.cos(a) * R0)} ${f1(ccy + Math.sin(a) * R0)}L${f1(ccx + Math.cos(a) * (R0 - len))} ${f1(ccy + Math.sin(a) * (R0 - len))}`);
+    }
+    parts.push(`<circle cx="${ccx}" cy="${ccy}" r="${R0}" fill="none" stroke="#0a0a0a" stroke-opacity="0.3" stroke-width="1"/>`);
+    parts.push(`<circle cx="${ccx}" cy="${ccy}" r="${R0 + 7}" fill="none" stroke="#0a0a0a" stroke-opacity="0.16" stroke-width="1"/>`);
+    parts.push(`<path d="${ticks.join("")}" stroke="#0a0a0a" stroke-opacity="0.32" stroke-width="1"/>`);
+    for (let deg = 0; deg < 360; deg += 30) {
+      const a = (deg - 90) * D;
+      const x = ccx + Math.cos(a) * (R0 + 24);
+      const y = ccy + Math.sin(a) * (R0 + 24);
+      parts.push(`<text x="${f1(x)}" y="${f1(y + 4)}" ${mono} font-size="12" text-anchor="middle" fill="#0a0a0a" fill-opacity="0.45">${String(deg).padStart(3, "0")}</text>`);
+    }
+  }
+  // Plate caption, top right.
+  parts.push(`<g ${mono} fill="#0a0a0a"><text x="2290" y="62" font-size="13" letter-spacing="3" text-anchor="end" fill-opacity="0.6">PLATE IV · THE WINTER HEXAGON</text><text x="2290" y="84" font-size="12" letter-spacing="1.5" text-anchor="end" fill-opacity="0.42">EPOCH J2000.0 · STEREOGRAPHIC · CENTRE 6h +10°</text></g>`);
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}">${parts.join("")}</svg>`;
+
+  // Paper: warm-neutral off-white, a fine fibre texture, a faint wash where the Milky Way runs.
+  const img = new Img();
+  const paper = linRGB(246, 246, 243);
+  const [mx0, my0] = proj(5.2, 48);
+  const [mx1, my1] = proj(7.4, -28);
+  const mdx = mx1 - mx0;
+  const mdy = my1 - my0;
+  const mlen = Math.hypot(mdx, mdy);
+  for (let y = 0; y < H; y++)
+    for (let x = 0; x < W; x++) {
+      const u = x / H;
+      const v = y / H;
+      const fibre = 0.012 * fbm(n, u * 60, v * 9, 0.5, 3) + 0.008 * fbm(n2, u * 220, v * 220, 1.5, 2);
+      const blot = 0.012 * fbm(n2, u * 2.2, v * 2.2, 3.3, 4);
+      // Distance from the Milky Way's centre line.
+      const t = ((x - mx0) * mdy - (y - my0) * mdx) / mlen;
+      const mw = Math.exp(-((t / 150) ** 2)) * (0.5 + 0.5 * smooth(-0.3, 0.5, fbm(n, u * 3, v * 3, 7.1, 5)));
+      const vig = 0.025 * smooth(0.5, 1.25, Math.hypot(u - 1.2, (v - 0.5) * 1.6));
+      const k = 1 + fibre + blot - 0.05 * mw - vig;
+      const i = (y * W + x) * 3;
+      img.d[i] = paper[0] * k;
+      img.d[i + 1] = paper[1] * k;
+      img.d[i + 2] = paper[2] * k * (1 + 0.006 * mw);
+    }
+  const base = Buffer.alloc(W * H * 3);
+  const rr = rng(84);
+  for (let i = 0; i < W * H * 3; i++) {
+    let t = clamp(img.d[i]);
+    t = t <= 0.0031308 ? 12.92 * t : 1.055 * Math.pow(t, 1 / 2.4) - 0.055;
+    base[i] = clamp(Math.round(t * 255 + (rr() + rr() - 1) * 0.8), 0, 255);
+  }
+  const raw = await sharp(base, { raw: { width: W, height: H, channels: 3 } })
+    .composite([{ input: Buffer.from(svg) }])
+    .removeAlpha()
+    .raw()
+    .toBuffer();
+  await encode(raw, "light-chart", 90);
+}
+
+/* ---------------------------------------------------------------- clouds: drifting veil (RGBA, tiles horizontally) */
+
+/**
+ * Wisps of mist and cirrus on transparency, seamless left to right (noise sampled on a cylinder), for the
+ * light "Clouds" scene: the hero slides two copies of it at different speeds over the deck (parallax).
+ */
+async function veil() {
+  const n = perlin(91);
+  const n2 = perlin(92);
+  const out = Buffer.alloc(W * H * 4);
+  const r = rng(93);
+  for (let y = 0; y < H; y++)
+    for (let x = 0; x < W; x++) {
+      const th = (x / W) * Math.PI * 2;
+      const v = y / H;
+      // Horizontal period = the frame width; ~3.2 noise units around the cylinder per radian.
+      const cx = Math.cos(th) * 1.7;
+      const cz = Math.sin(th) * 1.7;
+      const warp = fbm(n2, cx * 0.8, v * 4, cz * 0.8, 3);
+      const mist = smooth(0.02, 0.5, fbm(n, cx + warp * 0.5, v * 24 + warp * 2.5, cz, 6));
+      const fib = 0.5 + 0.5 * fbm(n2, cx * 4, v * 110 + warp * 10, cz * 4, 3);
+      // Mist sits along the deck's horizon; a fainter cirrus band floats higher in the sky.
+      const band = 0.9 * Math.exp(-(((v - 0.47) / 0.11) ** 2)) + 0.45 * Math.exp(-(((v - 0.2) / 0.08) ** 2)) + 0.35 * Math.exp(-(((v - 0.72) / 0.14) ** 2));
+      const a = clamp(mist * fib * band * 0.55);
+      const k = (y * W + x) * 4;
+      out[k] = out[k + 1] = 255;
+      out[k + 2] = 255;
+      out[k + 3] = clamp(Math.round(a * 255 + (r() - 0.5)), 0, 255);
+    }
+  // Soft content: half resolution is indistinguishable once scaled up, at a fraction of the bytes.
+  const file = join(OUT, "light-clouds-veil.webp");
+  await sharp(out, { raw: { width: W, height: H, channels: 4 } })
+    .resize(W / 2, H / 2)
+    .webp({ quality: 70, alphaQuality: 70, effort: 6 })
+    .toFile(file);
+  console.log(`light-clouds-veil.webp  ${W / 2}x${H / 2}  ${(statSync(file).size / 1024).toFixed(0)} KB`);
+}
+
+const SCENES = { orbit, moon, nebula, galaxy, "light-daylight": daylight, "light-clouds": clouds, "light-lunar": lunar, "light-chart": chart, "light-clouds-veil": veil };
 const pick = process.argv.slice(2);
 for (const [name, fn] of Object.entries(SCENES)) {
   if (pick.length && !pick.includes(name)) continue;

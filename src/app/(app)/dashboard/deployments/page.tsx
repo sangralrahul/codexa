@@ -1,5 +1,6 @@
 import Link from "next/link";
-import { AppPage, PageHeader } from "@/components/app/app-shell";
+import { AppPage } from "@/components/app/app-shell";
+import { SpaceBanner } from "@/components/app/space-hero/space-banner";
 import { requireUser } from "@/lib/auth/guards";
 import { getCurrentWorkspace } from "@/lib/services/current-workspace";
 import { listProjects } from "@/lib/services/projects";
@@ -33,8 +34,13 @@ export default async function DeploymentsPage() {
     LIMIT,
   );
   return (
-    <AppPage>
-      <PageHeader title="Deployments" description={current ? `Newest deployments in ${current.workspace.name} (up to ${LIMIT}). Publish and roll back from each project's editor.` : undefined} />
+    <>
+      <SpaceBanner
+        scene="orbit"
+        title="Deployments"
+        subtitle={current ? `Newest deployments in ${current.workspace.name} (up to ${LIMIT}). Publish and roll back from each project's editor.` : undefined}
+      />
+      <AppPage>
       {!current ? (
         <Alert variant="warning" title="No workspace">
           You are not a member of any workspace.{" "}
@@ -119,6 +125,7 @@ export default async function DeploymentsPage() {
           </table>
         </div>
       )}
-    </AppPage>
+      </AppPage>
+    </>
   );
 }

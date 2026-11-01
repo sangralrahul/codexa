@@ -38,6 +38,8 @@ export function ProjectsBrowser({
   emptySecondaryAction,
   title,
   canCreate = false,
+  facts: showFacts = Boolean(title),
+  toolbarNew = true,
 }: {
   projects: ProjectCardItem[];
   showWorkspace?: boolean;
@@ -50,6 +52,10 @@ export function ProjectsBrowser({
   title?: string;
   /** Show New project and the ghost tile (editors and up). */
   canCreate?: boolean;
+  /** The workspace facts strip under the toolbar (defaults to on when the page title renders here). */
+  facts?: boolean;
+  /** The toolbar's own New project button (off when the page header already has one). */
+  toolbarNew?: boolean;
 }) {
   const [query, setQuery] = useState("");
   const [sort, setSort] = useState<Sort>("recent");
@@ -103,7 +109,7 @@ export function ProjectsBrowser({
     </h1>
   ) : null;
 
-  const newProject = canCreate ? (
+  const newProject = canCreate && toolbarNew ? (
     <Link href="/new-project" className={buttonClasses("primary", "sm", "shrink-0")}>
       <Plus className="size-4" aria-hidden="true" /> New project
     </Link>
@@ -218,7 +224,7 @@ export function ProjectsBrowser({
       </div>
 
       {/* Facts strip: every number is summed from the loaded rows (live deployments, running previews, files, checkpoints). */}
-      {title ? (
+      {showFacts ? (
         <dl className="mb-4 flex flex-wrap items-center gap-x-5 gap-y-1.5 text-[12.5px] text-muted-foreground">
           <div className="flex items-center gap-1.5">
             <span className={cn("size-1.5 rounded-full", facts.live ? "bg-success" : "bg-muted-foreground/40")} aria-hidden="true" />

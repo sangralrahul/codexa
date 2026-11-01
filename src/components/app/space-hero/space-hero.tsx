@@ -5,14 +5,14 @@ import { SpaceBackdrop } from "./space-backdrop";
 export type SpaceHeroWorkspace = { id: string; name: string; plan: string };
 
 /**
- * The dashboard's opening hero: a full-bleed live space scene (always dark, a `.dark` token island)
- * with the workspace chip, the question and whatever composer `children` renders, centred on top.
- * The bottom edge fades into the page background (captured outside the island as --hero-page).
+ * The dashboard's opening hero: a full-bleed live scene that follows the page theme (night space in
+ * dark, a daylight set in light) with the workspace chip, the question and whatever composer `children`
+ * renders, centred on top. The bottom edge fades into the page background (--hero-page).
  */
 export function SpaceHero({ workspace, title = "What will you build today?", children }: { workspace: SpaceHeroWorkspace | null; title?: string; children: React.ReactNode }) {
   return (
     <div className="space-hero-wrap">
-      <section data-space-hero aria-labelledby="space-hero-title" className="space-hero dark">
+      <section data-space-hero data-space-host aria-labelledby="space-hero-title" className="space-hero">
         <SpaceBackdrop />
         <div className="space-hero__content">
           {workspace ? (

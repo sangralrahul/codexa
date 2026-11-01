@@ -1,4 +1,5 @@
-import { AppPage, PageHeader } from "@/components/app/app-shell";
+import { AppPage } from "@/components/app/app-shell";
+import { SpaceBanner } from "@/components/app/space-hero/space-banner";
 import { requireUser } from "@/lib/auth/guards";
 import { getCurrentWorkspace } from "@/lib/services/current-workspace";
 import { roleAtLeast } from "@/lib/services/access";
@@ -30,8 +31,9 @@ export default async function NewProjectPage({ searchParams }: { searchParams: S
   // ?template= (or ?tab=template) opens the template tab with that starter selected.
   const initialTab = requested || sp.tab === "template" ? "template" : "describe";
   return (
-    <AppPage>
-      <PageHeader title="New project" description="Describe what you want, start from a runnable template, or bring a repository. You can rename it and change who can open it later." />
+    <>
+      <SpaceBanner scene="moon" title="New project" subtitle="Describe what you want, start from a runnable template, or bring a repository. You can rename it and change who can open it later." />
+      <AppPage>
       <NewProjectForm
         templates={templates}
         workspaces={editable.map((w) => ({ id: w.workspace.id, name: w.workspace.name, role: w.role, plan: w.workspace.plan }))}
@@ -41,6 +43,7 @@ export default async function NewProjectPage({ searchParams }: { searchParams: S
         presets={presets}
         aiConfigured={capabilities.ai}
       />
-    </AppPage>
+      </AppPage>
+    </>
   );
 }

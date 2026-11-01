@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { ExternalLink } from "lucide-react";
-import { AppPage, PageHeader } from "@/components/app/app-shell";
+import { AppPage } from "@/components/app/app-shell";
+import { SpaceBanner } from "@/components/app/space-hero/space-banner";
+import { buttonClasses } from "@/components/ui/button";
 import { TemplateGallery, UseTemplateButton } from "@/components/templates";
 import { Alert } from "@/components/ui/misc";
 import { requireUser } from "@/lib/auth/guards";
@@ -24,17 +26,19 @@ export default async function DashboardTemplatesPage({ searchParams }: { searchP
   const workspaceId = current?.workspace.id ?? null;
 
   return (
-    <AppPage width="wide" className="[--btn-radius:10px]">
-      <PageHeader
+    <>
+      <SpaceBanner
+        scene="nebula"
         title="Templates"
-        description={current ? `${TEMPLATES.length} runnable starters. Pick one to start a project in ${current.workspace.name}.` : "Join or create a workspace to start projects from templates."}
+        subtitle={current ? `${TEMPLATES.length} runnable starters. Pick one to start a project in ${current.workspace.name}.` : "Join or create a workspace to start projects from templates."}
         actions={
-          <Link href="/templates" className="inline-flex items-center gap-1.5 rounded-md px-2 py-1 text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground">
+          <Link href="/templates" className={buttonClasses("outline", "sm")}>
             Public gallery
             <ExternalLink className="size-3.5" aria-hidden="true" />
           </Link>
         }
       />
+      <AppPage width="wide" className="[--btn-radius:10px]">
       {!current ? (
         <Alert variant="warning" title="No workspace" className="mb-6">
           You are not a member of any workspace yet, so templates cannot be used. Accept a pending invitation or create a workspace from the dashboard.
@@ -55,6 +59,7 @@ export default async function DashboardTemplatesPage({ searchParams }: { searchP
           renderSheetAction: (t) => <UseTemplateButton templateId={t.id} templateName={t.name} workspaceId={workspaceId} canCreate={canCreate} fileCount={t.fileCount} size="md" />,
         }}
       />
-    </AppPage>
+      </AppPage>
+    </>
   );
 }
