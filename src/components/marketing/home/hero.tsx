@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { ArrowRight, Monitor } from "lucide-react";
 import { SpaceBackdrop } from "@/components/space/space-backdrop";
+import { HOME_SCENE_SET } from "@/components/space/home-scenes";
 import { RotatingText } from "@/components/motion/rotating-text";
 import { Rise, RiseWords } from "@/components/motion/rise-words";
 import { tokenize } from "@/components/vignettes/tokenize";
@@ -18,8 +19,9 @@ function compact(lines: string[]): CompactToken[][] {
 const HERO_PHRASES = ["a storefront.", "a dashboard.", "a booking app.", "an internal tool.", "a REST API.", "a portfolio."] as const;
 
 /**
- * The opening: a full-bleed live scene (the dashboard's backdrop, fixed to the orbit horizon in the
- * dark theme and its daylight pair in the light theme), the frame's rails running through it, the
+ * The opening: a full-bleed live scene (the home's own set, HOME_SCENE_SET: a ringed giant, totality,
+ * an aurora and the Milky Way at night; their daylight counterparts in the light theme, crossfading every
+ * 25 s), the frame's rails running through it, the
  * "New" pill, the headline (the LCP: server-rendered text with the first phrase in place, rising in
  * with CSS; RotatingText takes over the cycle after hydration; screen readers get the stable sentence), two CTAs, the price line, and the product tour rising from the horizon.
  */
@@ -27,7 +29,7 @@ export function HomeHero({ signedIn, templateCount, priceLine, tour }: { signedI
   const script: TourScript = { ...tour, code: compact(tour.code) };
   return (
     <section aria-labelledby="home-title" className="hm-hero" data-space-hero data-space-host>
-      <SpaceBackdrop scene="orbit" variant="stage" />
+      <SpaceBackdrop sets={HOME_SCENE_SET} variant="stage" picker={false} />
       <div aria-hidden="true" className="hm-hero__rails" />
       <div className="hm-hero__copy">
         <Link href="/download" className="hm-pill">

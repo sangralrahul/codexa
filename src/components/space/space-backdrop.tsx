@@ -4,12 +4,23 @@ import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { Repeat } from "lucide-react";
 import { useCalm } from "@/lib/client/motion";
 import { cn } from "@/lib/utils";
-import { isSpaceSceneId, LIGHT_SPACE_SCENES, sceneFor, scenesFor, SPACE_SCENES, type DarkSceneId, type SpaceScene, type SpaceSceneId, type SpaceTheme } from "./scenes";
+import { LIGHT_SPACE_SCENES, sceneFor, SPACE_SCENES, type DarkSceneId, type SpaceScene, type SpaceSceneId, type SpaceTheme } from "./scenes";
 import { Starfield } from "./starfield";
 import { Dustfield } from "./dustfield";
 import "./space.css";
 
-const ALL_SCENES: readonly SpaceScene[] = [...SPACE_SCENES, ...LIGHT_SPACE_SCENES];
+/** A scene as the backdrop draws it: any scene set (the dashboard's, the marketing home's) fits this shape. */
+export type BackdropScene = Omit<SpaceScene, "id"> & {
+  id: string;
+  /** Dark theme: whether the starfield may draw shooting stars over this scene (default true). */
+  meteors?: boolean;
+};
+
+/** A night set and a daylight set; `key` namespaces the viewer's pinned scene so sets don't share pins. */
+export type BackdropSceneSet = { key: string; dark: readonly BackdropScene[]; light: readonly BackdropScene[] };
+
+/** The dashboard's set. Its pins keep the original storage keys, so choices made before sets existed survive. */
+const DEFAULT_SET: BackdropSceneSet = { key: "", dark: SPACE_SCENES, light: LIGHT_SPACE_SCENES };
 
 /* ---- The page theme, live: the `.dark` class on <html> (set by the theme provider and its toggle) ---- */
 
@@ -27,25 +38,28 @@ export function useSpaceTheme(): SpaceTheme {
 
 /* ---- The viewer's pinned scene per theme (localStorage, with an in-memory fallback when storage is blocked) ---- */
 
-const KEYS: Record<SpaceTheme, string> = { dark: "codexa:space-scene", light: "codexa:space-scene:light" };
+const storageKey = (theme: SpaceTheme, set = "") => (set ? `codexa:space-scene:${set}:${theme}` : theme === "dark" ? "codexa:space-scene" : "codexa:space-scene:light");
 const EVENT = "codexa:space-scene";
-const memory: Record<SpaceTheme, SpaceSceneId | null> = { dark: null, light: null };
+const memory = new Map<string, string | null>();
 
-function readPinned(theme: SpaceTheme): SpaceSceneId | null {
+function readPinned(theme: SpaceTheme, set: BackdropSceneSet): string | null {
+  const key = storageKey(theme, set.key);
+  let v: string | null;
   try {
-    const v = window.localStorage.getItem(KEYS[theme]);
-    return isSpaceSceneId(v, theme) ? v : null;
+    v = window.localStorage.getItem(key);
   } catch {
-    return memory[theme];
+    v = memory.get(key) ?? null;
   }
+  return set[theme].some((s) => s.id === v) ? v : null;
 }
 
-/** Pin a scene for a theme (stops the rotation), or null to go back to cycling. */
-export function pinSpaceScene(id: SpaceSceneId | null, theme: SpaceTheme = "dark") {
-  memory[theme] = id;
+/** Pin a scene for a theme (stops the rotation), or null to go back to cycling. `set` is a scene set's key ("" = the dashboard's). */
+export function pinSpaceScene(id: SpaceSceneId | string | null, theme: SpaceTheme = "dark", set = "") {
+  const key = storageKey(theme, set);
+  memory.set(key, id);
   try {
-    if (id) window.localStorage.setItem(KEYS[theme], id);
-    else window.localStorage.removeItem(KEYS[theme]);
+    if (id) window.localStorage.setItem(key, id);
+    else window.localStorage.removeItem(key);
   } catch {
     /* storage blocked: the in-memory value still applies for this page view */
   }
@@ -103,9 +117,15 @@ export function SpaceBackdrop({
   interval = 25_000,
   scene: fixed,
   variant = "hero",
+  sets = DEFAULT_SET,
+  picker = true,
   className,
 }: {
   interval?: number;
+  /** The scenes to rotate through (default: the dashboard's night and daylight sets). */
+  sets?: BackdropSceneSet;
+  /** Show the scene picker (when not fixed to one scene). */
+  picker?: boolean;
   /** Show this scene (its daylight pair in the light theme) instead of rotating; hides the picker. */
   scene?: DarkSceneId;
   /** "banner" uses each scene's short-crop focus and a quieter canvas; "stage" is the hero's canvas with a scrim its page styles (marketing home). */
@@ -120,23 +140,25 @@ export function SpaceBackdrop({
     () => false,
   );
   const theme = useSpaceTheme();
-  const scenes = scenesFor(theme);
+  const scenes = sets[theme];
+  const pool = [...sets.dark, ...sets.light];
   const storedPin = useSyncExternalStore(
     subscribePinned,
-    () => readPinned(theme),
+    () => readPinned(theme, sets),
     () => null,
   );
   const pinned = fixed ? null : storedPin;
   const active = useOnScreen(rootRef);
   const [auto, setAuto] = useState(0);
-  const current: SpaceSceneId = fixed ? sceneFor(theme, fixed).id : (pinned ?? scenes[auto % scenes.length].id);
+  const current: string = fixed ? sceneFor(theme, fixed).id : (pinned ?? scenes[auto % scenes.length].id);
   const banner = variant === "banner";
-  const motion = ALL_SCENES.find((s) => s.id === current)?.motion;
+  const currentScene = pool.find((s) => s.id === current);
+  const motion = currentScene?.motion;
 
   // Image layers, newest last: the previous scene stays underneath while the new one fades in.
-  const [shown, setShown] = useState<SpaceSceneId | null>(null);
-  const [layers, setLayers] = useState<SpaceSceneId[]>([]);
-  const [loaded, setLoaded] = useState<ReadonlySet<SpaceSceneId>>(() => new Set());
+  const [shown, setShown] = useState<string | null>(null);
+  const [layers, setLayers] = useState<string[]>([]);
+  const [loaded, setLoaded] = useState<ReadonlySet<string>>(() => new Set());
   if (mounted && current !== shown) {
     setShown(current);
     setLayers((l) => [...l.filter((x) => x !== current).slice(-1), current]);
@@ -148,7 +170,7 @@ export function SpaceBackdrop({
     return () => window.clearTimeout(t);
   }, [fixed, calm, pinned, active, auto, interval, scenes.length]);
 
-  const markLoaded = (id: SpaceSceneId) => {
+  const markLoaded = (id: string) => {
     // Two frames later, so the opacity transition starts from a painted 0.
     requestAnimationFrame(() => requestAnimationFrame(() => setLoaded((s) => (s.has(id) ? s : new Set(s).add(id)))));
   };
@@ -158,7 +180,7 @@ export function SpaceBackdrop({
     <div ref={rootRef} className={cn("space-backdrop", className)} data-variant={variant} data-paused={!active || undefined} data-calm={calm || undefined}>
       <div className="space-backdrop__scenes" aria-hidden="true">
         {layers.map((id) => {
-          const scene = ALL_SCENES.find((s) => s.id === id)!;
+          const scene = pool.find((s) => s.id === id) ?? [...SPACE_SCENES, ...LIGHT_SPACE_SCENES].find((s) => s.id === id)!;
           const isTop = id === top;
           return (
             <div
@@ -205,7 +227,7 @@ export function SpaceBackdrop({
           banner ? (
             <Starfield running={active} density={0.5} meteors={false} className="space-backdrop__stars" />
           ) : (
-            <Starfield running={active} className="space-backdrop__stars" />
+            <Starfield running={active} meteors={currentScene?.meteors !== false} className="space-backdrop__stars" />
           )
         ) : (
           <Dustfield
@@ -218,10 +240,10 @@ export function SpaceBackdrop({
       ) : null}
       <div className="space-backdrop__scrim" aria-hidden="true" />
 
-      {mounted && !fixed ? (
+      {mounted && !fixed && picker ? (
         <div role="group" aria-label="Backdrop scene" className="space-picker">
           {scenes.map((s) => (
-            <button key={s.id} type="button" aria-pressed={current === s.id} onClick={() => pinSpaceScene(s.id, theme)} className="space-picker__btn" title={`Show the ${s.label.toLowerCase()} scene`}>
+            <button key={s.id} type="button" aria-pressed={current === s.id} onClick={() => pinSpaceScene(s.id, theme, sets.key)} className="space-picker__btn" title={`Show the ${s.label.toLowerCase()} scene`}>
               <span className="space-picker__dot" aria-hidden="true" />
               <span className="max-sm:sr-only">{s.label}</span>
             </button>
@@ -232,7 +254,7 @@ export function SpaceBackdrop({
               aria-pressed={!pinned}
               onClick={() => {
                 setAuto(Math.max(0, scenes.findIndex((s) => s.id === current)));
-                pinSpaceScene(null, theme);
+                pinSpaceScene(null, theme, sets.key);
               }}
               className="space-picker__btn space-picker__btn--icon"
               title={`Cycle through the scenes every ${Math.round(interval / 1000)} seconds`}
