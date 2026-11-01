@@ -11,7 +11,7 @@ import fs from "node:fs/promises";
 import http from "node:http";
 import os from "node:os";
 import path from "node:path";
-import { and, eq } from "drizzle-orm";
+import { and, desc, eq } from "drizzle-orm";
 import type { User, Workspace, Project } from "@/db/schema";
 
 let currentUser: User | null = null;
@@ -258,6 +258,24 @@ describe.skipIf(!canRun)("runtime API", () => {
     expect(activity.map((a) => a.kind)).toEqual(expect.arrayContaining(["runtime.started", "runtime.stopped", "runtime.exec"]));
     expect((await proxyGet(hostOf(session.previewUrl))).status).toBe(404);
     expect((await routes.stop.POST(req("POST", "/x"), ctx({ id: staticProject.id }))).status).toBe(200); // idempotent
+  }, 120_000);
+
+  it("bills an unobserved, runner-stopped preview only up to the idle timeout", async () => {
+    as(alice);
+    const minutesFor = async () => (await db.select().from(schema.usageEvents).where(and(eq(schema.usageEvents.projectId, staticProject.id), eq(schema.usageEvents.kind, "runtime_minutes")))).reduce((n, e) => n + e.quantity, 0);
+    const before = await minutesFor();
+    expect([200, 201]).toContain((await routes.start.POST(req("POST", "/x"), ctx({ id: staticProject.id }))).status);
+    // Nobody opened the project for three days after its last accounting mark…
+    const [live] = await db.select().from(schema.runtimeSessions).where(eq(schema.runtimeSessions.projectId, staticProject.id)).orderBy(desc(schema.runtimeSessions.startedAt)).limit(1);
+    await db.update(schema.runtimeSessions).set({ lastHeartbeatAt: new Date(Date.now() - 3 * 24 * 60 * 60_000) }).where(eq(schema.runtimeSessions.id, live.id));
+    // …and meanwhile the runner's idle sweeper stopped the sandbox. The next status read reconciles it.
+    await app.sessions.stopAll();
+    const body = (await (await routes.runtime.GET(req("GET", "/x"), ctx({ id: staticProject.id }))).json()) as { session: { status: string } };
+    expect(body.session.status).toBe("stopped");
+    // Billed at most the 30-minute idle cap, not the three days (4,320 minutes).
+    const billed = (await minutesFor()) - before;
+    expect(billed).toBeGreaterThan(0);
+    expect(billed).toBeLessThanOrEqual(31);
   }, 120_000);
 
   it("execInProject starts a runtime on demand (vite project, typecheck) and marks runner-stopped sessions", async () => {

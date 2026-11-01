@@ -26,6 +26,13 @@ import type { ExecCommand, RunnerExecResult, RunnerSessionView, RuntimeSessionDt
 
 const ACTIVE = ["starting", "running"] as const;
 const HEARTBEAT_ACCOUNT_MS = 5 * 60_000;
+/**
+ * Longest a sandbox can keep running with nobody watching: the runner stops a session after
+ * RUNNER_IDLE_TIMEOUT_MS (30 min by default) without activity. When a session is found to have
+ * ended while no one was looking, billing stops at most this long after the last activity we
+ * know of, instead of running on until the next time someone opens the project.
+ */
+const UNOBSERVED_END_CAP_MS = 30 * 60_000;
 
 export function toSessionDto(row: RuntimeSession): RuntimeSessionDto {
   return {
@@ -76,8 +83,15 @@ async function accrueMinutes(row: RuntimeSession, workspaceId: string, final: bo
   return updated ?? row;
 }
 
-async function markStopped(row: RuntimeSession, workspaceId: string, patch: { status: "stopped" | "error"; error?: string | null }) {
-  await accrueMinutes(row, workspaceId, true);
+/** When a session that ended unobserved should be billed until: last known activity + the idle cap, never later than now. */
+function unobservedEnd(row: RuntimeSession, lastActivityAt?: string | null, now = new Date()): Date {
+  const activity = lastActivityAt ? new Date(lastActivityAt).getTime() : NaN;
+  const base = Math.max(row.lastHeartbeatAt.getTime(), Number.isFinite(activity) ? activity : 0);
+  return new Date(Math.min(now.getTime(), base + UNOBSERVED_END_CAP_MS));
+}
+
+async function markStopped(row: RuntimeSession, workspaceId: string, patch: { status: "stopped" | "error"; error?: string | null }, endedAt?: Date) {
+  await accrueMinutes(row, workspaceId, true, endedAt);
   const [updated] = await db
     .update(runtimeSessions)
     .set({ status: patch.status, error: patch.error ?? null, stoppedAt: new Date() })
@@ -164,7 +178,11 @@ export async function startRuntime({ project, workspace, user }: StartRuntimeInp
 async function reconcile(row: RuntimeSession, workspaceId: string): Promise<RuntimeSession | null> {
   if (!row.runnerSessionId) {
     // Insert happened but the runner call never completed (crash mid-start): close it out.
-    if (Date.now() - row.startedAt.getTime() > 60_000) return markStopped(row, workspaceId, { status: "error", error: "Start did not complete" });
+    if (Date.now() - row.startedAt.getTime() > 60_000) {
+      // Nothing ever ran: bill at most the minute the start was allowed to take.
+      const endedAt = new Date(Math.min(Date.now(), row.startedAt.getTime() + 60_000));
+      return markStopped(row, workspaceId, { status: "error", error: "Start did not complete" }, endedAt);
+    }
     return row;
   }
   const health = await runnerHealth();
@@ -180,10 +198,10 @@ async function reconcile(row: RuntimeSession, workspaceId: string): Promise<Runt
       }
       return accrued;
     }
-    return markStopped(row, workspaceId, { status: mapped.status, error: mapped.error });
+    return markStopped(row, workspaceId, { status: mapped.status, error: mapped.error }, unobservedEnd(row, session.lastActivityAt));
   } catch (err) {
     if (err instanceof RunnerRequestError && err.status === 404) {
-      return markStopped(row, workspaceId, { status: "stopped", error: "The sandbox was stopped by the runner (idle timeout or restart)" });
+      return markStopped(row, workspaceId, { status: "stopped", error: "The sandbox was stopped by the runner (idle timeout or restart)" }, unobservedEnd(row));
     }
     if (err instanceof RunnerUnavailableError) return row;
     throw err;
