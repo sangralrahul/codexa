@@ -3,7 +3,7 @@ import { requireUser } from "@/lib/auth/guards";
 import { getCurrentWorkspace } from "@/lib/services/current-workspace";
 import { roleAtLeast } from "@/lib/services/access";
 import { listProjects } from "@/lib/services/projects";
-import { getMilestones } from "@/lib/services/dashboard";
+import { getMilestones, getProjectStatuses } from "@/lib/services/dashboard";
 import { getRecentDeployments } from "@/lib/services/dashboard-insights";
 import { listMembers } from "@/lib/services/workspaces";
 import { getWorkspaceEntitlements } from "@/lib/services/usage";
@@ -12,18 +12,26 @@ import { PLANS } from "@/config/plans";
 import { clampIdea } from "@/lib/client/pending-idea";
 import { getTemplate } from "@/templates";
 import { DEFAULT_TEMPLATE_ID, listTemplateSummaries } from "@/components/projects/template-summaries";
-import type { PromptPreset } from "@/components/projects/prompt-box";
+import type { PromptMode, PromptPreset } from "@/components/projects/prompt-box";
 import { CHECKLIST_COOKIE } from "@/components/projects/getting-started";
 import { buildProjectCards } from "@/components/projects/card-data";
-import { Overview } from "@/components/app/overview";
+import { toStatusDto } from "@/components/projects/status";
+import { Overview, type OverviewLists } from "@/components/app/overview";
 import type { DeploymentRow } from "@/components/projects/deployments-card";
 
 export const metadata = { title: "Overview", robots: { index: false } };
 
 type SearchParams = Promise<{ prompt?: string; template?: string }>;
 
-/** Rows in the recent projects table. */
+/** Rows in the recent projects table (per filter). */
 const RECENT = 8;
+
+/** The hero's runtime tabs: one real starter template per runtime the runner supports. */
+const MODE_DEFS = [
+  { id: "web", label: "Web app", templateId: "vite-react-starter" },
+  { id: "site", label: "Website", templateId: "static-site" },
+  { id: "api", label: "API", templateId: "node-express-api" },
+] as const;
 
 function hostOf(url: string | null) {
   if (!url) return null;
@@ -46,12 +54,24 @@ export default async function DashboardPage({ searchParams }: { searchParams: Se
     current ? listMembers(current.workspace.id) : Promise.resolve([]),
   ]);
   const projectCount = rows.length;
-  // Every project's real state, file/checkpoint counts and the workspace members; the newest five
+  // Live / Drafts split over every project (a live deployment = Live, otherwise a draft), then the
+  // newest rows of each filter get full card data (state, file/checkpoint counts); the newest five
   // deployments across the whole workspace for the aside.
   const touched = (p: (typeof rows)[number]) => (p.lastOpenedAt ?? p.updatedAt).getTime();
-  const recentRows = [...rows].sort((a, b) => touched(b) - touched(a)).slice(0, RECENT);
+  const sorted = [...rows].sort((a, b) => touched(b) - touched(a));
+  const allStatuses = await getProjectStatuses(sorted.map((p) => p.id));
+  const isLive = (p: (typeof rows)[number]) => Boolean(toStatusDto(allStatuses.get(p.id))?.live);
+  const liveRows = sorted.filter(isLive);
+  const draftRows = sorted.filter((p) => !isLive(p));
+  const lists: OverviewLists = {
+    all: { ids: sorted.slice(0, RECENT).map((p) => p.id), total: sorted.length },
+    live: { ids: liveRows.slice(0, RECENT).map((p) => p.id), total: liveRows.length },
+    drafts: { ids: draftRows.slice(0, RECENT).map((p) => p.id), total: draftRows.length },
+  };
+  const shownIds = new Set([...lists.all.ids, ...lists.live.ids, ...lists.drafts.ids]);
+  const cardRows = sorted.filter((p) => shownIds.has(p.id));
   const [{ items: projectItems }, recentDeploys] = await Promise.all([
-    current ? buildProjectCards(recentRows, { id: current.workspace.id, name: current.workspace.name, role: current.role }) : Promise.resolve({ items: [], statuses: new Map(), members: [] }),
+    current ? buildProjectCards(cardRows, { id: current.workspace.id, name: current.workspace.name, role: current.role }) : Promise.resolve({ items: [], statuses: new Map(), members: [] }),
     getRecentDeployments(
       rows.map((p) => p.id),
       5,
@@ -118,6 +138,10 @@ export default async function DashboardPage({ searchParams }: { searchParams: Se
     },
   ];
   const presets = presetDefs.filter((p): p is PromptPreset => Boolean(p.templateId));
+  const modes: PromptMode[] = MODE_DEFS.flatMap((m) => {
+    const t = templates.find((x) => x.id === m.templateId);
+    return t ? [{ id: m.id, label: m.label, templateId: t.id, framework: t.framework, detail: t.frameworkName }] : [];
+  });
 
   const m = milestones;
   // Shown until every step is done (or dismissed); a finished checklist is noise.
@@ -125,6 +149,8 @@ export default async function DashboardPage({ searchParams }: { searchParams: Se
 
   return (
     <Overview
+      workspace={current ? { id: current.workspace.id, name: current.workspace.name, plan: PLANS[current.workspace.plan].name } : null}
+      modes={modes}
       composer={{
         workspaceId: createIn,
         workspaces: editable.map((w) => ({ id: w.workspace.id, name: w.workspace.name, plan: w.workspace.plan })),
@@ -141,7 +167,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: Se
       }}
       showPresets={projectCount === 0}
       projects={projectItems}
-      projectCount={projectCount}
+      lists={lists}
       deployments={deployments}
       entitlements={entitlements ? { plan: entitlements.plan, periodStart: entitlements.periodStart, limits: entitlements.limits, used: entitlements.used } : null}
       members={memberRows.map((mr) => ({ id: mr.userId, name: mr.name?.trim() || mr.email, avatarUrl: mr.avatarUrl ?? null, role: mr.role }))}

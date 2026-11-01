@@ -179,17 +179,17 @@ function starfield(img, seed, { count, density = () => 1, mask = null, scale = 1
     if (r() > density(x, y)) continue;
     placed++;
     // Mostly pinpricks; only a handful are bright enough to bloom.
-    const b = Math.min(5, 0.011 * Math.pow(r(), -1.12)) * scale;
+    const b = Math.min(3.2, 0.011 * Math.pow(r(), -1.12)) * scale;
     const col = starColor(r());
-    const sigma = 0.42 + 0.2 * Math.log1p(b * 3);
+    const sigma = 0.4 + 0.14 * Math.log1p(b * 3);
     img.splat(x, y, b, sigma, col, 1, mask);
-    if (halos && b > 1.1) img.splat(x, y, b * 0.012, 2.2 + b * 0.9, col, 1, mask);
+    if (halos && b > 1.4) img.splat(x, y, b * 0.006, 1.6 + b * 0.5, col, 1, mask);
   }
 }
 
 /* ---------------------------------------------------------------- encode */
 
-async function save(img, name, { exposure = 1, sat = 0.3, quality = 80, black = 0 }) {
+async function save(img, name, { exposure = 1, sat = 0.3, quality = 90, black = 0 }) {
   const out = Buffer.alloc(W * H * 3);
   const r = rng(1234);
   const d = img.d;
@@ -328,9 +328,9 @@ async function moon() {
   const n = perlin(21);
   const n2 = perlin(22);
   const r = rng(23);
-  const cx = 1800;
-  const cy = 540;
-  const R = 410;
+  const cx = 1900;
+  const cy = 520;
+  const R = 390;
   const L = norm3([0.86, -0.3, 0.42]);
   const K = 1.0; // relief exaggeration
 
@@ -590,9 +590,9 @@ async function galaxy() {
   const n = perlin(41);
   const n2 = perlin(42);
   const r = rng(43);
-  const cx = 1660;
-  const cy = 540;
-  const rg = 640; // disc scale in pixels
+  const cx = 1880;
+  const cy = 500;
+  const rg = 600; // disc scale in pixels
   const inc = (64 * Math.PI) / 180;
   const pa = (-24 * Math.PI) / 180;
   const cosI = Math.cos(inc);
@@ -636,7 +636,7 @@ async function galaxy() {
       const t = Math.exp(-tau);
       trans[i] = t;
       const armLight = disk * (0.45 + 1.1 * arm * clumps + 0.6 * armS * clumps);
-      const outer = 0.08 * Math.exp(-rr / 0.55) * (0.4 + 0.6 * arm);
+      const outer = 0.08 * Math.exp(-rr / 0.55) * (0.4 + 0.6 * arm) * smooth(1.85, 0.9, rr);
       const bR = bulge * 1.0;
       const bG = bulge * 0.93;
       const bB = bulge * 0.82;
@@ -667,9 +667,10 @@ async function galaxy() {
     const x = r() * W;
     const y = r() * H;
     if (Math.hypot(x - cx, y - cy) < 800) continue;
-    const s = 3 + r() * 6;
+    // Tiny, edge-on-ish smudges: distant galaxies, not out-of-focus blobs.
+    const s = 1.2 + r() * 1.6;
     const a = r() * Math.PI;
-    for (let q = 0; q < 3; q++) img.splat(x + Math.cos(a) * (q - 1) * s * 0.6, y + Math.sin(a) * (q - 1) * s * 0.6, 0.05 + r() * 0.05, s * 0.5, [1, 0.95, 0.88]);
+    for (let q = 0; q < 5; q++) img.splat(x + Math.cos(a) * (q - 2) * s * 0.7, y + Math.sin(a) * (q - 2) * s * 0.7, (q === 2 ? 0.16 : 0.07) * (0.6 + r() * 0.6), s * 0.55, [1, 0.95, 0.88]);
   }
   await save(img, "galaxy", { exposure: 1.25, sat: 0.3 });
 }

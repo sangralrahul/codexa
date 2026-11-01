@@ -36,9 +36,11 @@ export function Starfield({ running, density = 1, meteors = true, className }: {
     const sctx = sprite.getContext("2d");
     if (sctx) {
       const g = sctx.createRadialGradient(16, 16, 0, 16, 16, 16);
+      // A bright pinpoint core with a short falloff: stars, not bokeh.
       g.addColorStop(0, "rgba(255,255,255,1)");
-      g.addColorStop(0.18, "rgba(240,246,255,0.85)");
-      g.addColorStop(0.45, "rgba(220,232,255,0.18)");
+      g.addColorStop(0.14, "rgba(246,249,255,0.92)");
+      g.addColorStop(0.32, "rgba(225,235,255,0.22)");
+      g.addColorStop(0.6, "rgba(220,232,255,0.04)");
       g.addColorStop(1, "rgba(220,232,255,0)");
       sctx.fillStyle = g;
       sctx.fillRect(0, 0, 32, 32);
@@ -60,15 +62,7 @@ export function Starfield({ running, density = 1, meteors = true, className }: {
       stars = Array.from({ length: count }, () => {
         const z = Math.random() < 0.6 ? 0.25 : Math.random() < 0.75 ? 0.55 : 1;
         const bright = Math.random() ** 3;
-        return {
-          x: Math.random() * w,
-          y: Math.random() * h,
-          z,
-          r: 0.35 + z * 0.55 + bright * 0.9,
-          a: 0.25 + 0.55 * bright + z * 0.2,
-          tw: 0.6 + Math.random() * 2.2,
-          ph: Math.random() * TAU,
-        };
+        return { x: Math.random() * w, y: Math.random() * h, z, r: 0.45 + z * 0.4 + bright * 0.75, a: 0.3 + 0.5 * bright + z * 0.2, tw: 0.6 + Math.random() * 2.2, ph: Math.random() * TAU };
       });
     };
 
@@ -114,7 +108,7 @@ export function Starfield({ running, density = 1, meteors = true, className }: {
         const px = s.x + cur.x * s.z * 16;
         const py = s.y + cur.y * s.z * 10;
         const tw = 0.72 + 0.28 * Math.sin(t * 0.001 * s.tw + s.ph);
-        const size = s.r * 4;
+        const size = s.r * 3.2;
         ctx.globalAlpha = Math.min(1, s.a * tw);
         ctx.drawImage(sprite, px - size / 2, py - size / 2, size, size);
       }
@@ -172,7 +166,8 @@ export function Starfield({ running, density = 1, meteors = true, className }: {
       }
     };
 
-    const host = canvas.parentElement;
+    // Parallax follows the pointer anywhere over the hero (its content sits above the canvas).
+    const host = canvas.closest<HTMLElement>("[data-space-hero]") ?? canvas.parentElement;
     const onMove = (e: PointerEvent) => {
       if (e.pointerType !== "mouse" || !host) return;
       const rect = host.getBoundingClientRect();

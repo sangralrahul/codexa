@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { ArrowUpRight, Plus } from "lucide-react";
 import { Avatar } from "@/components/ui/avatar";
-import { PromptBox } from "@/components/projects/prompt-box";
+import { PromptBox, type PromptMode, type PromptRecent } from "@/components/projects/prompt-box";
 import type { ProjectCardItem } from "@/components/projects/project-card";
 import type { DeploymentRow } from "@/components/projects/deployments-card";
 import type { KpiEntitlements } from "@/components/projects/kpi-row";
@@ -9,6 +9,8 @@ import { GettingStarted, type ChecklistMilestones } from "@/components/projects/
 import { absoluteTime, frameworkLabel, lastTouch, relativeTime } from "@/components/projects/format";
 import { ProjectThumb } from "./project-thumb";
 import { shortAgo, UsageBar } from "./grid-bits";
+import { ProjectFilters } from "./project-filters";
+import { SpaceHero, type SpaceHeroWorkspace } from "./space-hero/space-hero";
 
 export type OverviewMember = { id: string; name: string; avatarUrl: string | null; role: string };
 type Tone = "ok" | "warn" | "error" | "info" | undefined;
@@ -85,8 +87,16 @@ export function ProjectsTable({ projects, label, empty }: { projects: ProjectCar
               return (
                 <tr key={p.id}>
                   <td className="w-full max-w-0 font-medium text-foreground sm:w-auto sm:max-w-none">
-                    <Link href={`/projects/${p.id}`} className="group/pr flex min-w-0 items-center gap-3 rounded-[4px] outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring">
-                      <ProjectThumb templateId={p.templateId} framework={p.framework} size="lg" className="hidden h-10 w-16 rounded-[4px] shadow-[inset_0_0_0_1px_var(--border-strong)] min-[420px]:inline-flex" />
+                    <Link
+                      href={`/projects/${p.id}`}
+                      className="group/pr flex min-w-0 items-center gap-3 rounded-[4px] outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+                    >
+                      <ProjectThumb
+                        templateId={p.templateId}
+                        framework={p.framework}
+                        size="lg"
+                        className="hidden h-10 w-16 rounded-[4px] shadow-[inset_0_0_0_1px_var(--border-strong)] min-[420px]:inline-flex"
+                      />
                       <span className="min-w-0">
                         <span className="block truncate group-hover/pr:underline group-hover/pr:underline-offset-4">{p.name}</span>
                         <small className="app-dim app-mono block whitespace-nowrap text-[11px] font-normal">
@@ -104,7 +114,13 @@ export function ProjectsTable({ projects, label, empty }: { projects: ProjectCar
                   </td>
                   <td className="mono hidden max-w-[220px] truncate sm:table-cell">
                     {p.status?.live ? (
-                      <a href={p.status.live.url} target="_blank" rel="noopener noreferrer" className="hover:text-foreground hover:underline hover:underline-offset-4" title={`Open ${p.status.live.url}`}>
+                      <a
+                        href={p.status.live.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="hover:text-foreground hover:underline hover:underline-offset-4"
+                        title={`Open ${p.status.live.url}`}
+                      >
                         {p.status.live.host}
                       </a>
                     ) : (
@@ -113,7 +129,9 @@ export function ProjectsTable({ projects, label, empty }: { projects: ProjectCar
                   </td>
                   <td className="mono hidden whitespace-nowrap lg:table-cell">
                     {p.lastCheckpointId ? (
-                      <span title={`${p.checkpointCount ?? 1} checkpoint${p.checkpointCount === 1 ? "" : "s"} · latest ${absoluteTime(p.lastCheckpointAt)}`}>{p.lastCheckpointId.replace(/-/g, "").slice(0, 7)}</span>
+                      <span title={`${p.checkpointCount ?? 1} checkpoint${p.checkpointCount === 1 ? "" : "s"} · latest ${absoluteTime(p.lastCheckpointAt)}`}>
+                        {p.lastCheckpointId.replace(/-/g, "").slice(0, 7)}
+                      </span>
                     ) : (
                       <span className="app-dim">None</span>
                     )}
@@ -133,16 +151,28 @@ export function ProjectsTable({ projects, label, empty }: { projects: ProjectCar
   );
 }
 
+/** Project ids per filter (most recently touched first, at most the table's length) and the real totals. */
+export type OverviewLists = Record<"all" | "live" | "drafts", { ids: string[]; total: number }>;
+
+const FILTERS: { id: keyof OverviewLists; label: string }[] = [
+  { id: "all", label: "All" },
+  { id: "live", label: "Live" },
+  { id: "drafts", label: "Drafts" },
+];
+
 /**
- * Overview (the signed-in dashboard), d01 "Monochrome Grid": the composer and the projects table
- * in the main column; usage, recent deployments and members in a 320px aside. Every value comes
- * from the page's database reads and the plan config.
+ * Overview (the signed-in dashboard), d01 "Monochrome Grid": a full-bleed space hero with the composer
+ * (runtime tabs, recent projects as quick picks), then the projects table with All / Live / Drafts
+ * filters in the main column and usage, recent deployments and members in a 320px aside. Every value
+ * comes from the page's database reads and the plan config.
  */
 export function Overview({
+  workspace,
   composer,
+  modes,
   showPresets,
   projects,
-  projectCount,
+  lists,
   deployments,
   entitlements,
   members,
@@ -150,12 +180,16 @@ export function Overview({
   canCreate,
   checklist,
 }: {
+  /** The current workspace for the hero chip (plan as its display name). */
+  workspace: SpaceHeroWorkspace | null;
   composer: React.ComponentProps<typeof PromptBox>;
+  /** Runtime tabs above the composer (each a real starter template). */
+  modes: PromptMode[];
   /** Quick-start presets under the composer (first run only, to keep the page quiet afterwards). */
   showPresets: boolean;
-  /** Most recently touched first. */
+  /** Card data for every project any filter shows. */
   projects: ProjectCardItem[];
-  projectCount: number;
+  lists: OverviewLists;
   deployments: DeploymentRow[];
   entitlements: KpiEntitlements | null;
   members: OverviewMember[];
@@ -165,159 +199,198 @@ export function Overview({
   checklist: { milestones: ChecklistMilestones; emailVerified: boolean; emailConfigured: boolean } | null;
 }) {
   const e = entitlements;
+  const projectCount = lists.all.total;
   const shownMembers = members.slice(0, 5);
-  return (
-    <div className="mx-auto grid w-full max-w-[1296px] grid-cols-1 gap-8 px-4 py-6 sm:px-6 sm:py-8 lg:grid-cols-[minmax(0,1fr)_320px]">
-      <h1 className="sr-only">Overview</h1>
-      <div className="min-w-0">
-        <PromptBox {...composer} presets={showPresets ? composer.presets : []} align="start" compact />
-
-        {checklist ? (
-          <GettingStarted
-            milestones={checklist.milestones}
-            canCreate={canCreate}
-            emailVerified={checklist.emailVerified}
-            emailConfigured={checklist.emailConfigured}
-            resumeHref={projects[0] ? `/projects/${projects[0].id}` : undefined}
-            layout="strip"
-            className="mt-4"
-          />
-        ) : null}
-
-        <section aria-labelledby="ov-projects" className="mt-7">
-          <div className="mb-3 flex items-center gap-2.5">
-            <h2 id="ov-projects" className="text-[16px] font-semibold tracking-[-0.01em]">
-              Projects
-            </h2>
-            <span className="app-pill app-mono">{projectCount}</span>
-            <div className="ml-auto flex items-center gap-2">
-              <Link href="/projects" className="app-chip">
-                All projects
+  const byId = new Map(projects.map((p) => [p.id, p]));
+  const pick = (ids: string[]) => ids.map((id) => byId.get(id)).filter((p): p is ProjectCardItem => Boolean(p));
+  const recent: PromptRecent[] = pick(lists.all.ids)
+    .slice(0, 4)
+    .map((p) => ({ id: p.id, name: p.name, templateId: p.templateId, framework: p.framework }));
+  const empty: Record<keyof OverviewLists, React.ReactNode> = {
+    all: (
+      <>
+        <span className="block font-medium text-foreground">No projects yet</span>
+        <span className="mt-1 block">
+          Describe your first app above, start from a{" "}
+          <Link href="/dashboard/templates" className="text-foreground underline underline-offset-4">
+            template
+          </Link>
+          {canCreate ? (
+            <>
+              , or{" "}
+              <Link href="/import-project" className="text-foreground underline underline-offset-4">
+                import from GitHub
               </Link>
-              {canCreate ? (
-                <Link href="/new-project" className="app-chip">
-                  <Plus className="size-3.5" aria-hidden="true" /> New project
-                </Link>
-              ) : null}
-            </div>
-          </div>
-          <ProjectsTable
-            projects={projects}
-            label="Recent projects"
-            empty={
-              <>
-                <span className="block font-medium text-foreground">No projects yet</span>
-                <span className="mt-1 block">
-                  Describe your first app above, start from a{" "}
-                  <Link href="/dashboard/templates" className="text-foreground underline underline-offset-4">
-                    template
+            </>
+          ) : null}
+          .
+        </span>
+      </>
+    ),
+    live: (
+      <>
+        <span className="block font-medium text-foreground">Nothing is live yet</span>
+        <span className="mt-1 block">Publish a project from the editor and it shows up here with its domain.</span>
+      </>
+    ),
+    drafts: (
+      <>
+        <span className="block font-medium text-foreground">No drafts</span>
+        <span className="mt-1 block">Every project in this workspace is published.</span>
+      </>
+    ),
+  };
+
+  return (
+    <>
+      <SpaceHero workspace={workspace}>
+        <PromptBox {...composer} presets={showPresets ? composer.presets : []} hero={{ modes, recent }} />
+      </SpaceHero>
+
+      <div className="mx-auto grid w-full max-w-[1296px] grid-cols-1 gap-8 px-4 pb-8 pt-2 sm:px-6 lg:grid-cols-[minmax(0,1fr)_320px]">
+        <div className="min-w-0">
+          {checklist ? (
+            <GettingStarted
+              milestones={checklist.milestones}
+              canCreate={canCreate}
+              emailVerified={checklist.emailVerified}
+              emailConfigured={checklist.emailConfigured}
+              resumeHref={recent[0] ? `/projects/${recent[0].id}` : undefined}
+              layout="strip"
+              className="mb-7"
+            />
+          ) : null}
+
+          <section aria-labelledby="ov-projects">
+            <ProjectFilters
+              label="Filter projects"
+              heading={
+                <h2 id="ov-projects" className="text-[16px] font-semibold tracking-[-0.01em]">
+                  Projects
+                </h2>
+              }
+              actions={
+                <>
+                  <Link href="/projects" className="app-chip">
+                    All projects
                   </Link>
                   {canCreate ? (
-                    <>
-                      , or{" "}
-                      <Link href="/import-project" className="text-foreground underline underline-offset-4">
-                        import from GitHub
-                      </Link>
-                    </>
+                    <Link href="/new-project" className="app-chip">
+                      <Plus className="size-3.5" aria-hidden="true" /> New project
+                    </Link>
                   ) : null}
-                  .
-                </span>
-              </>
-            }
-          />
-          {projectCount > projects.length ? (
-            <p className="mt-3 text-[13px] text-muted-foreground">
-              Showing the {projects.length} most recent of {projectCount}.{" "}
-              <Link href="/projects" className="text-foreground underline-offset-4 hover:underline">
-                View all projects
-              </Link>
-            </p>
-          ) : null}
-        </section>
-      </div>
-
-      <aside aria-label="Workspace summary" className="flex min-w-0 flex-col gap-5">
-        <section className="app-box" aria-labelledby="ov-usage">
-          <div className="app-box__head">
-            <h2 id="ov-usage">
-              <Link href="/settings/usage">Usage</Link>
-            </h2>
-            {e ? <span>Resets {resetLabel(e.periodStart)}</span> : null}
-          </div>
-          {e ? (
-            <div className="space-y-3.5 px-3.5 py-3">
-              <UsageBar label="AI requests" used={e.used.ai_request} limit={e.limits.aiRequestsPerMonth} metered />
-              <UsageBar label="Preview minutes" used={e.used.runtime_minutes} limit={e.limits.runtimeMinutesPerMonth} metered />
-              <UsageBar label="Projects" used={projectCount} limit={e.limits.projects} metered />
-              <UsageBar label="Deployments" used={e.used.deployment} limit={e.limits.deploymentsPerMonth} metered />
-            </div>
-          ) : (
-            <p className="px-3.5 py-3 text-[13px] text-muted-foreground">No workspace selected.</p>
-          )}
-        </section>
-
-        <section className="app-box" aria-labelledby="ov-deploys">
-          <div className="app-box__head">
-            <h2 id="ov-deploys">Recent deployments</h2>
-            <Link href="/dashboard/deployments">View all</Link>
-          </div>
-          {deployments.length ? (
-            <ol className="app-feed px-3.5">
-              {deployments.map((d) => {
-                const line = deploymentLine(d);
-                return (
-                  <li key={d.id}>
-                    <span className="app-dot" data-tone={line.tone} aria-hidden="true" />
-                    <span className="min-w-0">
-                      <Link href={`/projects/${d.projectId}`} className="block truncate font-medium text-foreground hover:underline hover:underline-offset-4">
-                        {d.projectName}
-                      </Link>
-                      <span className="block truncate" title={line.text}>
-                        {line.text}
-                      </span>
-                    </span>
-                    <time dateTime={d.at} title={absoluteTime(d.at)} suppressHydrationWarning>
-                      {shortAgo(d.at)}
-                    </time>
-                  </li>
-                );
+                </>
+              }
+              tabs={FILTERS.map((f) => {
+                const list = pick(lists[f.id].ids);
+                const total = lists[f.id].total;
+                return {
+                  id: f.id,
+                  label: f.label,
+                  count: total,
+                  panel: (
+                    <>
+                      <ProjectsTable projects={list} label={f.id === "all" ? "Recent projects" : `${f.label} projects`} empty={projectCount === 0 ? empty.all : empty[f.id]} />
+                      {total > list.length ? (
+                        <p className="mt-3 text-[13px] text-muted-foreground">
+                          Showing the {list.length} most recent of {total}.{" "}
+                          <Link href="/projects" className="text-foreground underline-offset-4 hover:underline">
+                            View all projects
+                          </Link>
+                        </p>
+                      ) : null}
+                    </>
+                  ),
+                };
               })}
-            </ol>
-          ) : (
-            <p className="px-3.5 py-3 text-[13px] text-muted-foreground">No deployments yet. Publish a project from the editor and it shows up here.</p>
-          )}
-        </section>
+            />
+          </section>
+        </div>
 
-        <section className="app-box" aria-labelledby="ov-members">
-          <div className="app-box__head">
-            <h2 id="ov-members">
-              <Link href="/settings/members">Members</Link>
-            </h2>
-            {memberLimit !== null ? (
-              <span className="app-mono">{memberLimit < 0 ? `${members.length} seats` : `${members.length} of ${memberLimit} seats`}</span>
-            ) : null}
-          </div>
-          {shownMembers.length ? (
-            <ul className="app-feed px-3.5">
-              {shownMembers.map((m) => (
-                <li key={m.id} className="!grid-cols-[22px_minmax(0,1fr)_auto] items-center">
-                  <Avatar name={m.name} src={m.avatarUrl} size="xs" className="[&>span]:size-[22px]" />
-                  <span className="truncate font-medium text-foreground">{m.name}</span>
-                  <span className="app-meta uppercase">{m.role}</span>
-                </li>
-              ))}
-            </ul>
-          ) : (
-            <p className="px-3.5 py-3 text-[13px] text-muted-foreground">No members.</p>
-          )}
-          <div className="border-t border-border px-3.5 py-2.5 text-[13px]">
-            <Link href={members.length > shownMembers.length ? "/settings/members" : "/settings/members#invite"} className="inline-flex items-center gap-1 text-muted-foreground hover:text-foreground">
-              {members.length > shownMembers.length ? `View all ${members.length} members` : "Invite members"}
-              <ArrowUpRight className="size-3.5" aria-hidden="true" />
-            </Link>
-          </div>
-        </section>
-      </aside>
-    </div>
+        <aside aria-label="Workspace summary" className="flex min-w-0 flex-col gap-5">
+          <section className="app-box" aria-labelledby="ov-usage">
+            <div className="app-box__head">
+              <h2 id="ov-usage">
+                <Link href="/settings/usage">Usage</Link>
+              </h2>
+              {e ? <span>Resets {resetLabel(e.periodStart)}</span> : null}
+            </div>
+            {e ? (
+              <div className="space-y-3.5 px-3.5 py-3">
+                <UsageBar label="AI requests" used={e.used.ai_request} limit={e.limits.aiRequestsPerMonth} metered />
+                <UsageBar label="Preview minutes" used={e.used.runtime_minutes} limit={e.limits.runtimeMinutesPerMonth} metered />
+                <UsageBar label="Projects" used={projectCount} limit={e.limits.projects} metered />
+                <UsageBar label="Deployments" used={e.used.deployment} limit={e.limits.deploymentsPerMonth} metered />
+              </div>
+            ) : (
+              <p className="px-3.5 py-3 text-[13px] text-muted-foreground">No workspace selected.</p>
+            )}
+          </section>
+
+          <section className="app-box" aria-labelledby="ov-deploys">
+            <div className="app-box__head">
+              <h2 id="ov-deploys">Recent deployments</h2>
+              <Link href="/dashboard/deployments">View all</Link>
+            </div>
+            {deployments.length ? (
+              <ol className="app-feed px-3.5">
+                {deployments.map((d) => {
+                  const line = deploymentLine(d);
+                  return (
+                    <li key={d.id}>
+                      <span className="app-dot" data-tone={line.tone} aria-hidden="true" />
+                      <span className="min-w-0">
+                        <Link href={`/projects/${d.projectId}`} className="block truncate font-medium text-foreground hover:underline hover:underline-offset-4">
+                          {d.projectName}
+                        </Link>
+                        <span className="block truncate" title={line.text}>
+                          {line.text}
+                        </span>
+                      </span>
+                      <time dateTime={d.at} title={absoluteTime(d.at)} suppressHydrationWarning>
+                        {shortAgo(d.at)}
+                      </time>
+                    </li>
+                  );
+                })}
+              </ol>
+            ) : (
+              <p className="px-3.5 py-3 text-[13px] text-muted-foreground">No deployments yet. Publish a project from the editor and it shows up here.</p>
+            )}
+          </section>
+
+          <section className="app-box" aria-labelledby="ov-members">
+            <div className="app-box__head">
+              <h2 id="ov-members">
+                <Link href="/settings/members">Members</Link>
+              </h2>
+              {memberLimit !== null ? <span className="app-mono">{memberLimit < 0 ? `${members.length} seats` : `${members.length} of ${memberLimit} seats`}</span> : null}
+            </div>
+            {shownMembers.length ? (
+              <ul className="app-feed px-3.5">
+                {shownMembers.map((m) => (
+                  <li key={m.id} className="!grid-cols-[22px_minmax(0,1fr)_auto] items-center">
+                    <Avatar name={m.name} src={m.avatarUrl} size="xs" className="[&>span]:size-[22px]" />
+                    <span className="truncate font-medium text-foreground">{m.name}</span>
+                    <span className="app-meta uppercase">{m.role}</span>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p className="px-3.5 py-3 text-[13px] text-muted-foreground">No members.</p>
+            )}
+            <div className="border-t border-border px-3.5 py-2.5 text-[13px]">
+              <Link
+                href={members.length > shownMembers.length ? "/settings/members" : "/settings/members#invite"}
+                className="inline-flex items-center gap-1 text-muted-foreground hover:text-foreground"
+              >
+                {members.length > shownMembers.length ? `View all ${members.length} members` : "Invite members"}
+                <ArrowUpRight className="size-3.5" aria-hidden="true" />
+              </Link>
+            </div>
+          </section>
+        </aside>
+      </div>
+    </>
   );
 }

@@ -8,19 +8,13 @@
  */
 export type SpaceSceneId = "orbit" | "moon" | "nebula" | "galaxy";
 
-export type SpaceScene = {
-  id: SpaceSceneId;
-  label: string;
-  src: string;
-  focus: string;
-  drift: { x: number; y: number };
-};
+export type SpaceScene = { id: SpaceSceneId; label: string; src: string; focus: string; drift: { x: number; y: number } };
 
 export const SPACE_SCENES: readonly SpaceScene[] = [
   { id: "orbit", label: "Orbit", src: "/space/orbit.webp", focus: "62% 70%", drift: { x: -1.6, y: -0.8 } },
-  { id: "moon", label: "Moon", src: "/space/moon.webp", focus: "76% 48%", drift: { x: -1.2, y: 0.9 } },
+  { id: "moon", label: "Moon", src: "/space/moon.webp", focus: "80% 48%", drift: { x: -1.2, y: 0.9 } },
   { id: "nebula", label: "Nebula", src: "/space/nebula.webp", focus: "68% 50%", drift: { x: 1.4, y: -1 } },
-  { id: "galaxy", label: "Galaxy", src: "/space/galaxy.webp", focus: "70% 48%", drift: { x: -1.4, y: 1 } },
+  { id: "galaxy", label: "Galaxy", src: "/space/galaxy.webp", focus: "78% 46%", drift: { x: -1.4, y: 1 } },
 ];
 
 export function isSpaceSceneId(v: unknown): v is SpaceSceneId {

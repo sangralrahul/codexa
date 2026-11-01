@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Check, ChevronDown, CornerDownLeft, Globe, ImagePlus, Info, Link2, Loader2, Lock, Sparkles, Undo2, X } from "lucide-react";
+import { Check, ChevronDown, CornerDownLeft, FolderGit2, Globe, ImagePlus, Info, Link2, Loader2, Lock, Sparkles, Undo2, X } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -43,6 +43,10 @@ export type PromptPreset = {
   templateId: string;
 };
 export type PromptWorkspace = { id: string; name: string; plan: string };
+/** A hero tab: a real starter template for one runtime (React app, static site, Express API). */
+export type PromptMode = { id: string; label: string; templateId: string; framework: string; detail: string };
+/** A recent project for the hero's quick picks. */
+export type PromptRecent = { id: string; name: string; templateId: string | null; framework: string | null };
 
 const IDEAS = [
   "a habit tracker with streaks and weekly charts",
@@ -51,6 +55,13 @@ const IDEAS = [
   "an invoice tracker with GST totals",
   "a recipe app where I can save and tag recipes",
 ];
+
+/** Rotating placeholder ideas per runtime, so the example always matches the selected starter. */
+const IDEAS_BY_FRAMEWORK: Record<string, readonly string[]> = {
+  "vite-react": ["a habit tracker with streaks and weekly charts", "an internal tool to review support tickets", "a recipe app where I can save and tag recipes", "an invoice tracker with GST totals"],
+  static: ["a landing page for a coffee subscription", "a portfolio site with a projects grid and contact form", "a one-page site for a yoga studio with a class timetable"],
+  "node-express": ["a REST API for a library with books, members and loans", "a webhook receiver that validates and logs events", "a URL shortener API with click counts"],
+};
 
 const VIS_ICON: Record<ProjectVisibility, typeof Lock> = {
   private: Lock,
@@ -64,18 +75,18 @@ const SOURCE_LABEL: Record<IdeaSource, string> = {
   command: "the command menu",
 };
 
-const STATIC_PLACEHOLDER = `Describe your app, e.g. ${IDEAS[0]}`;
-
 /**
- * Placeholder that types the example ideas once each, then settles on a static example. It only runs
- * while the box is empty, unfocused, on screen and the tab is visible, and never when calm, so focusing
- * the box (or switching motion off) stops it at once.
+ * Placeholder that types the example ideas once each, then settles on a static example (`loop`: keeps
+ * rotating through them instead). It only runs while the box is empty, unfocused, on screen and the tab
+ * is visible, and never when calm, so focusing the box (or switching motion off) stops it at once.
+ * A new `ideas` list (a different starter) restarts it.
  */
-function useTypedPlaceholder(active: boolean, ref: React.RefObject<HTMLElement | null>) {
+function useTypedPlaceholder(active: boolean, ref: React.RefObject<HTMLElement | null>, ideas: readonly string[] = IDEAS, loop = false) {
   const calm = useCalm();
-  const [text, setText] = useState(STATIC_PLACEHOLDER);
+  const [typed, setTyped] = useState<{ ideas: readonly string[]; text: string } | null>(null);
   const [visible, setVisible] = useState(false);
-  const [done, setDone] = useState(false);
+  const [doneFor, setDoneFor] = useState<readonly string[] | null>(null);
+  const done = doneFor === ideas;
   useEffect(() => {
     const el = ref.current;
     if (!el || typeof IntersectionObserver === "undefined") return;
@@ -100,30 +111,30 @@ function useTypedPlaceholder(active: boolean, ref: React.RefObject<HTMLElement |
     let erasing = false;
     let timer = 0;
     const tick = () => {
-      const full = IDEAS[idea];
+      const full = ideas[idea];
       pos += erasing ? -2 : 1;
-      setText(`Ask Codexa to build ${full.slice(0, Math.max(0, pos))}`);
+      setTyped({ ideas, text: `Ask Codexa to build ${full.slice(0, Math.max(0, pos))}` });
       if (!erasing && pos >= full.length) {
-        // The last idea stays typed out: one pass, then it rests.
-        if (idea === IDEAS.length - 1) {
-          setDone(true);
+        // The last idea stays typed out: one pass, then it rests (unless looping).
+        if (!loop && idea === ideas.length - 1) {
+          setDoneFor(ideas);
           return;
         }
         erasing = true;
-        timer = window.setTimeout(tick, 2000);
+        timer = window.setTimeout(tick, loop ? 2600 : 2000);
         return;
       }
       if (erasing && pos <= 0) {
         erasing = false;
-        idea += 1;
+        idea = (idea + 1) % ideas.length;
       }
       timer = window.setTimeout(tick, erasing ? 16 : 40);
     };
     timer = window.setTimeout(tick, 900);
     return () => clearTimeout(timer);
-  }, [on]);
-  if (done) return `Ask Codexa to build ${IDEAS[IDEAS.length - 1]}`;
-  return on ? text : STATIC_PLACEHOLDER;
+  }, [on, ideas, loop]);
+  if (done) return `Ask Codexa to build ${ideas[ideas.length - 1]}`;
+  return on && typed?.ideas === ideas ? typed.text : `Describe your app, e.g. ${ideas[0]}`;
 }
 
 const chip =
@@ -151,7 +162,8 @@ export function PromptBox({
   initialTemplateId,
   atLimit = null,
   align = "center",
-  compact = false,
+  compact: compactProp = false,
+  hero,
 }: {
   /** The editable workspace projects are created in (null: the user cannot create). */
   workspaceId: string | null;
@@ -175,7 +187,14 @@ export function PromptBox({
   align?: "center" | "start";
   /** Dashboard: the Monochrome Grid box (10px radius, hairline border, toolbar under a divider, 26px chips, white Build). */
   compact?: boolean;
+  /**
+   * Dashboard hero: the compact toolbar in a larger panel over the space scene, with runtime tabs above
+   * (each sets a real starter template; "From template" opens the template menu), rotating ideas for the
+   * selected runtime, and the viewer's recent projects (or the presets when there are none) underneath.
+   */
+  hero?: { modes: PromptMode[]; recent: PromptRecent[] };
 }) {
+  const compact = compactProp || Boolean(hero);
   const router = useRouter();
   const mod = usePlatformMod();
   const formRef = useRef<HTMLFormElement>(null);
@@ -222,8 +241,11 @@ export function PromptBox({
     }
   };
   const enabled = Boolean(wsId);
-  const placeholder = useTypedPlaceholder(!prompt && enabled && !carried && !focused && !busy, areaRef);
   const template = templates.find((t) => t.id === templateId);
+  const [templateMenu, setTemplateMenu] = useState(false);
+  const heroIdeas = hero ? (IDEAS_BY_FRAMEWORK[template?.framework ?? "vite-react"] ?? IDEAS) : IDEAS;
+  const placeholder = useTypedPlaceholder(!prompt && enabled && !carried && !focused && !busy, areaRef, heroIdeas, Boolean(hero));
+  const modeTemplateIds = new Set(hero?.modes.map((m) => m.templateId));
   const workspace = workspaces.find((w) => w.id === wsId);
   const length = prompt.length;
   const start = align === "start";
@@ -326,27 +348,71 @@ export function PromptBox({
 
   return (
     <section aria-label="Describe your idea" className="w-full">
-      <div className={start ? "w-full" : "mx-auto max-w-3xl"}>
+      <div className={hero ? "mx-auto w-full max-w-[760px]" : start ? "w-full" : "mx-auto max-w-3xl"}>
+        {hero && hero.modes.length ? (
+          <div role="group" aria-label="What are you building?" className="space-modes">
+            {hero.modes.map((m) => (
+              <button
+                key={m.id}
+                type="button"
+                aria-pressed={templateId === m.templateId}
+                disabled={!enabled || busy}
+                onClick={() => {
+                  setTemplateId(m.templateId);
+                  setError(null);
+                }}
+                className="space-mode"
+                title={`Start from the ${m.detail} starter`}
+              >
+                {m.label}
+              </button>
+            ))}
+            {templates.length > hero.modes.length ? (
+              <button
+                type="button"
+                aria-pressed={!modeTemplateIds.has(templateId)}
+                aria-haspopup="menu"
+                disabled={!enabled || busy}
+                onClick={() => setTemplateMenu(true)}
+                className="space-mode"
+                title="Pick one of the templates to start from"
+              >
+                From template
+              </button>
+            ) : null}
+          </div>
+        ) : null}
         <form
           ref={formRef}
           onSubmit={(e) => {
             e.preventDefault();
             void submit();
           }}
-          className={compact ? "rounded-lg" : "rounded-[20px]"}
+          className={hero ? "rounded-2xl" : compact ? "rounded-lg" : "rounded-[20px]"}
         >
           <div
             data-composer
             data-onscreen-watch
             data-active={prompt.trim() ? "" : undefined}
             className={
-              compact
-                ? // Dashboard: a flat hairline box; the border brightens while focused.
-                  "app-composer"
-                : "comet-border rounded-[20px] shadow-[var(--shadow-lg)]"
+              hero
+                ? // Dashboard hero: a solid dark panel over the scene, 1px hairline, brighter while focused.
+                  "space-composer"
+                : compact
+                  ? // Dashboard: a flat hairline box; the border brightens while focused.
+                    "app-composer"
+                  : "comet-border rounded-[20px] shadow-[var(--shadow-lg)]"
             }
           >
-            <div className={compact ? "overflow-hidden rounded-[9px]" : "comet-border__inner overflow-hidden rounded-[19px] bg-card shadow-[inset_0_1px_0_var(--hairline)]"}>
+            <div
+              className={
+                hero
+                  ? "overflow-hidden rounded-[15px]"
+                  : compact
+                    ? "overflow-hidden rounded-[9px]"
+                    : "comet-border__inner overflow-hidden rounded-[19px] bg-card shadow-[inset_0_1px_0_var(--hairline)]"
+              }
+            >
               {carried ? (
                 <div className="flex items-center gap-2 px-4 pt-3.5 sm:px-5">
                   <span className="chip-in inline-flex h-6 items-center gap-1.5 rounded-full bg-selection px-2.5 text-xs font-medium text-foreground shadow-[inset_0_0_0_1px_color-mix(in_oklab,var(--accent)_30%,transparent)]">
@@ -370,7 +436,7 @@ export function PromptBox({
                 ref={areaRef}
                 id="idea-prompt"
                 data-hotkey-search
-                minRows={compact ? 2 : 3}
+                minRows={hero ? 3 : compact ? 2 : 3}
                 maxRows={12}
                 value={prompt}
                 onChange={(e) => {
@@ -409,7 +475,11 @@ export function PromptBox({
                 disabled={busy || !enabled}
                 className={cn(
                   "block w-full resize-none bg-transparent leading-relaxed placeholder:text-muted-foreground/70 focus:outline-none disabled:opacity-60",
-                  compact ? "min-h-[56px] px-4 pb-2.5 pt-4 text-[15px] placeholder:text-[color:var(--app-dim)]" : "min-h-[120px] px-4 pb-2 pt-4 text-base sm:px-5",
+                  hero
+                    ? "min-h-[92px] px-4 pb-3 pt-4 text-[16px] placeholder:text-[color:var(--app-dim)] sm:px-5 sm:pt-5"
+                    : compact
+                      ? "min-h-[56px] px-4 pb-2.5 pt-4 text-[15px] placeholder:text-[color:var(--app-dim)]"
+                      : "min-h-[120px] px-4 pb-2 pt-4 text-base sm:px-5",
                 )}
               />
               {images.length ? (
@@ -435,7 +505,7 @@ export function PromptBox({
                   {notice}
                 </p>
               ) : null}
-              <div className={cn("flex flex-wrap items-center gap-2 sm:flex-nowrap", compact ? "border-t border-border px-2.5 pb-2.5 pt-2" : "px-3 pb-3")}>
+              <div className={cn("flex flex-wrap items-center gap-2 sm:flex-nowrap", hero ? "px-3 pb-3 pt-1" : compact ? "border-t border-border px-2.5 pb-2.5 pt-2" : "px-3 pb-3")}>
                 <div className="flex min-w-0 flex-1 items-center gap-1.5 overflow-x-auto [scrollbar-width:none]">
                   <input
                     ref={fileRef}
@@ -487,7 +557,7 @@ export function PromptBox({
                     )
                   ) : null}
                   {templates.length ? (
-                    <DropdownMenu>
+                    <DropdownMenu open={templateMenu} onOpenChange={setTemplateMenu}>
                       <DropdownMenuTrigger asChild disabled={!enabled}>
                         <button
                           type="button"
@@ -582,8 +652,10 @@ export function PromptBox({
                     </DropdownMenuContent>
                   </DropdownMenu>
                   {compact && enabled ? (
-                    <Link href="/import-project" className={chipCls}>
-                      Import from GitHub
+                    <Link href="/import-project" className={chipCls} aria-label="Import from GitHub">
+                      <FolderGit2 className="size-3.5" aria-hidden="true" />
+                      <span className="hidden sm:inline">Import from GitHub</span>
+                      <span className="sm:hidden">Import</span>
                     </Link>
                   ) : null}
                 </div>
@@ -599,7 +671,7 @@ export function PromptBox({
                       disabled={(!prompt.trim() && !images.length) || !enabled || busy || enhancing}
                       aria-keyshortcuts="Control+Enter Meta+Enter"
                       aria-busy={busy || undefined}
-                      className="app-btn app-btn--primary app-btn--sm disabled:cursor-not-allowed disabled:opacity-70"
+                      className={cn("app-btn app-btn--primary disabled:cursor-not-allowed disabled:opacity-70", hero ? "space-build" : "app-btn--sm")}
                     >
                       {busy ? <Loader2 className="size-3.5 animate-spin" aria-hidden="true" /> : null}
                       <span>Build</span>
@@ -698,8 +770,22 @@ export function PromptBox({
         )}
       </div>
 
-      {presets.length ? (
-        <div className={cn(start ? "" : "mx-auto max-w-4xl", compact ? "mt-3.5" : "mt-5")}>
+      {hero && hero.recent.length ? (
+        <nav aria-label="Recent projects" className="mx-auto mt-4 flex max-w-[760px] items-center justify-center gap-2 sm:mt-5">
+          <span className="hidden shrink-0 font-mono text-[10.5px] uppercase tracking-[0.06em] text-muted-foreground sm:inline">Jump back in</span>
+          <ul className="edge-fade-x preset-row -mx-4 flex min-w-0 gap-1.5 overflow-x-auto px-4 pb-1 sm:mx-0 sm:flex-wrap sm:justify-center sm:overflow-visible sm:px-0 sm:pb-0">
+            {hero.recent.map((p) => (
+              <li key={p.id} className="shrink-0">
+                <Link href={`/projects/${p.id}`} className="space-pick" title={`Open ${p.name}`}>
+                  <ProjectThumb templateId={p.templateId} framework={p.framework ?? undefined} />
+                  <span className="max-w-[160px] truncate">{p.name}</span>
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </nav>
+      ) : presets.length ? (
+        <div className={cn(start ? "" : "mx-auto max-w-4xl", hero ? "mt-4 sm:mt-5" : compact ? "mt-3.5" : "mt-5")}>
           <p className="sr-only" id="presets-label">
             Quick starts
           </p>
@@ -724,7 +810,11 @@ export function PromptBox({
                     className={cn(
                       "flex items-center rounded-full border transition-[border-color,color,background-color] duration-(--dur-3) disabled:pointer-events-none disabled:opacity-50",
                       compact ? "h-8 px-3 text-[12.5px]" : "h-8 px-3.5 text-[13px]",
-                      on ? "border-primary/40 bg-primary/10 text-primary" : "border-border bg-card/70 text-muted-foreground hover:border-border-strong hover:bg-card hover:text-foreground",
+                      hero
+                        ? "space-pick"
+                        : on
+                          ? "border-primary/40 bg-primary/10 text-primary"
+                          : "border-border bg-card/70 text-muted-foreground hover:border-border-strong hover:bg-card hover:text-foreground",
                     )}
                   >
                     {p.label}
