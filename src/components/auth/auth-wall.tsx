@@ -16,16 +16,16 @@ import { TEMPLATE_SHOTS, templateShotSrc, templateShotSrcSet } from "@/component
  * Browsers already stop CSS animations in hidden tabs, so no visibility listener is needed.
  */
 
-type Shot = { key: string; src: string; srcSet?: string; label: string; dark?: boolean };
+type Shot = { key: string; src: string; srcSet?: string; label: string; lightSrc?: string };
 
-/** Codexa's own product captures (public/marketing, 16:10). They are dark-theme captures, so the light
- * theme shows them inverted (auth.css) rather than as grey slabs through the white vignette. */
+/** Codexa's own product captures (public/marketing, 16:10), each in both themes: `<name>.webp` is the
+ * dark capture and `<name>-light.webp` the light one; auth.css displays the one matching the site. */
 const PRODUCT: Shot[] = [
-  { key: "app-editor", dark: true, src: "/marketing/app-editor.webp", label: "Codexa editor" },
-  { key: "app-dashboard", dark: true, src: "/marketing/app-dashboard.webp", label: "Codexa dashboard" },
-  { key: "app-agent", dark: true, src: "/marketing/app-agent.webp", label: "Codexa agent" },
-  { key: "app-publish", dark: true, src: "/marketing/app-publish.webp", label: "Codexa publish" },
-];
+  { key: "app-editor", label: "Codexa editor" },
+  { key: "app-dashboard", label: "Codexa dashboard" },
+  { key: "app-agent", label: "Codexa agent" },
+  { key: "app-publish", label: "Codexa publish" },
+].map((p) => ({ ...p, src: `/marketing/${p.key}.webp`, lightSrc: `/marketing/${p.key}-light.webp` }));
 
 /** Starter templates, picked for variety (apps, dashboards, stores, sites, portfolios). */
 const TEMPLATE_IDS = [
@@ -79,16 +79,28 @@ function columns(): Shot[][] {
 }
 
 function Tile({ shot }: { shot: Shot }) {
+  const img = { sizes: "(max-width: 640px) 220px, 320px", alt: "", width: 1440, height: 900, loading: "lazy", decoding: "async", fetchPriority: "low", draggable: false } as const;
   return (
-    <div className="auth-wall__tile" data-dark={shot.dark ? "" : undefined}>
+    <div className="auth-wall__tile">
       <div className="auth-wall__bar">
         <span />
         <span />
         <span />
         <em>{shot.label}</em>
       </div>
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img src={shot.src} srcSet={shot.srcSet} sizes="(max-width: 640px) 220px, 320px" alt="" width={1440} height={900} loading="lazy" decoding="async" fetchPriority="low" draggable={false} />
+      {shot.lightSrc ? (
+        // A theme pair: only the current theme's copy displays (auth.css), and a lazy image that is
+        // display:none is never fetched.
+        <>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img {...img} src={shot.src} data-theme-img="dark" />
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img {...img} src={shot.lightSrc} data-theme-img="light" />
+        </>
+      ) : (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img {...img} src={shot.src} srcSet={shot.srcSet} />
+      )}
     </div>
   );
 }

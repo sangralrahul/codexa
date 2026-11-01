@@ -1,5 +1,5 @@
 import { Check, Cloud, Globe, RotateCcw } from "lucide-react";
-import { CAPTURES } from "@/components/marketing/captures";
+import { CAPTURES, ThemedImg } from "@/components/marketing/captures";
 import { Eyebrow } from "./frame";
 
 /** 03 Publish: copy and check rows on the left, the real Publish dialog capture on the right. */
@@ -35,8 +35,7 @@ export function HomePublish({ publishChecks }: { publishChecks: number }) {
       </div>
       <div className="mkg-split__media">
         <div className="mkg-pimg">
-          {/* eslint-disable-next-line @next/next/no-img-element -- static capture with explicit size */}
-          <img src={c.src} alt={c.alt} width={c.width} height={c.height} loading="lazy" decoding="async" />
+          <ThemedImg src={c.src} alt={c.alt} width={c.width} height={c.height} />
         </div>
       </div>
     </section>

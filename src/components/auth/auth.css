@@ -128,9 +128,9 @@
 :root:not(.dark) .auth-wall__plane { opacity: 0.9; }
 :root:not(.dark) .auth-wall__tile { border-color: var(--border); box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03); }
 :root:not(.dark) .auth-wall__bar span { background: var(--border); }
-/* Dark-theme product captures are shown inverted (hue kept) in light, so they read as light UI
-   instead of grey slabs through the white vignette. Layout is untouched, so the loop stays seamless. */
-:root:not(.dark) .auth-wall__tile[data-dark] img { filter: invert(1) hue-rotate(180deg) contrast(0.92); }
+/* Codexa's own captures come in both themes (same crop and size); each tile shows the site's. */
+:root:not(.dark) .auth-wall__tile img[data-theme-img="dark"],
+:root.dark .auth-wall__tile img[data-theme-img="light"] { display: none; }
 
 /* Phones: three narrower columns, tilted less; the rest are display:none (their lazy images never load). */
 @media (width < 40rem) {

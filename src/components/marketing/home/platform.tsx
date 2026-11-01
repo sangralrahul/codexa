@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { ArrowUpRight, Download, History, Monitor, Terminal, Users, type LucideIcon } from "lucide-react";
-import { CAPTURES } from "@/components/marketing/captures";
+import { CAPTURES, ThemedImg } from "@/components/marketing/captures";
 import { SectionHead } from "./frame";
 import type { HomeMeterRow } from "./data";
 
@@ -41,8 +41,7 @@ export function HomePlatform({ meter, runtimes, roles }: { meter: HomeMeterRow[]
             </ul>
           </div>
           <div className="mkg-cell__img">
-            {/* eslint-disable-next-line @next/next/no-img-element -- static capture with explicit size */}
-            <img src={agent.src} alt={agent.alt} width={agent.width} height={agent.height} loading="lazy" decoding="async" />
+            <ThemedImg src={agent.src} alt={agent.alt} width={agent.width} height={agent.height} />
           </div>
         </div>
         <div className="mkg-cell">

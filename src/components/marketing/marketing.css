@@ -108,6 +108,12 @@
 :root:not(.dark) .mk-btn--secondary:hover { border-color: var(--muted-foreground); }
 :root:not(.dark) .mk-composer:focus-within { border-color: var(--border-strong); box-shadow: 0 0 0 4px color-mix(in oklab, var(--foreground) 6%, transparent), var(--shadow-lg); }
 
+/* Product captures come in pairs (ThemedImg in captures.tsx): the dark capture and its -light twin.
+   Only the current theme's copy displays; a lazy image that is display:none is never fetched.
+   !important so a component's own `img { display: block }` cannot bring the other copy back. */
+:root:not(.dark) .mk-theme-dark,
+:root.dark .mk-theme-light { display: none !important; }
+
 /* --------------------------------------------------------------------------
    Type: page H1 56–64px / 800 / -0.04em, section H2 40–44px / 700 / -0.03em,
    lead 20px muted. Headlines are plain white: no gradient text anywhere.

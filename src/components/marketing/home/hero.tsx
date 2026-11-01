@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { ArrowRight, FileCode2 } from "lucide-react";
-import { CAPTURES } from "@/components/marketing/captures";
+import { CAPTURES, ThemedImg, serverTheme } from "@/components/marketing/captures";
 import { Crosshairs } from "./frame";
 
 /** Hero row: construction grid, "New" tag, the statement headline, two CTAs and the price line read from PLANS. */
@@ -35,9 +35,11 @@ export function HomeHero({ signedIn, templateCount, priceLine }: { signedIn: boo
   );
 }
 
-/** The product window: a real capture of the workspace code view. */
-export function HomeShot() {
+/** The product window: a real capture of the workspace code view, in the site's theme. */
+export async function HomeShot() {
   const c = CAPTURES.editor;
+  // Above the fold: the copy for the theme the server can see loads eagerly; "system" leaves both lazy.
+  const eager = await serverTheme();
   return (
     <>
       <figure className="mkg-row mkg-shot">
@@ -54,8 +56,7 @@ export function HomeShot() {
             </span>
             <span className="mkg-winbar__end">Code</span>
           </div>
-          {/* eslint-disable-next-line @next/next/no-img-element -- static capture with explicit size */}
-          <img src={c.src} alt={c.alt} width={c.width} height={c.height} fetchPriority="high" decoding="async" />
+          <ThemedImg src={c.src} alt={c.alt} width={c.width} height={c.height} eager={eager} />
         </div>
         <figcaption className="sr-only">{c.caption}</figcaption>
       </figure>
