@@ -65,21 +65,21 @@ type FilePart = Extract<MessagePart, { type: "file_change" }>;
 export function PlanPart({ steps, done, pending }: { steps: string[]; done: boolean; pending?: boolean }) {
   return (
     <section className="space-y-2" aria-label="Plan">
-      <h3 className="text-[13px] font-semibold text-foreground">{pending ? "Proposed plan" : "Plan"}</h3>
+      <h3 className="ws-label">{pending ? "Proposed plan" : "Plan"}</h3>
       <ol className="space-y-1.5">
         {steps.map((step, i) => (
-          <li key={i} className="flex items-start gap-2.5 text-[14px] leading-snug">
+          <li key={i} className="flex items-start gap-2.5 text-[13px] leading-[1.45]">
             <span
               role="checkbox"
               aria-checked={done}
               aria-readonly="true"
               aria-label={`Step ${i + 1}`}
               className={cn(
-                "mt-px inline-flex size-[18px] shrink-0 items-center justify-center rounded-full border font-mono text-[10px] tabular-nums transition-colors duration-300",
-                done ? "border-success/50 bg-success/12 text-success" : "border-border-strong text-muted-foreground",
+                "mt-px inline-flex size-[17px] shrink-0 items-center justify-center rounded-[5px] border font-mono text-[10px] tabular-nums transition-colors duration-300",
+                done ? "border-success/45 bg-success/10 text-success" : "border-border-strong bg-muted/50 text-muted-foreground",
               )}
             >
-              {done ? <Check className="check-draw size-3" strokeWidth={3} style={{ ["--check-delay" as string]: `${i * 60}ms` }} aria-hidden="true" /> : i + 1}
+              {done ? <Check className="check-draw size-2.5" strokeWidth={3.25} style={{ ["--check-delay" as string]: `${i * 60}ms` }} aria-hidden="true" /> : i + 1}
             </span>
             <span className={cn("min-w-0", done && "text-muted-foreground")}>{step}</span>
           </li>
@@ -154,7 +154,7 @@ export function StageRail({ stages, status, running, stageTimes, finishedAt }: {
         return (
           <li key={seg.id} className="min-w-0">
             <span className="ws-rail-seg block" data-state={states[i]} aria-hidden="true" />
-            <span aria-hidden="true" className="mt-1 flex items-baseline justify-between gap-1 text-[10.5px] leading-none">
+            <span aria-hidden="true" className="mt-1.5 flex items-baseline justify-between gap-1 text-[10.5px] leading-none">
               <span className={cn("truncate", states[i] === "active" ? "font-medium text-foreground" : states[i] === "done" ? "text-muted-foreground" : states[i] === "error" ? "text-danger" : "text-muted-foreground/60")}>{seg.label}</span>
               {timed ? <span className="shrink-0 font-mono text-[10px] tabular-nums text-foreground-dim">{shortMs(t)}</span> : null}
             </span>
@@ -239,8 +239,8 @@ export function ChecksRow({ validation, running, onFix }: { validation?: RunVali
     return { id, label, state: "skipped", note: "Not run" };
   });
   return (
-    <section aria-label="Checks" className="space-y-1.5">
-      <h3 className="text-[13px] font-semibold">Checks</h3>
+    <section aria-label="Checks" className="space-y-2">
+      <h3 className="ws-label">Checks</h3>
       <ul className="grid grid-cols-3 gap-1.5">
         {cells.map((c) => {
           const Icon = c.state === "passed" ? ShieldCheck : c.state === "failed" ? XCircle : c.state === "pending" ? Loader2 : CircleSlash;
@@ -248,8 +248,8 @@ export function ChecksRow({ validation, running, onFix }: { validation?: RunVali
             <li
               key={c.id}
               className={cn(
-                "flex min-w-0 items-start gap-2 rounded-lg border px-2 py-1.5 text-[12px]",
-                c.state === "passed" ? "border-success/25 bg-success/[0.06]" : c.state === "failed" ? "border-danger/30 bg-danger/[0.05]" : "border-border bg-surface/50",
+                "flex min-w-0 items-start gap-2 rounded-md border px-2 py-1.5 text-[12px]",
+                c.state === "passed" ? "border-success/25 bg-success/[0.05]" : c.state === "failed" ? "border-danger/30 bg-danger/[0.05]" : "border-border bg-muted/40",
               )}
               title={c.note}
             >
@@ -304,8 +304,8 @@ export function ToolCallRow({ call, result }: { call: ToolCallPart; result?: Too
   const summary = summarizeToolInput(call.name, call.input);
   const pending = !result;
   return (
-    <details className="group rounded-lg text-xs">
-      <summary className="flex h-7 cursor-pointer list-none items-center gap-2 rounded-lg px-2 transition-colors hover:bg-muted focus-visible:outline-2 focus-visible:outline-ring [&::-webkit-details-marker]:hidden">
+    <details className="group rounded-md text-xs">
+      <summary className="flex h-7 cursor-pointer list-none items-center gap-2 rounded-md px-2 transition-colors hover:bg-muted focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-ring [&::-webkit-details-marker]:hidden">
         {React.createElement(toolIcon(call.name), { className: "size-3.5 shrink-0 text-muted-foreground", "aria-hidden": true })}
         <code className="shrink-0 font-mono text-[11.5px] font-medium">{call.name}</code>
         <span className="min-w-0 truncate font-mono text-[11px] text-muted-foreground">{summary}</span>
@@ -322,13 +322,13 @@ export function ToolCallRow({ call, result }: { call: ToolCallPart; result?: Too
       </summary>
       <div className="mx-2 mb-1.5 mt-1 space-y-2 border-l border-border pl-3">
         <div>
-          <p className="mb-1 text-[11px] font-medium text-muted-foreground">Input</p>
-          <pre className="max-h-48 overflow-auto rounded-md bg-muted p-2 font-mono text-[11px] leading-snug">{formatInput(call.input)}</pre>
+          <p className="ws-label mb-1.5">Input</p>
+          <pre className="max-h-48 overflow-auto rounded-md bg-muted p-2 font-mono text-[11px] leading-snug shadow-[inset_0_0_0_1px_var(--border)]">{formatInput(call.input)}</pre>
         </div>
         {result ? (
           <div>
-            <p className="mb-1 text-[11px] font-medium text-muted-foreground">{result.isError ? "Error" : "Output"}</p>
-            <pre className={cn("max-h-48 overflow-auto rounded-md p-2 font-mono text-[11px] leading-snug", result.isError ? "bg-danger/5 text-danger" : "bg-muted")}>{result.output}</pre>
+            <p className="ws-label mb-1.5">{result.isError ? "Error" : "Output"}</p>
+            <pre className={cn("max-h-48 overflow-auto rounded-md p-2 font-mono text-[11px] leading-snug", result.isError ? "bg-danger/5 text-danger shadow-[inset_0_0_0_1px_color-mix(in_oklab,var(--danger)_22%,transparent)]" : "bg-muted shadow-[inset_0_0_0_1px_var(--border)]")}>{result.output}</pre>
           </div>
         ) : null}
       </div>
@@ -352,17 +352,17 @@ export function ActionsSummary({ calls, results, running }: { calls: ToolCallPar
   const icons = [...new Set(calls.map((c) => toolIcon(c.name)))].slice(0, 5);
   const live = running ? pending[pending.length - 1] : undefined;
   return (
-    <details className="group rounded-xl border border-border bg-surface/50">
-      <summary className="flex h-9 cursor-pointer list-none items-center gap-2 rounded-xl px-2.5 text-[12.5px] transition-colors hover:bg-muted/60 focus-visible:outline-2 focus-visible:outline-ring [&::-webkit-details-marker]:hidden">
+    <details className="group rounded-lg border border-border bg-muted/30">
+      <summary className="flex h-8 cursor-pointer list-none items-center gap-2 rounded-lg px-2 text-[12.5px] transition-colors hover:bg-muted/70 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-ring [&::-webkit-details-marker]:hidden">
         <span className="flex -space-x-1" aria-hidden="true">
           {icons.map((Icon, i) => (
-            <span key={i} className="flex size-5 items-center justify-center rounded-md border border-border bg-card text-muted-foreground">
+            <span key={i} className="flex size-5 items-center justify-center rounded-[5px] border border-border bg-card text-muted-foreground">
               <Icon className="size-3" />
             </span>
           ))}
         </span>
         <span className="shrink-0 whitespace-nowrap font-medium">
-          Ran {calls.length} action{calls.length === 1 ? "" : "s"}
+          Ran <span className="font-mono tabular-nums">{calls.length}</span> action{calls.length === 1 ? "" : "s"}
         </span>
         {failed ? <span className="shrink-0 whitespace-nowrap text-danger">· {failed} failed</span> : null}
         {live ? (
@@ -422,11 +422,11 @@ export function WritingFiles({ files, running, stats }: { files: FilePart[]; run
   const statOf = new Map((stats ?? []).map((s) => [s.path, s]));
   return (
     <section aria-label={running ? "Writing files" : "Files changed"} className="space-y-1.5">
-      <h3 className="flex items-center gap-2 text-[13px] font-semibold">
-        {running ? "Writing files" : "Files changed"}
-        <span className="rounded-full bg-muted px-1.5 font-mono text-[10.5px] font-medium tabular-nums text-muted-foreground">{rows.length}</span>
+      <h3 className="flex items-center gap-2">
+        <span className="ws-label">{running ? "Writing files" : "Files changed"}</span>
+        <span className="rounded-[4px] bg-muted px-1 font-mono text-[10px] font-medium leading-4 tabular-nums text-muted-foreground shadow-[inset_0_0_0_1px_var(--border)]">{rows.length}</span>
       </h3>
-      <ul className="overflow-hidden rounded-xl border border-border">
+      <ul className="overflow-hidden rounded-lg border border-border">
         {rows.map((f, i) => {
           const meta = ACTION_META[f.action];
           const stat = statOf.get(f.path);
@@ -439,13 +439,13 @@ export function WritingFiles({ files, running, stats }: { files: FilePart[]; run
                   onClick={() => emit("codexa:open-file", { path: f.path })}
                   disabled={f.action === "delete"}
                   title={f.action === "delete" ? `${meta.label} ${f.path}` : `Open ${f.path}`}
-                  className="materialize__sweep group flex h-8 w-full items-center gap-2 px-2.5 text-left transition-colors hover:bg-muted/70 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-ring disabled:cursor-default"
+                  className="materialize__sweep group flex h-7 w-full items-center gap-2 px-2 text-left transition-colors hover:bg-muted/70 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-ring disabled:cursor-default"
                 >
-                  <span className={cn("materialize__icon inline-flex size-[18px] shrink-0 items-center justify-center rounded-[5px] font-mono text-[10px] font-semibold", meta.tone)} aria-hidden="true">
+                  <span className={cn("materialize__icon inline-flex size-4 shrink-0 items-center justify-center rounded-[4px] font-mono text-[9.5px] font-semibold", meta.tone)} aria-hidden="true">
                     {meta.letter}
                   </span>
                   <span className="sr-only">{meta.label} </span>
-                  <span className={cn("min-w-0 truncate font-mono text-[12px]", f.action === "delete" && "text-muted-foreground line-through", newest && "ws-write-caret")}>{f.path}</span>
+                  <span className={cn("min-w-0 truncate font-mono text-[11.5px]", f.action === "delete" && "text-muted-foreground line-through", newest && "ws-write-caret")}>{f.path}</span>
                   {stat ? (
                     <span className="ml-auto shrink-0 font-mono text-[11px] tabular-nums">
                       <span className="text-success">+{stat.added}</span> <span className="text-danger">−{stat.removed}</span>
@@ -484,7 +484,7 @@ export function deriveValidation(parts: MessagePart[], runError?: string | null)
 export function ChecksBlock({ validation, onFix }: { validation: RunValidation; onFix?: (v: RunValidation) => void }) {
   if (validation.skipped) {
     return (
-      <div className="flex items-start gap-2 rounded-xl border border-border bg-surface/50 px-3 py-2 text-[12.5px] text-muted-foreground" role="note">
+      <div className="flex items-start gap-2 rounded-lg border border-border bg-muted/40 px-3 py-2 text-[12.5px] text-muted-foreground" role="note">
         <CircleSlash className="mt-0.5 size-3.5 shrink-0" aria-hidden="true" />
         <span>
           <span className="font-medium text-foreground">Checks skipped.</span> {validation.skipped}
@@ -494,7 +494,7 @@ export function ChecksBlock({ validation, onFix }: { validation: RunValidation; 
   }
   if (validation.ok) {
     return (
-      <div className="flex items-center gap-2 rounded-xl border border-success/25 bg-success/[0.06] px-3 py-2 text-[12.5px]">
+      <div className="flex items-center gap-2 rounded-lg border border-success/25 bg-success/[0.05] px-3 py-2 text-[12.5px]">
         <ShieldCheck className="size-3.5 shrink-0 text-success" aria-hidden="true" />
         <span>
           <code className="font-mono font-medium">{validation.command ?? "check"}</code> passed
@@ -503,7 +503,7 @@ export function ChecksBlock({ validation, onFix }: { validation: RunValidation; 
     );
   }
   return (
-    <div className="overflow-hidden rounded-xl border border-danger/30 bg-danger/[0.05]" role="group" aria-label="Checks failed">
+    <div className="overflow-hidden rounded-lg border border-danger/30 bg-danger/[0.05]" role="group" aria-label="Checks failed">
       <div className="flex items-center gap-2 px-3 py-2 text-[12.5px]">
         <XCircle className="size-3.5 shrink-0 text-danger" aria-hidden="true" />
         <span className="min-w-0 flex-1">
@@ -533,7 +533,7 @@ export function ChecksBlock({ validation, onFix }: { validation: RunValidation; 
 
 export function ErrorPart({ message }: { message: string }) {
   return (
-    <div role="alert" className="flex items-start gap-2 rounded-xl border border-danger/35 bg-danger/[0.06] p-2.5 text-[13px] text-foreground">
+    <div role="alert" className="flex items-start gap-2 rounded-lg border border-danger/35 bg-danger/[0.06] p-2.5 text-[13px] text-foreground">
       <AlertTriangle className="mt-0.5 size-3.5 shrink-0 text-danger" aria-hidden="true" />
       <span className="whitespace-pre-wrap break-words">{message}</span>
     </div>
@@ -615,21 +615,21 @@ export function AssistantParts({ parts, status, streaming, meta = {} }: { parts:
   return (
     <div className="space-y-3">
       {isRun ? (
-        <div className="space-y-3 rounded-2xl border border-border bg-card p-3 shadow-[inset_0_1px_0_var(--hairline)]">
-          <div className="flex items-start gap-3">
-            <span className="ws-orb mt-0.5 rounded-lg" data-running={running && !calm ? "" : undefined}>
-              <LogoMark size={22} state={logoState} />
+        <div className="space-y-3.5 rounded-xl border border-border bg-card p-3">
+          <div className="flex items-center gap-2.5">
+            <span className="ws-orb rounded-lg" data-running={running && !calm ? "" : undefined}>
+              <LogoMark size={20} state={logoState} />
             </span>
             <div className="min-w-0 flex-1">
-              <p className="flex items-center gap-2 text-[14px] font-semibold leading-tight">
+              <p className="flex items-center gap-1.5 text-[13px] font-semibold leading-tight tracking-[-0.005em]">
                 <span key={stage} className={cn("stage-swap truncate", running && "text-shimmer", status === "failed" && "text-danger", status === "cancelled" && "text-warning")}>
                   {stageLabel(stage)}
                 </span>
                 {status === "succeeded" ? <CheckCircle2 className="size-3.5 shrink-0 text-success" aria-hidden="true" /> : null}
               </p>
-              {detail ? <p className="mt-0.5 truncate text-[12px] text-muted-foreground" title={detail}>{detail}</p> : null}
+              {detail ? <p className="mt-0.5 truncate text-[11.5px] text-muted-foreground" title={detail}>{detail}</p> : null}
             </div>
-            <RunTimer startedAt={meta.startedAt} finishedAt={meta.finishedAt} running={running} className="mt-0.5 shrink-0" />
+            <RunTimer startedAt={meta.startedAt} finishedAt={meta.finishedAt} running={running} className="shrink-0 rounded-[5px] bg-muted px-1.5 py-0.5 text-[11px] leading-none shadow-[inset_0_0_0_1px_var(--border)]" />
           </div>
           <StageRail stages={stages} status={status} running={running} stageTimes={meta.stageTimes} finishedAt={meta.finishedAt} />
           {!running ? <RunMetaStrip changed={Math.max(files.length, meta.changedFiles?.length ?? 0)} stats={meta.stats} tokens={meta.tokens} repairAttempts={meta.repairAttempts} /> : null}
@@ -654,7 +654,7 @@ export function AssistantParts({ parts, status, streaming, meta = {} }: { parts:
           ) : null}
         </div>
       ) : null}
-      {prose.length ? <div className="space-y-2.5">{prose}</div> : null}
+      {prose.length ? <div className={cn("space-y-2", isRun && "ws-narration")}>{prose}</div> : null}
       {!isRun && !prose.length && running ? (
         <p className="flex items-center gap-2 text-[13px] text-muted-foreground">
           <Info className="size-3.5" aria-hidden="true" /> Starting…

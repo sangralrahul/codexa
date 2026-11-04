@@ -69,7 +69,7 @@ export function SearchPanel({ projectId, onOpen, focusKey, header }: { projectId
 
   return (
     <div className="flex h-full min-h-0 flex-col">
-      {header ? <div className="flex h-10 shrink-0 items-center border-b border-border px-2">{header}</div> : null}
+      {header ? <div className="ws-chrome flex h-10 shrink-0 items-center border-b border-border pl-1.5 pr-2">{header}</div> : null}
       <div className="px-2 py-2">
         <label htmlFor="ws-search" className="sr-only">
           Search in project

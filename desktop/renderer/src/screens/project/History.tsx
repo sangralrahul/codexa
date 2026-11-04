@@ -1,13 +1,13 @@
 import { useCallback, useEffect, useState } from "react";
-import { Clock, History as HistoryIcon, Rocket, RotateCcw, Save, Sparkles, Undo2 } from "lucide-react";
+import { Clock, History as HistoryIcon, Plus, Rocket, RotateCcw, Save, ShieldCheck, Sparkles, Undo2 } from "lucide-react";
 import { ApiError, historyApi, type Snapshot } from "../../lib/api";
 import { cn, relativeTime } from "../../lib/util";
-import { Badge, Button, Dialog, Spinner, toast } from "../../ui";
+import { Badge, Button, Dialog, Tip, toast } from "../../ui";
 
 const KIND: Record<string, { label: string; icon: typeof Save; tint: string }> = {
   manual: { label: "Saved by you", icon: Save, tint: "text-fg" },
-  auto: { label: "Auto-saved", icon: Clock, tint: "text-muted" },
-  ai: { label: "AI change", icon: Sparkles, tint: "text-accent" },
+  auto: { label: "Auto-saved", icon: Clock, tint: "text-dim" },
+  ai: { label: "AI change", icon: Sparkles, tint: "text-fg" },
   deploy: { label: "Published", icon: Rocket, tint: "text-success" },
   restore: { label: "Before restore", icon: Undo2, tint: "text-warning" },
 };
@@ -70,64 +70,96 @@ export function HistoryPanel({ projectId, canEdit, onRestored }: { projectId: st
     }
   };
 
+  // Group by calendar day, newest first (the API already returns newest first).
+  const days: { label: string; items: { s: Snapshot; index: number }[] }[] = [];
+  (items ?? []).forEach((snap, index) => {
+    const label = dayLabel(snap.createdAt);
+    const last = days.at(-1);
+    if (last?.label === label) last.items.push({ s: snap, index });
+    else days.push({ label, items: [{ s: snap, index }] });
+  });
+
   return (
     <div className="flex h-full flex-col bg-card">
       <PanelHeader title="History" sub={items ? `${items.length} checkpoint${items.length === 1 ? "" : "s"} · restore any of them` : "Checkpoints of your files"}>
         {canEdit ? (
-          <Button size="sm" onClick={() => void save()} loading={busy && !confirm} title="Save the current files as a checkpoint">
-            <Save /> Checkpoint
-          </Button>
+          <Tip label="Save the current files as a checkpoint" align="end">
+            <Button size="xs" onClick={() => void save()} loading={busy && !confirm}>
+              {busy && !confirm ? null : <Plus className="!size-3.5" />} Checkpoint
+            </Button>
+          </Tip>
         ) : null}
       </PanelHeader>
-      <div className="scroll min-h-0 flex-1 px-3 py-2">
+      <div className="scroll min-h-0 flex-1">
         {items === null ? (
-          <Spinner className="m-4" />
+          <div className="space-y-4 px-4 py-4" aria-label="Loading history">
+            {[0, 1, 2, 3].map((i) => (
+              <div key={i} className="flex items-center gap-3">
+                <span className="pulse size-6 rounded-full bg-surface" />
+                <span className="flex-1 space-y-1.5">
+                  <span className="pulse block h-3 w-2/3 rounded-sm bg-surface" />
+                  <span className="pulse block h-2.5 w-1/3 rounded-sm bg-surface" />
+                </span>
+              </div>
+            ))}
+          </div>
         ) : items.length === 0 ? (
-          <div className="px-4 py-12 text-center">
-            <div className="mx-auto flex size-11 items-center justify-center rounded-xl border border-border bg-surface text-muted">
+          <div className="px-6 py-14 text-center">
+            <div className="mx-auto flex size-10 items-center justify-center rounded-lg border border-border bg-panel text-dim">
               <HistoryIcon className="size-5" />
             </div>
-            <p className="mt-4 text-[13.5px] font-medium">No checkpoints yet</p>
+            <p className="mt-4 text-[14px] font-semibold tracking-[-0.01em]">No checkpoints yet</p>
             <p className="mx-auto mt-1 max-w-[260px] text-[12.5px] leading-relaxed text-muted">Every AI change saves one automatically. You can also save one yourself before a risky edit.</p>
           </div>
         ) : (
-          <ol>
-            {items.map((s, i) => {
-              const k = kindOf(s.kind);
-              const day = dayLabel(s.createdAt);
-              const header = i === 0 || day !== dayLabel(items[i - 1].createdAt) ? day : null;
-              const current = i === 0;
-              return (
-                <li key={s.id}>
-                  {header ? <p className={cn("px-1 pb-1.5 text-[11px] font-semibold uppercase tracking-wider text-dim", i > 0 && "pt-4")}>{header}</p> : null}
-                  <div className={cn("group relative flex gap-3 rounded-xl border px-3 py-2.5 transition-colors", current ? "border-border bg-surface/60 card-edge" : "border-transparent hover:border-border hover:bg-surface/40")}>
-                    <span className={cn("mt-0.5 flex size-7 shrink-0 items-center justify-center rounded-lg border border-border bg-card", k.tint)}>
-                      <k.icon className="size-3.5" />
-                    </span>
-                    <span className="min-w-0 flex-1">
-                      <span className="flex items-center gap-2">
-                        <span className="truncate text-[13px] font-medium">{s.name}</span>
-                        {current ? <Badge tone="success">Current</Badge> : null}
+          days.map((d) => (
+            <section key={d.label} aria-label={d.label}>
+              <h3 className="ws-label sticky top-0 z-[1] flex items-center gap-2 border-b border-border bg-card/95 px-4 py-2 backdrop-blur-sm">
+                {d.label}
+                <span className="text-dim/70">· {d.items.length}</span>
+              </h3>
+              <ol className="ws-timeline py-1.5">
+                {d.items.map(({ s, index }) => {
+                  const k = kindOf(s.kind);
+                  const current = index === 0;
+                  return (
+                    <li key={s.id} className="group relative flex items-start gap-3 py-2 pl-3 pr-3 transition-colors hover:bg-panel dark:hover:bg-surface/50">
+                      <span className={cn("relative z-[1] mt-px flex size-[22px] shrink-0 items-center justify-center rounded-full border bg-card", current ? "border-fg text-fg" : "border-border-strong", !current && k.tint)} aria-hidden="true">
+                        <k.icon className="size-3" />
                       </span>
-                      <span className="mt-0.5 block text-[11.5px] text-muted">
-                        {k.label} · {relativeTime(s.createdAt)} · {s.fileCount} files
+                      <span className="min-w-0 flex-1">
+                        <span className="flex items-center gap-2">
+                          <span className="truncate text-[13px] font-medium leading-snug">{s.name}</span>
+                          {current ? <Badge tone="accent">Current</Badge> : null}
+                        </span>
+                        <span className="mt-0.5 flex min-w-0 items-center gap-1.5 whitespace-nowrap text-[11.5px] text-muted">
+                          <span className="truncate">{k.label}</span>
+                          <span className="text-dim">·</span>
+                          <time dateTime={s.createdAt} title={new Date(s.createdAt).toLocaleString()} className="mono text-[10.5px] text-dim">
+                            {new Date(s.createdAt).toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit" })}
+                          </time>
+                          <span className="text-dim">·</span>
+                          <span className="mono text-[10.5px] text-dim">{s.fileCount} files</span>
+                        </span>
+                        {s.message ? <span className="mt-1 block truncate text-[12px] text-muted">{s.message}</span> : null}
                       </span>
-                      {s.message ? <span className="mt-1 block truncate text-[12px] text-muted">{s.message}</span> : null}
-                    </span>
-                    {canEdit && !current ? (
-                      <Button size="sm" variant="secondary" className="h-7 self-center px-2 text-[12px] opacity-0 group-hover:opacity-100 focus-visible:opacity-100" aria-label={`Restore ${s.name}`} onClick={() => setConfirm(s)}>
-                        <RotateCcw className="!size-3.5" /> Restore
-                      </Button>
-                    ) : null}
-                  </div>
-                </li>
-              );
-            })}
-          </ol>
+                      {canEdit && !current ? (
+                        <Button size="xs" variant="secondary" className="shrink-0 self-center opacity-0 transition-opacity group-hover:opacity-100 focus-visible:opacity-100" aria-label={`Restore ${s.name}`} onClick={() => setConfirm(s)}>
+                          <RotateCcw className="!size-3.5" /> Restore
+                        </Button>
+                      ) : null}
+                    </li>
+                  );
+                })}
+              </ol>
+            </section>
+          ))
         )}
       </div>
       {items && items.length > 0 ? (
-        <p className="border-t border-border px-4 py-2.5 text-[11.5px] leading-relaxed text-dim">Restoring is safe: the current files are saved as a checkpoint first, so you can always undo.</p>
+        <p className="flex items-start gap-2 border-t border-border px-4 py-2.5 text-[11.5px] leading-relaxed text-dim">
+          <ShieldCheck className="mt-px size-3.5 shrink-0" aria-hidden="true" /> Restoring is safe: the current files are saved as a checkpoint first, so you can always undo.
+        </p>
       ) : null}
       <Dialog open={Boolean(confirm)} onClose={() => setConfirm(null)} title="Restore this checkpoint?" description={confirm ? `Your files go back to “${confirm.name}” (${confirm.fileCount} files, ${relativeTime(confirm.createdAt)}). The current state is saved as a checkpoint first, so you can undo this.` : undefined}>
         <div className="flex justify-end gap-2">
@@ -145,10 +177,10 @@ export function HistoryPanel({ projectId, canEdit, onRestored }: { projectId: st
 
 export function PanelHeader({ title, sub, children }: { title: string; sub?: string; children?: React.ReactNode }) {
   return (
-    <div className="flex h-12 shrink-0 items-center gap-2 border-b border-border px-4">
+    <div className="ws-bar pl-4 pr-2">
       <div className="min-w-0 flex-1">
-        <p className="text-[13.5px] font-semibold">{title}</p>
-        {sub ? <p className="truncate text-[11.5px] text-muted">{sub}</p> : null}
+        <h2 className="text-[13px] font-semibold leading-tight">{title}</h2>
+        {sub ? <p className="truncate text-[11px] leading-tight text-dim">{sub}</p> : null}
       </div>
       {children}
     </div>

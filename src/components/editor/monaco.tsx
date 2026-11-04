@@ -9,7 +9,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { Editor, DiffEditor, loader, type Monaco, type OnMount } from "@monaco-editor/react";
 import type { editor as MonacoEditorNs } from "monaco-editor";
 import { useTheme } from "@/components/theme/theme-provider";
-import { Spinner } from "@/components/ui/misc";
+import { EditorLoading as Loading } from "./editor-loading";
 import type { LineChanges } from "@/lib/client/workspace/line-diff";
 import { DAY, NIGHT, defineCodexaThemes } from "./monaco-theme";
 
@@ -87,11 +87,7 @@ export type CodeEditorProps = {
   onCursor?: (pos: { line: number; column: number }) => void;
 };
 
-const Loading = () => (
-  <div className="flex h-full items-center justify-center text-sm text-muted-foreground" role="status">
-    <Spinner className="mr-2" /> Loading editor…
-  </div>
-);
+
 
 /** Below this editor width (px) long lines wrap (indented) instead of running off the right edge. */
 const WRAP_BELOW_PX = 520;
@@ -211,8 +207,9 @@ export function MonacoCodeEditor({ path, language, value, readOnly, onChange, on
       onChange={(v) => onChange(v ?? "")}
       options={{
         readOnly,
-        fontSize: compact ? 13 : 13.5,
+        fontSize: compact ? 12.5 : 13,
         lineHeight: compact ? 19 : 20,
+        letterSpacing: -0.1,
         fontFamily: "var(--font-geist-mono), ui-monospace, SFMono-Regular, Menlo, monospace",
         fontLigatures: true,
         minimap: { enabled: false },
@@ -226,19 +223,19 @@ export function MonacoCodeEditor({ path, language, value, readOnly, onChange, on
         cursorBlinking: "smooth",
         cursorSmoothCaretAnimation: "on",
         cursorWidth: 2,
-        padding: { top: 14, bottom: 14 },
+        padding: { top: 10, bottom: 14 },
         stickyScroll: { enabled: true, maxLineCount: 4 },
         bracketPairColorization: { enabled: true },
         guides: { bracketPairs: "active", indentation: true, highlightActiveIndentation: true },
-        lineDecorationsWidth: compact ? 6 : 10,
-        lineNumbersMinChars: 3,
+        lineDecorationsWidth: compact ? 10 : 14,
+        lineNumbersMinChars: compact ? 3 : 4,
         glyphMargin: false,
         folding: !compact,
         showFoldingControls: "mouseover",
         overviewRulerBorder: false,
         hideCursorInOverviewRuler: true,
         roundedSelection: true,
-        scrollbar: { verticalScrollbarSize: 10, horizontalScrollbarSize: 10, useShadows: false },
+        scrollbar: { verticalScrollbarSize: 8, horizontalScrollbarSize: 8, useShadows: false },
         fixedOverflowWidgets: true,
         ariaLabel: `Editor for ${path}`,
       }}

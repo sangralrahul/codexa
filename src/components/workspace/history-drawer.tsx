@@ -245,7 +245,7 @@ export function HistoryDrawer({
       ) : (
         <div className="px-5 py-4">
           {canEdit ? (
-            <form onSubmit={create} className="mb-5 flex items-center gap-2 rounded-xl border border-border bg-surface/60 p-1.5 pl-3 shadow-[inset_0_1px_0_var(--hairline)]">
+            <form onSubmit={create} className="mb-4 flex items-center gap-2 rounded-lg border border-border bg-muted/40 p-1 pl-3 focus-within:border-border-strong">
               <Flag className="size-4 shrink-0 text-muted-foreground" aria-hidden="true" />
               <label htmlFor="snap-name" className="sr-only">
                 New checkpoint name
@@ -265,7 +265,7 @@ export function HistoryDrawer({
             <div className="space-y-3" aria-busy="true">
               <div className="grid grid-cols-4 gap-2">
                 {[0, 1, 2, 3].map((i) => (
-                  <Skeleton key={i} className="h-14 rounded-xl" />
+                  <Skeleton key={i} className="h-14 rounded-lg" />
                 ))}
               </div>
               {[0, 1, 2].map((i) => (
@@ -293,11 +293,11 @@ export function HistoryDrawer({
                         ["Named", counts.manual, Flag],
                       ] as const
                     ).map(([label, n, Icon]) => (
-                      <div key={label} className="rounded-xl border border-border bg-surface/60 px-2.5 py-2">
-                        <dt className="flex items-center gap-1 text-[10.5px] font-medium uppercase tracking-[0.05em] text-foreground-dim">
+                      <div key={label} className="rounded-lg border border-border px-2.5 py-2">
+                        <dt className="ws-label flex items-center gap-1">
                           <Icon className="size-3" aria-hidden="true" /> {label}
                         </dt>
-                        <dd className="mt-0.5 text-[18px] font-bold leading-none tabular-nums tracking-[-0.02em]">{n}</dd>
+                        <dd className="mt-1.5 font-mono text-[17px] font-medium leading-none tabular-nums tracking-[-0.02em]">{n}</dd>
                       </div>
                     ))}
                   </dl>
@@ -315,7 +315,7 @@ export function HistoryDrawer({
                       ]}
                     />
                     {oldest ? (
-                      <p className="text-[11.5px] tabular-nums text-foreground-dim">
+                      <p className="font-mono text-[11px] tabular-nums text-foreground-dim">
                         Since {new Date(oldest.createdAt).toLocaleDateString(undefined, { month: "short", day: "numeric" })} · {relativeTime(oldest.createdAt)}
                       </p>
                     ) : null}
@@ -343,18 +343,18 @@ export function HistoryDrawer({
               {snapshots.length > 0 && shown.length === 0 ? <li className="relative pl-10 text-[13px] text-muted-foreground">No checkpoints of this kind yet.</li> : null}
               {groups.map((g) => (
                 <li key={g.day} className="relative">
-                  <p className="relative z-[1] mb-2 ml-10 text-[11.5px] font-medium text-muted-foreground">{g.day}</p>
-                  <ol className="space-y-1 pb-4">
+                  <p className="ws-label relative z-[1] mb-1.5 ml-10">{g.day}</p>
+                  <ol className="space-y-px pb-4">
                     {g.items.map((s) => {
                       const k = kindOf(s.kind);
                       return (
-                        <li key={s.id} className="group relative flex items-start gap-3 rounded-xl py-1.5 pr-2">
+                        <li key={s.id} className="group relative flex items-start gap-3 rounded-lg py-1.5 pr-1.5 transition-colors hover:bg-muted/40 focus-within:bg-muted/40">
                           <span className={cn("relative z-[1] mt-0.5 flex size-[27px] shrink-0 items-center justify-center rounded-full ring-1 shadow-[0_0_0_4px_var(--card)]", k.tone)} aria-hidden="true">
                             <k.Icon className="size-3.5" />
                           </span>
                           <div className="min-w-0 flex-1">
-                            <p className="truncate text-[13.5px] font-medium">{s.name}</p>
-                            <p className="mt-0.5 flex flex-wrap items-center gap-x-2 text-[11.5px] text-muted-foreground">
+                            <p className="truncate pt-px text-[13px] font-medium">{s.name}</p>
+                            <p className="mt-0.5 flex items-center gap-x-1.5 overflow-hidden whitespace-nowrap font-mono text-[11px] text-muted-foreground">
                               <span>{k.label}</span>
                               <span aria-hidden="true">·</span>
                               <time dateTime={s.createdAt} title={new Date(s.createdAt).toLocaleString()}>
@@ -364,16 +364,17 @@ export function HistoryDrawer({
                               <span className="tabular-nums">{s.fileCount} files</span>
                             </p>
                             {s.message ? <p className="mt-1 text-[12px] text-muted-foreground">{s.message}</p> : null}
-                            <div className="mt-1.5 flex gap-1.5 opacity-90 transition-opacity group-hover:opacity-100">
-                              <Button size="sm" variant="outline" appearance="app" className="h-7 px-2.5 text-xs" onClick={() => void openDiff(s)}>
-                                <GitCompare className="size-3.5" aria-hidden="true" /> View diff
+                          </div>
+                          {/* Revealed on hover and keyboard focus; always shown where there is no hover (touch). */}
+                          <div className="flex shrink-0 gap-1 self-center transition-opacity [@media(hover:hover)]:absolute [@media(hover:hover)]:right-1.5 [@media(hover:hover)]:top-1/2 [@media(hover:hover)]:-translate-y-1/2 [@media(hover:hover)]:rounded-md [@media(hover:hover)]:bg-card [@media(hover:hover)]:p-0.5 [@media(hover:hover)]:opacity-0 [@media(hover:hover)]:shadow-[-12px_0_12px_-4px_var(--card)] [@media(hover:hover)]:group-hover:opacity-100 [@media(hover:hover)]:group-focus-within:opacity-100">
+                            <Button size="sm" variant="outline" appearance="app" className="h-7 px-2 text-xs" onClick={() => void openDiff(s)} aria-label={`View diff of “${s.name}”`}>
+                              <GitCompare className="size-3.5" aria-hidden="true" /> Diff
+                            </Button>
+                            {canEdit ? (
+                              <Button size="sm" variant="ghost" appearance="app" className="h-7 px-2 text-xs" onClick={() => setRestoring(s)} aria-label={`Restore “${s.name}”`}>
+                                <RotateCcw className="size-3.5" aria-hidden="true" /> Restore
                               </Button>
-                              {canEdit ? (
-                                <Button size="sm" variant="ghost" appearance="app" className="h-7 px-2.5 text-xs" onClick={() => setRestoring(s)}>
-                                  <RotateCcw className="size-3.5" aria-hidden="true" /> Restore
-                                </Button>
-                              ) : null}
-                            </div>
+                            ) : null}
                           </div>
                         </li>
                       );

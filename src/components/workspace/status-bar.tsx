@@ -16,10 +16,10 @@ import { usePeers } from "./presence";
 export type CheckpointState = { name: string; createdAt: string; changed: number | null; total: number | null };
 
 const item =
-  "inline-flex h-full shrink-0 items-center gap-1.5 rounded-md px-2 transition-colors hover:bg-muted hover:text-foreground focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-ring";
+  "inline-flex h-full shrink-0 items-center gap-1.5 rounded-[5px] px-1.5 transition-colors hover:bg-muted hover:text-foreground focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-ring";
 
 /**
- * The 26px status bar. Every item is real state and opens the panel it describes:
+ * The 24px status bar (mono, dense). Every item is real state and opens the panel it describes:
  * runtime → preview, branch → GitHub, problems → dock, Ln/Col → go to line,
  * language → commands, model → the agent, presence → who is here.
  */
@@ -77,14 +77,14 @@ export function StatusBar({
   const dot = rt.status === "running" ? "ok" : rt.status === "starting" ? "busy" : rt.status === "error" ? "error" : rt.status === "unavailable" ? "warn" : "idle";
 
   return (
-    <footer className="flex h-[26px] shrink-0 items-stretch gap-0.5 px-1.5 text-[11.5px] text-muted-foreground" aria-label="Status bar">
+    <footer className="flex h-6 shrink-0 items-stretch gap-px px-1.5 py-0.5 font-mono text-[11px] text-muted-foreground" aria-label="Status bar">
       <button type="button" onClick={onOpenPreview} className={item} title="Open the preview">
         <StatusDot status={dot} pulse={running} />
         <span className="tabular-nums">{runtimeLabel}</span>
       </button>
       {branch ? (
         <button type="button" onClick={onOpenGithub} className={item} title="GitHub">
-          <GitBranch className="size-3.5" aria-hidden="true" />
+          <GitBranch className="size-3" aria-hidden="true" />
           <span className="max-w-[10rem] truncate font-mono">{branch}</span>
         </button>
       ) : null}
@@ -95,21 +95,21 @@ export function StatusBar({
           className={cn(item, "hidden md:inline-flex")}
           title={`Latest checkpoint “${checkpoint.name}” · ${new Date(checkpoint.createdAt).toLocaleString()}${checkpoint.total !== null ? ` · ${checkpoint.total} checkpoint${checkpoint.total === 1 ? "" : "s"}` : ""}. Open version history.`}
         >
-          <Bookmark className="size-3.5" aria-hidden="true" />
-          <span className="max-w-[12rem] truncate">{checkpoint.name}</span>
+          <Bookmark className="size-3" aria-hidden="true" />
+          <span className="max-w-[12rem] truncate font-sans">{checkpoint.name}</span>
           <span className="tabular-nums text-foreground-dim">{relativeTime(checkpoint.createdAt)}</span>
           {checkpoint.changed !== null ? (
-            <span className={cn("rounded bg-muted px-1 font-mono text-[10.5px] tabular-nums shadow-[inset_0_0_0_1px_var(--border)]", checkpoint.changed > 0 ? "text-foreground" : "text-foreground-dim")} aria-label={`${checkpoint.changed} files changed since`}>
+            <span className={cn("rounded-[4px] bg-muted px-1 font-mono text-[10px] leading-4 tabular-nums shadow-[inset_0_0_0_1px_var(--border)]", checkpoint.changed > 0 ? "text-foreground" : "text-foreground-dim")} aria-label={`${checkpoint.changed} files changed since`}>
               {checkpoint.changed > 0 ? `+${checkpoint.changed}` : "clean"}
             </span>
           ) : null}
         </button>
       ) : null}
       <button type="button" onClick={onOpenProblems} className={item} title="Open problems">
-        <CircleAlert className={cn("size-3.5", errors && "text-danger")} aria-hidden="true" />
+        <CircleAlert className={cn("size-3", errors && "text-danger")} aria-hidden="true" />
         <span className={cn("font-mono tabular-nums", errors && "text-danger")}>{errors}</span>
         <span className="sr-only"> error{errors === 1 ? "" : "s"},</span>
-        <TriangleAlert className={cn("ml-1 size-3.5", warnings && "text-warning")} aria-hidden="true" />
+        <TriangleAlert className={cn("ml-1 size-3", warnings && "text-warning")} aria-hidden="true" />
         <span className={cn("font-mono tabular-nums", warnings && "text-warning")}>{warnings}</span>
         <span className="sr-only"> warning{warnings === 1 ? "" : "s"}</span>
       </button>
@@ -129,7 +129,7 @@ export function StatusBar({
         ) : null}
         <button type="button" onClick={onOpenAgent} className={item} title={agent.ai ? `AI provider: ${agent.ai.provider}` : "AI agent"}>
           {agent.ai?.mock ? (
-            <span className="inline-flex items-center gap-1 rounded bg-muted px-1.5 font-medium text-muted-foreground shadow-[inset_0_0_0_1px_var(--border)]" title="AI_MOCK=1 is set: responses are scripted. Development only.">
+            <span className="inline-flex items-center gap-1 rounded-[4px] px-1 text-[10.5px] font-medium leading-4 text-muted-foreground shadow-[inset_0_0_0_1px_var(--border)]" title="AI_MOCK=1 is set: responses are scripted. Development only.">
               <FlaskConical className="size-3" aria-hidden="true" /> Mock AI
             </span>
           ) : agent.ai?.configured ? (
@@ -147,7 +147,7 @@ export function StatusBar({
           <Popover>
             <PopoverTrigger asChild>
               <button type="button" className={item} aria-label={`${others.length + 1} ${others.length ? "people" : "person"} in this project`}>
-                <Users className="size-3.5" aria-hidden="true" />
+                <Users className="size-3" aria-hidden="true" />
                 <span className="font-mono tabular-nums">{others.length + 1}</span>
               </button>
             </PopoverTrigger>

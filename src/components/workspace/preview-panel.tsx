@@ -216,7 +216,12 @@ export function PreviewPanel({
     <section className="@container/preview flex h-full min-h-0 flex-col" aria-label="Preview">
       <div className="relative flex min-h-0 flex-1 flex-col overflow-hidden bg-card">
         {/* Browser toolbar */}
-        <div className="flex h-10 shrink-0 items-center gap-1 border-b border-border bg-surface/80 px-1.5">
+        <div className="ws-chrome flex h-10 shrink-0 items-center gap-1 border-b border-border px-1.5">
+          <span className="ws-chrome-dots hidden @[640px]/preview:inline-flex" aria-hidden="true">
+            <span />
+            <span />
+            <span />
+          </span>
           <Tooltip content="Reload preview">
             <button ref={reloadRef} type="button" aria-label="Reload preview" disabled={status !== "running"} onClick={reload} className={cn(toolButton, "ws-reload size-7")}>
               <RotateCw className="size-3.5" aria-hidden="true" />
@@ -224,14 +229,14 @@ export function PreviewPanel({
           </Tooltip>
           <span
             role="status"
-            className="hidden h-7 shrink-0 items-center gap-1.5 rounded-full bg-muted px-2.5 text-[11.5px] font-medium tabular-nums text-muted-foreground shadow-[inset_0_0_0_1px_var(--border)] @[560px]/preview:inline-flex"
+            className="hidden h-7 shrink-0 items-center gap-1.5 rounded-md bg-card px-2 text-[11.5px] font-medium tabular-nums text-muted-foreground shadow-[inset_0_0_0_1px_var(--border)] @[560px]/preview:inline-flex"
             title={rt.session?.previewUrl ? `Dev server · ${rt.session.previewUrl}` : "Dev server"}
           >
             <StatusDot status={chip.dot} pulse={chip.pulse} />
             {chip.label}
           </span>
           <form
-            className="flex h-7 min-w-0 flex-1 items-center gap-1.5 rounded-full bg-muted pl-2.5 pr-1 text-[11.5px] shadow-[inset_0_0_0_1px_var(--border)] focus-within:shadow-[inset_0_0_0_1px_var(--border-strong),0_0_0_3px_color-mix(in_oklab,var(--ring)_18%,transparent)]"
+            className="flex h-7 min-w-0 flex-1 items-center gap-1.5 rounded-md bg-card pl-2.5 pr-1 text-[11.5px] shadow-[inset_0_0_0_1px_var(--border)] focus-within:shadow-[inset_0_0_0_1px_var(--border-strong),0_0_0_3px_color-mix(in_oklab,var(--ring)_14%,transparent)]"
             onSubmit={(e) => {
               e.preventDefault();
               if (!previewUrl) return;
@@ -258,7 +263,7 @@ export function PreviewPanel({
                   className="min-w-0 flex-1 bg-transparent font-mono text-foreground outline-none"
                 />
                 <Tooltip content={copied ? "Copied" : "Copy address"}>
-                  <button type="button" onClick={() => void copy()} aria-label="Copy preview address" className="inline-flex size-5 shrink-0 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-background hover:text-foreground">
+                  <button type="button" onClick={() => void copy()} aria-label="Copy preview address" className="inline-flex size-5 shrink-0 items-center justify-center rounded-[4px] text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:outline-2 focus-visible:outline-ring">
                     {copied ? <Check className="pop-in size-3 text-success" aria-hidden="true" /> : <Copy className="size-3" aria-hidden="true" />}
                   </button>
                 </Tooltip>
@@ -272,7 +277,7 @@ export function PreviewPanel({
             )}
           </form>
           {onDeviceChange ? (
-            <div role="radiogroup" aria-label="Preview size" className="hidden shrink-0 items-center rounded-full bg-muted p-0.5 shadow-[inset_0_0_0_1px_var(--border)] @[520px]/preview:flex">
+            <div role="radiogroup" aria-label="Preview size" className="hidden shrink-0 items-center gap-px rounded-md bg-muted p-0.5 shadow-[inset_0_0_0_1px_var(--border)] @[520px]/preview:flex">
               {(Object.keys(DEVICES) as Device[]).map((d) => {
                 const { Icon, label } = DEVICES[d];
                 return (
@@ -283,7 +288,7 @@ export function PreviewPanel({
                       aria-checked={device === d}
                       aria-label={label}
                       onClick={() => onDeviceChange(d)}
-                      className={cn("inline-flex size-6 items-center justify-center rounded-full transition-colors focus-visible:outline-2 focus-visible:outline-ring", device === d ? "bg-card text-foreground shadow-[var(--shadow-sm),inset_0_0_0_1px_var(--border)]" : "text-muted-foreground hover:text-foreground")}
+                      className={cn("inline-flex h-6 w-7 items-center justify-center rounded-[5px] transition-colors focus-visible:outline-2 focus-visible:outline-ring", device === d ? "bg-card text-foreground shadow-[var(--shadow-sm),inset_0_0_0_1px_var(--border)]" : "text-muted-foreground hover:text-foreground")}
                     >
                       <Icon className="size-3.5" aria-hidden="true" />
                     </button>
@@ -403,12 +408,12 @@ export function PreviewPanel({
           {editing && !calm ? <span className="ws-beam" aria-hidden="true" /> : null}
           {editing ? (
             // Visual only: the agent column's live region already announces each stage once.
-            <div className="ws-drop glass pointer-events-none absolute left-1/2 top-3 z-[4] flex -translate-x-1/2 items-center gap-2 rounded-full border border-border-strong px-3 py-1 text-[12px] font-medium shadow-lg" aria-hidden="true">
+            <div className="ws-drop glass pointer-events-none absolute left-1/2 top-3 z-[4] flex -translate-x-1/2 items-center gap-2 rounded-lg border border-border-strong px-2.5 py-1 text-[12px] font-medium shadow-lg" aria-hidden="true">
               <Loader2 className="size-3.5 animate-spin text-primary" aria-hidden="true" />
               {agentFiles ? `Agent is editing · ${agentFiles} file${agentFiles === 1 ? "" : "s"}` : "Agent is working…"}
             </div>
           ) : updated && status === "running" ? (
-            <div key={updated.seq} className="ws-drop glass pointer-events-none absolute left-1/2 top-3 z-[4] flex -translate-x-1/2 items-center gap-1.5 rounded-full border border-success/35 px-3 py-1 text-[12px] font-medium shadow-lg" role="status">
+            <div key={updated.seq} className="ws-drop glass pointer-events-none absolute left-1/2 top-3 z-[4] flex -translate-x-1/2 items-center gap-1.5 rounded-lg border border-success/35 px-2.5 py-1 text-[12px] font-medium shadow-lg" role="status">
               <Check className="size-3.5 text-success" aria-hidden="true" />
               Updated · {updated.count} file{updated.count === 1 ? "" : "s"}
             </div>
@@ -494,14 +499,14 @@ function FrameState({ canEdit, showOperatorDetails }: { canEdit: boolean; showOp
   let card: React.ReactNode;
   if (status === "unavailable" && !rt.configured) {
     card = (
-      <StatusCard icon={<MonitorOff className="size-5" aria-hidden="true" />} title="Previews are not available on this deployment" description="Your files, the editor, version history and AI still work.">
+      <StatusCard art="off" icon={<MonitorOff className="size-4" aria-hidden="true" />} label="Not configured" title="Previews are not available on this deployment" description="Your files, the editor, version history and AI still work.">
         <StillWorks />
         {showOperatorDetails && state?.runnerSetupHint ? <OperatorDetails>{state.runnerSetupHint}</OperatorDetails> : null}
       </StatusCard>
     );
   } else if (status === "unavailable") {
     card = (
-      <StatusCard icon={<CloudOff className="size-5" aria-hidden="true" />} title="Preview isn't available right now" description="The sandbox that runs previews isn't responding. Your files, the editor and version history still work.">
+      <StatusCard art="off" icon={<CloudOff className="size-4" aria-hidden="true" />} label="Unavailable" title="Preview isn't available right now" description="The sandbox that runs previews isn't responding. Your files, the editor and version history still work.">
         <RetryCountdown />
         <StillWorks />
         {showOperatorDetails ? (
@@ -517,7 +522,7 @@ function FrameState({ canEdit, showOperatorDetails }: { canEdit: boolean; showOp
     );
   } else if (status === "starting") {
     card = (
-      <StatusCard icon={<Loader2 className="size-5 animate-spin text-primary" aria-hidden="true" />} title="Starting the dev server…" description="Files are copied into an isolated sandbox and dependencies linked.">
+      <StatusCard art="busy" icon={<Loader2 className="size-4 animate-spin text-foreground" aria-hidden="true" />} label="Starting" title="Starting the dev server…" description="Files are copied into an isolated sandbox and dependencies linked.">
         {session?.startedAt ? <Elapsed since={session.startedAt} /> : null}
         <LogTail lines={tail} />
       </StatusCard>
@@ -525,7 +530,7 @@ function FrameState({ canEdit, showOperatorDetails }: { canEdit: boolean; showOp
   } else if (status === "error") {
     const errLines = tail.filter((l) => l.stream !== "stdout");
     card = (
-      <StatusCard tone="danger" icon={<Square className="size-4 fill-current" aria-hidden="true" />} title="The preview failed" description={session?.error ?? "The dev server exited unexpectedly."}>
+      <StatusCard art="error" tone="danger" icon={<Square className="size-3 fill-current" aria-hidden="true" />} label="Error" title="The preview failed" description={session?.error ?? "The dev server exited unexpectedly."}>
         <LogTail lines={errLines.length ? errLines : tail} />
         <div className="mt-4 flex flex-wrap justify-center gap-2">
           <Button
@@ -547,7 +552,7 @@ function FrameState({ canEdit, showOperatorDetails }: { canEdit: boolean; showOp
     );
   } else {
     card = (
-      <StatusCard icon={<Play className="size-5 translate-x-px fill-current" aria-hidden="true" />} title={session?.status === "stopped" && session.stoppedAt ? "Preview stopped" : "Run your app"} description="Starts the dev server in an isolated sandbox. Edits sync as you type.">
+      <StatusCard art="idle" icon={<Play className="size-3.5 translate-x-px fill-current" aria-hidden="true" />} label={session?.status === "stopped" && session.stoppedAt ? "Stopped" : "Ready"} title={session?.status === "stopped" && session.stoppedAt ? "Preview stopped" : "Run your app"} description="Starts the dev server in an isolated sandbox. Edits sync as you type.">
         <Button onClick={() => void rt.run("start")} loading={busy === "start"} disabled={!canEdit || busy !== null} size="sm" appearance="app" className="mt-4">
           <Play className="size-3.5 fill-current" aria-hidden="true" /> Start preview
         </Button>
@@ -561,19 +566,55 @@ function FrameState({ canEdit, showOperatorDetails }: { canEdit: boolean; showOp
   return (
     <div className="absolute inset-0 overflow-auto">
       <div className="absolute inset-0 overflow-hidden" aria-hidden="true">
-        <div className="absolute inset-0 bg-[radial-gradient(color-mix(in_oklab,var(--foreground)_9%,transparent)_1px,transparent_1.5px)] [background-size:16px_16px]" />
-
+        <div className="absolute inset-0 bg-[radial-gradient(color-mix(in_oklab,var(--foreground)_10%,transparent)_1px,transparent_1.5px)] [background-size:16px_16px] [mask-image:radial-gradient(80%_70%_at_50%_35%,black,transparent)]" />
       </div>
-      <div className="relative z-[1] flex min-h-full flex-col items-center justify-start p-5 pt-[10%]">{card}</div>
+      <div className="relative z-[1] flex min-h-full flex-col items-center justify-start p-5 pt-[9%]">{card}</div>
     </div>
   );
 }
 
-function StatusCard({ icon, title, description, tone, children }: { icon: React.ReactNode; title: string; description: string; tone?: "danger"; children?: React.ReactNode }) {
+type ArtState = "off" | "busy" | "error" | "idle";
+
+/**
+ * The state illustration: a hairline browser window (inline SVG, token colours only) with the
+ * state's glyph in a badge where the page would be. Decorative; the card's heading says the state.
+ */
+function PreviewArt({ state, icon }: { state: ArtState; icon: React.ReactNode }) {
   return (
-    <div className="pop-in w-full max-w-[420px] rounded-2xl border border-border bg-card px-6 py-6 text-center shadow-lg" role={tone === "danger" ? "alert" : undefined}>
-      <span className={cn("mx-auto flex size-10 items-center justify-center rounded-xl bg-muted shadow-[inset_0_0_0_1px_var(--border)]", tone === "danger" ? "bg-danger/10 text-danger" : "text-muted-foreground")}>{icon}</span>
-      <h2 className="mt-4 text-[15px] font-semibold tracking-tight text-balance">{title}</h2>
+    <div className="ws-illo relative mx-auto h-[96px] w-[156px]" aria-hidden="true">
+      <svg viewBox="0 0 156 96" fill="none" className="absolute inset-0 size-full" shapeRendering="geometricPrecision">
+        {/* The window behind: dashed, offset up and in. */}
+        <rect x="20.5" y="0.5" width="115" height="72" rx="7.5" className="ws-illo-soft" stroke="currentColor" strokeDasharray="2 3" />
+        {/* The browser window. */}
+        <rect x="6.5" y="12.5" width="143" height="83" rx="8.5" className="ws-illo-fill" stroke="currentColor" />
+        <path d="M7 28.5h142" stroke="currentColor" />
+        <circle cx="17" cy="20.5" r="2.5" stroke="currentColor" />
+        <circle cx="25.5" cy="20.5" r="2.5" stroke="currentColor" />
+        <circle cx="34" cy="20.5" r="2.5" stroke="currentColor" />
+        <rect x="46.5" y="16.5" width="70" height="8" rx="2.5" className="ws-illo-soft" stroke="currentColor" />
+        {/* The page that is not there: faint placeholder lines. */}
+        <path d="M20 41h40M20 48h26" className="ws-illo-faint" strokeWidth="3" strokeLinecap="round" />
+        <path d="M20 83h30M106 83h30M118 41h18" className="ws-illo-faint" strokeWidth="3" strokeLinecap="round" />
+        {state === "off" ? <path d="M58 76l40-28" className="ws-illo-ink" strokeDasharray="2 3" strokeLinecap="round" /> : null}
+      </svg>
+      <span
+        className={cn(
+          "absolute left-1/2 top-[62px] flex size-9 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border bg-card shadow-sm",
+          state === "error" ? "border-danger/40 text-danger" : state === "busy" ? "border-border-strong text-foreground" : "border-border-strong text-muted-foreground",
+        )}
+      >
+        {icon}
+      </span>
+    </div>
+  );
+}
+
+function StatusCard({ art, icon, label, title, description, tone, children }: { art: ArtState; icon: React.ReactNode; label: string; title: string; description: string; tone?: "danger"; children?: React.ReactNode }) {
+  return (
+    <div className="pop-in w-full max-w-[400px] rounded-xl border border-border bg-card px-6 pb-6 pt-5 text-center shadow-sm" role={tone === "danger" ? "alert" : undefined}>
+      <PreviewArt state={art} icon={icon} />
+      <p className={cn("ws-label mt-4", tone === "danger" && "text-danger")}>{label}</p>
+      <h2 className="mt-2 text-[15px] font-semibold tracking-[-0.01em] text-balance">{title}</h2>
       <p className="mx-auto mt-1.5 max-w-sm text-[13px] leading-relaxed text-muted-foreground text-pretty">{description}</p>
       {children}
     </div>
@@ -615,10 +656,10 @@ function StillWorks() {
   ];
   return (
     <div className="mt-5 border-t border-border pt-4">
-      <p className="text-[11px] font-medium uppercase tracking-[0.06em] text-muted-foreground">What still works</p>
-      <ul className="mt-2.5 flex flex-wrap justify-center gap-1.5">
+      <p className="ws-label">What still works</p>
+      <ul className="mt-3 flex flex-wrap justify-center gap-1.5">
         {items.map(({ label, Icon }) => (
-          <li key={label} className="inline-flex items-center gap-1.5 whitespace-nowrap rounded-full bg-muted px-2.5 py-1 text-[12px] font-medium text-foreground/85">
+          <li key={label} className="inline-flex h-6 items-center gap-1.5 whitespace-nowrap rounded-md bg-muted/60 px-2 text-[12px] font-medium text-foreground/85 shadow-[inset_0_0_0_1px_var(--border)]">
             <Icon className="size-3.5 text-success" aria-hidden="true" /> {label}
           </li>
         ))}
@@ -629,7 +670,7 @@ function StillWorks() {
 
 function OperatorDetails({ children }: { children: React.ReactNode }) {
   return (
-    <details className="group mt-4 w-full rounded-xl border border-border bg-card text-left text-xs">
+    <details className="group mt-4 w-full rounded-lg border border-border bg-card text-left text-xs">
       <summary className="flex cursor-pointer list-none items-center justify-between px-3 py-2 font-medium text-muted-foreground hover:text-foreground [&::-webkit-details-marker]:hidden">
         Details for the server operator
         <span className="transition-transform group-open:rotate-90" aria-hidden="true">
@@ -644,7 +685,7 @@ function OperatorDetails({ children }: { children: React.ReactNode }) {
 function LogTail({ lines }: { lines: LogLine[] }) {
   if (!lines.length) return null;
   return (
-    <pre className="mt-4 max-h-44 overflow-auto rounded-xl border border-code-border bg-code-bg p-2.5 text-left font-mono text-[11px] leading-5 text-code-fg" aria-label="Recent log lines">
+    <pre className="mt-4 max-h-44 overflow-auto rounded-lg border border-code-border bg-code-bg p-2.5 text-left font-mono text-[11px] leading-5 text-code-fg" aria-label="Recent log lines">
       {lines.map((l, i) => (
         <div key={`${l.ts}-${i}`} className={cn(l.stream === "stderr" && "text-danger", l.stream === "system" && "text-syn-attr")}>
           {stripAnsi(l.line)}
@@ -669,18 +710,18 @@ function SkeletonApp({ shimmer = false }: { shimmer?: boolean }) {
         <div className="ml-auto flex gap-2">
           {bar("h-3 w-12")}
           {bar("h-3 w-12")}
-          {bar("h-7 w-20 rounded-full")}
+          {bar("h-7 w-20 rounded-md")}
         </div>
       </div>
       <div className="mx-auto mt-12 max-w-lg space-y-3 text-center">
         {bar("mx-auto h-6 w-3/4")}
         {bar("mx-auto h-6 w-1/2")}
         {bar("mx-auto mt-4 h-3 w-2/3")}
-        {bar("mx-auto mt-5 h-9 w-32 rounded-full")}
+        {bar("mx-auto mt-5 h-9 w-32 rounded-lg")}
       </div>
       <div className="mx-auto mt-12 grid max-w-3xl grid-cols-3 gap-3">
         {[0, 1, 2].map((i) => (
-          <div key={i} className={cn("space-y-2 rounded-xl border border-border p-3", !shimmer && "bg-card/50")}>
+          <div key={i} className={cn("space-y-2 rounded-lg border border-border p-3", !shimmer && "bg-card/50")}>
             {bar("h-20 w-full rounded-lg")}
             {bar("h-3 w-2/3")}
             {bar("h-3 w-1/2")}

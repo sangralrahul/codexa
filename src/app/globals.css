@@ -1229,7 +1229,8 @@ body:has(main [data-tone="company"]) { --silk-1: #ff8a66; --silk-2: #ffc070; --s
   position: relative;
   isolation: isolate;
   overflow: hidden;
-  color: #ffffff;
+  /* The ink that sits on --primary in each theme (white on black, black on white). */
+  color: var(--primary-foreground);
   background: var(--primary);
   font-weight: 600;
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.28), 0 1px 2px rgba(15, 23, 42, 0.12), 0 10px 28px -10px var(--brand-glow);

@@ -1,8 +1,9 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Braces, ChevronRight, FileCode2, FileJson2, FileText, FileType2, Folder, FolderOpen, Hash, Image, Palette, RefreshCw, Save, Search, X } from "lucide-react";
+import { ChevronRight, FileCode2, Folder, FolderOpen, Lock, RefreshCw, Save, Search, X } from "lucide-react";
 import { ApiError, filesApi, runtimeApi, type FileEntry } from "../../lib/api";
 import { cn } from "../../lib/util";
-import { Button, Kbd, Spinner, toast } from "../../ui";
+import { Button, Spinner, Tip, toast } from "../../ui";
+import { FileIcon, kindOf } from "./fileKinds";
 import { isDark } from "../../app/theme";
 import { languageFor, monaco } from "./monaco";
 
@@ -30,39 +31,6 @@ function buildTree(files: FileEntry[]): Node[] {
   };
   sort(root.children!);
   return root.children!;
-}
-
-/** File-type icon and tint, like an IDE's explorer. */
-// File-type colours follow the familiar editor conventions (TypeScript blue, JavaScript yellow, …):
-// the one place the monochrome UI keeps colour, so files are recognisable at a glance.
-const KINDS: Record<string, { icon: typeof FileCode2; tint: string; label: string }> = {
-  tsx: { icon: Braces, tint: "text-[#3178c6]", label: "TypeScript React" },
-  ts: { icon: Braces, tint: "text-[#3178c6]", label: "TypeScript" },
-  jsx: { icon: Braces, tint: "text-[#e8a317]", label: "JavaScript React" },
-  js: { icon: Braces, tint: "text-[#e8a317]", label: "JavaScript" },
-  mjs: { icon: Braces, tint: "text-[#e8a317]", label: "JavaScript" },
-  cjs: { icon: Braces, tint: "text-[#e8a317]", label: "JavaScript" },
-  json: { icon: FileJson2, tint: "text-[#b8860b]", label: "JSON" },
-  css: { icon: Palette, tint: "text-[#7c4dff]", label: "CSS" },
-  scss: { icon: Palette, tint: "text-[#c6538c]", label: "SCSS" },
-  html: { icon: FileCode2, tint: "text-[#e44d26]", label: "HTML" },
-  md: { icon: FileText, tint: "text-muted", label: "Markdown" },
-  svg: { icon: Image, tint: "text-[#ff9800]", label: "SVG" },
-  png: { icon: Image, tint: "text-[#2a9d8f]", label: "Image" },
-  jpg: { icon: Image, tint: "text-[#2a9d8f]", label: "Image" },
-  webp: { icon: Image, tint: "text-[#2a9d8f]", label: "Image" },
-  yml: { icon: Hash, tint: "text-[#cb171e]", label: "YAML" },
-  yaml: { icon: Hash, tint: "text-[#cb171e]", label: "YAML" },
-  sql: { icon: FileType2, tint: "text-[#2a9d8f]", label: "SQL" },
-};
-function kindOf(path: string) {
-  const name = path.split("/").pop() ?? "";
-  if (name === ".gitignore" || name === ".env" || name.startsWith(".env.")) return { icon: FileText, tint: "text-dim", label: "Config" };
-  return KINDS[name.split(".").pop()?.toLowerCase() ?? ""] ?? { icon: FileText, tint: "text-dim", label: "Plain text" };
-}
-function FileIcon({ path, className }: { path: string; className?: string }) {
-  const k = kindOf(path);
-  return <k.icon className={cn("size-3.5 shrink-0", k.tint, className)} aria-hidden="true" />;
 }
 
 /** The file most people want first: the app's entry component, then the page, then anything readable. */
@@ -265,8 +233,9 @@ export function CodeView({ projectId, filesVersion, readOnly }: { projectId: str
   const renderNodes = (nodes: Node[], depth: number) =>
     nodes.map((n) => {
       const isOpen = open.has(n.path);
+      const isActive = active === n.path;
       return (
-        <li key={n.path}>
+        <li key={n.path} role="treeitem" aria-expanded={n.children ? isOpen : undefined} aria-selected={isActive}>
           <button
             type="button"
             onClick={() =>
@@ -279,124 +248,149 @@ export function CodeView({ projectId, filesVersion, readOnly }: { projectId: str
                   })
                 : void openFile(n.path)
             }
-            style={{ paddingLeft: 8 + depth * 12 }}
-            className={cn("flex h-[26px] w-full items-center gap-1.5 rounded-md pr-2 text-left text-[12.5px]", active === n.path ? "bg-surface font-medium text-fg ring-1 ring-border" : "text-muted hover:bg-surface/70 hover:text-fg")}
+            style={{ paddingLeft: 6 + depth * 12 }}
+            title={n.path}
+            className={cn(
+              "relative flex h-6 w-full items-center gap-1.5 rounded-[5px] pr-2 text-left text-[12.5px] transition-colors",
+              isActive ? "bg-surface text-fg" : "text-muted hover:bg-surface/70 hover:text-fg",
+            )}
           >
-            {n.children ? <ChevronRight className={cn("size-3 shrink-0 text-dim transition-transform", isOpen && "rotate-90")} /> : <span className="w-3" />}
+            {/* Indent guides, one per level. */}
+            {Array.from({ length: depth }, (_, i) => (
+              <span key={i} aria-hidden="true" className="absolute inset-y-0 w-px bg-border" style={{ left: 12 + i * 12 }} />
+            ))}
+            {n.children ? <ChevronRight className={cn("size-3 shrink-0 text-dim transition-transform", isOpen && "rotate-90")} /> : <span className="w-3 shrink-0" />}
             {n.children ? isOpen ? <FolderOpen className="size-3.5 shrink-0 text-[#d4a017]" /> : <Folder className="size-3.5 shrink-0 text-[#d4a017]" /> : <FileIcon path={n.path} />}
-            <span className="truncate">{n.name}</span>
-            {dirty.has(n.path) ? <span className="ml-auto size-1.5 shrink-0 rounded-full bg-accent" /> : null}
+            <span className={cn("truncate", isActive && "font-medium")}>{n.name}</span>
+            {dirty.has(n.path) ? <span className="ml-auto size-1.5 shrink-0 rounded-full bg-fg" aria-label="Unsaved" /> : null}
           </button>
-          {n.children && isOpen ? <ul>{renderNodes(n.children, depth + 1)}</ul> : null}
+          {n.children && isOpen ? <ul role="group">{renderNodes(n.children, depth + 1)}</ul> : null}
         </li>
       );
     });
 
   return (
-    <div className="flex h-full">
-      <aside className="flex w-[240px] shrink-0 flex-col border-r border-border bg-sidebar">
-        <div className="flex h-11 items-center justify-between border-b border-border px-3">
-          <span className="text-[11.5px] font-semibold uppercase tracking-wider text-dim">Explorer</span>
-          <span className="flex items-center gap-1">
-            {files ? <span className="text-[11px] tabular-nums text-dim">{files.length} files</span> : null}
-            <Button variant="ghost" size="icon-sm" aria-label="Refresh files" title="Refresh files" onClick={() => void loadFiles()}>
+    <div className="flex h-full bg-bg">
+      <aside className="flex w-[240px] shrink-0 flex-col border-r border-border bg-sidebar" aria-label="Explorer">
+        <div className="ws-bar gap-1 bg-sidebar pl-3 pr-1.5">
+          <span className="ws-label">Explorer</span>
+          {files ? <span className="mono ml-auto text-[10.5px] tabular-nums text-dim">{files.length} files</span> : <span className="ml-auto" />}
+          <Tip label="Refresh files" align="end">
+            <button type="button" className="ws-icon ws-icon--sm" aria-label="Refresh files" onClick={() => void loadFiles()}>
               <RefreshCw />
-            </Button>
-          </span>
+            </button>
+          </Tip>
         </div>
-        <div className="relative border-b border-border p-2">
-          <Search className="pointer-events-none absolute left-4 top-1/2 size-3.5 -translate-y-1/2 text-dim" />
+        <div className="relative px-2 pb-1.5 pt-2">
+          <Search className="pointer-events-none absolute left-4 top-1/2 mt-[1px] size-3.5 -translate-y-1/2 text-dim" />
           <input
             value={filter}
             onChange={(e) => setFilter(e.target.value)}
+            onKeyDown={(e) => e.key === "Escape" && setFilter("")}
             placeholder="Filter files"
             aria-label="Filter files"
-            className="h-7 w-full rounded-md border border-transparent bg-surface pl-7 pr-6 text-[12.5px] outline-none placeholder:text-dim focus:border-border-strong"
+            className="h-7 w-full rounded-md border border-border bg-bg pl-7 pr-7 text-[12.5px] outline-none transition-colors placeholder:text-dim focus:border-[var(--mark)]"
           />
           {filter ? (
-            <button type="button" aria-label="Clear filter" onClick={() => setFilter("")} className="absolute right-3.5 top-1/2 -translate-y-1/2 text-dim hover:text-fg">
+            <button type="button" aria-label="Clear filter" onClick={() => setFilter("")} className="absolute right-3.5 top-1/2 mt-[1px] -translate-y-1/2 rounded-sm text-dim hover:text-fg">
               <X className="size-3.5" />
             </button>
           ) : null}
         </div>
-        <nav className="scroll min-h-0 flex-1 p-1.5">
+        <nav className="scroll min-h-0 flex-1 px-1.5 pb-2" aria-label="Files">
           {files === null ? (
-            <Spinner className="m-3" />
+            <div className="space-y-1.5 px-2 py-2" aria-label="Loading files">
+              {[70, 52, 84, 46, 64, 58].map((w, i) => (
+                <span key={i} className="pulse block h-3 rounded-sm bg-surface" style={{ width: `${w}%` }} />
+              ))}
+            </div>
           ) : q ? (
             matches.length === 0 ? (
-              <p className="px-2 py-4 text-center text-[12px] text-dim">No files match</p>
+              <p className="px-2 py-6 text-center text-[12px] text-dim">No files match “{filter.trim()}”</p>
             ) : (
               <ul>
                 {matches.map((f) => (
                   <li key={f.path}>
-                    <button type="button" onClick={() => void openFile(f.path)} className={cn("flex h-[30px] w-full items-center gap-1.5 rounded-md px-2 text-left text-[12.5px]", active === f.path ? "bg-surface text-fg" : "text-muted hover:bg-surface/70 hover:text-fg")}>
+                    <button type="button" onClick={() => void openFile(f.path)} className={cn("flex h-[34px] w-full items-center gap-2 rounded-[5px] px-2 text-left text-[12.5px] transition-colors", active === f.path ? "bg-surface text-fg" : "text-muted hover:bg-surface/70 hover:text-fg")}>
                       <FileIcon path={f.path} />
                       <span className="min-w-0">
-                        <span className="block truncate font-medium">{f.path.split("/").pop()}</span>
-                        {f.path.includes("/") ? <span className="block truncate text-[10.5px] leading-tight text-dim">{f.path.slice(0, f.path.lastIndexOf("/"))}</span> : null}
+                        <span className="block truncate font-medium leading-tight">{f.path.split("/").pop()}</span>
+                        {f.path.includes("/") ? <span className="mono block truncate text-[10.5px] leading-tight text-dim">{f.path.slice(0, f.path.lastIndexOf("/"))}</span> : null}
                       </span>
                     </button>
                   </li>
                 ))}
               </ul>
             )
+          ) : files.length === 0 ? (
+            <p className="px-2 py-6 text-center text-[12px] leading-relaxed text-dim">No files yet.</p>
           ) : (
-            <ul>{renderNodes(tree, 0)}</ul>
+            <ul role="tree" aria-label="Project files">
+              {renderNodes(tree, 0)}
+            </ul>
           )}
         </nav>
       </aside>
-      <div className="flex min-w-0 flex-1 flex-col bg-card">
-        <div className="flex h-10 shrink-0 items-end gap-0.5 border-b border-border bg-sidebar/60 px-2">
-          <div className="scroll flex min-w-0 flex-1 items-end gap-0.5 overflow-y-hidden">
-            {tabs.map((t) => (
-              <div
-                key={t.path}
-                className={cn("group flex h-[34px] shrink-0 items-center gap-1.5 rounded-t-lg border border-b-0 pl-2.5 pr-1 text-[12.5px]", active === t.path ? "border-border bg-card text-fg" : "border-transparent text-muted hover:text-fg")}
-                onAuxClick={(e) => e.button === 1 && closeTab(t.path)}
-              >
-                <button type="button" onClick={() => setActive(t.path)} className="flex max-w-[200px] items-center gap-1.5 truncate" title={t.path}>
-                  <FileIcon path={t.path} className="size-3" />
-                  {t.path.split("/").pop()}
-                </button>
-                <button type="button" onClick={() => closeTab(t.path)} aria-label={`Close ${t.path}`} className="flex size-5 items-center justify-center rounded hover:bg-surface">
-                  {dirty.has(t.path) ? <span className="size-1.5 rounded-full bg-accent group-hover:hidden" /> : null}
-                  <X className={cn("size-3", dirty.has(t.path) && "hidden group-hover:block")} />
-                </button>
-              </div>
-            ))}
+      <div className="flex min-w-0 flex-1 flex-col bg-bg">
+        <div className="flex h-9 shrink-0 items-stretch border-b border-border bg-sidebar">
+          <div className="flex min-w-0 flex-1 items-stretch overflow-x-auto overflow-y-hidden [scrollbar-width:none]" role="tablist" aria-label="Open files">
+            {tabs.map((t) => {
+              const on = active === t.path;
+              return (
+                <div
+                  key={t.path}
+                  className={cn("group relative flex shrink-0 items-center gap-1 border-r border-border pl-3 pr-1.5 text-[12.5px] transition-colors", on ? "bg-bg text-fg" : "text-muted hover:bg-surface/60 hover:text-fg")}
+                  onAuxClick={(e) => e.button === 1 && closeTab(t.path)}
+                >
+                  {on ? <span aria-hidden="true" className="absolute inset-x-0 top-0 h-px bg-fg" /> : null}
+                  {on ? <span aria-hidden="true" className="absolute inset-x-0 -bottom-px h-px bg-bg" /> : null}
+                  <button type="button" role="tab" aria-selected={on} onClick={() => setActive(t.path)} className="flex h-full max-w-[200px] items-center gap-1.5 truncate" title={t.path}>
+                    <FileIcon path={t.path} className="size-3" />
+                    <span className="truncate">{t.path.split("/").pop()}</span>
+                  </button>
+                  <button type="button" onClick={() => closeTab(t.path)} aria-label={`Close ${t.path}`} className={cn("flex size-5 items-center justify-center rounded-[4px] text-dim transition-colors hover:bg-surface hover:text-fg", !on && !dirty.has(t.path) && "opacity-0 group-hover:opacity-100 focus-visible:opacity-100")}>
+                    {dirty.has(t.path) ? <span className="size-1.5 rounded-full bg-fg group-hover:hidden" /> : null}
+                    <X className={cn("size-3", dirty.has(t.path) && "hidden group-hover:block")} />
+                  </button>
+                </div>
+              );
+            })}
           </div>
           {active && !readOnly ? (
-            <div className="flex h-10 items-center gap-2 pl-2">
-              <span className="hidden text-[11.5px] text-dim xl:inline">
-                <Kbd>Ctrl S</Kbd>
-              </span>
-              <Button size="sm" variant={dirty.has(active) ? "primary" : "ghost"} disabled={!dirty.has(active)} loading={saving} onClick={() => void save()}>
-                <Save /> Save
-              </Button>
+            <div className="flex items-center gap-2 border-l border-border pl-2 pr-1.5">
+              <Tip label="Save" keys="Ctrl S" align="end">
+                <Button size="xs" variant={dirty.has(active) ? "primary" : "ghost"} disabled={!dirty.has(active)} loading={saving} onClick={() => void save()}>
+                  {saving ? null : <Save className="!size-3.5" />} Save
+                </Button>
+              </Tip>
             </div>
           ) : null}
         </div>
         {active ? (
-          <div className="flex h-8 shrink-0 items-center gap-1 border-b border-border px-3 text-[12px] text-muted">
-            {active.split("/").map((seg, i, arr) => (
-              <span key={i} className="flex items-center gap-1">
-                {i > 0 ? <ChevronRight className="size-3 text-dim" /> : null}
-                <span className={cn(i === arr.length - 1 && "flex items-center gap-1.5 font-medium text-fg")}>
-                  {i === arr.length - 1 ? <FileIcon path={active} className="size-3" /> : null}
-                  {seg}
+          <div className="flex h-7 shrink-0 items-center gap-1 border-b border-border bg-bg px-3 text-[12px] text-muted">
+            <nav aria-label="File path" className="flex min-w-0 items-center gap-1">
+              {active.split("/").map((seg, i, arr) => (
+                <span key={i} className="flex min-w-0 items-center gap-1">
+                  {i > 0 ? <ChevronRight className="size-3 shrink-0 text-dim" /> : null}
+                  <span className={cn("truncate", i === arr.length - 1 ? "flex items-center gap-1.5 text-fg" : "text-dim")}>
+                    {i === arr.length - 1 ? <FileIcon path={active} className="size-3" /> : null}
+                    {seg}
+                  </span>
                 </span>
-              </span>
-            ))}
-            <span className="ml-auto flex items-center gap-2 text-[11.5px]">
+              ))}
+            </nav>
+            <span className="ml-auto flex shrink-0 items-center gap-2 text-[11.5px]">
               {readOnly ? (
-                <span className="text-dim">Read only</span>
+                <span className="flex items-center gap-1.5 text-dim">
+                  <Lock className="size-3" /> Read only
+                </span>
               ) : dirty.has(active) ? (
                 <span className="flex items-center gap-1.5 text-warning">
-                  <span className="size-1.5 rounded-full bg-warning" /> Unsaved changes
+                  <span className="ws-dot bg-warning" /> Unsaved
                 </span>
               ) : (
                 <span className="flex items-center gap-1.5 text-dim">
-                  <span className="size-1.5 rounded-full bg-success" /> Saved
+                  <span className="ws-dot bg-success" /> Saved
                 </span>
               )}
             </span>
@@ -405,22 +399,33 @@ export function CodeView({ projectId, filesVersion, readOnly }: { projectId: str
         <div className="relative min-h-0 flex-1">
           <div ref={hostRef} className="absolute inset-0" />
           {!active ? (
-            <div className="absolute inset-0 flex flex-col items-center justify-center bg-card text-center">
-              <FileCode2 className="size-6 text-dim" />
-              <p className="mt-3 text-[13.5px] font-medium">{files && files.length === 0 ? "This project has no files yet" : "Open a file to view or edit it"}</p>
-              <p className="mt-1 text-[12.5px] text-muted">{files && files.length === 0 ? "Describe what to build in the chat and the AI creates them." : "Changes you save update the live preview."}</p>
+            <div className="absolute inset-0 flex flex-col items-center justify-center bg-bg text-center">
+              <span className="flex size-10 items-center justify-center rounded-lg border border-border bg-card text-dim">
+                <FileCode2 className="size-5" />
+              </span>
+              <p className="mt-4 text-[14px] font-semibold tracking-[-0.01em]">{files && files.length === 0 ? "This project has no files yet" : "Open a file to view or edit it"}</p>
+              <p className="mt-1 max-w-[320px] text-[12.5px] leading-relaxed text-muted">{files && files.length === 0 ? "Describe what to build in the chat and the AI creates them." : "Pick one in the explorer. Changes you save update the live preview."}</p>
+              {files && files.length ? (
+                <p className="mt-4 flex items-center gap-1.5 text-[11.5px] text-dim">
+                  <span className="mono rounded-[4px] border border-border px-1 text-[10.5px] text-muted">Ctrl S</span> saves the open file
+                </p>
+              ) : null}
             </div>
           ) : null}
         </div>
         {active ? (
-          <div className="flex h-6 shrink-0 items-center gap-4 border-t border-border bg-sidebar/60 px-3 text-[11px] tabular-nums text-dim">
-            <span>
+          <div className="ws-status text-[11px] tabular-nums text-dim">
+            <span className="ws-status__item">
               Ln {cursor.line}, Col {cursor.col}
             </span>
-            <span>Spaces: 2</span>
-            <span>UTF-8</span>
-            <span className="ml-auto">{activeFile ? fmtSize(activeFile.size) : null}</span>
-            <span className="text-muted">{activeTab?.binary ? "Binary" : kindOf(active).label}</span>
+            <span className="ws-status__item">Spaces: 2</span>
+            <span className="ws-status__item">UTF-8</span>
+            <span className="ml-auto" />
+            {activeFile ? <span className="ws-status__item mono">{fmtSize(activeFile.size)}</span> : null}
+            <span className="ws-status__item flex items-center gap-1.5 text-muted">
+              <FileIcon path={active} className="size-3" />
+              {activeTab?.binary ? "Binary" : kindOf(active).label}
+            </span>
           </div>
         ) : null}
       </div>

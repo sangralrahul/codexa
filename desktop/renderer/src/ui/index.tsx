@@ -4,7 +4,7 @@ import { Check, Loader2, X } from "lucide-react";
 import { cn, initials } from "../lib/util";
 
 type Variant = "primary" | "secondary" | "ghost" | "danger" | "accent";
-type Size = "sm" | "md" | "lg" | "icon" | "icon-sm";
+type Size = "xs" | "sm" | "md" | "lg" | "icon" | "icon-sm";
 
 const VARIANTS: Record<Variant, string> = {
   primary: "btn-primary",
@@ -14,6 +14,7 @@ const VARIANTS: Record<Variant, string> = {
   danger: "bg-danger text-white hover:brightness-110",
 };
 const SIZES: Record<Size, string> = {
+  xs: "h-7 px-2.5 text-[12.5px] gap-1.5 rounded-md [&_svg]:!size-3.5",
   sm: "h-8 px-3 text-[13px] gap-1.5 rounded-md",
   md: "h-9 px-3.5 text-[13.5px] gap-2 rounded-md",
   lg: "h-11 px-5 text-[14.5px] gap-2 rounded-md",
@@ -122,6 +123,23 @@ export function Kbd({ children }: { children: ReactNode }) {
   return <kbd className="inline-flex h-[18px] min-w-5 items-center justify-center rounded border border-border-strong px-1 font-mono text-[10.5px] text-muted">{children}</kbd>;
 }
 
+/**
+ * A hover / keyboard-focus tooltip (CSS only, no portal): the label and an optional shortcut, in an
+ * inverted chip. The trigger keeps its own aria-label; the tooltip is visual reinforcement, so it is
+ * hidden from assistive tech to avoid announcing the name twice.
+ */
+export function Tip({ label, keys, side = "bottom", align = "center", children, className }: { label: string; keys?: string; side?: "top" | "bottom" | "right"; align?: "center" | "end"; children: ReactNode; className?: string }) {
+  return (
+    <span className={cn("tip-host", className)}>
+      {children}
+      <span aria-hidden="true" className="tip" data-side={side} data-align={align}>
+        {label}
+        {keys ? <span className="tip__keys">{keys}</span> : null}
+      </span>
+    </span>
+  );
+}
+
 export function EmptyState({ icon, title, body, action }: { icon?: ReactNode; title: string; body?: ReactNode; action?: ReactNode }) {
   return (
     <div className="flex flex-col items-center justify-center rounded-lg border border-dashed border-border-strong px-6 py-14 text-center">
@@ -134,7 +152,7 @@ export function EmptyState({ icon, title, body, action }: { icon?: ReactNode; ti
 }
 
 /** Small popover menu anchored to its trigger; closes on outside click and Escape. */
-export function Menu({ trigger, children, align = "end", width = 200 }: { trigger: (open: boolean, toggle: () => void) => ReactNode; children: (close: () => void) => ReactNode; align?: "start" | "end"; width?: number }) {
+export function Menu({ trigger, children, align = "end", width = 200, className }: { trigger: (open: boolean, toggle: () => void) => ReactNode; children: (close: () => void) => ReactNode; align?: "start" | "end"; width?: number; className?: string }) {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
   useEffect(() => {
@@ -151,7 +169,7 @@ export function Menu({ trigger, children, align = "end", width = 200 }: { trigge
     };
   }, [open]);
   return (
-    <div ref={ref} className="relative">
+    <div ref={ref} className={cn("relative", className)}>
       {trigger(open, () => setOpen((o) => !o))}
       {open ? (
         <div role="menu" style={{ width }} className={cn("fade-in absolute top-full z-50 mt-1.5 rounded-lg border border-border-strong bg-card p-1", align === "end" ? "right-0" : "left-0")}>

@@ -60,7 +60,7 @@ const TOOLS: { id: WorkspaceTool; label: string; hint: string; Icon: typeof Hist
 export type RecentProject = { id: string; name: string; templateId: string | null; category: string | null };
 
 /**
- * The 52px workspace header. Left: logo, project switcher, the save pill. Centre: the canvas
+ * The 48px workspace header (every control is 32px tall, hairline dividers between groups). Left: logo, project switcher, the save pill. Centre: the canvas
  * view (device sizes live in the preview's own toolbar, next to the frame they size). Right: the agent status (real elapsed time), Run (a state machine
  * bound to the real runtime status), presence (only when connected), History, Share, Publish
  * and a labelled Tools menu.
@@ -141,13 +141,14 @@ export function WorkspaceHeader({
   const logoState = agent.running ? (calm ? "idle" : "running") : run?.finishedAt && run.status === "succeeded" ? "success" : run?.finishedAt && run.status === "failed" ? "error" : "idle";
 
   return (
-    <header className="relative z-20 grid h-[52px] shrink-0 grid-cols-[minmax(0,1fr)_auto] items-center gap-2 px-2.5 sm:px-3 xl:grid-cols-[minmax(0,1fr)_auto_minmax(max-content,1fr)]" data-testid="workspace-header">
-      <div className="flex min-w-0 items-center gap-2">
+    <header className="relative z-20 grid h-12 shrink-0 grid-cols-[minmax(0,1fr)_auto] items-center gap-2 px-2 sm:px-2.5 xl:grid-cols-[minmax(0,1fr)_auto_minmax(max-content,1fr)]" data-testid="workspace-header">
+      <div className="flex min-w-0 items-center gap-1.5">
       <Tooltip content="Back to dashboard">
-        <Link href="/dashboard" aria-label="Back to dashboard" className="flex size-8 shrink-0 items-center justify-center rounded-lg transition-opacity hover:opacity-80 focus-visible:outline-2 focus-visible:outline-ring">
-          <LogoMark size={26} state={logoState} key={`${logoState}-${run?.key ?? ""}`} />
+        <Link href="/dashboard" aria-label="Back to dashboard" className="flex size-8 shrink-0 items-center justify-center rounded-lg transition-colors hover:bg-muted focus-visible:outline-2 focus-visible:outline-ring">
+          <LogoMark size={22} state={logoState} key={`${logoState}-${run?.key ?? ""}`} />
         </Link>
       </Tooltip>
+      <span className="ws-divider max-sm:hidden" aria-hidden="true" />
 
       {/* Project switcher + save pill */}
       <div className="flex min-w-0 flex-1 items-center gap-1 sm:gap-1.5">
@@ -175,27 +176,27 @@ export function WorkspaceHeader({
                 }
               }}
               maxLength={100}
-              className="h-8 w-40 rounded-lg border border-ring bg-input px-2.5 text-[14px] font-semibold shadow-[0_0_0_3px_color-mix(in_oklab,var(--ring)_18%,transparent)] outline-none sm:w-64"
+              className="h-8 w-40 rounded-lg border border-ring bg-input px-2.5 text-[13.5px] font-medium shadow-[0_0_0_3px_color-mix(in_oklab,var(--ring)_14%,transparent)] outline-none sm:w-64"
               aria-invalid={Boolean(renameError)}
             />
-            <button type="submit" className="rounded-md p-1.5 text-success hover:bg-muted" aria-label="Save name">
+            <button type="submit" className="inline-flex size-8 items-center justify-center rounded-lg text-success hover:bg-muted focus-visible:outline-2 focus-visible:outline-ring" aria-label="Save name">
               <Check className="size-4" aria-hidden="true" />
             </button>
           </form>
         ) : (
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <button type="button" className="group flex min-w-0 items-center gap-2 rounded-lg py-1 pl-1 pr-1.5 text-left transition-colors hover:bg-muted focus-visible:outline-2 focus-visible:outline-ring data-[state=open]:bg-muted" aria-label={`${name}: project menu`}>
+              <button type="button" className="group flex h-8 min-w-0 items-center gap-2 rounded-lg pl-1.5 pr-1.5 text-left transition-colors hover:bg-muted focus-visible:outline-2 focus-visible:outline-ring data-[state=open]:bg-muted" aria-label={`${name}: project menu`}>
                 {template ? (
-                  <span className="relative h-5 w-8 shrink-0 overflow-hidden rounded-[5px] shadow-[0_0_0_1px_var(--border-strong)] max-sm:hidden" aria-hidden="true">
+                  <span className="relative h-[18px] w-7 shrink-0 overflow-hidden rounded-[4px] shadow-[0_0_0_1px_var(--border-strong)] max-sm:hidden" aria-hidden="true">
                     <TemplatePreview id={template.id} category={template.category} sizes="32px" className="size-full rounded-none border-0 shadow-none" imgClassName="size-full aspect-auto" />
                   </span>
                 ) : (
-                  <span className="flex h-5 w-8 shrink-0 items-center justify-center rounded-[5px] bg-muted text-muted-foreground shadow-[0_0_0_1px_var(--border)] max-sm:hidden" aria-hidden="true">
+                  <span className="flex h-[18px] w-7 shrink-0 items-center justify-center rounded-[4px] bg-muted text-muted-foreground shadow-[0_0_0_1px_var(--border)] max-sm:hidden" aria-hidden="true">
                     <LayoutGrid className="size-3" />
                   </span>
                 )}
-                <span className="min-w-0 truncate text-[14px] font-semibold tracking-tight">{name}</span>
+                <span className="min-w-0 truncate text-[13.5px] font-medium tracking-[-0.01em]">{name}</span>
                 <ChevronDown className="size-3.5 shrink-0 text-muted-foreground transition-transform group-data-[state=open]:rotate-180" aria-hidden="true" />
               </button>
             </DropdownMenuTrigger>
@@ -256,9 +257,9 @@ export function WorkspaceHeader({
         </div>
       ) : null}
 
-      <div className="flex shrink-0 items-center justify-end gap-1 sm:gap-1.5">
+      <div className="flex shrink-0 items-center justify-end gap-1">
         {isDesktop ? (
-          <div className="flex items-center gap-1.5 xl:hidden">
+          <div className="flex items-center gap-1 xl:hidden">
             <ViewSwitch view={view} onViewChange={onViewChange} compact />
           </div>
         ) : null}
@@ -266,6 +267,7 @@ export function WorkspaceHeader({
         <div className="hidden sm:flex">
           <RunButton canEdit={canEdit} onRun={onRun} />
         </div>
+        <span className="ws-divider mx-1 hidden sm:block" aria-hidden="true" />
         <div className="hidden md:block">
           <PresenceAvatars />
         </div>
@@ -273,33 +275,34 @@ export function WorkspaceHeader({
           <button
             type="button"
             onClick={() => openTool("history")}
-            className="hidden h-8 items-center gap-1.5 rounded-[10px] px-2 text-[13px] font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:outline-2 focus-visible:outline-ring sm:inline-flex"
+            className="hidden h-8 items-center gap-1.5 rounded-lg px-2 text-[13px] font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:outline-2 focus-visible:outline-ring sm:inline-flex"
             aria-label={`History${historyCount ? `, ${historyCount} version${historyCount === 1 ? "" : "s"}` : ""}`}
           >
             <History className="size-4" aria-hidden="true" />
             <span className="hidden xl:inline">History</span>{" "}
-            {historyCount ? <span className="rounded-full bg-muted px-1.5 font-mono text-[10.5px] leading-[18px] tabular-nums text-muted-foreground shadow-[inset_0_0_0_1px_var(--border)]">{historyCount}</span> : null}
+            {historyCount ? <span className="rounded-[5px] bg-muted px-1 font-mono text-[10.5px] leading-[16px] tabular-nums text-muted-foreground shadow-[inset_0_0_0_1px_var(--border)]">{historyCount}</span> : null}
           </button>
         </Tooltip>
         <button
           type="button"
           onClick={() => openTool("share")}
-          className="hidden h-8 items-center gap-1.5 rounded-[10px] px-2.5 text-[13px] font-medium text-foreground/85 transition-colors hover:bg-muted hover:text-foreground focus-visible:outline-2 focus-visible:outline-ring lg:inline-flex"
+          className="hidden h-8 items-center gap-1.5 rounded-lg px-2 text-[13px] font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:outline-2 focus-visible:outline-ring lg:inline-flex"
         >
-          <Share2 className="size-3.5" aria-hidden="true" /> Share
+          <Share2 className="size-4" aria-hidden="true" /> Share
         </button>
+        <span className="ws-divider mx-1 hidden lg:block" aria-hidden="true" />
         {/* Publish keeps its label at every width: it is the primary action. */}
         <PublishPopover projectId={projectId} onManage={onManageDeployments} className="ws-publish max-sm:px-3" open={publishOpen} onOpenChange={onPublishOpenChange} />
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <button
               type="button"
-              className="inline-flex h-8 items-center gap-1.5 rounded-[10px] px-1.5 text-[13px] font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:outline-2 focus-visible:outline-ring data-[state=open]:bg-muted data-[state=open]:text-foreground sm:px-2"
+              className="inline-flex h-8 min-w-8 items-center justify-center gap-1 rounded-lg px-1.5 text-[13px] font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:outline-2 focus-visible:outline-ring data-[state=open]:bg-muted data-[state=open]:text-foreground sm:px-2"
               aria-label="Tools"
             >
               <Wrench className="size-4 lg:hidden" aria-hidden="true" />
               <span className="hidden lg:inline">Tools</span>
-              <ChevronDown className="hidden size-3.5 lg:block" aria-hidden="true" />
+              <ChevronDown className="hidden size-3.5 opacity-70 lg:block" aria-hidden="true" />
             </button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-72">
@@ -389,7 +392,7 @@ function SavePill({ status, canEdit }: { status: SaveStatus; canEdit: boolean })
       aria-live="polite"
       data-testid="save-status"
       className={cn(
-        "ws-save inline-flex h-6 shrink-0 items-center gap-1.5 rounded-full px-1 text-[11.5px] font-medium sm:px-2",
+        "ws-save inline-flex h-6 shrink-0 items-center gap-1.5 rounded-md px-1 text-[12px] font-medium sm:px-1.5",
         !canEdit ? "bg-muted text-muted-foreground" : status === "error" ? "bg-danger/10 text-danger" : status === "unsaved" ? "ws-warn-ink bg-warning/10" : "text-muted-foreground",
       )}
     >
@@ -440,12 +443,12 @@ function AgentPill({ onReveal }: { onReveal: () => void }) {
     <button
       type="button"
       onClick={onReveal}
-      className="ws-pill-in hidden h-8 items-center gap-2 rounded-full border border-primary/30 bg-primary/[0.07] px-3 text-[12.5px] font-medium transition-colors hover:bg-primary/12 focus-visible:outline-2 focus-visible:outline-ring md:inline-flex"
+      className="ws-pill-in hidden h-8 items-center gap-2 rounded-lg border border-border-strong bg-muted/60 px-2.5 text-[12.5px] font-medium transition-colors hover:bg-muted focus-visible:outline-2 focus-visible:outline-ring md:inline-flex"
       aria-label={`Agent: ${label}, ${formatElapsed(now - run.startedAt)} elapsed. Show the agent`}
     >
       <Loader2 className="size-3.5 animate-spin text-primary" aria-hidden="true" />
       <span className="text-shimmer">{label}</span>
-      <span className="font-mono text-[11.5px] tabular-nums text-muted-foreground">{formatElapsed(now - run.startedAt)}</span>
+      <span className="font-mono text-[11px] tabular-nums text-muted-foreground">{formatElapsed(now - run.startedAt)}</span>
     </button>
   );
 }
@@ -458,7 +461,7 @@ function RunButton({ canEdit, onRun }: { canEdit: boolean; onRun: () => void }) 
   const rt = useRuntime();
   const { status, busy } = rt;
   const base =
-    "ws-run inline-flex h-8 items-center gap-1.5 rounded-[10px] px-3 text-[13px] font-medium transition-[background-color,color,box-shadow] duration-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring active:scale-[0.97] calm:active:scale-100 disabled:pointer-events-none disabled:opacity-50";
+    "ws-run inline-flex h-8 items-center gap-1.5 rounded-lg px-2.5 text-[13px] font-medium transition-[background-color,color,box-shadow] duration-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring active:scale-[0.97] calm:active:scale-100 disabled:pointer-events-none disabled:opacity-50";
 
   if (status === "running" || status === "starting") {
     const starting = status === "starting";
@@ -503,7 +506,7 @@ function RunButton({ canEdit, onRun }: { canEdit: boolean; onRun: () => void }) 
           onClick={onRun}
           disabled={!canEdit || unavailable || busy !== null}
           aria-label="Run preview"
-          className={cn(base, "bg-card text-foreground shadow-[inset_0_0_0_1px_var(--border-strong),var(--shadow-sm)] hover:bg-muted")}
+          className={cn(base, "bg-card text-foreground shadow-[inset_0_0_0_1px_var(--border-strong)] hover:bg-muted")}
         >
           {busy === "start" ? <Loader2 className="size-3.5 animate-spin" aria-hidden="true" /> : <Play className="size-3.5 fill-current text-success" aria-hidden="true" />}
           <span className="hidden sm:inline">Run</span>

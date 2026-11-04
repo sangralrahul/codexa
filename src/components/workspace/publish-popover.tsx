@@ -131,7 +131,7 @@ function VersionsSection({ deployments, live, scan, canRollback, rollingBack, on
   const took = latest.finishedAt ? Date.parse(latest.finishedAt) - Date.parse(latest.createdAt) : null;
   const versions = showAll ? deployments : deployments.slice(0, 5);
   return (
-    <section aria-labelledby="versions-title" className="rounded-xl border border-border">
+    <section aria-labelledby="versions-title" className="rounded-lg border border-border">
       <div className="flex items-center gap-2 border-b border-border px-4 py-3">
         <Rocket className="size-4 text-muted-foreground" aria-hidden="true" />
         <h3 id="versions-title" className="text-[13.5px] font-semibold">
@@ -425,11 +425,12 @@ export function PublishPopover({ projectId, onManage, className, compact, open: 
           href={live.url}
           target="_blank"
           rel="noopener noreferrer"
-          className="ws-pill-in hidden h-8 items-center gap-1 rounded-[10px] px-2 text-[12px] text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:outline-2 focus-visible:outline-ring min-[1440px]:inline-flex"
+          className="ws-pill-in hidden h-8 items-center gap-1.5 rounded-lg px-2 text-[12px] text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:outline-2 focus-visible:outline-ring min-[1440px]:inline-flex"
           aria-label={`Published ${publishedAgo}. Open the live site`}
         >
-          Published {publishedAgo}
-          <ExternalLink className="size-3" aria-hidden="true" />
+          <span className="size-1.5 shrink-0 rounded-full bg-success" aria-hidden="true" />
+          <span className="tabular-nums">Live · {publishedAgo}</span>
+          <ExternalLink className="size-3 opacity-70" aria-hidden="true" />
         </a>
       ) : null}
       <Dialog open={open} onOpenChange={(o) => void onOpen(o)}>
@@ -438,7 +439,7 @@ export function PublishPopover({ projectId, onManage, className, compact, open: 
             type="button"
             data-spark=""
             onClick={() => void onOpen(true)}
-            className={cn("btn-brand relative inline-flex h-8 select-none items-center gap-1.5 rounded-[10px] text-[13px] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring active:scale-[0.97] calm:active:scale-100", compact ? "w-8 justify-center px-0" : "px-3.5", className)}
+            className={cn("btn-brand relative inline-flex h-8 select-none items-center gap-1.5 rounded-lg text-[13px] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring active:scale-[0.97] calm:active:scale-100", compact ? "w-8 justify-center px-0" : "px-3", className)}
             aria-label={live ? `Publish (published ${publishedAgo})` : "Publish"}
           >
             {inProgress ? <Loader2 className="size-3.5 animate-spin" aria-hidden="true" /> : live ? <LiveDot /> : <Rocket className="size-3.5" aria-hidden="true" data-spark-icon="" />}
@@ -458,7 +459,7 @@ export function PublishPopover({ projectId, onManage, className, compact, open: 
             <div className="space-y-5 px-6 pb-6">
               {/* Address */}
               <section aria-label="Address" className="space-y-2.5">
-                <div className="flex h-10 items-center gap-2 rounded-xl bg-muted px-3 font-mono text-[12.5px] shadow-[inset_0_0_0_1px_var(--border)]">
+                <div className="flex h-10 items-center gap-2 rounded-lg bg-muted/60 px-3 font-mono text-[12.5px] shadow-[inset_0_0_0_1px_var(--border)]">
                   <Globe className={cn("size-4 shrink-0", live ? "text-success" : "text-muted-foreground")} aria-hidden="true" />
                   {live?.url ? (
                     <a href={live.url} target="_blank" rel="noopener noreferrer" className="min-w-0 flex-1 truncate hover:underline">
@@ -468,7 +469,7 @@ export function PublishPopover({ projectId, onManage, className, compact, open: 
                     <span className="min-w-0 flex-1 truncate text-muted-foreground">{host ? `${host} · not published yet` : "Not published yet"}</span>
                   )}
                   {live ? (
-                    <span className="inline-flex items-center gap-1.5 rounded-full bg-success/12 px-2 py-0.5 font-sans text-[11px] font-medium text-success">
+                    <span className="inline-flex items-center gap-1.5 rounded-[5px] bg-success/10 px-1.5 py-0.5 text-[10.5px] font-medium uppercase tracking-[0.04em] text-success">
                       <LiveDot /> Live
                     </span>
                   ) : null}
@@ -483,13 +484,20 @@ export function PublishPopover({ projectId, onManage, className, compact, open: 
                     options={providers.map((p) => ({ value: p.id, label: p.name.replace(/\s*\([^)]*\)\s*$/, ""), disabled: !p.available, title: p.available ? p.name : `${p.name}: ${p.reason ?? "not configured"}` }))}
                   />
                 ) : null}
-                {providers.filter((p) => !p.available).map((p) => (
-                  <p key={p.id} className="text-[12px] text-muted-foreground">
-                    <span className="font-medium text-foreground/80">{p.name}: not configured.</span> {p.reason}
-                  </p>
-                ))}
+                {providers.some((p) => !p.available) ? (
+                  <ul className="divide-y divide-border rounded-lg border border-dashed border-border-strong" aria-label="Providers that are not configured">
+                    {providers.filter((p) => !p.available).map((p) => (
+                      <li key={p.id} className="flex items-start gap-2.5 px-3 py-2 text-[12px] text-muted-foreground">
+                        <span className="mt-[5px] size-1.5 shrink-0 rounded-full bg-warning" aria-hidden="true" />
+                        <span className="min-w-0">
+                          <span className="font-medium text-foreground/85">{p.name}: not configured.</span> {p.reason}
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+                ) : null}
                 {setup && !live && provider === "codexa" && setup.canManage ? (
-                  <div className="grid gap-3 rounded-xl border border-border p-3 sm:grid-cols-2">
+                  <div className="grid gap-3 rounded-lg border border-border p-3 sm:grid-cols-2">
                     <div>
                       <label htmlFor="first-site-name" className="text-[12px] font-medium">
                         Site address
@@ -511,7 +519,7 @@ export function PublishPopover({ projectId, onManage, className, compact, open: 
               </section>
 
               {/* Checks */}
-              <section aria-labelledby="checks-title" className="rounded-xl border border-border">
+              <section aria-labelledby="checks-title" className="rounded-lg border border-border">
                 <div className="flex items-center gap-2 border-b border-border px-4 py-3">
                   <ShieldCheck className="size-4 text-muted-foreground" aria-hidden="true" />
                   <h3 id="checks-title" className="text-[13.5px] font-semibold">
@@ -709,7 +717,7 @@ export function PublishPopover({ projectId, onManage, className, compact, open: 
                     <QrCode value={siteUrl} size={104} label="QR code for the live site" className="shrink-0 self-center p-1 shadow-[0_0_0_1px_var(--border)]" />
                   </div>
 
-                  <section aria-labelledby="report-title" className="rounded-xl border border-border">
+                  <section aria-labelledby="report-title" className="rounded-lg border border-border">
                     <div className="flex items-center gap-2 border-b border-border px-4 py-3">
                       <Gauge className="size-4 text-muted-foreground" aria-hidden="true" />
                       <h3 id="report-title" className="text-[13.5px] font-semibold">

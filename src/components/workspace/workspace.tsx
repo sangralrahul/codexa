@@ -112,7 +112,7 @@ class PanelBoundary extends Component<{ name: string; children: React.ReactNode 
     if (!this.state.error) return this.props.children;
     return (
       <div role="alert" className="flex h-full min-h-[160px] flex-col items-center justify-center gap-2 p-6 text-center">
-        <span className="flex size-9 items-center justify-center rounded-xl border border-danger/30 bg-danger/[0.07] text-danger">
+        <span className="flex size-9 items-center justify-center rounded-lg border border-danger/30 bg-danger/[0.07] text-danger">
           <TriangleAlert className="size-4" aria-hidden="true" />
         </span>
         <p className="text-[13.5px] font-semibold">The {this.props.name} panel hit an error</p>
@@ -120,7 +120,7 @@ class PanelBoundary extends Component<{ name: string; children: React.ReactNode 
         <button
           type="button"
           onClick={() => this.setState({ error: null })}
-          className="mt-1 inline-flex h-8 items-center gap-1.5 rounded-[10px] border border-border-strong bg-card px-3 text-[12.5px] font-medium transition-colors hover:bg-muted focus-visible:outline-2 focus-visible:outline-ring"
+          className="mt-1 inline-flex h-8 items-center gap-1.5 rounded-lg border border-border-strong bg-card px-3 text-[12.5px] font-medium transition-colors hover:bg-muted focus-visible:outline-2 focus-visible:outline-ring"
         >
           <RotateCw className="size-3.5" aria-hidden="true" /> Try again
         </button>
@@ -718,7 +718,7 @@ function Shell({
                       <button
                         type="button"
                         onClick={() => revealAgent(true)}
-                        className="ws-pill-in glass absolute left-2 top-1/2 z-30 flex -translate-y-1/2 flex-col items-center gap-2 rounded-xl border border-border-strong px-1.5 py-3 shadow-lg transition-colors hover:bg-muted focus-visible:outline-2 focus-visible:outline-ring"
+                        className="ws-pill-in glass absolute left-2 top-1/2 z-30 flex -translate-y-1/2 flex-col items-center gap-2 rounded-lg border border-border-strong px-1.5 py-3 shadow-lg transition-colors hover:bg-muted focus-visible:outline-2 focus-visible:outline-ring"
                         aria-label="Show the agent"
                       >
                         <MessageSquare className="size-4" aria-hidden="true" />
@@ -902,11 +902,14 @@ function Shell({
 /** Mirrors the shell while localStorage (view, sizes) is read after mount, so nothing jumps. */
 function ShellSkeleton() {
   return (
-    <div className="grid min-h-0 flex-1 grid-cols-[360px_1fr] gap-1.5 pb-1.5 max-lg:grid-cols-1 min-[1440px]:grid-cols-[380px_1fr]" aria-hidden="true">
+    <div className="grid min-h-0 flex-1 grid-cols-[340px_1fr] gap-1.5 pb-1.5 max-lg:grid-cols-1 min-[1440px]:grid-cols-[380px_1fr]" aria-hidden="true">
       <div className="ws-card max-lg:hidden" />
       <div className="grid grid-cols-[minmax(0,1fr)_36%] gap-1.5 max-lg:grid-cols-1">
-        <div className="ws-card grid grid-cols-[192px_1fr] max-lg:hidden">
-          <div className="border-r border-border" />
+        <div className="ws-card grid grid-cols-[208px_1fr] max-lg:hidden">
+          <div className="border-r border-border">
+            <div className="ws-chrome h-10 border-b border-border" />
+          </div>
+          <div className="ws-tabstrip h-10 shadow-[inset_0_-1px_0_var(--border)]" />
         </div>
         <div className="ws-card" />
       </div>
@@ -963,7 +966,7 @@ function MiniComposer({ disabled, running }: { disabled: boolean; running: boole
   const [text, setText] = useState("");
   return (
     <form
-      className="glass flex shrink-0 items-center gap-2 rounded-2xl border border-border-strong p-1.5 pl-3.5 shadow-xl"
+      className="glass flex shrink-0 items-center gap-2 rounded-xl border border-border-strong p-1.5 pl-3.5 shadow-xl"
       onSubmit={(e) => {
         e.preventDefault();
         const t = text.trim();
@@ -984,7 +987,7 @@ function MiniComposer({ disabled, running }: { disabled: boolean; running: boole
         className="h-9 min-w-0 flex-1 bg-transparent text-[15px] outline-none placeholder:text-muted-foreground disabled:cursor-not-allowed"
         maxLength={8000}
       />
-      <button type="submit" disabled={disabled || !text.trim()} aria-label="Send to the agent" className="ws-send inline-flex size-9 shrink-0 items-center justify-center rounded-full bg-foreground text-background disabled:opacity-25">
+      <button type="submit" disabled={disabled || !text.trim()} aria-label="Send to the agent" className="ws-send inline-flex size-9 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring disabled:bg-muted disabled:text-muted-foreground">
         <ArrowUp className="size-4" aria-hidden="true" />
       </button>
     </form>
@@ -1013,8 +1016,8 @@ function MobileNav({ tab, onChange, previewBadge, problems, agentRunning }: { ta
   };
   return (
     <nav className="shrink-0 px-1.5 pb-[max(env(safe-area-inset-bottom),6px)]" aria-label="Workspace panels">
-      <div ref={ref} role="tablist" aria-label="Workspace panels" onKeyDown={onKeyDown} className="glass relative flex rounded-2xl border border-border p-1 shadow-lg">
-        <GlideIndicator ref={glide} className="inset-y-1 rounded-xl bg-muted shadow-[inset_0_0_0_1px_var(--border)]" />
+      <div ref={ref} role="tablist" aria-label="Workspace panels" onKeyDown={onKeyDown} className="glass relative flex rounded-xl border border-border p-1 shadow-lg">
+        <GlideIndicator ref={glide} className="inset-y-1 rounded-lg bg-muted shadow-[inset_0_0_0_1px_var(--border)]" />
         {items.map(([id, label, Icon]) => (
           <button
             key={id}
@@ -1026,7 +1029,7 @@ function MobileNav({ tab, onChange, previewBadge, problems, agentRunning }: { ta
             tabIndex={tab === id ? 0 : -1}
             onClick={() => onChange(id)}
             data-no-ripple
-            className={cn("relative z-[1] flex flex-1 flex-col items-center gap-0.5 rounded-xl py-1.5 text-[11px] font-medium transition-colors focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-ring", tab === id ? "text-foreground" : "text-muted-foreground")}
+            className={cn("relative z-[1] flex flex-1 flex-col items-center gap-0.5 rounded-lg py-1.5 text-[11px] font-medium transition-colors focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-ring", tab === id ? "text-foreground" : "text-muted-foreground")}
           >
             <span className="relative">
               <Icon className="size-[18px]" aria-hidden="true" />

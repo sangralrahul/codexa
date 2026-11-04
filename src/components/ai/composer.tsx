@@ -140,7 +140,7 @@ export function Composer({
 
   return (
     <form
-      className="@container shrink-0 px-3 pb-3 pt-2"
+      className="@container shrink-0 px-2.5 pb-2.5 pt-2"
       onSubmit={(e) => {
         e.preventDefault();
         if (canSend) onSend();
@@ -161,7 +161,7 @@ export function Composer({
       }}
     >
       {mode === "fix" && lastError ? (
-        <details className="group mb-2 overflow-hidden rounded-xl border border-warning/35 bg-warning/[0.06] text-xs">
+        <details className="group mb-2 overflow-hidden rounded-lg border border-warning/35 bg-warning/[0.06] text-xs">
           <summary className="flex cursor-pointer list-none items-center gap-2 px-3 py-2 font-medium [&::-webkit-details-marker]:hidden">
             <OctagonAlert className="size-3.5 text-warning" aria-hidden="true" />
             Latest error will be sent to the AI
@@ -170,7 +170,7 @@ export function Composer({
         </details>
       ) : null}
       {queued ? (
-        <div className="ws-drop mb-2 flex items-center gap-2 rounded-xl border border-border bg-surface px-3 py-1.5 text-[12px]" role="status">
+        <div className="ws-drop mb-2 flex items-center gap-2 rounded-lg border border-border bg-muted/50 px-2.5 py-1.5 text-[12px]" role="status">
           <span className="size-1.5 shrink-0 rounded-full bg-primary" aria-hidden="true" />
           <span className="min-w-0 flex-1 truncate">
             <span className="font-medium">Queued:</span> <span className="text-muted-foreground">{queued}</span>
@@ -184,10 +184,10 @@ export function Composer({
         </div>
       ) : null}
 
-      <div className={cn("ws-composer comet-border", dragging && "rounded-2xl outline-2 outline-offset-2 outline-dashed outline-ring")} data-active={running && !calm ? "" : undefined}>
+      <div className={cn("ws-composer comet-border", dragging && "rounded-xl outline-2 outline-offset-2 outline-dashed outline-ring")} data-active={running && !calm ? "" : undefined}>
         <div className={cn("comet-border__inner", (disabled || running) && "bg-surface")}>
           {(activeFile || showErrorChip) && onContextChange && !(disabled && disabledReason) ? (
-            <div className="flex flex-wrap items-center gap-1.5 px-3 pt-2.5" aria-label="Context sent with the message">
+            <div className="flex flex-wrap items-center gap-1 px-2.5 pt-2.5" aria-label="Context sent with the message">
               {activeFile ? (
                 <button
                   type="button"
@@ -195,7 +195,7 @@ export function Composer({
                   onClick={() => onContextChange({ ...ctx, activeFile: !ctx.activeFile })}
                   title={ctx.activeFile ? "The open file is mentioned in the message. Click to leave it out." : "Mention the open file in the message"}
                   className={cn(
-                    "inline-flex h-6 max-w-[14rem] items-center gap-1 rounded-md px-1.5 font-mono text-[11px] transition-colors focus-visible:outline-2 focus-visible:outline-ring",
+                    "inline-flex h-[22px] max-w-[14rem] items-center gap-1 rounded-[5px] px-1.5 font-mono text-[10.5px] transition-colors focus-visible:outline-2 focus-visible:outline-ring",
                     ctx.activeFile ? "bg-muted text-foreground shadow-[inset_0_0_0_1px_var(--border-strong)]" : "text-muted-foreground shadow-[inset_0_0_0_1px_var(--border)] [border-style:dashed] hover:text-foreground",
                   )}
                 >
@@ -210,7 +210,7 @@ export function Composer({
                   onClick={() => onContextChange({ ...ctx, error: !ctx.error })}
                   title={ctx.error ? "The latest error is attached. Click to leave it out." : "Attach the latest error to the message"}
                   className={cn(
-                    "inline-flex h-6 items-center gap-1 rounded-md px-1.5 text-[11px] font-medium transition-colors focus-visible:outline-2 focus-visible:outline-ring",
+                    "inline-flex h-[22px] items-center gap-1 rounded-[5px] px-1.5 text-[11px] font-medium transition-colors focus-visible:outline-2 focus-visible:outline-ring",
                     ctx.error ? "bg-danger/10 text-danger shadow-[inset_0_0_0_1px_color-mix(in_oklab,var(--danger)_35%,transparent)]" : "text-muted-foreground shadow-[inset_0_0_0_1px_var(--border)] hover:text-foreground",
                   )}
                 >
@@ -259,10 +259,10 @@ export function Composer({
             disabled={disabled || running}
             rows={2}
             maxLength={COMPOSER_MAX}
-            className="block max-h-56 min-h-[76px] w-full resize-none bg-transparent px-3.5 pt-3 text-[14px] leading-relaxed outline-none [field-sizing:content] placeholder:text-muted-foreground/80 disabled:cursor-not-allowed disabled:placeholder:text-muted-foreground/70"
+            className="block max-h-56 min-h-[64px] w-full resize-none bg-transparent px-3 pt-2.5 text-[13.5px] leading-[1.55] outline-none [field-sizing:content] placeholder:text-muted-foreground/80 disabled:cursor-not-allowed disabled:placeholder:text-muted-foreground/70"
             aria-describedby="ai-composer-hint"
           />
-          <div className="flex items-center gap-2 px-2 pb-2">
+          <div className="flex items-center gap-1 px-1.5 pb-1.5">
             <DropdownMenu>
               <DropdownMenuTrigger asChild disabled={running || disabled}>
                 <button
@@ -270,7 +270,7 @@ export function Composer({
                   aria-label={`Mode: ${current.label}. Change mode`}
                   aria-describedby="ai-composer-hint"
                   data-no-ripple
-                  className="inline-flex h-8 shrink-0 items-center gap-1.5 rounded-lg bg-muted px-2.5 text-[12.5px] font-medium shadow-[inset_0_0_0_1px_var(--border)] transition-colors hover:bg-muted/70 focus-visible:outline-2 focus-visible:outline-ring disabled:opacity-60"
+                  className="inline-flex h-7 shrink-0 items-center gap-1.5 rounded-md bg-muted px-2 text-[12px] font-medium shadow-[inset_0_0_0_1px_var(--border)] transition-colors hover:bg-muted/70 focus-visible:outline-2 focus-visible:outline-ring disabled:opacity-60 data-[state=open]:shadow-[inset_0_0_0_1px_var(--border-strong)]"
                 >
                   <current.Icon className="size-3.5" aria-hidden="true" />
                   {current.label}
@@ -304,15 +304,15 @@ export function Composer({
                   disabled={running || disabled || imgs.length >= MAX_PROMPT_IMAGES}
                   aria-label="Attach images"
                   title={`Attach a screenshot, sketch or design (up to ${MAX_PROMPT_IMAGES}). You can also paste or drop images.`}
-                  className="inline-flex size-8 shrink-0 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:outline-2 focus-visible:outline-ring disabled:pointer-events-none disabled:opacity-40"
+                  className="inline-flex size-7 shrink-0 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:outline-2 focus-visible:outline-ring disabled:pointer-events-none disabled:opacity-40"
                 >
-                  <ImagePlus className="size-4" aria-hidden="true" />
+                  <ImagePlus className="size-[15px]" aria-hidden="true" />
                 </button>
               </>
             ) : null}
             {onEnhance && (mode === "build" || mode === "plan") ? (
               onUndoEnhance && !enhancing ? (
-                <button type="button" onClick={onUndoEnhance} disabled={running} title="Put your original text back" className="inline-flex h-8 shrink-0 items-center gap-1 rounded-lg px-2 text-[12px] font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:outline-2 focus-visible:outline-ring">
+                <button type="button" onClick={onUndoEnhance} disabled={running} title="Put your original text back" className="inline-flex h-7 shrink-0 items-center gap-1 rounded-md px-2 text-[12px] font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:outline-2 focus-visible:outline-ring">
                   <Undo2 className="size-3.5" aria-hidden="true" /> Undo
                 </button>
               ) : (
@@ -321,7 +321,7 @@ export function Composer({
                   onClick={onEnhance}
                   disabled={running || disabled || enhancing || value.trim().length < 3}
                   title="Turn your idea into a detailed brief before sending"
-                  className="inline-flex h-8 shrink-0 items-center gap-1 rounded-lg px-2 text-[12px] font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:outline-2 focus-visible:outline-ring disabled:pointer-events-none disabled:opacity-40"
+                  className="inline-flex h-7 min-w-7 shrink-0 items-center justify-center gap-1 rounded-md px-1.5 text-[12px] font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:outline-2 focus-visible:outline-ring disabled:pointer-events-none disabled:opacity-40"
                 >
                   {enhancing ? <Loader2 className="size-3.5 animate-spin" aria-hidden="true" /> : <Sparkles className="size-3.5" aria-hidden="true" />}
                   <span className="hidden @[420px]:inline">{enhancing ? "Enhancing…" : "Enhance"}</span>
@@ -329,9 +329,9 @@ export function Composer({
                 </button>
               )
             ) : null}
-            <div className="min-w-0 flex-1 truncate text-[11.5px] text-muted-foreground">
+            <div className="min-w-0 flex-1 truncate pl-0.5 text-[11px] text-muted-foreground">
               {model?.mock ? (
-                <span className="inline-flex items-center gap-1 rounded-md bg-muted px-1.5 py-0.5 font-medium text-muted-foreground shadow-[inset_0_0_0_1px_var(--border)]" title="AI_MOCK=1 is set: responses are scripted. Development only.">
+                <span className="inline-flex h-5 items-center gap-1 rounded-[5px] px-1.5 font-mono text-[10.5px] font-medium text-muted-foreground shadow-[inset_0_0_0_1px_var(--border)]" title="AI_MOCK=1 is set: responses are scripted. Development only.">
                   <FlaskConical className="size-3" aria-hidden="true" /> Mock AI
                 </span>
               ) : model ? (
@@ -356,13 +356,13 @@ export function Composer({
                 onClick={onCancel}
                 aria-label="Cancel"
                 title="Stop the run"
-                className="ws-send relative inline-flex size-9 shrink-0 items-center justify-center rounded-full bg-card text-foreground shadow-[inset_0_0_0_1px_var(--border-strong)] hover:bg-muted"
+                className="ws-send relative inline-flex size-8 shrink-0 items-center justify-center rounded-full bg-card text-foreground shadow-[inset_0_0_0_1px_var(--border-strong)] hover:bg-muted focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
               >
-                <svg className="pointer-events-none absolute inset-0 -rotate-90" viewBox="0 0 36 36" aria-hidden="true">
+                <svg className="pointer-events-none absolute inset-0 size-full -rotate-90" viewBox="0 0 36 36" aria-hidden="true">
                   <circle cx="18" cy="18" r="15" fill="none" stroke="var(--border)" strokeWidth="2" />
                   <circle className="ws-ring" cx="18" cy="18" r="15" fill="none" stroke="var(--primary)" strokeWidth="2" strokeLinecap="round" strokeDasharray={ring} strokeDashoffset={ring * (1 - Math.max(0.06, Math.min(1, progress ?? 0)))} />
                 </svg>
-                <Square className="size-3 fill-current" aria-hidden="true" />
+                <Square className="size-2.5 fill-current" aria-hidden="true" />
               </button>
             ) : (
               <button
@@ -370,9 +370,9 @@ export function Composer({
                 disabled={!canSend}
                 aria-label="Send"
                 title="Send (Enter)"
-                className="ws-send inline-flex size-9 shrink-0 items-center justify-center rounded-full bg-foreground text-background shadow-[0_6px_18px_-8px_color-mix(in_oklab,var(--foreground)_60%,transparent)] hover:opacity-90 disabled:pointer-events-none disabled:opacity-25"
+                className="ws-send inline-flex size-8 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground transition-colors hover:bg-primary-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring disabled:pointer-events-none disabled:bg-muted disabled:text-muted-foreground disabled:shadow-[inset_0_0_0_1px_var(--border)]"
               >
-                <ArrowUp className="size-[18px]" strokeWidth={2.25} aria-hidden="true" />
+                <ArrowUp className="size-4" strokeWidth={2.25} aria-hidden="true" />
               </button>
             )}
           </div>
@@ -386,7 +386,7 @@ export function Composer({
           </button>
         </p>
       ) : null}
-      <p id="ai-composer-hint" className={cn("mt-1.5 flex items-center gap-1.5 truncate px-1 text-[11.5px] text-muted-foreground", blocked && "sr-only")}>
+      <p id="ai-composer-hint" className={cn("mt-1.5 flex items-center gap-1.5 truncate px-1 text-[11px] text-muted-foreground", blocked && "sr-only")}>
         {blocked ? (
           disabledReason
         ) : running ? (

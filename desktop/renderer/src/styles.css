@@ -411,6 +411,481 @@ textarea,
   }
 }
 
+/* Tooltips (ui/Tip): an inverted chip, shown after a short hover or at once on keyboard focus. */
+.tip-host {
+  position: relative;
+  display: inline-flex;
+}
+.tip {
+  position: absolute;
+  z-index: 70;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 24px;
+  padding: 0 8px;
+  border-radius: 5px;
+  background: var(--fg);
+  color: var(--bg);
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: -0.003em;
+  white-space: nowrap;
+  pointer-events: none;
+  opacity: 0;
+  transition:
+    opacity 100ms ease-out,
+    transform 100ms ease-out;
+}
+.tip__keys {
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  font-weight: 400;
+  opacity: 0.6;
+}
+.tip[data-side="bottom"] {
+  top: calc(100% + 6px);
+  left: 50%;
+  translate: -50% 0;
+  transform: translateY(-2px);
+}
+.tip[data-side="top"] {
+  bottom: calc(100% + 6px);
+  left: 50%;
+  translate: -50% 0;
+  transform: translateY(2px);
+}
+.tip[data-side="right"] {
+  left: calc(100% + 8px);
+  top: 50%;
+  translate: 0 -50%;
+  transform: translateX(-2px);
+}
+.tip[data-side="bottom"][data-align="end"],
+.tip[data-side="top"][data-align="end"] {
+  left: auto;
+  right: 0;
+  translate: none;
+}
+.tip-host:hover > .tip {
+  opacity: 1;
+  transform: none;
+  transition-delay: 380ms;
+}
+.tip-host:has(:focus-visible) > .tip {
+  opacity: 1;
+  transform: none;
+}
+.tip-host:has([aria-expanded="true"]) > .tip,
+.tip-host:active > .tip {
+  opacity: 0;
+  transition-delay: 0ms;
+}
+
+/* ==========================================================================
+   Project workspace (screens/project): one 32px control height, 44px bars
+   under the 48px header, hairlines between regions, no elevation.
+   ========================================================================== */
+
+/* Segmented control (Preview / Code, device widths). */
+.ws-seg {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  height: 32px;
+  padding: 3px;
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  background: var(--panel);
+}
+.ws-seg__btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  height: 24px;
+  min-width: 24px;
+  padding: 0 10px;
+  border-radius: 4px;
+  font-size: 12.5px;
+  font-weight: 500;
+  color: var(--muted);
+  transition:
+    color 120ms,
+    background-color 120ms,
+    box-shadow 120ms;
+}
+.ws-seg__btn svg {
+  width: 14px;
+  height: 14px;
+  flex: none;
+}
+.ws-seg__btn:hover {
+  color: var(--fg);
+}
+.ws-seg__btn[aria-selected="true"],
+.ws-seg__btn[aria-pressed="true"] {
+  color: var(--fg);
+  background: var(--card);
+  box-shadow: 0 0 0 1px var(--border-strong);
+}
+.dark .ws-seg__btn[aria-selected="true"],
+.dark .ws-seg__btn[aria-pressed="true"] {
+  background: var(--track);
+  box-shadow: 0 0 0 1px var(--border);
+}
+.ws-seg__btn:focus-visible {
+  outline-offset: 0;
+}
+.ws-seg--icons .ws-seg__btn {
+  padding: 0;
+  width: 26px;
+}
+.ws-seg--sm {
+  height: 28px;
+  padding: 2px;
+}
+.ws-seg--sm .ws-seg__btn {
+  height: 22px;
+}
+
+/* 32px square icon button used across the workspace chrome. */
+.ws-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  width: 32px;
+  height: 32px;
+  border-radius: 6px;
+  color: var(--muted);
+  transition:
+    color 120ms,
+    background-color 120ms;
+}
+.ws-icon svg {
+  width: 16px;
+  height: 16px;
+}
+.ws-icon:hover:not(:disabled) {
+  color: var(--fg);
+  background: var(--surface);
+}
+.ws-icon:disabled {
+  opacity: 0.4;
+  pointer-events: none;
+}
+.ws-icon--sm {
+  width: 28px;
+  height: 28px;
+}
+.ws-icon--sm svg {
+  width: 15px;
+  height: 15px;
+}
+.ws-icon--xs {
+  width: 24px;
+  height: 24px;
+  border-radius: 5px;
+}
+.ws-icon--xs svg {
+  width: 14px;
+  height: 14px;
+}
+
+/* Left tool rail. */
+.ws-rail {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  width: 48px;
+  flex: none;
+  padding: 8px 0;
+  border-right: 1px solid var(--border);
+  background: var(--sidebar);
+}
+.ws-rail__btn {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 7px;
+  color: var(--dim);
+  transition:
+    color 120ms,
+    background-color 120ms;
+}
+.ws-rail__btn svg {
+  width: 18px;
+  height: 18px;
+}
+.ws-rail__btn:hover {
+  color: var(--fg);
+  background: var(--surface);
+}
+.ws-rail__btn[aria-pressed="true"] {
+  color: var(--fg);
+  background: var(--surface);
+}
+.ws-rail__btn[aria-pressed="true"]::before {
+  content: "";
+  position: absolute;
+  left: -6px;
+  top: 8px;
+  bottom: 8px;
+  width: 2px;
+  border-radius: 0 2px 2px 0;
+  background: var(--fg);
+}
+.ws-rail__sep {
+  width: 20px;
+  height: 1px;
+  margin: 4px 0;
+  background: var(--border);
+}
+
+/* 44px bar at the top of every pane (chat, explorer, preview, history, settings). */
+.ws-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 44px;
+  flex: none;
+  padding: 0 12px;
+  border-bottom: 1px solid var(--border);
+  background: var(--card);
+}
+.ws-label {
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  font-weight: 400;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--dim);
+}
+
+/* Bottom status bar. */
+.ws-status {
+  display: flex;
+  align-items: center;
+  height: 26px;
+  flex: none;
+  padding: 0 6px;
+  border-top: 1px solid var(--border);
+  background: var(--sidebar);
+  font-size: 11.5px;
+  color: var(--muted);
+}
+.ws-status__item {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 100%;
+  padding: 0 8px;
+  white-space: nowrap;
+}
+.ws-status__item + .ws-status__item {
+  border-left: 1px solid var(--border);
+}
+.ws-dot {
+  width: 6px;
+  height: 6px;
+  flex: none;
+  border-radius: 999px;
+  background: var(--dim);
+}
+
+/* Chat: agent activity (tool calls) as dense rows in one hairline box. */
+.ws-steps {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--card);
+  overflow: hidden;
+}
+.ws-step {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  min-height: 30px;
+  padding: 0 10px;
+  text-align: left;
+  font-size: 12.5px;
+  color: var(--muted);
+  transition: background-color 120ms;
+}
+.ws-steps > li + li {
+  border-top: 1px solid var(--border);
+}
+button.ws-step:hover {
+  background: var(--panel);
+  color: var(--fg);
+}
+.dark button.ws-step:hover {
+  background: var(--surface);
+}
+.ws-step__out {
+  max-height: 180px;
+  margin: 0;
+  padding: 8px 10px 10px 32px;
+  overflow: auto;
+  border-top: 1px dashed var(--border);
+  background: var(--panel);
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+  line-height: 1.55;
+  white-space: pre-wrap;
+  word-break: break-word;
+  color: var(--muted);
+  scrollbar-width: thin;
+}
+
+/* Change letters, as in source control: A(dded) M(odified) D(eleted). */
+.ws-change {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  flex: none;
+  border-radius: 4px;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 600;
+}
+.ws-change[data-action="create"] {
+  color: var(--success);
+  background: color-mix(in oklab, var(--success) 14%, transparent);
+}
+.ws-change[data-action="update"] {
+  color: var(--warning);
+  background: color-mix(in oklab, var(--warning) 14%, transparent);
+}
+.ws-change[data-action="delete"] {
+  color: var(--danger);
+  background: color-mix(in oklab, var(--danger) 14%, transparent);
+}
+
+/* Composer. */
+.ws-composer {
+  border: 1px solid var(--border-strong);
+  border-radius: 10px;
+  background: var(--bg);
+  transition:
+    border-color 140ms,
+    box-shadow 140ms;
+}
+.dark .ws-composer {
+  background: var(--panel);
+  border-color: var(--border);
+}
+.ws-composer:focus-within {
+  border-color: var(--mark);
+  box-shadow: 0 0 0 3px color-mix(in oklab, var(--fg) 6%, transparent);
+}
+
+/* Preview canvas behind the device frame: a quiet construction grid. */
+.ws-canvas {
+  background-color: var(--panel);
+  background-image:
+    linear-gradient(color-mix(in oklab, var(--border) 55%, transparent) 1px, transparent 1px),
+    linear-gradient(90deg, color-mix(in oklab, var(--border) 55%, transparent) 1px, transparent 1px);
+  background-size: 24px 24px;
+  background-position: -1px -1px;
+}
+.dark .ws-canvas {
+  background-color: var(--bg);
+  background-image:
+    linear-gradient(color-mix(in oklab, var(--border) 45%, transparent) 1px, transparent 1px),
+    linear-gradient(90deg, color-mix(in oklab, var(--border) 45%, transparent) 1px, transparent 1px);
+}
+.ws-frame {
+  border: 1px solid var(--border-strong);
+  border-radius: 10px;
+  background: #fff;
+  overflow: hidden;
+  box-shadow: 0 1px 2px color-mix(in oklab, var(--fg) 4%, transparent), 0 16px 40px -24px color-mix(in oklab, var(--fg) 22%, transparent);
+}
+.dark .ws-frame {
+  border-color: var(--border);
+  box-shadow: 0 0 0 1px #000, 0 24px 60px -30px #000;
+}
+/* Honest-state illustration: drawn in the theme's own greys. */
+.ws-illo {
+  color: var(--border-strong);
+}
+.ws-illo .fill-card {
+  fill: var(--card);
+}
+.ws-illo .fill-panel {
+  fill: var(--panel);
+}
+.ws-illo .fill-surface {
+  fill: var(--surface);
+}
+.ws-illo .stroke-line {
+  stroke: var(--border-strong);
+}
+.ws-illo .stroke-soft {
+  stroke: var(--border);
+}
+.ws-illo .fill-dim {
+  fill: var(--dim);
+}
+.ws-illo .fill-fg {
+  fill: var(--fg);
+}
+.ws-illo .stroke-fg {
+  stroke: var(--fg);
+}
+
+/* History timeline: a hairline spine through the event nodes. */
+.ws-timeline {
+  position: relative;
+}
+.ws-timeline::before {
+  content: "";
+  position: absolute;
+  left: 23px;
+  top: 6px;
+  bottom: 6px;
+  width: 1px;
+  background: var(--border);
+}
+
+/* Console lines. */
+.ws-log {
+  display: flex;
+  gap: 12px;
+  padding: 0 12px 0 10px;
+  border-left: 2px solid transparent;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+.ws-log:hover {
+  background: color-mix(in oklab, var(--fg) 3%, transparent);
+}
+.ws-log[data-stream="stderr"] {
+  border-left-color: var(--danger);
+  background: color-mix(in oklab, var(--danger) 7%, transparent);
+  color: var(--danger);
+}
+.ws-log[data-stream="system"] {
+  color: var(--muted);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tip {
+    transition: none;
+  }
+}
+[data-motion="reduced"] .tip {
+  transition: none;
+}
+
 /* Chat markdown. */
 .prose-chat p {
   margin: 0 0 0.6em;

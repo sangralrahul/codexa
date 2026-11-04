@@ -533,7 +533,7 @@ export function ChatPanel({
     <section className="@container flex h-full min-h-0 flex-col" aria-label="AI assistant">
       {/* Outline: h1 project (workspace) → h2 here → h3 run-card sections and AI headings. */}
       <h2 className="sr-only">AI assistant</h2>
-      <header className="flex h-12 shrink-0 items-center gap-1.5 border-b border-border px-2.5">
+      <header className="ws-chrome flex h-10 shrink-0 items-center gap-1 border-b border-border pl-1.5 pr-1">
         <ConversationMenu conversations={conversations} activeId={activeId} disabled={Boolean(running)} onPick={(id) => setActiveId(id)} onNew={newChat} title={active?.title ?? "New chat"} />
         {/* No "Not configured" badge here: the empty state below says it once, in full. */}
         <div className="ml-auto flex items-center gap-1">
@@ -543,7 +543,7 @@ export function ChatPanel({
               onClick={newChat}
               disabled={Boolean(running)}
               aria-label="New chat"
-              className="inline-flex size-8 shrink-0 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:outline-2 focus-visible:outline-ring disabled:opacity-40"
+              className="inline-flex size-7 shrink-0 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:outline-2 focus-visible:outline-ring disabled:opacity-40"
             >
               <MessageSquarePlus className="size-4" aria-hidden="true" />
             </button>
@@ -558,7 +558,7 @@ export function ChatPanel({
           if (el.clientWidth === 0) return; // collapsed column: not a reading position
           stick.current = el.scrollHeight - el.scrollTop - el.clientHeight < 96;
         }}
-        className={cn("scrollbar-thin min-h-0 flex-1 overflow-y-auto px-3.5 py-4", notConfigured && !messages.length && "flex flex-col")}
+        className={cn("scrollbar-thin min-h-0 flex-1 overflow-y-auto px-3 py-4", notConfigured && !messages.length && "flex flex-col")}
         aria-busy={Boolean(running)}
       >
         {statusError ? (
@@ -573,9 +573,25 @@ export function ChatPanel({
           <NotConfigured missingEnv={status?.missingEnv ?? []} showOperatorDetails={showOperatorDetails} centered={!messages.length} suggestions={messages.length ? null : suggestionsFor(templateCategory, framework)} />
         ) : null}
         {messagesLoading ? (
-          <div className="space-y-3" aria-label="Loading messages">
-            <Skeleton className="ml-auto h-10 w-2/3 rounded-2xl" />
-            <Skeleton className="h-32 w-full rounded-2xl" />
+          <div className="space-y-4" aria-label="Loading messages">
+            <Skeleton className="ml-auto h-9 w-2/3 rounded-xl" />
+            <div className="space-y-3 rounded-xl border border-border p-3">
+              <div className="flex items-center gap-2.5">
+                <Skeleton className="size-6 rounded-lg" />
+                <Skeleton className="h-3 w-28" />
+                <Skeleton className="ml-auto h-4 w-10 rounded-[5px]" />
+              </div>
+              <div className="grid grid-cols-6 gap-1">
+                {[0, 1, 2, 3, 4, 5].map((i) => (
+                  <Skeleton key={i} className="h-1 rounded-full" />
+                ))}
+              </div>
+              <Skeleton className="h-7 w-full rounded-lg" />
+            </div>
+            <div className="space-y-2 pl-3.5">
+              <Skeleton className="h-3 w-4/5" />
+              <Skeleton className="h-3 w-3/5" />
+            </div>
           </div>
         ) : messagesError ? (
           <Alert variant="danger" title="Could not load this conversation">
@@ -601,7 +617,7 @@ export function ChatPanel({
             <Spinner /> Checking AI configuration…
           </p>
         ) : null}
-        <ol className="space-y-6">
+        <ol className="space-y-5">
           {messages.map((m) => (
             <li key={m.id}>
               {m.role === "user" ? (
@@ -694,10 +710,10 @@ function ConversationMenu({ conversations, activeId, disabled, onPick, onNew, ti
       <PopoverTrigger asChild>
         <button
           type="button"
-          className="flex min-w-0 items-center gap-2 rounded-lg px-2 py-1.5 text-left text-[13.5px] font-semibold transition-colors hover:bg-muted focus-visible:outline-2 focus-visible:outline-ring"
+          className="flex h-7 min-w-0 items-center gap-1.5 rounded-md px-1.5 text-left text-[13px] font-medium transition-colors hover:bg-muted focus-visible:outline-2 focus-visible:outline-ring data-[state=open]:bg-muted"
           aria-label={`Conversation: ${title}. Choose conversation`}
         >
-          <Sparkles className="size-4 shrink-0 text-primary" aria-hidden="true" />
+          <Sparkles className="size-3.5 shrink-0 text-muted-foreground" aria-hidden="true" />
           <span className="truncate">{title}</span>
           <ChevronDown className="size-3.5 shrink-0 text-muted-foreground" aria-hidden="true" />
         </button>
@@ -769,20 +785,20 @@ function UserMessage({ projectId, message, fresh }: { projectId: string; message
             <li key={i}>
               <a href={p.src} target="_blank" rel="noopener noreferrer" className="block">
                 {/* eslint-disable-next-line @next/next/no-img-element -- private attachment served by the API */}
-                <img src={p.src} alt={p.alt} loading="lazy" className="h-20 max-w-40 rounded-xl object-cover shadow-[0_0_0_1px_var(--border-strong)]" />
+                <img src={p.src} alt={p.alt} loading="lazy" className="h-20 max-w-40 rounded-lg object-cover shadow-[0_0_0_1px_var(--border-strong)]" />
               </a>
             </li>
           ))}
         </ul>
       ) : null}
-      <div className="max-w-[88%] whitespace-pre-wrap break-words rounded-2xl rounded-br-md bg-muted px-3.5 py-2 text-[14px] leading-[1.6] shadow-[inset_0_0_0_1px_var(--border)]">
+      <div className="max-w-[88%] whitespace-pre-wrap break-words rounded-xl rounded-br-[4px] bg-muted px-3 py-2 text-[13.5px] leading-[1.55] text-foreground shadow-[inset_0_0_0_1px_var(--border)]">
         <span className="sr-only">You: </span>
         {text}
       </div>
       {file || error ? (
         <div className="flex max-w-[88%] flex-wrap justify-end gap-1.5" aria-label="Context sent with this message">
           {file ? (
-            <span className="inline-flex max-w-full items-center gap-1 rounded-md bg-muted/70 px-1.5 py-0.5 font-mono text-[11px] text-muted-foreground shadow-[inset_0_0_0_1px_var(--border)]">
+            <span className="inline-flex max-w-full items-center gap-1 rounded-[5px] px-1.5 py-0.5 font-mono text-[10.5px] text-muted-foreground shadow-[inset_0_0_0_1px_var(--border)]">
               <span aria-hidden="true">@</span>
               <span className="truncate">{file}</span>
             </span>
@@ -854,18 +870,18 @@ function AssistantMessage({
           }}
         />
       ) : message.content ? (
-        <p className="whitespace-pre-wrap text-[14px] leading-[1.65]">{message.content}</p>
+        <p className="whitespace-pre-wrap text-[13.5px] leading-[1.6]">{message.content}</p>
       ) : null}
       {message.nextSteps?.length ? (
-        <section className="space-y-1.5" aria-label="Next steps">
-          <h3 className="text-[13px] font-semibold">Next steps</h3>
-          <ul className="space-y-1">
+        <section className="space-y-2" aria-label="Next steps">
+          <h3 className="ws-label">Next steps</h3>
+          <ul className="overflow-hidden rounded-lg border border-border">
             {message.nextSteps.map((s, i) => (
-              <li key={i}>
+              <li key={i} className="border-b border-border last:border-b-0">
                 <button
                   type="button"
                   onClick={() => onNextStep(s)}
-                  className="group flex w-full items-start gap-2 rounded-lg px-2 py-1.5 text-left text-[13.5px] transition-colors hover:bg-muted focus-visible:outline-2 focus-visible:outline-ring"
+                  className="group flex w-full items-start gap-2 px-2.5 py-1.5 text-left text-[13px] transition-colors hover:bg-muted/70 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-ring"
                   title="Put this in the composer"
                 >
                   <ArrowRight className="mt-0.5 size-3.5 shrink-0 text-muted-foreground transition-transform group-hover:translate-x-0.5" aria-hidden="true" />
@@ -907,16 +923,16 @@ function NotConfigured({ missingEnv, showOperatorDetails, centered, suggestions 
   const hiddenCount = suggestions ? suggestions.length - shown.length : 0;
   return (
     <div className={cn("pop-in mx-auto mb-4 flex w-full max-w-sm flex-col items-center px-2 text-center", centered ? "my-auto py-2" : "pt-8")}>
-      <span className="flex size-12 items-center justify-center rounded-2xl border border-border-strong bg-card text-muted-foreground shadow-lg">
+      <span className="flex size-11 items-center justify-center rounded-xl border border-border-strong bg-card text-muted-foreground shadow-sm">
         <KeyRound className="size-5" aria-hidden="true" />
       </span>
-      <h2 className="mt-5 font-display text-[22px] font-[650] tracking-tight">AI is not configured</h2>
+      <h2 className="mt-5 font-display text-[20px] font-semibold tracking-[-0.02em]">AI is not configured</h2>
       <p className="mt-1.5 text-[13.5px] leading-relaxed text-muted-foreground">The AI assistant isn&apos;t set up on this server yet. Your files, the editor, previews and version history still work.</p>
       <Button asChild variant="outline" size="sm" className="mt-5">
         <Link href="/docs/ai-agent">Read the AI agent setup guide</Link>
       </Button>
       {showOperatorDetails ? (
-        <details className="group mt-6 w-full rounded-xl border border-border text-left text-xs">
+        <details className="group mt-6 w-full rounded-lg border border-border text-left text-xs">
           <summary className="flex cursor-pointer list-none items-center justify-between px-3 py-2 font-medium text-muted-foreground hover:text-foreground [&::-webkit-details-marker]:hidden">
             Details for the server operator
             <span className="transition-transform group-open:rotate-90" aria-hidden="true">
@@ -940,7 +956,7 @@ function NotConfigured({ missingEnv, showOperatorDetails, centered, suggestions 
             {shown.map((sg) => {
               const Icon = SUGGESTION_ICONS[sg.icon];
               return (
-                <li key={sg.title} className="flex items-center gap-2.5 rounded-xl border border-dashed border-border px-2.5 py-2">
+                <li key={sg.title} className="flex items-center gap-2.5 rounded-lg border border-dashed border-border px-2.5 py-2">
                   <span className="flex size-7 shrink-0 items-center justify-center rounded-lg bg-muted text-muted-foreground" aria-hidden="true">
                     <Icon className="size-3.5" />
                   </span>
@@ -996,8 +1012,8 @@ function ChatWelcome({ projectName, category, framework, onPick }: { projectName
   const suggestions = suggestionsFor(category, framework);
   return (
     <div className="mx-auto flex max-w-xl flex-col px-0.5 pt-4">
-      {projectName ? <p className="truncate text-[12px] font-medium text-muted-foreground">{projectName}</p> : null}
-      <h2 className="mt-1 font-display text-[22px] font-[650] leading-[1.2] tracking-[-0.02em] text-balance">What should we build next?</h2>
+      {projectName ? <p className="ws-label truncate">{projectName}</p> : null}
+      <h2 className="mt-2 font-display text-[20px] font-semibold leading-[1.2] tracking-[-0.025em] text-balance">What should we build next?</h2>
       <p className="mt-2 text-[13px] leading-relaxed text-muted-foreground text-pretty">
         Describe a feature, ask about the code, or fix the latest error. The agent plans first, edits files through reviewable tools and saves a checkpoint before every change.
       </p>
@@ -1009,9 +1025,9 @@ function ChatWelcome({ projectName, category, framework, onPick }: { projectName
               <button
                 type="button"
                 onClick={() => onPick(s.prompt, s.mode)}
-                className="group flex h-full w-full items-start gap-2.5 rounded-xl border border-border bg-card px-3 py-2.5 text-left transition-[border-color,background-color,box-shadow] duration-200 hover:border-border-strong hover:bg-muted/40 focus-visible:outline-2 focus-visible:outline-ring"
+                className="group flex h-full w-full items-start gap-2.5 rounded-lg border border-border bg-card px-2.5 py-2 text-left transition-[border-color,background-color,box-shadow] duration-200 hover:border-border-strong hover:bg-muted/40 focus-visible:outline-2 focus-visible:outline-ring"
               >
-                <span className="mt-px flex size-7 shrink-0 items-center justify-center rounded-lg bg-muted text-muted-foreground shadow-[inset_0_0_0_1px_var(--border)] transition-colors group-hover:text-primary">
+                <span className="mt-px flex size-7 shrink-0 items-center justify-center rounded-md bg-muted text-muted-foreground shadow-[inset_0_0_0_1px_var(--border)] transition-colors group-hover:text-foreground">
                   <Icon className="size-3.5" aria-hidden="true" />
                 </span>
                 <span className="min-w-0">

@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { ArrowDownToLine, Check, Copy, Eraser, Terminal, X } from "lucide-react";
 import { logsApi, type LogLine } from "../../lib/api";
 import { cn } from "../../lib/util";
-import { Button } from "../../ui";
+import { Tip } from "../../ui";
 
 const STATUS: Record<string, { label: string; dot: string }> = {
   running: { label: "dev server running", dot: "bg-success" },
@@ -64,38 +64,49 @@ export function ConsolePanel({ projectId, onClose }: { projectId: string; onClos
   };
 
   return (
-    <div className="flex h-full flex-col border-t border-border bg-card">
-      <div className="flex h-9 shrink-0 items-center gap-2 border-b border-border px-3">
-        <Terminal className="size-3.5 text-muted" />
-        <span className="text-[12.5px] font-semibold">Console</span>
-        <span className="flex items-center gap-1.5 text-[11.5px] text-dim">
-          <span className={cn("size-1.5 rounded-full", s.dot)} /> {s.label}
+    <div className="flex h-full flex-col border-t border-border bg-bg" role="region" aria-label="Console">
+      <div className="flex h-9 shrink-0 items-center gap-2 border-b border-border bg-sidebar pl-3 pr-1.5">
+        <Terminal className="size-3.5 text-muted" aria-hidden="true" />
+        <span className="ws-label text-fg">Console</span>
+        <span className="flex items-center gap-1.5 rounded-full border border-border px-2 py-px text-[11px] text-muted">
+          <span className={cn("ws-dot", s.dot)} /> {s.label}
         </span>
-        <span className="text-[11px] tabular-nums text-dim">· {visible.length} lines</span>
+        <span className="mono text-[10.5px] tabular-nums text-dim">
+          {visible.length} line{visible.length === 1 ? "" : "s"}
+        </span>
         <span className="ml-auto" />
         <button
           type="button"
           aria-pressed={errorsOnly}
           onClick={() => setErrorsOnly((v) => !v)}
-          className={cn("inline-flex h-6 items-center gap-1.5 rounded-md px-2 text-[11.5px] font-medium transition-colors", errorsOnly ? "bg-danger/10 text-danger" : "text-muted hover:bg-surface hover:text-fg")}
+          className={cn("inline-flex h-6 items-center gap-1.5 rounded-md border px-2 text-[11.5px] font-medium transition-colors", errorsOnly ? "border-danger/30 bg-danger/10 text-danger" : "border-transparent text-muted hover:bg-surface hover:text-fg")}
         >
-          Errors
-          <span className={cn("rounded px-1 tabular-nums", errors ? "bg-danger/15 text-danger" : "bg-surface text-dim")}>{errors}</span>
+          Errors only
+          <span className={cn("mono rounded-[3px] px-1 text-[10.5px] tabular-nums", errors ? "bg-danger/15 text-danger" : "bg-surface text-dim")}>{errors}</span>
         </button>
+        <span aria-hidden="true" className="mx-0.5 h-4 w-px bg-border" />
         {!pinned ? (
-          <Button size="icon-sm" variant="ghost" aria-label="Jump to latest" title="Jump to latest" onClick={jump}>
-            <ArrowDownToLine />
-          </Button>
+          <Tip label="Jump to latest">
+            <button type="button" className="ws-icon ws-icon--xs" aria-label="Jump to latest" onClick={jump}>
+              <ArrowDownToLine />
+            </button>
+          </Tip>
         ) : null}
-        <Button size="icon-sm" variant="ghost" aria-label="Copy output" title="Copy output" onClick={() => void copy()} disabled={shown.length === 0}>
-          {copied ? <Check /> : <Copy />}
-        </Button>
-        <Button size="icon-sm" variant="ghost" aria-label="Clear console" title="Clear" onClick={() => setClearedAt(lines.at(-1)?.ts ?? new Date().toISOString())}>
-          <Eraser />
-        </Button>
-        <Button size="icon-sm" variant="ghost" aria-label="Close console" title="Close (Ctrl J)" onClick={onClose}>
-          <X />
-        </Button>
+        <Tip label={copied ? "Copied" : "Copy output"}>
+          <button type="button" className="ws-icon ws-icon--xs" aria-label="Copy output" onClick={() => void copy()} disabled={shown.length === 0}>
+            {copied ? <Check className="text-success" /> : <Copy />}
+          </button>
+        </Tip>
+        <Tip label="Clear">
+          <button type="button" className="ws-icon ws-icon--xs" aria-label="Clear console" onClick={() => setClearedAt(lines.at(-1)?.ts ?? new Date().toISOString())}>
+            <Eraser />
+          </button>
+        </Tip>
+        <Tip label="Close" keys="Ctrl J" align="end">
+          <button type="button" className="ws-icon ws-icon--xs" aria-label="Close console" onClick={onClose}>
+            <X />
+          </button>
+        </Tip>
       </div>
       <div
         ref={ref}
@@ -104,15 +115,20 @@ export function ConsolePanel({ projectId, onClose }: { projectId: string; onClos
           stick.current = el.scrollHeight - el.scrollTop - el.clientHeight < 24;
           setPinned(stick.current);
         }}
-        className="scroll selectable min-h-0 flex-1 bg-bg px-3 py-2 font-mono text-[12px] leading-[1.6]"
+        className="scroll selectable min-h-0 flex-1 bg-bg py-1.5 font-mono text-[12px] leading-[1.65]"
+        role="log"
+        aria-label="Dev server output"
       >
         {shown.length === 0 ? (
-          <p className="text-dim">{errorsOnly ? "No errors. Nice." : "No output yet. Logs from installing, building and running your app show up here."}</p>
+          <div className="flex h-full flex-col items-center justify-center gap-1.5 px-6 text-center font-sans">
+            <p className="text-[12.5px] font-medium text-fg">{errorsOnly ? "No errors" : "No output yet"}</p>
+            <p className="max-w-[420px] text-[12px] leading-relaxed text-dim">{errorsOnly ? "Nothing on stderr since the console was last cleared." : "Logs from installing, building and running your app show up here while the preview runs."}</p>
+          </div>
         ) : (
           shown.map((l, i) => (
-            <div key={i} className={cn("flex gap-2 whitespace-pre-wrap break-words rounded px-1 -mx-1", l.stream === "stderr" ? "bg-danger/[0.06] text-danger" : l.stream === "system" ? "text-accent" : "text-fg/85")}>
-              <span className="shrink-0 select-none text-dim">{new Date(l.ts).toLocaleTimeString(undefined, { hour12: false })}</span>
-              <span className="min-w-0 flex-1">{l.line}</span>
+            <div key={i} className="ws-log" data-stream={l.stream}>
+              <span className="shrink-0 select-none tabular-nums text-dim">{new Date(l.ts).toLocaleTimeString(undefined, { hour12: false })}</span>
+              <span className={cn("min-w-0 flex-1", l.stream === "stdout" && "text-fg/85")}>{l.line}</span>
             </div>
           ))
         )}

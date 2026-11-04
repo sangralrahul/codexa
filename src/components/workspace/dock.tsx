@@ -42,15 +42,15 @@ export function Dock({
     onOpenChange(true);
   };
   const countBadge = (count: number) => (
-    <span className={cn("rounded-full px-1.5 font-mono text-[10.5px] tabular-nums", errors ? "bg-danger/12 text-danger" : count ? "ws-warn-ink bg-warning/12" : "bg-muted text-muted-foreground")}>{count}</span>
+    <span className={cn("rounded-[4px] px-1 font-mono text-[10px] leading-4 tabular-nums", errors ? "bg-danger/12 text-danger" : count ? "ws-warn-ink bg-warning/12" : "bg-muted text-muted-foreground shadow-[inset_0_0_0_1px_var(--border)]")}>{count}</span>
   );
 
   return (
     <div className="ws-card flex h-full min-h-0 flex-col" data-dock={open ? "open" : "collapsed"}>
       {/* Header (expanded) / ticker (collapsed) */}
       {open ? (
-        <div className="flex h-9 shrink-0 items-center gap-1 border-b border-border px-1.5">
-          <div role="tablist" aria-label="Dock" className="flex items-center gap-0.5">
+        <div className="ws-chrome flex h-9 shrink-0 items-stretch gap-1 border-b border-border pl-1 pr-1.5">
+          <div role="tablist" aria-label="Dock" className="flex items-stretch">
             {(
               [
                 ["terminal", "Terminal", TerminalSquare, null],
@@ -75,10 +75,11 @@ export function Dock({
                   }
                 }}
                 className={cn(
-                  "inline-flex h-7 items-center gap-1.5 rounded-lg px-2.5 text-[12.5px] font-medium transition-colors focus-visible:outline-2 focus-visible:outline-ring",
-                  tab === id ? "bg-muted text-foreground" : "text-muted-foreground hover:text-foreground",
+                  "relative inline-flex items-center gap-1.5 px-2.5 text-[12px] font-medium transition-colors focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-ring",
+                  tab === id ? "text-foreground" : "text-muted-foreground hover:text-foreground",
                 )}
               >
+                {tab === id ? <span className="absolute inset-x-2 -bottom-px h-px bg-foreground" aria-hidden="true" /> : null}
                 <Icon className="size-3.5" aria-hidden="true" />
                 {label}
                 {count !== null ? countBadge(count) : null}
@@ -87,11 +88,11 @@ export function Dock({
           </div>
           {collapsible ? (
             <>
-              <span className="ml-auto hidden items-center gap-1 text-[11px] text-muted-foreground md:flex">
+              <span className="ml-auto hidden items-center gap-1 self-center text-[11px] text-muted-foreground md:flex">
                 <Kbd mod>J</Kbd>
               </span>
               <Tooltip content="Collapse the dock">
-                <button type="button" onClick={() => onOpenChange(false)} aria-label="Collapse the dock" className={cn(toolButton, "size-7")}>
+                <button type="button" onClick={() => onOpenChange(false)} aria-label="Collapse the dock" className={cn(toolButton, "size-7 self-center")}>
                   <ChevronDown className="size-4" aria-hidden="true" />
                 </button>
               </Tooltip>
@@ -100,7 +101,7 @@ export function Dock({
         </div>
       ) : (
         // Collapsed: the same two labels (each opens the dock on its tab), then the live ticker.
-        <div className="flex h-full min-h-0 items-center gap-0.5 px-1.5">
+        <div className="ws-chrome flex h-full min-h-0 items-center gap-0.5 px-1">
           <button type="button" onClick={() => openTo("terminal")} className="inline-flex h-6 shrink-0 items-center gap-1.5 rounded-md px-2 text-[12px] font-medium text-foreground/85 transition-colors hover:bg-muted hover:text-foreground focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-ring">
             <TerminalSquare className="size-3.5 text-muted-foreground" aria-hidden="true" />
             Terminal
@@ -123,7 +124,7 @@ export function Dock({
           >
             {/* Named from its content, so the visible ticker line is part of the button's name. */}
             <span className="sr-only">{last ? "Open the terminal. Last line: " : "Open the terminal. "}</span>
-            <span className="min-w-0 flex-1 truncate text-[11.5px] text-muted-foreground">
+            <span className="min-w-0 flex-1 truncate font-mono text-[11px] text-muted-foreground">
               {last ? (
                 <span key={snap.total} className={cn("ws-ticker-line inline-block font-mono", last.stream === "stderr" && "text-danger")}>
                   {stripAnsi(last.line)}
@@ -158,7 +159,9 @@ export function ProblemsList({ problems }: { problems: Problem[] }) {
   if (!problems.length) {
     return (
       <div className="flex h-full flex-col items-center justify-center gap-1.5 p-6 text-center">
-        <ListChecks className="size-5 text-success" aria-hidden="true" />
+        <span className="mb-1 flex size-8 items-center justify-center rounded-lg border border-border bg-card text-success shadow-sm">
+          <ListChecks className="size-4" aria-hidden="true" />
+        </span>
         <p className="text-[13px] font-medium">No problems</p>
         <p className="max-w-xs text-[12px] text-muted-foreground">Errors from the dev server and failed checks after an AI run show up here.</p>
       </div>
@@ -167,10 +170,10 @@ export function ProblemsList({ problems }: { problems: Problem[] }) {
   return (
     <ul className="divide-y divide-border" aria-label="Problems">
       {problems.map((p) => (
-        <li key={p.id} className="group flex items-start gap-2.5 px-3 py-2 text-[12.5px] hover:bg-muted/40">
+        <li key={p.id} className="group flex items-start gap-2.5 px-3 py-1.5 text-[12.5px] hover:bg-muted/40">
           {p.severity === "error" ? <CircleAlert className="mt-0.5 size-3.5 shrink-0 text-danger" aria-label="Error" /> : <TriangleAlert className="mt-0.5 size-3.5 shrink-0 text-warning" aria-label="Warning" />}
           <div className="min-w-0 flex-1">
-            <p className="break-words font-mono text-[12px] leading-5">{p.message}</p>
+            <p className="break-words font-mono text-[11.5px] leading-5">{p.message}</p>
             <p className="mt-0.5 flex flex-wrap items-center gap-x-2 text-[11.5px] text-muted-foreground">
               <span>{p.source === "checks" ? "AI run checks" : "Dev server"}</span>
               {p.file ? (
@@ -186,7 +189,7 @@ export function ProblemsList({ problems }: { problems: Problem[] }) {
           <button
             type="button"
             onClick={() => emit("codexa:ai-fix-request", { error: p.file ? `${p.message} (${p.file}${p.line ? `:${p.line}` : ""})` : p.message, logs: p.context })}
-            className="inline-flex h-7 shrink-0 items-center gap-1.5 rounded-lg border border-border bg-card px-2 text-[12px] font-medium opacity-80 transition-[opacity,background-color] hover:bg-muted group-hover:opacity-100 focus-visible:opacity-100 focus-visible:outline-2 focus-visible:outline-ring"
+            className="inline-flex h-7 shrink-0 items-center gap-1.5 rounded-md border border-border bg-card px-2 text-[12px] font-medium opacity-80 transition-[opacity,background-color] hover:bg-muted group-hover:opacity-100 focus-visible:opacity-100 focus-visible:outline-2 focus-visible:outline-ring"
           >
             <Wand2 className="size-3.5" aria-hidden="true" /> Fix with AI
           </button>

@@ -8,7 +8,7 @@
    ========================================================================== */
 
 /* ---------- Shell ---------- */
-.ws-root { --ws-gutter: 6px; --btn-radius: 10px; }
+.ws-root { --ws-gutter: 6px; --btn-radius: 8px; --ws-radius: 12px; }
 
 /* The canvas behind the cards: background, a 4% horizon tint in one corner, grain on ink. */
 .ws-body { position: relative; isolation: isolate; }
@@ -36,16 +36,16 @@
 }
 .dark .ws-body::after { display: block; }
 
-/* Inset panel card: hairline border, md shadow, inner top highlight. */
+/* Inset panel card: a 1px hairline and a 12px radius. Paper gets a whisper of shadow; ink is flat. */
 .ws-card {
   position: relative;
-  border-radius: 16px;
+  border-radius: var(--ws-radius);
   background: var(--card);
   border: 1px solid var(--border);
-  box-shadow: inset 0 1px 0 var(--hairline), var(--shadow-md);
+  box-shadow: var(--shadow-sm);
   overflow: hidden;
 }
-.dark .ws-card { border-color: color-mix(in oklab, var(--border) 70%, var(--border-strong)); }
+.dark .ws-card { box-shadow: none; }
 
 /* The explorer and the editor read as one "Code" card: their inner edges square off and the 1px
    separator between them is the hairline (the panel library keeps a full-size drag target).
@@ -54,8 +54,9 @@
 .ws-card.ws-code-r { border-top-left-radius: 0; border-bottom-left-radius: 0; border-left-width: 0; clip-path: inset(-32px -32px -32px 0); }
 
 /* Agent card: a comet-border (globals) whose comet runs while a real run is active. */
-.ws-agent.comet-border { border-radius: 16px; box-shadow: var(--shadow-md); height: 100%; }
-.ws-agent > .comet-border__inner { border-radius: 15px; height: 100%; overflow: hidden; }
+.ws-agent.comet-border { border-radius: var(--ws-radius); box-shadow: var(--shadow-sm); height: 100%; }
+.dark .ws-agent.comet-border { box-shadow: none; }
+.ws-agent > .comet-border__inner { border-radius: calc(var(--ws-radius) - 1px); height: 100%; overflow: hidden; }
 .ws-agent[data-running-calm] { background: linear-gradient(var(--brand-from), var(--brand-from)); }
 
 /* Splitters: 6px transparent gutters with a 3×28px grab pill that turns signal while dragging. */
@@ -100,13 +101,29 @@
 .ws-pill-in { animation: ws-pill-in var(--dur-3) var(--ease-out) both; }
 @keyframes ws-pill-in { from { opacity: 0; transform: translateY(-4px) scale(0.96); } }
 
-/* Publish (btn-brand) in the header: the resting signal glow is clipped to a tight halo so it never
-   hazes the cards under the header; hover and keyboard focus release the full glow. */
+/* Publish (btn-brand) in the header: the solid primary (white on ink, black on paper), with no halo;
+   hover lifts it to --primary-hover. It is the one filled control in the header. */
 .btn-brand.ws-publish {
-  clip-path: inset(-3px round 13px);
-  transition: box-shadow var(--dur-4) var(--ease-out), translate var(--dur-3) var(--ease-out), scale var(--dur-3) var(--ease-snap), filter var(--dur-3), clip-path var(--dur-4) var(--ease-out);
+  color: var(--primary-foreground);
+  box-shadow: inset 0 1px 0 color-mix(in oklab, var(--primary-foreground) 14%, transparent), var(--shadow-sm);
+  transition: background-color var(--dur-2) var(--ease-out), scale var(--dur-3) var(--ease-snap);
 }
-.btn-brand.ws-publish:is(:hover, :focus-visible) { clip-path: inset(-48px round 13px); }
+.btn-brand.ws-publish:hover { translate: none; background: var(--primary-hover); box-shadow: inset 0 1px 0 color-mix(in oklab, var(--primary-foreground) 14%, transparent), var(--shadow-sm); }
+.btn-brand.ws-publish::after { display: none; }
+
+/* Header group divider: a 1px x 16px hairline between control groups. */
+.ws-divider { width: 1px; height: 16px; flex: none; background: var(--border); }
+
+/* Small mono caps label (section headings in the agent card, the dock, the preview states). */
+.ws-label {
+  font-family: var(--font-geist-mono), ui-monospace, monospace;
+  font-size: 10.5px;
+  font-weight: 500;
+  line-height: 1;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--muted-foreground);
+}
 
 /* Run button: a running state that offers Stop on hover/focus. */
 .ws-run [data-when="hover"] { display: none; }
@@ -189,15 +206,32 @@
 .ws-suggest > :nth-child(4) { animation-delay: 150ms; }
 @keyframes ws-pop-up { from { opacity: 0; transform: translateY(8px) scale(0.98); } }
 
-/* Composer: a focus glow ring; the comet (globals) runs while a run is active. */
-.ws-composer.comet-border { border-radius: 16px; }
-.ws-composer > .comet-border__inner { border-radius: 15px; transition: box-shadow var(--dur-3) var(--ease-out); }
-.ws-composer:focus-within > .comet-border__inner { box-shadow: 0 0 0 3px color-mix(in oklab, var(--primary) 16%, transparent), 0 14px 40px -18px color-mix(in oklab, var(--primary) 45%, transparent); }
+/* Composer: a crisp 1px focus edge plus a soft 3px ring; the comet (globals) runs while a run is active. */
+.ws-composer.comet-border { border-radius: var(--ws-radius); }
+.ws-composer > .comet-border__inner { border-radius: calc(var(--ws-radius) - 1px); transition: box-shadow var(--dur-3) var(--ease-out); }
+.ws-composer:focus-within > .comet-border__inner { box-shadow: 0 0 0 1px var(--border-strong), 0 0 0 4px color-mix(in oklab, var(--foreground) 7%, transparent); }
+
+/* Agent message: a 1px rail at the left edge ties the agent's narration to its run card. */
+.ws-narration { position: relative; padding-left: 14px; }
+.ws-narration::before { content: ""; position: absolute; left: 3px; top: 4px; bottom: 4px; width: 1px; background: var(--border); }
+
+/* Checkpoint marker: a hairline rule with the checkpoint in the middle. */
+.ws-rule { display: flex; align-items: center; gap: 8px; }
+.ws-rule::before, .ws-rule::after { content: ""; height: 1px; flex: 1 1 0; background: var(--border); }
 .ws-send { transition: transform var(--dur-4) var(--ease-spring), opacity var(--dur-2), background-color var(--dur-2); }
 .ws-send:active { transform: scale(0.88); transition-duration: var(--dur-1); }
 .ws-ring { transition: stroke-dashoffset var(--dur-4) var(--ease-out); }
 
 /* ---------- Preview ---------- */
+/* Browser chrome: three hairline window dots before the toolbar controls. */
+.ws-chrome-dots { gap: 6px; padding: 0 6px 0 4px; } /* display comes from utilities (hidden until the toolbar is wide) */
+.ws-chrome-dots > span { width: 9px; height: 9px; border-radius: 9999px; border: 1px solid var(--border-strong); background: var(--muted); }
+/* The state illustration (inline SVG): every stroke and fill reads a token through currentColor or a class. */
+.ws-illo { color: var(--border-strong); }
+.ws-illo .ws-illo-fill { fill: var(--card); }
+.ws-illo .ws-illo-soft { fill: var(--muted); }
+.ws-illo .ws-illo-ink { stroke: var(--muted-foreground); }
+.ws-illo .ws-illo-faint { stroke: var(--border); }
 /* The stage behind the browser card: a faint dotted grid with a low tint. */
 .ws-stage {
   position: relative;
@@ -244,6 +278,15 @@
 @keyframes ws-scan { from { transform: translateY(-100%); opacity: 1; } 86% { opacity: 1; } to { transform: translateY(0); opacity: 0; } }
 
 /* ---------- Editor ---------- */
+/* Tab strip: flush tabs separated by hairlines on the surface tone; the active tab takes the editor's
+   own background and opens into it (its bottom edge covers the strip's hairline). */
+/* Panel chrome: every 40px panel header (agent, explorer, tabs, browser toolbar, dock) shares one tone,
+   a step off the card, so the headers read as one layer across the workspace. */
+.ws-chrome, .ws-tabstrip { background: color-mix(in oklab, var(--surface) 75%, var(--card)); }
+.dark :is(.ws-chrome, .ws-tabstrip) { background: color-mix(in oklab, var(--background) 55%, var(--card)); }
+.ws-tabstrip [role="tab"][aria-selected="true"] { background: var(--ws-editor-bg, var(--card)); }
+.ws-tabstrip { --ws-editor-bg: var(--card); }
+.dark .ws-tabstrip { --ws-editor-bg: var(--code-bg); }
 .ws-tab { max-width: 220px; }
 .ws-tab-in { animation: ws-tab-in var(--dur-3) var(--ease-out) both; }
 @keyframes ws-tab-in { from { max-width: 0; opacity: 0; } }

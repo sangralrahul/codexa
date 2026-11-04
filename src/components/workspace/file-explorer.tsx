@@ -283,7 +283,7 @@ export function FileExplorer({
     <div className="flex h-full min-h-0 flex-col">
       {/* Same 40px + hairline as the editor's tab strip, so the joined Code card has one top bar. The header slot
           clips (with room for focus rings) so it can never spill over the action buttons. */}
-      <div className="flex h-10 shrink-0 items-center gap-1 border-b border-border pl-2 pr-1.5">
+      <div className="ws-chrome flex h-10 shrink-0 items-center gap-1 border-b border-border pl-1.5 pr-1">
         <div className="-my-1 min-w-0 flex-1 overflow-hidden py-1 pl-0.5 -ml-0.5">{header}</div>
         {canEdit ? (
           <DropdownMenu>
@@ -327,10 +327,11 @@ export function FileExplorer({
           {error}
         </p>
       ) : null}
-      <div ref={treeRef} className="scrollbar-thin min-h-0 flex-1 overflow-auto pb-2 pt-1.5" role="tree" aria-label="Project files" onKeyDown={onKeyDown} data-testid="file-explorer">
+      <div ref={treeRef} className="scrollbar-thin min-h-0 flex-1 overflow-auto pb-2 pt-1" role="tree" aria-label="Project files" onKeyDown={onKeyDown} data-testid="file-explorer">
         {pending && pending.kind !== "rename" && pending.dir === "" ? <NameInput depth={0} placeholder={pending.kind === "file" ? "filename.ts" : "folder-name"} onSubmit={submitPending} onCancel={() => setPending(null)} /> : null}
         {tree.length === 0 && !pending ? (
-          <div className="px-4 py-10 text-center">
+          <div className="mx-2 mt-2 rounded-lg border border-dashed border-border px-4 py-8 text-center">
+            <FilePlus2 className="mx-auto mb-2 size-4 text-muted-foreground" aria-hidden="true" />
             <p className="text-[13px] font-medium">No files yet</p>
             <p className="mt-1 text-xs text-muted-foreground">{canEdit ? "Create a file, or ask the agent to scaffold the project." : "This project has no files."}</p>
           </div>
@@ -519,23 +520,23 @@ function Node({ node, depth, index, setSize, ctx }: { node: TreeNode; depth: num
         onDoubleClick={() => ctx.canEdit && !isFolder && ctx.onRename(node.path, false)}
         title={node.path}
         className={cn(
-          "group relative mx-1.5 flex h-7 cursor-pointer items-center gap-1.5 rounded-lg pr-1 text-[13px] transition-colors duration-150",
-          isActive ? "bg-muted font-medium text-foreground shadow-[inset_0_0_0_1px_var(--border)]" : ctx.open.has(node.path) ? "text-foreground hover:bg-muted/70" : "text-foreground/80 hover:bg-muted/70 hover:text-foreground",
+          "group relative mx-1 flex h-[26px] cursor-pointer items-center gap-1.5 rounded-md pr-1 text-[13px] transition-colors duration-150",
+          isActive ? "bg-muted text-foreground shadow-[inset_0_0_0_1px_var(--border)]" : ctx.open.has(node.path) ? "text-foreground hover:bg-muted/70" : "text-foreground/75 hover:bg-muted/70 hover:text-foreground",
         )}
         style={{ paddingLeft: depth * 12 + 6 }}
       >
-        {flashAt ? <span key={flashAt} className="ws-ai-flash pointer-events-none absolute inset-0 rounded-lg" aria-hidden="true" /> : null}
+        {flashAt ? <span key={flashAt} className="ws-ai-flash pointer-events-none absolute inset-0 rounded-md" aria-hidden="true" /> : null}
         {Array.from({ length: depth }, (_, i) => (
-          <span key={i} aria-hidden="true" className="pointer-events-none absolute inset-y-0 w-px bg-border" style={{ left: i * 12 + 13 }} />
+          <span key={i} aria-hidden="true" className="pointer-events-none absolute inset-y-0 w-px bg-border/80 transition-colors group-hover:bg-border-strong/70" style={{ left: i * 12 + 13 }} />
         ))}
         {isFolder ? (
           <>
-            <ChevronRight className={cn("size-3.5 shrink-0 text-muted-foreground transition-transform duration-200 ease-out calm:transition-none", !isCollapsed && "rotate-90")} aria-hidden="true" />
-            {isCollapsed ? <Folder className="size-4 shrink-0 text-file-folder" aria-hidden="true" /> : <FolderOpen className="size-4 shrink-0 text-file-folder" aria-hidden="true" />}
+            <ChevronRight className={cn("size-3 shrink-0 text-muted-foreground transition-transform duration-200 ease-out calm:transition-none", !isCollapsed && "rotate-90")} aria-hidden="true" />
+            {isCollapsed ? <Folder className="size-[15px] shrink-0 text-file-folder" aria-hidden="true" /> : <FolderOpen className="size-[15px] shrink-0 text-file-folder" aria-hidden="true" />}
           </>
         ) : (
           <>
-            <span className="w-3.5 shrink-0" />
+            <span className="w-3 shrink-0" />
             <FileIcon name={node.name} />
           </>
         )}
@@ -557,7 +558,7 @@ function Node({ node, depth, index, setSize, ctx }: { node: TreeNode; depth: num
                   tabIndex={-1}
                   onClick={(e) => e.stopPropagation()}
                   aria-label={`Actions for ${node.name}`}
-                  className="absolute right-1 top-1/2 flex size-5 -translate-y-1/2 items-center justify-center rounded-md bg-muted text-muted-foreground opacity-0 shadow-[-8px_0_8px_-2px_var(--muted)] transition-opacity hover:bg-background hover:text-foreground group-hover:opacity-100 data-[state=open]:opacity-100"
+                  className="absolute right-1 top-1/2 flex size-5 -translate-y-1/2 items-center justify-center rounded-[4px] bg-muted text-muted-foreground opacity-0 shadow-[-8px_0_8px_-2px_var(--muted)] transition-opacity hover:bg-background hover:text-foreground group-hover:opacity-100 data-[state=open]:opacity-100"
                 >
                   <MoreHorizontal className="size-3.5" aria-hidden="true" />
                 </button>

@@ -2,7 +2,8 @@ import { lazy, Suspense, useCallback, useEffect, useRef, useState } from "react"
 import { Code2, ExternalLink, History as HistoryIcon, MessageSquare, MonitorPlay, Play, Rocket, SlidersHorizontal, Square, Terminal } from "lucide-react";
 import { aiApi, ApiError, deployApi, projectsApi, type AiStatus, type Deployment, type Project, type Role } from "../../lib/api";
 import { cn, relativeTime } from "../../lib/util";
-import { Badge, Button, Spinner, toast } from "../../ui";
+import { Badge, Button, Spinner, Tip, toast } from "../../ui";
+import { ProjectThumb } from "../../components/ProjectThumb";
 import { useApp } from "../../app/state";
 import { Chat } from "./Chat";
 import { Preview } from "./Preview";
@@ -128,82 +129,92 @@ export function Workspace({ projectId, initialPrompt }: { projectId: string; ini
   const running = runtime.status === "running";
   const starting = runtime.status === "starting" || (runtime.status === "stopped" && runtime.busy);
 
+  const runtimeDot = running ? "bg-success" : starting ? "pulse bg-warning" : runtime.status === "error" ? "bg-danger" : "bg-dim";
+  const runtimeLabel = running ? "Preview running" : starting ? "Starting preview" : runtime.status === "error" ? "Preview stopped with an error" : runtime.status === "unavailable" ? "Previews unavailable" : runtime.status === "loading" ? "Checking preview" : "Preview stopped";
+  const openView = (id: "preview" | "code") => {
+    setView(id);
+    if (id === "code") setCodeSeen(true);
+  };
+
   return (
-    <div className="flex h-full flex-col">
-      <header className="flex h-12 shrink-0 items-center gap-3 border-b border-border bg-card px-4">
-        <nav aria-label="Breadcrumb" className="flex min-w-0 items-center gap-1.5 text-[13.5px]">
-          <button type="button" onClick={() => go({ name: "projects" })} className="max-w-[180px] truncate text-muted hover:text-fg">
+    <div className="flex h-full flex-col bg-bg">
+      <header className="relative z-20 flex h-12 shrink-0 items-center gap-3 border-b border-border bg-bg pl-3 pr-3">
+        <nav aria-label="Breadcrumb" className="flex min-w-0 flex-1 items-center gap-2 text-[13px]">
+          <ProjectThumb templateId={project.templateId} name={project.name} className="h-5 w-8 rounded-[4px] border border-border-strong" />
+          <button type="button" onClick={() => go({ name: "projects" })} className="max-w-[180px] shrink truncate rounded-md px-1 py-0.5 text-muted transition-colors hover:text-fg">
             {workspaceName || "Projects"}
           </button>
-          <span className="text-dim">/</span>
-          <h1 className="truncate font-semibold tracking-[-0.01em]">{project.name}</h1>
+          <span aria-hidden="true" className="-mx-0.5 text-[15px] font-light text-border-strong">/</span>
+          <h1 className="min-w-0 truncate px-1 text-[13.5px] font-semibold tracking-[-0.01em]">{project.name}</h1>
+          {!canEdit ? <Badge>View only</Badge> : null}
         </nav>
-        {!canEdit ? <Badge>View only</Badge> : null}
 
-        <div className="mx-auto flex rounded-lg border border-border bg-surface p-0.5" role="tablist" aria-label="View">
+        <div className="ws-seg shrink-0" role="tablist" aria-label="View">
           {(
             [
               ["preview", "Preview", MonitorPlay, "Ctrl P"],
               ["code", "Code", Code2, "Ctrl E"],
             ] as const
           ).map(([id, label, Icon, keys]) => (
-            <button
-              key={id}
-              type="button"
-              role="tab"
-              aria-selected={view === id}
-              title={`${label} (${keys})`}
-              onClick={() => {
-                setView(id);
-                if (id === "code") setCodeSeen(true);
-              }}
-              className={cn("flex h-7 items-center gap-1.5 rounded-md px-3 text-[12.5px] font-medium transition-colors [&_svg]:size-3.5", view === id ? "bg-card text-fg shadow-sm" : "text-muted hover:text-fg")}
-            >
-              <Icon /> {label}
-            </button>
+            <Tip key={id} label={`Show ${label.toLowerCase()}`} keys={keys}>
+              <button type="button" role="tab" aria-selected={view === id} aria-keyshortcuts={keys.replace(" ", "+")} onClick={() => openView(id)} className="ws-seg__btn min-w-[84px]">
+                <Icon /> {label}
+              </button>
+            </Tip>
           ))}
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex min-w-0 flex-1 items-center justify-end gap-1.5">
           {running || starting ? (
-            <Button size="sm" onClick={() => void runtime.stop()} disabled={runtime.busy} aria-label="Stop preview">
-              <span className={cn("size-1.5 rounded-full", running ? "bg-success" : "pulse bg-warning")} />
-              {running ? "Running" : "Starting"}
-              <Square className="!size-3 fill-current text-muted" />
-            </Button>
+            <Tip label="Stop the preview">
+              <Button size="sm" onClick={() => void runtime.stop()} disabled={runtime.busy} aria-label="Stop preview" className="min-w-[96px]">
+                <span className={cn("ws-dot", running ? "bg-success" : "pulse bg-warning")} />
+                {running ? "Running" : "Starting"}
+                <Square className="!size-3 fill-current text-muted" />
+              </Button>
+            </Tip>
           ) : (
-            <Button size="sm" onClick={() => void runtime.start()} loading={runtime.busy} disabled={runtime.status === "unavailable" || runtime.status === "loading"}>
-              <Play /> Run
-            </Button>
+            <Tip label={runtime.status === "unavailable" ? "Previews are unavailable" : "Start a live preview"}>
+              <Button size="sm" onClick={() => void runtime.start()} loading={runtime.busy} disabled={runtime.status === "unavailable" || runtime.status === "loading"} className="min-w-[72px]">
+                {runtime.busy ? null : <Play className="!size-3.5" />} Run
+              </Button>
+            </Tip>
           )}
-          <Button variant="ghost" size="icon-sm" aria-label="Open on the web" title="Open on the web" onClick={() => void window.codexa.openWeb(`/projects/${project.id}`)}>
-            <ExternalLink />
-          </Button>
-          {live ? (
-            <button
-              type="button"
-              onClick={() => void window.codexa.openExternal(live.url!)}
-              title={`Open ${live.url}`}
-              className="hidden h-8 items-center gap-1.5 rounded-lg border border-border bg-card px-2.5 text-[12.5px] text-muted transition-colors hover:border-border-strong hover:text-fg lg:inline-flex"
-            >
-              <span className="size-1.5 rounded-full bg-success" /> Live · {relativeTime(live.createdAt)}
+          <Tip label="Open on the web">
+            <button type="button" className="ws-icon" aria-label="Open on the web" onClick={() => void window.codexa.openWeb(`/projects/${project.id}`)}>
+              <ExternalLink />
             </button>
+          </Tip>
+          {live ? (
+            <Tip label={`Open ${live.url!.replace(/^https?:\/\//, "")}`} align="end">
+              <button
+                type="button"
+                onClick={() => void window.codexa.openExternal(live.url!)}
+                className="hidden h-8 items-center gap-2 rounded-md border border-border px-2.5 text-[12.5px] text-muted transition-colors hover:border-border-strong hover:text-fg lg:inline-flex"
+              >
+                <span className="ws-dot bg-success" />
+                <span className="font-medium text-fg">Live</span>
+                <span className="mono text-[11px] text-dim">{relativeTime(live.createdAt)}</span>
+              </button>
+            </Tip>
           ) : null}
+          <span aria-hidden="true" className="mx-1 h-5 w-px bg-border" />
           <Button
             variant="accent"
             size="sm"
+            className="px-3.5"
             onClick={() => {
               if (!canEdit) return toast.info("View only", "Ask a workspace admin for editor access to publish.");
               setPublishOpen(true);
             }}
           >
-            <Rocket /> Publish
+            <Rocket className="!size-3.5" /> Publish
           </Button>
         </div>
       </header>
 
       <div className="flex min-h-0 flex-1">
-        <nav aria-label="Project tools" className="flex w-12 shrink-0 flex-col items-center gap-1 border-r border-border bg-sidebar py-2">
+        <nav aria-label="Project tools" className="ws-rail relative z-10">
           {(
             [
               ["chat", "AI chat", MessageSquare],
@@ -211,34 +222,23 @@ export function Workspace({ projectId, initialPrompt }: { projectId: string; ini
               ["settings", "Project settings", SlidersHorizontal],
             ] as const
           ).map(([id, label, Icon]) => (
-            <button
-              key={id}
-              type="button"
-              aria-label={label}
-              title={label}
-              aria-pressed={panel === id}
-              onClick={() => setPanel(id)}
-              className={cn("relative flex size-9 items-center justify-center rounded-lg transition-colors [&_svg]:size-[18px]", panel === id ? "bg-card text-fg shadow-sm ring-1 ring-border" : "text-dim hover:bg-surface hover:text-fg")}
-            >
-              {panel === id ? <span className="absolute -left-2 top-2 h-5 w-[3px] rounded-r-full bg-accent" /> : null}
-              <Icon />
-            </button>
+            <Tip key={id} label={label} side="right">
+              <button type="button" aria-label={label} aria-pressed={panel === id} onClick={() => setPanel(id)} className="ws-rail__btn">
+                <Icon />
+              </button>
+            </Tip>
           ))}
           <span className="mt-auto" />
-          <button
-            type="button"
-            aria-label="Console"
-            title="Console (Ctrl J)"
-            aria-pressed={consoleOpen}
-            onClick={() => setConsoleOpen((o) => !o)}
-            className={cn("flex size-9 items-center justify-center rounded-lg transition-colors [&_svg]:size-[18px]", consoleOpen ? "bg-card text-fg shadow-sm ring-1 ring-border" : "text-dim hover:bg-surface hover:text-fg")}
-          >
-            <Terminal />
-          </button>
+          <span aria-hidden="true" className="ws-rail__sep" />
+          <Tip label="Console" keys="Ctrl J" side="right">
+            <button type="button" aria-label="Console" aria-keyshortcuts="Control+J" aria-pressed={consoleOpen} onClick={() => setConsoleOpen((o) => !o)} className="ws-rail__btn">
+              <Terminal />
+            </button>
+          </Tip>
         </nav>
-        <section style={{ width: chatWidth }} className="relative shrink-0 border-r border-border" aria-label="Side panel">
+        <section style={{ width: chatWidth }} className="relative shrink-0 border-r border-border bg-card" aria-label="Side panel">
           <div className={cn("absolute inset-0", panel !== "chat" && "invisible")}>
-            <Chat projectId={project.id} initialPrompt={initialPrompt} onFilesChanged={onFilesChanged} />
+            <Chat projectId={project.id} initialPrompt={initialPrompt} onFilesChanged={onFilesChanged} onOpenHistory={() => setPanel("history")} />
           </div>
           {panel === "history" ? (
             <div className="absolute inset-0">
@@ -259,46 +259,62 @@ export function Workspace({ projectId, initialPrompt }: { projectId: string; ini
             dragging.current = true;
             document.body.style.cursor = "col-resize";
           }}
-          className="-ml-1 w-2 shrink-0 cursor-col-resize hover:bg-ring/30"
-        />
-        <div className="flex min-w-0 flex-1 flex-col">
-        <section className="relative min-h-0 min-w-0 flex-1" aria-label={view === "preview" ? "Preview" : "Code"}>
-          <div className={cn("absolute inset-0", view !== "preview" && "invisible")}>
-            <Preview runtime={runtime} reloadKey={0} />
-          </div>
-          {codeSeen ? (
-            <div className={cn("absolute inset-0", view !== "code" && "invisible")}>
-              <Suspense
-                fallback={
-                  <div className="flex h-full items-center justify-center">
-                    <Spinner />
-                  </div>
-                }
-              >
-                <CodeView projectId={project.id} filesVersion={filesVersion} readOnly={!canEdit} />
-              </Suspense>
+          className="group relative z-10 -ml-[3px] w-[5px] shrink-0 cursor-col-resize"
+        >
+          <span aria-hidden="true" className="absolute inset-y-0 left-[2px] w-px transition-colors group-hover:bg-border-strong group-active:bg-fg" />
+        </div>
+        <div className="-ml-[2px] flex min-w-0 flex-1 flex-col">
+          <section className="relative min-h-0 min-w-0 flex-1" aria-label={view === "preview" ? "Preview" : "Code"}>
+            <div className={cn("absolute inset-0", view !== "preview" && "invisible")}>
+              <Preview runtime={runtime} reloadKey={0} onOpenConsole={() => setConsoleOpen(true)} />
+            </div>
+            {codeSeen ? (
+              <div className={cn("absolute inset-0", view !== "code" && "invisible")}>
+                <Suspense
+                  fallback={
+                    <div className="flex h-full items-center justify-center">
+                      <Spinner />
+                    </div>
+                  }
+                >
+                  <CodeView projectId={project.id} filesVersion={filesVersion} readOnly={!canEdit} />
+                </Suspense>
+              </div>
+            ) : null}
+          </section>
+          {consoleOpen ? (
+            <div className="h-[240px] shrink-0">
+              <ConsolePanel projectId={project.id} onClose={() => setConsoleOpen(false)} />
             </div>
           ) : null}
-        </section>
-        {consoleOpen ? (
-          <div className="h-[240px] shrink-0">
-            <ConsolePanel projectId={project.id} onClose={() => setConsoleOpen(false)} />
-          </div>
-        ) : null}
         </div>
       </div>
 
-      <footer className="flex h-7 shrink-0 items-center gap-4 border-t border-border bg-sidebar px-3 text-[11.5px] text-muted">
-        <span className="flex items-center gap-1.5">
-          <span className={cn("size-1.5 rounded-full", running ? "bg-success" : starting ? "pulse bg-warning" : runtime.status === "error" ? "bg-danger" : "bg-dim")} />
-          {running ? "Preview running" : starting ? "Starting preview" : runtime.status === "error" ? "Preview stopped with an error" : runtime.status === "unavailable" ? "Previews unavailable" : "Preview stopped"}
+      <footer className="ws-status" aria-label="Status">
+        <button type="button" onClick={() => setConsoleOpen((o) => !o)} className="ws-status__item rounded-sm transition-colors hover:text-fg" aria-label={`${runtimeLabel}. Toggle console`}>
+          <span className={cn("ws-dot", runtimeDot)} />
+          {runtimeLabel}
+        </button>
+        <span className="ws-status__item">
+          <span className={cn("ws-dot", ai?.configured ? "bg-success" : "bg-dim")} />
+          {ai ? (ai.configured ? "AI ready" : "AI not configured") : "Checking AI"}
+          {ai?.configured && ai.model ? <span className="mono text-[10.5px] text-dim">{ai.model}</span> : null}
         </span>
-        <span className="flex items-center gap-1.5">
-          <span className={cn("size-1.5 rounded-full", ai?.configured ? "bg-success" : "bg-dim")} />
-          {ai ? (ai.configured ? `AI ready${ai.model ? ` · ${ai.model}` : ""}` : "AI not configured") : "Checking AI"}
+        <span className="ws-status__item">{canEdit ? "Changes save to Codexa automatically" : "View only"}</span>
+        <span className="ml-auto hidden items-center gap-3 px-2 text-dim xl:flex">
+          {(
+            [
+              ["Ctrl P", "preview"],
+              ["Ctrl E", "code"],
+              ["Ctrl J", "console"],
+              ["Ctrl K", "search"],
+            ] as const
+          ).map(([k, l]) => (
+            <span key={k} className="flex items-center gap-1.5">
+              <span className="mono text-[10.5px] text-muted">{k}</span> {l}
+            </span>
+          ))}
         </span>
-        <span className="ml-auto">{canEdit ? "Changes save to Codexa automatically" : "View only"}</span>
-        <span className="text-dim">Ctrl P preview · Ctrl E code · Ctrl J console · Ctrl K search</span>
       </footer>
 
       <PublishDialog projectId={project.id} open={publishOpen} onClose={() => setPublishOpen(false)} canPublish={canEdit} onChanged={refreshLive} />

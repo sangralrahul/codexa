@@ -168,8 +168,9 @@ export function EditorArea({
 
   return (
     <div className="@container flex h-full min-h-0 flex-col" data-testid="editor-area">
-      <div className="flex h-10 shrink-0 items-stretch border-b border-border">
-        <div ref={stripRef} className="flex min-w-0 flex-1 [scrollbar-width:none] items-end gap-0.5 overflow-x-auto px-1.5 pt-1.5" role="tablist" aria-label="Open files">
+      {/* The strip's bottom hairline is an inset shadow, so the active tab's background covers it and opens into the editor. */}
+      <div className="ws-tabstrip flex h-10 shrink-0 items-stretch shadow-[inset_0_-1px_0_var(--border)]">
+        <div ref={stripRef} className="flex min-w-0 flex-1 [scrollbar-width:none] items-stretch overflow-x-auto" role="tablist" aria-label="Open files">
           <div
             role="tab"
             data-tab={OVERVIEW}
@@ -180,10 +181,11 @@ export function EditorArea({
             title="Project overview"
             aria-label="Project overview"
             className={cn(
-              "relative flex h-[33px] shrink-0 cursor-default items-center gap-1.5 rounded-t-lg px-2.5 text-[12.5px] transition-colors focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-ring",
-              viewing === OVERVIEW ? "bg-background text-foreground shadow-[inset_0_1px_0_var(--border),inset_1px_0_0_var(--border),inset_-1px_0_0_var(--border)]" : "text-muted-foreground hover:bg-muted/60 hover:text-foreground",
+              "relative flex h-full w-10 shrink-0 cursor-default items-center justify-center border-r border-border text-[12.5px] transition-colors focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-ring",
+              viewing === OVERVIEW ? "text-foreground" : "text-muted-foreground hover:bg-muted/60 hover:text-foreground",
             )}
           >
+            {viewing === OVERVIEW ? <span className="absolute inset-x-0 top-0 h-px bg-foreground" aria-hidden="true" /> : null}
             <Home className="size-3.5" aria-hidden="true" />
           </div>
           {tabs.map((path) => {
@@ -205,13 +207,13 @@ export function EditorArea({
                 aria-label={`${basename(path)}${isDirty ? ", unsaved changes" : ""}${ai ? ", changed by the AI" : ""}`}
                 aria-keyshortcuts="Delete"
                 className={cn(
-                  "ws-tab group relative flex h-[33px] shrink-0 cursor-default items-center gap-1.5 overflow-hidden rounded-t-lg pl-2.5 pr-1 text-[12.5px] transition-colors focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-ring",
-                  isActive ? "bg-background text-foreground shadow-[inset_0_1px_0_var(--border),inset_1px_0_0_var(--border),inset_-1px_0_0_var(--border)]" : "text-muted-foreground hover:bg-muted/60 hover:text-foreground",
+                  "ws-tab group relative flex h-full shrink-0 cursor-default items-center gap-1.5 overflow-hidden border-r border-border pl-3 pr-1.5 text-[12.5px] transition-colors focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-ring",
+                  isActive ? "text-foreground" : "text-muted-foreground hover:bg-muted/60 hover:text-foreground",
                   isNew && "ws-tab-in",
                   leaving.has(path) && "ws-tab-out",
                 )}
               >
-                {isActive ? <span className="absolute inset-x-2 top-0 h-[2px] rounded-b-full bg-primary" aria-hidden="true" /> : null}
+                {isActive ? <span className="absolute inset-x-0 top-0 h-px bg-foreground" aria-hidden="true" /> : null}
                 <FileIcon name={basename(path)} className="size-3.5" />
                 <span className={cn("truncate", isDirty && "italic")}>{basename(path)}</span>
                 {ai ? <span className="ws-ai-dot" title="Changed by the AI" aria-hidden="true" /> : null}
@@ -224,10 +226,10 @@ export function EditorArea({
                     e.stopPropagation();
                     requestClose(path);
                   }}
-                  className={cn("ml-0.5 flex size-5 cursor-pointer items-center justify-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground", !isActive && !isDirty && "opacity-0 group-hover:opacity-100")}
+                  className={cn("ml-1 flex size-[18px] cursor-pointer items-center justify-center rounded-[4px] text-muted-foreground hover:bg-muted hover:text-foreground", !isActive && !isDirty && "opacity-0 group-hover:opacity-100")}
                 >
-                  {isDirty ? <span className="size-2 rounded-full bg-warning group-hover:hidden" /> : null}
-                  <X className={cn("size-3.5", isDirty && "hidden group-hover:block")} />
+                  {isDirty ? <span className="size-[7px] rounded-full bg-warning group-hover:hidden" /> : null}
+                  <X className={cn("size-3", isDirty && "hidden group-hover:block")} />
                 </span>
               </div>
             );
@@ -235,22 +237,22 @@ export function EditorArea({
         </div>
         {viewing !== OVERVIEW ? (
           // Narrow editors give the room to the tabs (Monaco's own Ctrl/⌘ F, H and Shift+Alt+F still work).
-          <div className="hidden shrink-0 items-center gap-0.5 px-1.5 @[340px]:flex">
+          <div className="hidden shrink-0 items-center gap-0.5 px-1 @[340px]:flex">
             <Tooltip content="Find (Ctrl/⌘ F)">
               <button type="button" aria-label="Find in file" onClick={() => runAction("actions.find")} className={cn(toolButton, "size-7")}>
-                <Search className="size-4" aria-hidden="true" />
+                <Search className="size-[15px]" aria-hidden="true" />
               </button>
             </Tooltip>
             {canEdit ? (
               <>
                 <Tooltip content="Find and replace (Ctrl/⌘ H)">
                   <button type="button" aria-label="Find and replace" onClick={() => runAction("editor.action.startFindReplaceAction")} className={cn(toolButton, "size-7")}>
-                    <Replace className="size-4" aria-hidden="true" />
+                    <Replace className="size-[15px]" aria-hidden="true" />
                   </button>
                 </Tooltip>
                 <Tooltip content={canFormat(language) ? "Format document (Shift+Alt+F)" : "Formatting is not available for this file type"}>
                   <button type="button" aria-label="Format document" disabled={!canFormat(language)} onClick={() => runAction("editor.action.formatDocument")} className={cn(toolButton, "size-7")}>
-                    <WandSparkles className="size-4" aria-hidden="true" />
+                    <WandSparkles className="size-[15px]" aria-hidden="true" />
                   </button>
                 </Tooltip>
               </>
@@ -260,7 +262,7 @@ export function EditorArea({
       </div>
 
       {viewing !== OVERVIEW && active ? (
-        <nav aria-label="File path" className="flex h-7 shrink-0 items-center gap-1 overflow-hidden px-3 font-mono text-[11.5px] text-muted-foreground">
+        <nav aria-label="File path" className="flex h-7 shrink-0 items-center gap-1 overflow-hidden border-b border-border/60 px-3 font-mono text-[11px] text-muted-foreground">
           {active.split("/").map((seg, i, arr) => (
             <span key={i} className="flex min-w-0 items-center gap-1">
               {i ? <ChevronRight className="size-3 shrink-0 opacity-60" aria-hidden="true" /> : null}
@@ -269,12 +271,12 @@ export function EditorArea({
             </span>
           ))}
           {marks && (marks.added.length || marks.modified.length) ? (
-            <span className="ml-auto inline-flex shrink-0 items-center gap-1.5 rounded-full bg-muted px-2 py-px font-sans text-[11px]">
+            <span className="ml-auto inline-flex shrink-0 items-center gap-1.5 rounded-[5px] px-1.5 py-px text-[10.5px] shadow-[inset_0_0_0_1px_var(--border)]">
               <span className="ws-ai-dot" aria-hidden="true" />
               AI changed {marks.added.length + marks.modified.length} line{marks.added.length + marks.modified.length === 1 ? "" : "s"}
             </span>
           ) : null}
-          {!canEdit ? <span className={cn("shrink-0 rounded-full border border-border px-2 py-px font-sans text-[11px]", !(marks && (marks.added.length || marks.modified.length)) && "ml-auto")}>Read-only</span> : null}
+          {!canEdit ? <span className={cn("shrink-0 rounded-[5px] border border-border px-1.5 py-px text-[10.5px]", !(marks && (marks.added.length || marks.modified.length)) && "ml-auto")}>Read-only</span> : null}
         </nav>
       ) : null}
 

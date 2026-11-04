@@ -14,12 +14,12 @@ const VISIBILITY: { id: Project["visibility"]; label: string; hint: string; icon
 
 function Section({ title, description, children, tone }: { title: string; description?: string; children: ReactNode; tone?: "danger" }) {
   return (
-    <section className={cn("rounded-xl border bg-card", tone === "danger" ? "border-danger/30" : "border-border")}>
-      <div className="border-b border-border px-4 py-2.5">
-        <h3 className={cn("text-[13px] font-semibold", tone === "danger" && "text-danger")}>{title}</h3>
-        {description ? <p className="mt-0.5 text-[12px] text-muted">{description}</p> : null}
+    <section className={cn("overflow-hidden rounded-lg border bg-card", tone === "danger" ? "border-danger/30" : "border-border")}>
+      <div className={cn("border-b px-3.5 py-2.5", tone === "danger" ? "border-danger/20" : "border-border")}>
+        <h3 className={cn("text-[13px] font-semibold leading-tight", tone === "danger" && "text-danger")}>{title}</h3>
+        {description ? <p className="mt-0.5 text-[12px] leading-snug text-muted">{description}</p> : null}
       </div>
-      <div className="space-y-4 p-4">{children}</div>
+      <div className="space-y-3.5 p-3.5">{children}</div>
     </section>
   );
 }
@@ -104,22 +104,22 @@ export function ProjectSettingsPanel({ projectId, canEdit, onSaved }: { projectI
   return (
     <div className="flex h-full flex-col bg-card">
       <PanelHeader title="Project settings" sub={dirty ? "Unsaved changes" : "Applies to everyone in this project"}>
-        <Button size="sm" variant="primary" disabled={!canEdit || !dirty || !form.name.trim()} loading={busy === "save"} onClick={() => void save()}>
+        <Button size="xs" variant="primary" disabled={!canEdit || !dirty || !form.name.trim()} loading={busy === "save"} onClick={() => void save()}>
           Save
         </Button>
       </PanelHeader>
-      <fieldset disabled={!canEdit} className="scroll min-h-0 flex-1 space-y-4 bg-bg/40 p-3">
+      <fieldset disabled={!canEdit} className="scroll min-h-0 flex-1 space-y-3 bg-panel p-3 dark:bg-bg">
         <Section title="General">
           <Field label="Name" htmlFor="ps-name">
-            <Input id="ps-name" value={form.name} maxLength={100} onChange={(e) => setForm({ ...form, name: e.target.value })} />
+            <Input id="ps-name" className="!h-8 !text-[13px]" value={form.name} maxLength={100} onChange={(e) => setForm({ ...form, name: e.target.value })} />
           </Field>
           <Field label="Description" htmlFor="ps-desc" hint="Shown on the project card and used by the AI for context.">
-            <Input id="ps-desc" value={form.description} maxLength={500} onChange={(e) => setForm({ ...form, description: e.target.value })} placeholder="What this app does" />
+            <Input id="ps-desc" className="!h-8 !text-[13px]" value={form.description} maxLength={500} onChange={(e) => setForm({ ...form, description: e.target.value })} placeholder="What this app does" />
           </Field>
         </Section>
 
         <Section title="Who can see it">
-          <div className="grid gap-2" role="radiogroup" aria-label="Visibility">
+          <div className="overflow-hidden rounded-md border border-border" role="radiogroup" aria-label="Visibility">
             {VISIBILITY.map((v) => {
               const on = form.visibility === v.id;
               return (
@@ -129,12 +129,12 @@ export function ProjectSettingsPanel({ projectId, canEdit, onSaved }: { projectI
                   role="radio"
                   aria-checked={on}
                   onClick={() => setForm({ ...form, visibility: v.id })}
-                  className={cn("flex items-center gap-3 rounded-lg border px-3 py-2.5 text-left transition-colors", on ? "border-fg bg-surface" : "border-border hover:border-border-strong")}
+                  className={cn("flex w-full items-center gap-3 px-3 py-2 text-left transition-colors [&+&]:border-t [&+&]:border-border", on ? "bg-surface" : "hover:bg-panel dark:hover:bg-surface/50")}
                 >
                   <v.icon className={cn("size-4 shrink-0", on ? "text-fg" : "text-muted")} />
                   <span className="min-w-0 flex-1">
-                    <span className="block text-[13px] font-medium">{v.label}</span>
-                    <span className="block text-[12px] text-muted">{v.hint}</span>
+                    <span className="block text-[13px] font-medium leading-tight">{v.label}</span>
+                    <span className="block text-[12px] leading-snug text-muted">{v.hint}</span>
                   </span>
                   <span className={cn("flex size-4 items-center justify-center rounded-full border", on ? "border-fg bg-fg text-card" : "border-border-strong")}>{on ? <Check className="size-3" /> : null}</span>
                 </button>
@@ -152,9 +152,9 @@ export function ProjectSettingsPanel({ projectId, canEdit, onSaved }: { projectI
             rows={7}
             onChange={(e) => setForm({ ...form, knowledge: e.target.value })}
             placeholder={"e.g. Use our brand color #0f766e.\nAll prices are in INR.\nKeep copy short and friendly."}
-            className="w-full resize-y rounded-lg border border-border bg-card px-3 py-2.5 text-[13.5px] leading-relaxed shadow-sm outline-none placeholder:text-dim focus-visible:outline-2 focus-visible:outline-ring"
+            className="selectable w-full resize-y rounded-md border border-border-strong bg-bg px-3 py-2 font-mono text-[12.5px] leading-relaxed outline-none transition-colors placeholder:text-dim focus:border-[var(--mark)]"
           />
-          <p className="text-right text-[11.5px] tabular-nums text-dim">{form.knowledge.length.toLocaleString()} / 4,000</p>
+          <p className="mono -mt-1.5 text-right text-[10.5px] tabular-nums text-dim">{form.knowledge.length.toLocaleString()} / 4,000</p>
         </Section>
 
         <Section title="About">

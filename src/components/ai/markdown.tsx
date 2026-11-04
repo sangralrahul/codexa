@@ -34,7 +34,7 @@ function CodeBlock({ language, code, children }: { language?: string; code: stri
     }
   };
   return (
-    <div className="group relative my-2 overflow-hidden rounded-xl border border-code-border bg-code-bg text-code-fg">
+    <div className="group relative my-2 overflow-hidden rounded-lg border border-code-border bg-code-bg text-code-fg">
       <div className="flex items-center justify-between border-b border-code-border px-3 py-1 font-mono text-[11px] text-code-muted">
         <span>{language ?? "code"}</span>
         <button
@@ -89,7 +89,7 @@ const components: Components = {
 /** Renders assistant text as Markdown (GFM). Content is untrusted: no raw HTML is rendered. */
 export function AiMarkdown({ text, className }: { text: string; className?: string }) {
   return (
-    <div className={cn("ai-markdown text-[14px] leading-[1.65] text-pretty [&>*+*]:mt-2.5 [&_li+li]:mt-1 [&_ol]:list-decimal [&_ol]:pl-5 [&_ul]:list-disc [&_ul]:pl-5 [&_li]:marker:text-muted-foreground [&_strong]:font-semibold [&_blockquote]:border-l-2 [&_blockquote]:border-border-strong [&_blockquote]:pl-3 [&_blockquote]:text-muted-foreground", className)}>
+    <div className={cn("ai-markdown text-[13.5px] leading-[1.6] text-pretty [&>*+*]:mt-2.5 [&_li+li]:mt-1 [&_ol]:list-decimal [&_ol]:pl-5 [&_ul]:list-disc [&_ul]:pl-5 [&_li]:marker:text-muted-foreground [&_strong]:font-semibold [&_blockquote]:border-l-2 [&_blockquote]:border-border-strong [&_blockquote]:pl-3 [&_blockquote]:text-muted-foreground", className)}>
       <ReactMarkdown remarkPlugins={[remarkGfm]} components={components} skipHtml>
         {text}
       </ReactMarkdown>

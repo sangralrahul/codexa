@@ -121,19 +121,19 @@ export function RunFooter({
   const checkpointAt = checkpoint?.createdAt ?? (startedAt ? new Date(startedAt).toISOString() : null);
 
   return (
-    <div className="space-y-2">
-      <div className="flex flex-wrap items-center gap-1.5">
+    <div className="space-y-2.5">
+      <div className="flex flex-wrap items-center gap-1">
         {changedCount > 0 || snapshotBeforeId ? (
           <button
             type="button"
             onClick={toggle}
             aria-expanded={open}
             aria-controls={panelId}
-            className="inline-flex h-7 items-center gap-1.5 rounded-lg border border-border bg-card px-2.5 text-[12.5px] font-medium shadow-[inset_0_1px_0_var(--hairline)] transition-colors hover:border-border-strong hover:bg-muted focus-visible:outline-2 focus-visible:outline-ring"
+            className="inline-flex h-7 items-center gap-1.5 rounded-md border border-border bg-card pl-1.5 pr-2 text-[12px] font-medium transition-colors hover:border-border-strong hover:bg-muted focus-visible:outline-2 focus-visible:outline-ring"
           >
             <ChevronRight className={cn("size-3.5 transition-transform duration-200", open && "rotate-90")} aria-hidden="true" />
             Review changes
-            <span className="font-mono text-[11px] tabular-nums text-muted-foreground">
+            <span className="font-mono text-[10.5px] tabular-nums text-muted-foreground">
               {details && stats.length === 0 && changedCount > 0 ? (
                 // The run did change files, but the project now matches its checkpoint again (reverted or edited back).
                 <>
@@ -160,12 +160,12 @@ export function RunFooter({
               setActionError(null);
               setConfirm("revert");
             }}
-            className="inline-flex h-7 items-center gap-1.5 rounded-lg px-2 text-[12.5px] text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:outline-2 focus-visible:outline-ring"
+            className="inline-flex h-7 items-center gap-1.5 rounded-md px-2 text-[12px] text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:outline-2 focus-visible:outline-ring"
           >
             <Undo2 className="size-3.5" aria-hidden="true" /> Revert
           </button>
         ) : null}
-        <span className="ml-auto flex items-center gap-2 font-mono text-[11px] tabular-nums text-muted-foreground">
+        <span className="ml-auto flex items-center gap-2 font-mono text-[10.5px] tabular-nums text-muted-foreground">
           {tokens ? <span>{compact(tokens)} tokens</span> : null}
           {duration ? <span aria-label={`Took ${duration}`}>{duration}</span> : null}
         </span>
@@ -174,7 +174,7 @@ export function RunFooter({
       {reverted !== null ? <p className="text-[12px] text-success">Reverted {reverted} file{reverted === 1 ? "" : "s"}.</p> : null}
 
       {open ? (
-        <div id={panelId} className="overflow-hidden rounded-xl border border-border bg-card text-[12.5px]">
+        <div id={panelId} className="overflow-hidden rounded-lg border border-border bg-card text-[12px]">
           {loading ? (
             <p className="flex items-center gap-2 px-3 py-2.5 text-muted-foreground">
               <Spinner /> Loading the diff…
@@ -217,8 +217,8 @@ export function RunFooter({
       ) : null}
 
       {snapshotBeforeId && checkpointAt ? (
-        <div className="flex items-center gap-2 text-[12px] text-muted-foreground">
-          <span className="inline-flex items-center gap-1.5 rounded-full border border-dashed border-border-strong px-2 py-0.5">
+        <div className="ws-rule text-[11px] text-muted-foreground">
+          <span className="inline-flex items-center gap-1.5 font-mono tabular-nums">
             <History className="size-3" aria-hidden="true" />
             Checkpoint · {timeOf(checkpointAt)}
           </span>
@@ -229,7 +229,7 @@ export function RunFooter({
                 setActionError(null);
                 setConfirm("restore");
               }}
-              className="inline-flex items-center gap-1 rounded-md px-1 font-medium text-foreground/80 underline-offset-2 transition-colors hover:text-foreground hover:underline focus-visible:outline-2 focus-visible:outline-ring"
+              className="inline-flex h-6 items-center gap-1 rounded-md px-1.5 font-medium text-foreground/80 transition-colors hover:bg-muted hover:text-foreground focus-visible:outline-2 focus-visible:outline-ring"
             >
               <RotateCcw className="size-3" aria-hidden="true" /> Restore to here
             </button>
