@@ -7,6 +7,7 @@ import { site } from "@/config/site";
 import type { Tone } from "@/content/marketing/types";
 import { cn } from "@/lib/utils";
 import { SpaceBackdrop } from "@/components/space/space-backdrop";
+import type { DarkSceneId } from "@/components/space/scenes";
 import { Crosshairs } from "./page-grid";
 import { PromptBox } from "./prompt-box";
 
@@ -60,6 +61,7 @@ export function CTABand({
   secondary,
   tone = "product",
   source = "cta",
+  scene = "galaxy",
   className,
 }: {
   variant?: Variant;
@@ -70,6 +72,8 @@ export function CTABand({
   tone?: Tone;
   /** prompt variant: where the idea passport says the idea came from ("solution" on solution pages). */
   source?: IdeaSource;
+  /** The band's scene (the galaxy unless the page's hero already shows it). */
+  scene?: DarkSceneId;
   className?: string;
 }) {
   void tone;
@@ -83,7 +87,7 @@ export function CTABand({
   const split = t.match(/^(.+?[.!?])\s+(\S.*)$/);
   return (
     <section aria-label="Get started" className={cn("pg-final", className)} data-space-host>
-      <SpaceBackdrop scene="galaxy" variant="banner" />
+      <SpaceBackdrop scene={scene} variant="banner" />
       <div aria-hidden="true" className="pg-hero__rails pg-hero__rails--full" />
       <div className="pg-final__inner">
         <h2 className="pg-final__h max-w-[22ch]">

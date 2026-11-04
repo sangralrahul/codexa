@@ -1,11 +1,12 @@
 import * as React from "react";
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
-import { SpaceBackdrop, type BackdropSceneSet } from "@/components/space/space-backdrop";
-import { HOME_DARK_SCENES, HOME_LIGHT_SCENES } from "@/components/space/home-scenes";
+import { SpaceBackdrop } from "@/components/space/space-backdrop";
+import type { DarkSceneId } from "@/components/space/scenes";
 import type { Crumb } from "@/content/marketing/types";
 import { cn } from "@/lib/utils";
 import { Breadcrumbs } from "./breadcrumbs";
+import { PAGE_SCENE_SETS, sceneForPath, type PageScene } from "./page-scenes";
 
 /**
  * The inner pages' share of the home page's "Monochrome Grid": a slim live space banner behind the
@@ -14,20 +15,7 @@ import { Breadcrumbs } from "./breadcrumbs";
  * and 1px hairline cell grids. Styles: the "Inner pages" block in marketing.css (pg-*).
  */
 
-/** One fixed scene per banner, from the home page's own set (each night scene with its daylight pair). */
-export type PageScene = "rings" | "eclipse" | "aurora" | "milkyway";
-const PAIRS: Record<PageScene, [string, string]> = {
-  rings: ["home-rings", "home-light-rings"],
-  eclipse: ["home-eclipse", "home-light-eclipse"],
-  aurora: ["home-aurora", "home-light-dawn"],
-  milkyway: ["home-milkyway", "home-light-orrery"],
-};
-const SETS = Object.fromEntries(
-  (Object.keys(PAIRS) as PageScene[]).map((k) => [
-    k,
-    { key: `page-${k}`, dark: HOME_DARK_SCENES.filter((s) => s.id === PAIRS[k][0]), light: HOME_LIGHT_SCENES.filter((s) => s.id === PAIRS[k][1]) } satisfies BackdropSceneSet,
-  ]),
-) as unknown as Record<PageScene, BackdropSceneSet>;
+export type { PageScene };
 
 type Corner = "tl" | "tr" | "bl" | "br";
 
@@ -70,7 +58,7 @@ export function PageHero({
   dim,
   lede,
   actions,
-  scene = "rings",
+  scene: sceneProp,
   align = "left",
   aside,
   asideWide = false,
@@ -83,6 +71,7 @@ export function PageHero({
   dim?: React.ReactNode;
   lede?: React.ReactNode;
   actions?: HeroAction[];
+  /** The banner scene; by default the page's own (sceneForPath on the last crumb). */
   scene?: PageScene;
   align?: "left" | "center";
   aside?: React.ReactNode;
@@ -93,9 +82,10 @@ export function PageHero({
 }) {
   const center = align === "center" && !aside;
   const [primary, ...rest] = actions ?? [];
+  const scene = sceneProp ?? sceneForPath(crumbs[crumbs.length - 1]?.path);
   return (
-    <header className={cn("pg-hero", className)} data-align={center ? "center" : "left"} data-space-host>
-      <SpaceBackdrop sets={SETS[scene]} variant="banner" picker={false} />
+    <header className={cn("pg-hero", className)} data-align={center ? "center" : "left"} data-aside={aside ? (asideWide ? "wide" : "split") : undefined} data-scene={scene} data-space-host>
+      <SpaceBackdrop sets={PAGE_SCENE_SETS[scene]} variant="banner" picker={false} />
       <div aria-hidden="true" className="pg-hero__rails" />
       <div className="pg-hero__inner">
         <Breadcrumbs items={crumbs} className={cn("pg-hero__crumbs", center && "flex justify-center")} />
@@ -177,11 +167,11 @@ export function RowHead({ id, index, label, title, dim, children, className }: {
  * The closing band shared by inner pages: a live scene (the home page's galaxy by night, its star
  * chart by day), the frame's rails, a two-tone line and up to two actions, or any children.
  */
-export function ClosingBand({ title, dim, lede, actions, children }: { title: React.ReactNode; dim?: React.ReactNode; lede?: React.ReactNode; actions?: HeroAction[]; children?: React.ReactNode }) {
+export function ClosingBand({ title, dim, lede, actions, scene = "galaxy", children }: { title: React.ReactNode; dim?: React.ReactNode; lede?: React.ReactNode; actions?: HeroAction[]; scene?: DarkSceneId; children?: React.ReactNode }) {
   const [primary, ...rest] = actions ?? [];
   return (
     <section aria-label="Get started" className="pg-final" data-space-host>
-      <SpaceBackdrop scene="galaxy" variant="banner" />
+      <SpaceBackdrop scene={scene} variant="banner" />
       <div aria-hidden="true" className="pg-hero__rails pg-hero__rails--full" />
       <div className="pg-final__inner">
         <h2 className="pg-final__h">

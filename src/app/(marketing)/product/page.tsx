@@ -33,7 +33,6 @@ export default function ProductPage() {
           { label: "Start building", href: "/signup" },
           { label: "See how it works", href: "/how-it-works" },
         ]}
-        scene="rings"
         aside={<CaptureShot id="agent" priority />}
         asideWide
       />

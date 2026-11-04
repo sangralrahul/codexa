@@ -79,7 +79,7 @@ export default function FaqPage() {
           </div>
         </div>
       </div>
-      <CTABand variant="docs" tone="docs" />
+      <CTABand variant="docs" tone="docs" scene="orbit" />
     </div>
   );
 }

@@ -13,15 +13,6 @@ export function Kicker({ children, className }: { children: React.ReactNode; cla
   return <PremiumKicker className={className}>{children}</PremiumKicker>;
 }
 
-/** Each area of the site keeps one scene from the home page's set, so a section reads as one place. */
-const SCENE_FOR_TONE: Record<Tone, PageScene> = {
-  product: "rings",
-  pricing: "eclipse",
-  trust: "aurora",
-  company: "milkyway",
-  docs: "milkyway",
-} as Record<Tone, PageScene>;
-
 /**
  * Inner-page header: the slim live space banner (PageHero) with breadcrumbs, the mono eyebrow, the
  * two-tone H1 (`highlight` is set in the dimmed tone), the lede and actions. Four variants:
@@ -59,7 +50,7 @@ export function PageHeader({
   visual?: React.ReactNode;
   meta?: HeaderMeta[];
   tone?: Tone;
-  /** Overrides the area's banner scene. */
+  /** Overrides the page's banner scene (default: sceneForPath on the last crumb). */
   scene?: PageScene;
   children?: React.ReactNode;
   className?: string;
@@ -89,7 +80,7 @@ export function PageHeader({
         title={<Highlight text={headline} highlight={highlight} />}
         lede={lede}
         actions={actions}
-        scene={scene ?? SCENE_FOR_TONE[tone ?? (pricing ? "pricing" : "product")] ?? "rings"}
+        scene={scene}
         align={pricing ? "center" : "left"}
         aside={aside}
         asideWide={variant === "product"}

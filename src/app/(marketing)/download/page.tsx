@@ -51,7 +51,6 @@ export default function DownloadPage() {
         title="Codexa"
         dim="for Windows."
         lede="A native Windows app for building with AI: describe an app, chat with the agent, edit code, watch the live preview and publish, all in one window."
-        scene="milkyway"
         align="center"
       >
         <div className="pg-ctas justify-center">

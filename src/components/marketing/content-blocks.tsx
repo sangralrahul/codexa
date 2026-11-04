@@ -259,21 +259,36 @@ export function ContentBlocks({ blocks, flip }: { blocks: ContentBlock[]; flip?:
   );
 }
 
-/** Article sections: an h2 (or h3) per section with the blocks under it. Ids are the in-page anchors. */
-export function ContentSections({ sections, headingLevel = 2 }: { sections: ContentSection[]; headingLevel?: 2 | 3 }) {
+/**
+ * Article sections: an h2 (or h3) per section with the blocks under it. Ids are the in-page anchors.
+ * `numbered` (legal pages): each heading carries its section number in a hanging mono column, and a
+ * number the author already wrote ("3. Your content") is used instead of being repeated.
+ */
+export function ContentSections({ sections, headingLevel = 2, numbered = false }: { sections: ContentSection[]; headingLevel?: 2 | 3; numbered?: boolean }) {
   const H = headingLevel === 2 ? "h2" : "h3";
   return (
     <>
-      {sections.map((s) => (
-        <section key={s.id} id={s.id} aria-labelledby={`${s.id}-heading`} className="scroll-mt-32">
-          <H id={`${s.id}-heading`} className={headingLevel === 2 ? "text-display-4" : "text-lg font-semibold"}>
-            {s.heading}
-          </H>
-          <div className="mt-4 space-y-5">
-            <ContentBlocks blocks={s.blocks} />
-          </div>
-        </section>
-      ))}
+      {sections.map((s, i) => {
+        const m = numbered ? /^(\d+)\.\s+(.*)$/.exec(s.heading) : null;
+        const n = m ? m[1] : String(i + 1);
+        const text = m ? m[2] : s.heading;
+        return (
+          <section key={s.id} id={s.id} aria-labelledby={`${s.id}-heading`} className={cn("scroll-mt-32", numbered && "lg-sec")}>
+            <H id={`${s.id}-heading`} className={numbered ? "lg-h" : headingLevel === 2 ? "text-display-4" : "text-lg font-semibold"}>
+              {numbered ? (
+                <span className="lg-h__n" aria-hidden="true">
+                  {n.padStart(2, "0")}
+                </span>
+              ) : null}
+              {numbered ? <span className="sr-only">{`Section ${n}: `}</span> : null}
+              {text}
+            </H>
+            <div className={cn("space-y-5", numbered ? "mt-3" : "mt-4")}>
+              <ContentBlocks blocks={s.blocks} />
+            </div>
+          </section>
+        );
+      })}
     </>
   );
 }
@@ -293,7 +308,8 @@ export function LandingSections({ sections }: { sections: ContentSection[] }) {
         return (
           <section key={s.id} id={s.id} aria-labelledby={`${s.id}-heading`} className="scroll-mt-28 border-t border-border/70 py-14 first:border-t-0 first:pt-0 lg:py-20">
             <div className={cn("grid grid-cols-1 gap-8 lg:gap-12", !wide && "lg:grid-cols-12")}>
-              <header data-reveal className={cn(wide ? "max-w-3xl" : "lg:col-span-4")}>
+              {/* The first row is in the first screen: it never waits for the reveal (or for hydration). */}
+              <header data-reveal={i === 0 ? undefined : ""} className={cn(wide ? "max-w-3xl" : "lg:col-span-4")}>
                 {/* The same chapter kicker as SectionHeader: "01 —— INCLUDED" (the short label is the nav label). */}
                 <p aria-hidden="true" className="text-label flex items-center gap-2.5 text-muted-foreground">
                   <span className="text-primary">{String(i + 1).padStart(2, "0")}</span>
@@ -308,7 +324,7 @@ export function LandingSections({ sections }: { sections: ContentSection[] }) {
                   {s.heading}
                 </h2>
               </header>
-              <div data-reveal style={{ "--reveal-delay": "100ms" } as React.CSSProperties} className={cn("min-w-0 space-y-6 text-[16.5px] leading-[1.7]", !wide && "lg:col-span-8")}>
+              <div data-reveal={i === 0 ? undefined : ""} style={{ "--reveal-delay": "100ms" } as React.CSSProperties} className={cn("min-w-0 space-y-6 text-[16.5px] leading-[1.7]", !wide && "lg:col-span-8")}>
                 <ContentBlocks blocks={s.blocks} flip={i % 2 === 1} />
               </div>
             </div>

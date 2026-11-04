@@ -117,6 +117,24 @@ const components: Components = {
       </a>
     );
   },
+  // A cell holding only an HTTP method ("GET", "POST", "GET/PUT/DELETE") reads as a method badge.
+  td: ({ node: _n, children, ...rest }) => {
+    const text = typeof children === "string" ? children.trim() : null;
+    if (text && /^(GET|POST|PUT|PATCH|DELETE|HEAD|OPTIONS)(\/(GET|POST|PUT|PATCH|DELETE))*$/.test(text)) {
+      return (
+        <td {...rest}>
+          <span className="inline-flex flex-wrap gap-1">
+            {text.split("/").map((m) => (
+              <span key={m} className="http-method" data-method={m}>
+                {m}
+              </span>
+            ))}
+          </span>
+        </td>
+      );
+    }
+    return <td {...rest}>{children}</td>;
+  },
   table: ({ node: _n, children }) => (
     <div className="my-4 overflow-x-auto">
       <table>{children}</table>

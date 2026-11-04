@@ -7,6 +7,7 @@ import type { ContentDoc, ContentSummary, Heading } from "@/lib/content/types";
 import { Breadcrumbs, type Crumb } from "./breadcrumbs";
 import { ArticleMeta, EditOnGitHub, PrevNext, RelatedLinks } from "./article-bits";
 import { DocsSidebar, type SidebarGroup } from "./sidebar";
+import { Crosshairs, Eyebrow } from "@/components/marketing/page-grid";
 import { cn } from "@/lib/utils";
 
 /**
@@ -16,10 +17,14 @@ import { cn } from "@/lib/utils";
  */
 export function ArticleShell({ sidebar, children, className }: { sidebar?: SidebarGroup[]; children: ReactNode; className?: string }) {
   return (
-    <div data-tone="docs" className={cn("container-x", className)}>
-      <div className={cn("grid gap-8 py-6 lg:gap-12 lg:py-10", sidebar ? "lg:grid-cols-[15.5rem_minmax(0,1fr)]" : "")}>
-        {sidebar ? <DocsSidebar groups={sidebar} /> : null}
-        <div className="min-w-0">{children}</div>
+    <div data-tone="docs" className={cn("dx-shell", className)}>
+      {/* The header band: a hairline grid with a soft glow behind the page title, fading into the page. */}
+      <div aria-hidden="true" className="dx-band" />
+      <div className="container-x relative">
+        <div className={cn("grid gap-8 py-6 lg:gap-12 lg:py-10", sidebar ? "lg:grid-cols-[15.5rem_minmax(0,1fr)]" : "")}>
+          {sidebar ? <DocsSidebar groups={sidebar} /> : null}
+          <div className="min-w-0">{children}</div>
+        </div>
       </div>
     </div>
   );
@@ -65,15 +70,15 @@ export function ArticleBody({
             </div>
           </header>
         ) : (
-          <header className="max-w-3xl">
-            {kicker ? <p className="text-label mb-4 text-signal-ink">{kicker}</p> : null}
-            <h1 className="text-display-3">{title}</h1>
-            {description ? <p className="text-lead mt-4">{description}</p> : null}
-            {meta ? <div className="mt-5">{meta}</div> : null}
+          <header className="dx-head">
+            {kicker ? <Eyebrow>{kicker}</Eyebrow> : null}
+            <h1 className="dx-h1">{title}</h1>
+            {description ? <p className="dx-lede">{description}</p> : null}
+            {meta ? <div className="dx-meta">{meta}</div> : null}
           </header>
         )}
         {hasToc ? (
-          <details className="group mt-8 rounded-xl border border-border bg-card/60 xl:hidden">
+          <details className="group mt-8 rounded-xl border border-border bg-(--pg-panel) xl:hidden">
             <summary className="flex cursor-pointer list-none items-center justify-between px-4 py-3 text-sm font-medium">
               On this page
               <span aria-hidden="true" className="text-muted-foreground transition-transform group-open:rotate-45">
@@ -91,8 +96,11 @@ export function ArticleBody({
             </ul>
           </details>
         ) : null}
-        <div className="mt-10 border-t border-border pt-8">{children}</div>
-        {footer ? <footer className="mt-14 space-y-10 border-t border-border pt-8">{footer}</footer> : null}
+        <div className="dx-body">
+          <Crosshairs corners={["tl"]} />
+          {children}
+        </div>
+        {footer ? <footer className="dx-foot mt-16 space-y-10 border-t border-border pt-8">{footer}</footer> : null}
       </article>
       {hasToc ? (
         <aside className="hidden xl:block">

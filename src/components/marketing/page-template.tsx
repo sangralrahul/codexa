@@ -3,7 +3,9 @@ import Link from "next/link";
 import { ArrowRight, LifeBuoy } from "lucide-react";
 import type { ContentPage, Crumb, Tone } from "@/content/marketing/types";
 import { getRoute } from "@/config/routes";
+import { listDocs } from "@/lib/content";
 import { site } from "@/config/site";
+import { cn } from "@/lib/utils";
 import { ReviewNote } from "./review-note";
 import { ContentSections, LandingSections } from "./content-blocks";
 import { CTABand } from "./cta-band";
@@ -12,6 +14,7 @@ import { OnThisPage } from "./on-this-page";
 import { ReadingProgress } from "./reading-progress";
 import { VignetteWindow } from "./vignette-window";
 import { Crosshairs } from "./page-grid";
+import { closingSceneFor, sceneForPath } from "./page-scenes";
 
 function crumbsFor(path: string, explicit?: Crumb[]): Crumb[] {
   if (explicit) return explicit;
@@ -78,6 +81,37 @@ function HelpCard() {
   );
 }
 
+/** The three latest changelog entries (the real release notes), for "before you send". */
+async function RecentlyShipped() {
+  const entries = [...(await listDocs("changelog"))].sort((a, b) => b.date.localeCompare(a.date)).slice(0, 3);
+  if (!entries.length) return null;
+  return (
+    <div className="pt-6">
+      <div className="flex items-baseline justify-between gap-3">
+        <p className="text-label text-muted-foreground">Recently shipped</p>
+        <Link href="/changelog" className="link-draw text-[13px] text-muted-foreground hover:text-foreground">
+          Changelog
+        </Link>
+      </div>
+      <ol className="mt-4 space-y-4 border-l border-border pl-5">
+        {entries.map((e) => (
+          <li key={e.href} className="relative">
+            <span aria-hidden="true" className="absolute -left-[23.5px] top-[7px] size-[7px] rounded-full border border-border-strong bg-background" />
+            <p className="font-mono text-[11px] uppercase tracking-[0.06em] text-foreground-dim">
+              {e.version ? `v${e.version} · ` : ""}
+              <time dateTime={e.date}>{formatDay(e.date)}</time>
+            </p>
+            <Link href={e.href} className="link-draw mt-0.5 inline-block text-[15px] font-medium">
+              {e.title}
+            </Link>
+            <p className="mt-0.5 line-clamp-2 text-[14px] leading-relaxed text-muted-foreground">{e.description}</p>
+          </li>
+        ))}
+      </ol>
+    </div>
+  );
+}
+
 /** "Before you send" card beside a form on pages that have no sections of their own. */
 function BeforeYouSend() {
   const links = [
@@ -102,6 +136,7 @@ function BeforeYouSend() {
         ))}
       </ul>
       <p className="text-[14px] text-muted-foreground">Everything you send is read by the people who build Codexa. Replies come by email.</p>
+      <RecentlyShipped />
     </div>
   );
 }
@@ -116,7 +151,7 @@ function BeforeYouSend() {
  * The ReviewNote stays visible whenever the page needs review. `layout="form"` puts the page's
  * form (children) beside the sections. The in-page index (OnThisPage) appears on article, legal and
  * landing pages with five or more sections. The header meta (reading time, sections) is only shown
- * on reading pages with three or more sections and never beside a form; `meta` replaces it.
+ * on reading pages with five or more sections and never beside a form; `meta` replaces it.
  */
 export function PageTemplate({
   page,
@@ -142,8 +177,9 @@ export function PageTemplate({
   const tone = page.tone ?? toneFor(page.path);
   const headline = page.headline ?? page.title;
   const form = layout === "form";
-  const cta = page.cta ? <CTABand tone={tone} title={page.cta.title} description={page.cta.description} primary={page.cta.primary} secondary={page.cta.secondary ?? null} /> : null;
-  const items = page.sections.map((s) => ({ id: s.id, title: s.navLabel ?? s.heading }));
+  const cta = page.cta ? <CTABand tone={tone} scene={closingSceneFor(sceneForPath(page.path))} title={page.cta.title} description={page.cta.description} primary={page.cta.primary} secondary={page.cta.secondary ?? null} /> : null;
+  // The index numbers its rows itself, so an author's "3. " prefix is dropped there.
+  const items = page.sections.map((s) => ({ id: s.id, title: s.navLabel ?? s.heading.replace(/^\d+\.\s+/, "") }));
 
   const landingToc = !form && page.sections.length >= 5;
   if (variant === "landing") {
@@ -194,8 +230,8 @@ export function PageTemplate({
 
   const legal = variant === "legal";
   const minutes = Math.max(1, Math.round(words(page) / 220));
-  // Reading time and a section count describe reading pages, not a short page with a form.
-  const reading = !form && page.sections.length >= 3;
+  // Reading time and a section count describe long reading pages; on a short page they would only fill space.
+  const reading = !form && page.sections.length >= 5;
   const meta: HeaderMeta[] = metaOverride ?? [
     ...(page.updated
       ? [
@@ -238,9 +274,20 @@ export function PageTemplate({
               {toc ? <OnThisPage items={items} /> : null}
               <div className={toc ? "hidden" : "hidden lg:block"}>{aside ?? <HelpCard />}</div>
             </aside>
-            <article data-print-article className="min-w-0 max-w-[68ch] space-y-12 text-[17px] leading-[1.7]">
+            <article data-print-article className={cn("min-w-0 max-w-[68ch]", legal ? "lg-article" : "space-y-12 text-[17px] leading-[1.7]")}>
+              {legal && page.updated ? (
+                <p className="lg-dateline">
+                  <span>
+                    Last revised <time dateTime={page.updated}>{formatDay(page.updated)}</time>
+                  </span>
+                  {page.review ? <span>Draft · pending {page.review === "both" ? "legal and security" : page.review} review</span> : null}
+                  <span>
+                    {page.sections.length} {page.sections.length === 1 ? "section" : "sections"}
+                  </span>
+                </p>
+              ) : null}
               {children}
-              <ContentSections sections={page.sections} />
+              <ContentSections sections={page.sections} numbered={legal} />
               {toc && aside ? <div>{aside}</div> : null}
             </article>
           </div>

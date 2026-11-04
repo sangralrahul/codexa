@@ -980,6 +980,13 @@ a.mk-pill:hover { border-color: var(--border-strong); color: var(--foreground); 
     radial-gradient(ellipse 48% 62% at 50% 46%, color-mix(in oklab, var(--background) 86%, transparent), transparent 100%),
     linear-gradient(to bottom, color-mix(in oklab, var(--background) 60%, transparent), transparent 26%, transparent 60%, var(--background) 100%);
 }
+/* A hero with a picture or meta panel on the right: the scene is widened past the viewport's right
+   edge so its subject (every scene keeps it at 62-80% across) clears the panel and rises from behind
+   its right edge instead of sitting under it. The left half (the headline) keeps the dark open sky. */
+@media (width >= 64rem) {
+  .pg-hero[data-aside] .space-backdrop__scenes { left: 0; right: -30%; }
+  .pg-hero[data-aside="split"] .space-backdrop__scenes { right: -24%; }
+}
 /* The frame's rails run through the banner, fading in from the top. */
 .pg-hero__rails {
   position: absolute; inset: 0; z-index: 1; width: min(1200px, calc(100% - 32px)); margin-inline: auto;
@@ -1153,4 +1160,120 @@ a.mk-pill:hover { border-color: var(--border-strong); color: var(--foreground); 
   .pg-facts { flex-wrap: nowrap; }
   .pg-facts > div { min-width: 0; padding: 12px 14px; }
   .pg-facts dd { font-size: 22px; }
+}
+
+/* ==========================================================================
+   Documentation (docs, API, SDK/CLI, guides, tutorials, learn, blog posts):
+   components/docs/article-layout.tsx. The site's grid language at reading
+   scale: a header band (hairline grid and a soft glow fading into the page),
+   a mono eyebrow, a tight display title, a hairline under the header with a
+   crosshair, the nav rail and the on-page index on hairlines, and prose tuned
+   for long reading (h2 rules, hairline tables, framed inline code, callouts).
+   Tokens only.
+   ========================================================================== */
+.dx-shell { position: relative; isolation: isolate; }
+.dx-band {
+  position: absolute; inset: 0 0 auto; z-index: -1; height: 360px; pointer-events: none;
+  background:
+    radial-gradient(ellipse 42% 70% at 68% 0%, color-mix(in oklab, var(--foreground) 7%, transparent), transparent 70%),
+    linear-gradient(to right, color-mix(in oklab, var(--border) 70%, transparent) 1px, transparent 1px) 0 0 / 48px 48px,
+    linear-gradient(to bottom, color-mix(in oklab, var(--border) 70%, transparent) 1px, transparent 1px) 0 0 / 48px 48px;
+  -webkit-mask-image: linear-gradient(to bottom, black 20%, transparent 95%);
+  mask-image: linear-gradient(to bottom, black 20%, transparent 95%);
+}
+:root:not(.dark) .dx-band { opacity: 0.8; }
+
+/* Header: eyebrow, title, lede, meta; the hairline under it carries a crosshair at its left end. */
+.dx-head { max-width: 46rem; }
+.dx-head .mk-eyebrow { margin-bottom: 18px; }
+.dx-h1 { font-size: clamp(2.125rem, 1.5rem + 2vw, 3rem); font-weight: 600; line-height: 1.04; letter-spacing: -0.045em; color: var(--foreground); text-wrap: balance; }
+.dx-lede { margin-top: 16px; max-width: 40rem; font-size: clamp(1.0625rem, 1rem + 0.3vw, 1.1875rem); line-height: 1.55; letter-spacing: -0.01em; color: var(--muted-foreground); text-wrap: pretty; }
+.dx-meta { margin-top: 20px; }
+.dx-body { position: relative; margin-top: 36px; padding-top: 36px; border-top: 1px solid var(--border); }
+.dx-body > .pg-x--tl { left: -11px; top: -11px; }
+@media (width < 64rem) { .dx-body > .pg-x { display: none; } }
+
+/* Nav rail: a hairline on its right edge from lg. */
+@media (width >= 64rem) {
+  .dx-shell .dx-rail { position: relative; }
+  .dx-shell .dx-rail::after { content: ""; position: absolute; top: 0; bottom: 0; right: -24px; width: 1px; background: linear-gradient(to bottom, transparent, var(--border) 80px, var(--border) calc(100% - 80px), transparent); }
+}
+
+/* Prose at reading scale (scoped to the docs shell so other prose keeps its rhythm). */
+.dx-shell .prose-codexa { font-size: 16px; line-height: 1.75; color: color-mix(in oklab, var(--foreground) 88%, var(--background)); }
+.dx-shell .prose-codexa > :first-child { margin-top: 0; }
+.dx-shell .prose-codexa h2 { margin: 3rem 0 1rem; padding-top: 2rem; border-top: 1px solid color-mix(in oklab, var(--border) 70%, transparent); font-family: var(--font-sans); font-size: 1.5rem; font-weight: 600; letter-spacing: -0.03em; color: var(--foreground); scroll-margin-top: 6rem; }
+.dx-shell .prose-codexa > h2:first-child, .dx-shell .prose-codexa [data-step] > h2 { margin-top: 2.25rem; padding-top: 0; border-top: 0; }
+.dx-shell .prose-codexa [data-step="1"] > h2:first-child { margin-top: 0; }
+.dx-shell .prose-codexa h3 { margin: 2rem 0 0.625rem; font-size: 1.0625rem; font-weight: 600; letter-spacing: -0.015em; color: var(--foreground); scroll-margin-top: 6rem; }
+.dx-shell .prose-codexa strong { color: var(--foreground); }
+.dx-shell .prose-codexa ul { list-style: none; padding-left: 1.25rem; }
+.dx-shell .prose-codexa ul > li { position: relative; }
+.dx-shell .prose-codexa ul > li::before { content: ""; position: absolute; left: -1.05rem; top: 0.72em; width: 5px; height: 5px; background: color-mix(in oklab, var(--foreground) 45%, transparent); }
+.dx-shell .prose-codexa ol { padding-left: 1.5rem; }
+.dx-shell .prose-codexa ol > li::marker { font-family: var(--font-mono); font-size: 0.8125rem; color: var(--muted-foreground); }
+.dx-shell .prose-codexa li { margin: 0.375rem 0; padding-left: 0.125rem; }
+.dx-shell .prose-codexa :not(pre) > code { padding: 0.1em 0.38em; border: 1px solid var(--border); border-radius: 5px; background: var(--pg-panel-2); font-size: 0.85em; color: var(--foreground); white-space: break-spaces; }
+.dx-shell .prose-codexa a:has(> code) { text-decoration: none; }
+.dx-shell .prose-codexa a:has(> code) > code { border-color: var(--border-strong); }
+.dx-shell .prose-codexa hr { border: 0; height: 1px; background: var(--border); }
+
+/* Tables: a hairline frame, mono uppercase headings, row rules only. */
+.dx-shell .prose-codexa div:has(> table) { margin: 1.5rem 0 1.75rem; border: 1px solid var(--border); border-radius: 12px; background: var(--background); }
+.dx-shell .prose-codexa table { margin: 0; font-size: 14px; line-height: 1.55; }
+.dx-shell .prose-codexa th, .dx-shell .prose-codexa td { border: 0; border-bottom: 1px solid var(--border); padding: 11px 16px; }
+.dx-shell .prose-codexa tr:last-child > td { border-bottom: 0; }
+.dx-shell .prose-codexa th { background: var(--pg-panel); font-family: var(--font-mono); font-size: 11px; font-weight: 500; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted-foreground); white-space: nowrap; }
+.dx-shell .prose-codexa thead th:first-child { border-top-left-radius: 11px; }
+.dx-shell .prose-codexa thead th:last-child { border-top-right-radius: 11px; }
+.dx-shell .prose-codexa tbody tr { transition: background-color var(--dur-2); }
+.dx-shell .prose-codexa tbody tr:hover { background: color-mix(in oklab, var(--pg-panel) 70%, transparent); }
+.dx-shell .prose-codexa td > code:only-child { white-space: nowrap; }
+
+/* Code: the dark pane in both themes, a touch more air. */
+.dx-shell .code-block { margin: 1.5rem 0 1.75rem; border-radius: 12px; }
+.dx-shell .code-block pre { font-size: 13px; line-height: 1.75; padding: 16px 18px; }
+
+/* Callouts: a little more air and the reading size of the body. */
+.dx-shell .prose-codexa aside:is([role="note"], [role="alert"]) { margin: 1.5rem 0; padding: 14px 16px; border-radius: 10px; font-size: 14.5px; line-height: 1.65; }
+.dx-shell .prose-codexa blockquote { border-left: 2px solid var(--border-strong); padding: 2px 0 2px 16px; color: var(--muted-foreground); }
+
+/* The on-page index and the footer cards. */
+.dx-shell nav[aria-label="On this page"] > p { font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.06em; color: var(--g-dim); }
+.dx-foot nav[aria-label="Pagination"] a { border-radius: 12px; padding: 18px 20px; }
+.dx-foot nav[aria-label="Pagination"] a > span:first-child { font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--g-dim); }
+.dx-foot nav[aria-label="Pagination"] a > span:last-child { margin-top: 4px; font-size: 16px; letter-spacing: -0.015em; }
+
+/* HTTP method badges in API tables (markdown.tsx): mono caps on a tinted hairline pill. */
+.http-method { display: inline-flex; align-items: center; height: 20px; padding: 0 7px; border: 1px solid color-mix(in oklab, var(--m) 40%, transparent); border-radius: 5px; background: color-mix(in oklab, var(--m) 10%, transparent); font-family: var(--font-mono); font-size: 10.5px; font-weight: 600; letter-spacing: 0.04em; color: var(--m); --m: var(--muted-foreground); }
+.http-method[data-method="GET"] { --m: var(--success); }
+.http-method[data-method="POST"] { --m: var(--foreground); }
+.http-method:is([data-method="PUT"], [data-method="PATCH"]) { --m: var(--warning); }
+.http-method[data-method="DELETE"] { --m: var(--danger); }
+.dx-shell .prose-codexa :not(pre) > code { -webkit-box-decoration-break: clone; box-decoration-break: clone; }
+.dx-h1--hub { font-size: clamp(2.5rem, 1.6rem + 3vw, 4rem); line-height: 1; letter-spacing: -0.05em; }
+
+/* ==========================================================================
+   Legal and policy pages (PageTemplate variant "legal"): a calm reading
+   column (68ch, 16.5px / 1.75), a dateline under a hairline, numbered
+   sections on hairline rules with the number in a hanging mono column.
+   ========================================================================== */
+.lg-article { font-size: 16.5px; line-height: 1.75; color: color-mix(in oklab, var(--foreground) 88%, var(--background)); }
+.lg-article > * + * { margin-top: 0; }
+.lg-dateline { display: flex; flex-wrap: wrap; gap: 6px 0; margin-bottom: 8px; padding-bottom: 14px; border-bottom: 1px solid var(--border); font-family: var(--font-mono); font-size: 12px; letter-spacing: 0.02em; color: var(--muted-foreground); }
+.lg-dateline > span + span::before { content: "·"; margin-inline: 10px; color: var(--g-dim); }
+.lg-dateline time { color: var(--foreground); }
+.lg-sec { padding-block: 32px; border-bottom: 1px solid color-mix(in oklab, var(--border) 70%, transparent); }
+.lg-sec:last-child { border-bottom: 0; }
+.lg-h { position: relative; display: flex; align-items: baseline; gap: 14px; font-size: 1.3125rem; font-weight: 600; line-height: 1.3; letter-spacing: -0.02em; color: var(--foreground); }
+.lg-h__n { flex-shrink: 0; min-width: 22px; font-family: var(--font-mono); font-size: 12px; font-weight: 500; letter-spacing: 0.04em; color: var(--g-dim); transform: translateY(-2px); }
+@media (width >= 80rem) {
+  .lg-h__n { position: absolute; right: calc(100% + 18px); min-width: 0; }
+}
+.lg-article .space-y-5 > p, .lg-article .space-y-5 > ul, .lg-article .space-y-5 > ol { max-width: 68ch; }
+@media print { .lg-sec { padding-block: 14px; break-inside: avoid-page; } }
+/* Phones: wide tables keep readable columns and scroll inside their frame instead of squeezing. */
+@media (width < 48rem) {
+  .dx-shell .prose-codexa div:has(> table) { overflow-x: auto; }
+  .dx-shell .prose-codexa table { min-width: 36rem; }
 }

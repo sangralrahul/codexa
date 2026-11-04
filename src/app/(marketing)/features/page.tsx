@@ -72,7 +72,6 @@ export default function FeaturesPage() {
           { label: "Start building", href: "/signup" },
           { label: "Compare plans", href: "/pricing/compare-plans" },
         ]}
-        scene="rings"
         aside={<SpecIndex />}
       />
 

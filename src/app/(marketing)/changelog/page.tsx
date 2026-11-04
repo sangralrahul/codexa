@@ -107,7 +107,6 @@ export default async function ChangelogPage() {
             .
           </>
         }
-        scene="milkyway"
       >
         {entries.length ? (
           <dl className="pg-facts">

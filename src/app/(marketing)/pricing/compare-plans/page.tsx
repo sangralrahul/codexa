@@ -18,7 +18,6 @@ export default function ComparePlansPage() {
         title="Every limit,"
         dim="side by side."
         lede="Every limit and feature, straight from the plan configuration the server enforces. Nothing on this page is typed in by hand."
-        scene="eclipse"
         align="center"
       />
       <GridFrame>

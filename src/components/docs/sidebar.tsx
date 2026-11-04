@@ -124,7 +124,7 @@ export function DocsSidebar({ groups }: { groups: SidebarGroup[] }) {
       </div>
 
       {/* Desktop rail */}
-      <aside className="hidden lg:block">
+      <aside className="dx-rail hidden lg:block">
         <div className="scrollbar-thin sticky top-24 max-h-[calc(100vh-7rem)] overflow-y-auto pb-8 pr-3">
           {showSearch ? (
             <div className="mb-6">

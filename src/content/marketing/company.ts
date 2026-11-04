@@ -92,7 +92,7 @@ export const COMPANY_PAGES: Record<string, ContentPage> = {
     sections: [
       { id: "github", heading: "GitHub", blocks: [{ type: "paragraph", text: `Discussions, issues, and feature requests happen in the Codexa repository on GitHub: [${site.social.github}](${site.social.github}). Use Discussions for questions and ideas, Issues for bugs you can reproduce.` }] },
       { id: "showcase", heading: "Showcase", blocks: [{ type: "paragraph", text: "Projects published by Codexa users appear in the [showcase](/showcase). You can submit your own from a project's share settings." }] },
-      { id: "other", heading: "Other ways to reach us", blocks: [{ type: "links", items: [{ label: "Request a feature", href: "/request-feature", description: "Tell us what to build next." }, { label: "Report a bug", href: "/report-bug", description: "Something is broken." }, { label: "Feedback", href: "/feedback", description: "Anything else." }, { label: "Newsletter", href: "/newsletter", description: "Product updates by email, roughly monthly." }] }] },
+      { id: "other", heading: "Other ways to reach us", blocks: [{ type: "links", items: [{ label: "Request a feature", href: "/request-feature", description: "Tell us what to build next." }, { label: "Report a bug", href: "/report-bug", description: "Something is broken." }, { label: "Feedback", href: "/feedback", description: "Anything else." }, { label: "Newsletter", href: "/newsletter", description: "Product updates by email, only when something ships." }] }] },
     ],
   },
 
