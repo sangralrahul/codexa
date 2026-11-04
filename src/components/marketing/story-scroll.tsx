@@ -65,7 +65,10 @@ export function StoryScroll({
   };
 
   const current = stages[Math.min(active, stages.length - 1)];
-  const playable = (node: StoryStage["node"], on: boolean) => (React.isValidElement(node) ? React.cloneElement(node, { playing: on, className: "flex-1" }) : node);
+  // Only `playing` is injected. The stage's size comes from the wrapper's CSS ([&>*]:flex-1), not a
+  // cloned className: server-passed elements can reach the SSR pass in a form cloneElement skips, so a
+  // cloned className rendered on the client only and broke hydration on every page with a story.
+  const playable = (node: StoryStage["node"], on: boolean) => (React.isValidElement(node) ? React.cloneElement(node, { playing: on }) : node);
 
   return (
     <div className="grid grid-cols-1 gap-10 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] lg:gap-16">
@@ -124,7 +127,7 @@ export function StoryScroll({
                   aria-hidden={i !== active}
                   inert={i !== active}
                   className={cn(
-                    "col-start-1 row-start-1 flex min-w-0 flex-col transition-[opacity,translate,visibility] duration-[420ms] ease-out calm:transition-none",
+                    "col-start-1 row-start-1 flex min-w-0 flex-col transition-[opacity,translate,visibility] duration-[420ms] ease-out calm:transition-none [&>*]:flex-1",
                     i === active ? "visible translate-y-0 opacity-100" : "invisible translate-y-2 opacity-0",
                   )}
                 >
