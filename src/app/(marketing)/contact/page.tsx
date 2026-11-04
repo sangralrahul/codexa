@@ -18,8 +18,14 @@ export default async function Page() {
         { label: "Also", value: "Support, sales, security and privacy addresses on this page" },
       ]}
     >
-      <section aria-labelledby="form-heading" className="e3 rounded-[20px] p-6 sm:p-7">
-        <h2 id="form-heading" className="text-display-4">Send a message</h2>
+      <section aria-labelledby="form-heading" className="rounded-[12px] border border-border bg-(--pg-panel) p-6 sm:p-7">
+        <p className="mk-eyebrow">
+          <i aria-hidden="true" />
+          <span>Message</span>
+        </p>
+        <h2 id="form-heading" className="mt-3 text-[26px] font-semibold leading-tight tracking-[-0.035em]">
+          Send <span className="text-(--g-dim)">a message.</span>
+        </h2>
         <SupportForm
           kind="contact"
           submitLabel="Send message"

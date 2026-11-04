@@ -119,42 +119,40 @@
    lead 20px muted. Headlines are plain white: no gradient text anywhere.
    -------------------------------------------------------------------------- */
 .mk-h1 {
-  font-family: var(--font-display);
-  font-size: clamp(2.5rem, 1.5rem + 3.4vw, 4rem);
-  line-height: 1.04;
-  letter-spacing: -0.04em;
-  font-weight: 800;
-  font-stretch: 100%;
+  font-family: var(--font-sans);
+  font-size: clamp(2.5rem, 1.3rem + 3.6vw, 4.25rem);
+  line-height: 1;
+  letter-spacing: -0.05em;
+  font-weight: 600;
   text-wrap: balance;
   color: var(--foreground);
 }
 .mk-h2 {
-  font-family: var(--font-display);
-  font-size: clamp(1.875rem, 1.3rem + 1.9vw, 2.75rem);
-  line-height: 1.08;
-  letter-spacing: -0.03em;
-  font-weight: 700;
-  font-stretch: 100%;
+  font-family: var(--font-sans);
+  font-size: clamp(2rem, 1.3rem + 2vw, 3rem);
+  line-height: 1.04;
+  letter-spacing: -0.045em;
+  font-weight: 600;
   text-wrap: balance;
   color: var(--foreground);
 }
 .mk-h3 {
-  font-family: var(--font-display);
+  font-family: var(--font-sans);
   font-size: clamp(1.25rem, 1.1rem + 0.5vw, 1.5rem);
   line-height: 1.2;
-  letter-spacing: -0.02em;
-  font-weight: 700;
+  letter-spacing: -0.025em;
+  font-weight: 600;
   color: var(--foreground);
 }
 .mk-lead {
   font-size: clamp(1.0625rem, 1rem + 0.4vw, 1.25rem);
   line-height: 1.55;
-  letter-spacing: -0.005em;
+  letter-spacing: -0.012em;
   color: var(--muted-foreground);
   text-wrap: pretty;
 }
-/* A highlighted phrase reads as plain ink (kept so existing markup needs no change). */
-.mk-gradient-text { color: inherit; }
+/* A highlighted phrase is the headline's second tone (the home page's two-tone headings): the same ink, dimmed. */
+.mk-gradient-text { color: var(--g-dim); }
 
 /* --------------------------------------------------------------------------
    Hero backdrop: at most a very faint monochrome radial behind a hero, fading
@@ -919,4 +917,240 @@ a.mk-pill:hover { border-color: var(--border-strong); color: var(--foreground); 
   font-weight: 500;
   line-height: 1;
   color: var(--foreground-dim);
+}
+
+/* ==========================================================================
+   Inner pages: the home page's Monochrome Grid for every page under the site
+   shell (page-grid.tsx). A slim live space banner behind the title (.pg-hero),
+   the framed 1200px column of hairline rows (.pg-row), crosshair marks,
+   numbered row heads with two-tone H2s, 1px hairline cell grids and the
+   closing band. Tokens only; the dim and crosshair inks are mixes of the
+   foreground into the page, as on the home page (home.css redefines the same
+   variables under [data-page="home"]).
+   ========================================================================== */
+.site-shell {
+  --g-dim: color-mix(in oklab, var(--foreground) 50%, var(--background));
+  --g-cross: color-mix(in oklab, var(--foreground) 58%, var(--background));
+  --g-pad: 48px;
+  --pg-panel: color-mix(in oklab, var(--foreground) 3%, var(--background));
+  --pg-panel-2: color-mix(in oklab, var(--foreground) 6%, var(--background));
+}
+:root:not(.dark) .site-shell {
+  --g-dim: var(--muted-foreground);
+  --g-cross: color-mix(in oklab, var(--foreground) 32%, var(--background));
+  --pg-panel: var(--surface);
+  --pg-panel-2: color-mix(in oklab, var(--foreground) 4%, var(--background));
+}
+@media (width < 64rem) { .site-shell { --g-pad: 32px; } }
+@media (width < 40rem) { .site-shell { --g-pad: 20px; } }
+
+/* Mono eyebrow with a square bullet (section kickers everywhere). */
+.mk-eyebrow { display: flex; align-items: center; gap: 10px; font-family: var(--font-mono); font-size: 12px; font-weight: 400; letter-spacing: 0.06em; text-transform: uppercase; color: var(--g-dim); }
+.mk-eyebrow > i { display: block; width: 6px; height: 6px; flex-shrink: 0; background: var(--foreground); }
+
+/* Crosshair marks. */
+.pg-x { position: absolute; z-index: 3; width: 21px; height: 21px; pointer-events: none; }
+.pg-x::before, .pg-x::after { content: ""; position: absolute; background: var(--g-cross); }
+.pg-x::before { left: 10px; top: 0; width: 1px; height: 21px; }
+.pg-x::after { top: 10px; left: 0; width: 21px; height: 1px; }
+.pg-x--tl { left: -11px; top: -11px; }
+.pg-x--tr { right: -11px; top: -11px; }
+.pg-x--bl { left: -11px; bottom: -11px; }
+.pg-x--br { right: -11px; bottom: -11px; }
+
+/* --- Hero: the live banner -------------------------------------------------- */
+.pg-hero { position: relative; isolation: isolate; overflow: clip; border-bottom: 1px solid var(--border); background: var(--background); color: var(--foreground); }
+.pg-hero .space-backdrop[data-variant="banner"] .space-backdrop__scrim {
+  background:
+    linear-gradient(to right, color-mix(in oklab, var(--background) 88%, transparent) 0%, color-mix(in oklab, var(--background) 62%, transparent) 38%, transparent 72%),
+    linear-gradient(to bottom, color-mix(in oklab, var(--background) 70%, transparent), transparent 26%, transparent 64%, var(--background) 100%);
+}
+:root:not(.dark) .pg-hero .space-backdrop[data-variant="banner"] .space-backdrop__scrim {
+  background:
+    linear-gradient(to right, color-mix(in oklab, var(--background) 92%, transparent) 0%, color-mix(in oklab, var(--background) 70%, transparent) 40%, transparent 74%),
+    linear-gradient(to bottom, color-mix(in oklab, var(--background) 60%, transparent), transparent 26%, transparent 64%, var(--background) 100%);
+}
+.pg-hero[data-align="center"] .space-backdrop[data-variant="banner"] .space-backdrop__scrim {
+  background:
+    radial-gradient(ellipse 46% 60% at 50% 46%, color-mix(in oklab, var(--background) 80%, transparent), transparent 100%),
+    linear-gradient(to bottom, color-mix(in oklab, var(--background) 70%, transparent), transparent 26%, transparent 60%, var(--background) 100%);
+}
+:root:not(.dark) .pg-hero[data-align="center"] .space-backdrop[data-variant="banner"] .space-backdrop__scrim {
+  background:
+    radial-gradient(ellipse 48% 62% at 50% 46%, color-mix(in oklab, var(--background) 86%, transparent), transparent 100%),
+    linear-gradient(to bottom, color-mix(in oklab, var(--background) 60%, transparent), transparent 26%, transparent 60%, var(--background) 100%);
+}
+/* The frame's rails run through the banner, fading in from the top. */
+.pg-hero__rails {
+  position: absolute; inset: 0; z-index: 1; width: min(1200px, calc(100% - 32px)); margin-inline: auto;
+  border-inline: 1px solid color-mix(in oklab, var(--border) 80%, transparent); pointer-events: none;
+  -webkit-mask-image: linear-gradient(to bottom, transparent, black 55%); mask-image: linear-gradient(to bottom, transparent, black 55%);
+}
+.pg-hero__rails--full { -webkit-mask-image: none; mask-image: none; }
+.pg-hero__frame { position: absolute; inset: 0; z-index: 3; width: min(1200px, calc(100% - 32px)); margin-inline: auto; pointer-events: none; }
+@media (width < 40rem) { .pg-hero__rails, .pg-hero__frame { width: calc(100% - 24px); } }
+.pg-hero__inner { position: relative; z-index: 2; width: min(1200px, calc(100% - 32px)); margin-inline: auto; padding: 32px var(--g-pad) 80px; }
+@media (width < 40rem) { .pg-hero__inner { width: calc(100% - 24px); padding-bottom: 56px; } }
+.pg-hero__crumbs { position: relative; }
+.pg-hero__grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: 48px; margin-top: 56px; }
+@media (width >= 64rem) {
+  .pg-hero__grid--split { grid-template-columns: minmax(0, 7fr) minmax(0, 5fr); align-items: end; gap: 64px; }
+  .pg-hero__grid--wide { grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); align-items: center; gap: 56px; }
+}
+@media (width < 40rem) { .pg-hero__grid { margin-top: 40px; gap: 36px; } }
+.pg-hero__copy { display: flex; min-width: 0; flex-direction: column; align-items: flex-start; }
+.pg-hero[data-align="center"] .pg-hero__copy { align-items: center; margin-inline: auto; max-width: 880px; text-align: center; }
+.pg-h1 {
+  margin-top: 22px; max-width: 18ch;
+  font-family: var(--font-sans); font-size: clamp(2.5rem, 1.2rem + 4vw, 4.5rem); font-weight: 600; line-height: 1; letter-spacing: -0.05em;
+  color: var(--foreground); text-wrap: balance;
+}
+.pg-hero[data-align="center"] .pg-h1 { max-width: 20ch; }
+.pg-hero__grid--wide .pg-h1 { font-size: clamp(2.5rem, 1.4rem + 3vw, 3.75rem); }
+.pg-dim, .pg-h1 .mk-gradient-text { color: color-mix(in oklab, var(--foreground) 52%, transparent); }
+:root:not(.dark) :is(.pg-dim, .pg-h1 .mk-gradient-text) { color: color-mix(in oklab, var(--foreground) 46%, transparent); }
+.pg-lede { margin-top: 22px; max-width: 620px; font-size: clamp(1.0625rem, 0.95rem + 0.45vw, 1.25rem); line-height: 1.5; letter-spacing: -0.012em; color: var(--muted-foreground); text-wrap: pretty; }
+.pg-lede em { font-style: normal; color: var(--foreground); }
+.pg-ctas { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 32px; }
+.pg-cta { box-shadow: 0 0 0 1px color-mix(in oklab, var(--foreground) 10%, transparent), 0 8px 30px -8px color-mix(in oklab, var(--foreground) 35%, transparent); }
+:root:not(.dark) .pg-cta { box-shadow: 0 1px 2px color-mix(in oklab, var(--foreground) 20%, transparent), 0 10px 24px -12px color-mix(in oklab, var(--foreground) 45%, transparent); }
+.pg-cta svg { transition: translate var(--dur-2) var(--ease-out); }
+.pg-cta:hover svg { translate: 2px 0; }
+.pg-glass { background: color-mix(in oklab, var(--background) 55%, transparent); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); }
+@media (width < 40rem) {
+  .pg-ctas { width: 100%; flex-direction: column; }
+  .pg-ctas .mkb { width: 100%; justify-content: center; }
+}
+/* Phones: the subject sits behind the copy, so the scrim deepens. */
+@media (width < 48rem) {
+  .pg-hero .space-backdrop[data-variant="banner"] .space-backdrop__scrim,
+  :root:not(.dark) .pg-hero .space-backdrop[data-variant="banner"] .space-backdrop__scrim {
+    background: linear-gradient(to bottom, color-mix(in oklab, var(--background) 78%, transparent), color-mix(in oklab, var(--background) 55%, transparent) 45%, var(--background) 100%);
+  }
+}
+
+/* Hero meta list (editorial pages): a glass panel of label / value pairs. */
+.pg-meta { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1px; overflow: hidden; border: 1px solid var(--border); border-radius: 12px; background: var(--border); }
+.pg-meta > div { padding: 16px 18px; background: color-mix(in oklab, var(--background) 82%, transparent); -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px); }
+@media (width >= 64rem) { .pg-meta { grid-template-columns: minmax(0, 1fr); } }
+.pg-meta dt { font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--g-dim); }
+.pg-meta dd { margin-top: 6px; font-size: 14px; font-weight: 500; color: var(--foreground); }
+
+/* Hero facts: big numbers in a hairline strip under the lede. */
+.pg-facts { display: flex; flex-wrap: wrap; gap: 0; margin-top: 36px; border: 1px solid var(--border); border-radius: 12px; overflow: hidden; background: color-mix(in oklab, var(--background) 70%, transparent); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); }
+.pg-facts > div { min-width: 120px; flex: 1; padding: 14px 20px; }
+.pg-facts > div + div { border-left: 1px solid var(--border); }
+.pg-facts dt { font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--g-dim); }
+.pg-facts dd { margin-top: 4px; font-size: 26px; font-weight: 600; line-height: 1.1; letter-spacing: -0.04em; color: var(--foreground); font-variant-numeric: proportional-nums lining-nums; }
+.pg-facts dd small { margin-left: 4px; font-size: 13px; font-weight: 400; letter-spacing: 0; color: var(--g-dim); }
+
+/* A picture in the hero (product captures): hairline frame, deep soft shadow. */
+.pg-shot { position: relative; overflow: hidden; border: 1px solid var(--border-strong); border-radius: 14px; background: var(--background); box-shadow: 0 0 0 1px color-mix(in oklab, var(--foreground) 4%, transparent), 0 40px 120px -40px color-mix(in oklab, var(--foreground) 22%, transparent), 0 24px 60px -30px var(--background); }
+:root:not(.dark) .pg-shot { box-shadow: 0 1px 2px color-mix(in oklab, var(--foreground) 6%, transparent), 0 24px 48px -20px color-mix(in oklab, var(--foreground) 18%, transparent), 0 60px 120px -40px color-mix(in oklab, var(--foreground) 22%, transparent); }
+.pg-shot__bar { display: flex; height: 38px; align-items: center; gap: 10px; padding: 0 14px; border-bottom: 1px solid var(--border); background: var(--pg-panel); font-family: var(--font-mono); font-size: 11.5px; color: var(--muted-foreground); }
+.pg-shot__bar > span:first-child { display: flex; gap: 6px; }
+.pg-shot__bar > span:first-child i { width: 9px; height: 9px; border-radius: 50%; background: var(--border-strong); }
+.pg-shot__bar > b { flex: 1; overflow: hidden; text-align: center; text-overflow: ellipsis; white-space: nowrap; font-weight: 400; }
+.pg-shot img { display: block; width: 100%; height: auto; }
+.pg-cap { display: flex; align-items: center; gap: 12px; padding: 14px 2px 0; font-size: 12.5px; color: var(--muted-foreground); }
+.pg-cap__tag { flex-shrink: 0; padding: 2px 8px; border: 1px solid var(--border-strong); border-radius: 999px; font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.04em; text-transform: uppercase; color: var(--foreground); }
+
+/* --- Frame rows ----------------------------------------------------------- */
+.pg-frame { border-bottom: 0; }
+.pg-row { position: relative; border-bottom: 1px solid var(--border); }
+.pg-frame > .pg-row:last-of-type { border-bottom: 0; }
+.pg-pad { padding: 48px var(--g-pad); }
+.pg-pad-b { padding: 0 var(--g-pad) 56px; }
+.pg-sh { display: grid; grid-template-columns: 1fr 1fr; align-items: end; gap: 48px; padding: 72px var(--g-pad) 40px; }
+.pg-sh--solo { grid-template-columns: 1fr; }
+.pg-sh__p { justify-self: end; max-width: 440px; font-size: 16px; color: var(--muted-foreground); text-wrap: pretty; }
+.pg-h2 { margin-top: 14px; font-family: var(--font-sans); font-size: clamp(2rem, 1.3rem + 2vw, 3rem); font-weight: 600; line-height: 1.04; letter-spacing: -0.045em; color: var(--foreground); text-wrap: balance; }
+.pg-h2 span { color: var(--g-dim); }
+.pg-link { color: var(--foreground); text-decoration: underline; text-decoration-color: var(--border-strong); text-underline-offset: 3px; transition: text-decoration-color var(--dur-2); }
+.pg-link:hover { text-decoration-color: var(--foreground); }
+@media (width < 64rem) {
+  .pg-sh { grid-template-columns: 1fr; align-items: start; gap: 20px; padding-top: 56px; }
+  .pg-sh__p { justify-self: start; }
+}
+
+/* Hairline cell grids: 1px gaps over the border colour. */
+.pg-cells { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1px; border-top: 1px solid var(--border); background: var(--border); }
+.pg-cells > * { position: relative; min-width: 0; padding: 32px; background: var(--background); transition: background-color var(--dur-3); }
+.pg-cells--hover > *:hover { background: color-mix(in oklab, var(--pg-panel) 70%, var(--background)); }
+.pg-cells--2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.pg-cells--4 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.pg-cells--5 { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+/* Never leave an empty slot showing the hairline colour: a lone last cell spans the row. */
+@media (width < 64rem) {
+  .pg-cells, .pg-cells--4, .pg-cells--5 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .pg-cells > :last-child:nth-child(odd) { grid-column: 1 / -1; }
+}
+@media (width < 40rem) { .pg-cells, .pg-cells--2, .pg-cells--4, .pg-cells--5 { grid-template-columns: 1fr; } .pg-cells > * { padding: 24px var(--g-pad); } }
+.pg-cell__n { font-family: var(--font-mono); font-size: 12px; color: var(--g-dim); }
+.pg-cell__h { display: flex; align-items: center; gap: 10px; font-size: 16px; font-weight: 600; letter-spacing: -0.015em; color: var(--foreground); }
+.pg-cell__h svg { flex-shrink: 0; color: var(--g-dim); }
+.pg-cell__p { margin-top: 8px; font-size: 14px; line-height: 1.55; color: var(--muted-foreground); text-wrap: pretty; }
+.pg-cell__link { display: inline-flex; align-items: center; gap: 6px; border-radius: 4px; }
+.pg-cell__link::after { content: ""; position: absolute; inset: 0; }
+.pg-cell__link svg { opacity: 0; translate: -2px 2px; transition: opacity var(--dur-2), translate var(--dur-2); }
+.pg-cell__link:is(:hover, :focus-visible) svg { opacity: 0.7; translate: 0 0; }
+
+/* Two-column row: sticky head on the left, content on the right, hairline between. */
+.pg-split { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); }
+.pg-split > :first-child { padding: 72px var(--g-pad); border-right: 1px solid var(--border); }
+.pg-split > :nth-child(2) { padding: 56px var(--g-pad) 64px; }
+.pg-split__sticky { position: sticky; top: 96px; }
+@media (width < 64rem) {
+  .pg-split { grid-template-columns: 1fr; }
+  .pg-split > :first-child { padding-bottom: 0; border-right: 0; }
+  .pg-split > :nth-child(2) { padding-top: 32px; }
+  .pg-split__sticky { position: static; }
+}
+@media (width < 40rem) { .pg-split > :first-child { padding-top: 56px; } }
+
+/* Pills (categories, filters). */
+.pg-pills { display: flex; flex-wrap: wrap; gap: 8px; }
+.pg-pills a, .pg-pills span { display: inline-flex; align-items: center; gap: 8px; height: 30px; padding: 0 12px; border: 1px solid var(--border); border-radius: 999px; font-size: 13px; color: var(--muted-foreground); transition: color var(--dur-2), border-color var(--dur-2), background-color var(--dur-2); }
+.pg-pills a:hover { border-color: var(--border-strong); background: var(--pg-panel); color: var(--foreground); }
+.pg-pills a[aria-current="page"] { border-color: var(--foreground); background: var(--foreground); color: var(--background); }
+.pg-pills a small { font-family: var(--font-mono); font-size: 11px; color: var(--g-dim); }
+.pg-pills a[aria-current="page"] small { color: color-mix(in oklab, var(--background) 65%, transparent); }
+
+/* --- Closing band --------------------------------------------------------- */
+.pg-final { position: relative; isolation: isolate; overflow: clip; border-top: 1px solid var(--border); background: var(--background); }
+.pg-final .space-backdrop[data-variant="banner"] .space-backdrop__scrim {
+  background:
+    radial-gradient(ellipse 50% 62% at 50% 50%, color-mix(in oklab, var(--background) 74%, transparent), transparent 100%),
+    linear-gradient(to bottom, var(--background), transparent 30%, transparent 75%, color-mix(in oklab, var(--background) 80%, transparent));
+}
+:root:not(.dark) .pg-final .space-backdrop[data-variant="banner"] .space-backdrop__scrim {
+  background:
+    radial-gradient(ellipse 52% 64% at 50% 50%, color-mix(in oklab, var(--background) 88%, transparent), transparent 100%),
+    linear-gradient(to bottom, var(--background), transparent 30%, transparent 75%, color-mix(in oklab, var(--background) 70%, transparent));
+}
+.pg-final__inner { position: relative; z-index: 2; display: flex; flex-direction: column; align-items: center; padding: 120px 20px 128px; text-align: center; }
+.pg-final__h { margin: 0; font-size: clamp(2.25rem, 1rem + 4vw, 4rem); font-weight: 600; line-height: 1.02; letter-spacing: -0.055em; color: var(--foreground); text-wrap: balance; }
+.pg-final__h span { color: color-mix(in oklab, var(--foreground) 52%, transparent); }
+.pg-final__lede { margin-inline: auto; text-align: center; }
+.pg-final .pg-ctas { justify-content: center; }
+@media (width < 40rem) { .pg-final__inner { padding: 88px 12px 96px; } }
+
+/* Hairline FAQ inside a split row. */
+.pg-faq > details > div { padding-right: 24px; }
+
+/* Plan cells (pricing-table-client.tsx): four hairline cells; the recommended plan sits on the panel with a 2px ink rule on top. */
+.pg-plans { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 1px; border-top: 1px solid var(--border); background: var(--border); }
+.pg-plans--3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.pg-plan { position: relative; min-width: 0; padding: 32px; background: var(--background); transition: background-color var(--dur-3); }
+.pg-plan:hover { background: color-mix(in oklab, var(--pg-panel) 60%, var(--background)); }
+.pg-plan[data-highlight] { background: var(--pg-panel); }
+.pg-plan[data-highlight]::before { content: ""; position: absolute; left: 0; right: 0; top: -1px; height: 2px; background: var(--foreground); }
+.pg-plan[data-fit] { box-shadow: inset 0 0 0 1px var(--foreground); }
+@media (width < 80rem) { .pg-plans { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (width < 40rem) { .pg-plans, .pg-plans--3 { grid-template-columns: 1fr; } .pg-plan { padding: 28px var(--g-pad); } }
+.pg-cells--flush { border-top: 0; }
+@media (width < 40rem) {
+  .pg-facts { flex-wrap: nowrap; }
+  .pg-facts > div { min-width: 0; padding: 12px 14px; }
+  .pg-facts dd { font-size: 22px; }
 }

@@ -2,11 +2,10 @@
 
 import Link from "next/link";
 import * as React from "react";
-import { ArrowRight, Check, Sparkles } from "lucide-react";
+import { ArrowRight, Check } from "lucide-react";
 import type { Currency } from "@/db/schema";
 import { formatPrice, type PlanPrice } from "@/config/plans";
 import { DEFAULT_USAGE, FINDER_RANGES, explainPlan, maxAnnualSavingPercent, type Usage, type UsageKey } from "@/content/marketing/plan-finder";
-import { buttonClasses } from "@/components/ui/button";
 import { Odometer } from "@/components/motion/odometer";
 import { GlideIndicator, useGlide } from "@/components/motion/glide";
 import { cn } from "@/lib/utils";
@@ -54,10 +53,10 @@ function Toggle<T extends string>({
   return (
     <div className="inline-flex items-center gap-2.5">
       {/* Phones: the label is for screen readers only, so both toggles fit on one centred row. */}
-      <span id={id} className="text-label text-muted-foreground max-sm:sr-only">
+      <span id={id} className="font-mono text-[11px] uppercase tracking-[0.06em] text-(--g-dim) max-sm:sr-only">
         {label}
       </span>
-      <div ref={group} role="radiogroup" aria-labelledby={id} onKeyDown={onKey} className="relative inline-flex rounded-full border border-border bg-surface/80 p-1 shadow-[inset_0_1px_0_var(--hairline)] backdrop-blur">
+      <div ref={group} role="radiogroup" aria-labelledby={id} onKeyDown={onKey} className="relative inline-flex rounded-full border border-border bg-background p-1">
         <GlideIndicator ref={pill} className="inset-y-1 rounded-full" />
         {options.map((o) => (
           <button
@@ -72,7 +71,7 @@ function Toggle<T extends string>({
             className={cn("relative z-[1] inline-flex h-8 items-center gap-1.5 rounded-full px-3.5 text-[13.5px] font-medium transition-colors duration-200", value === o.value ? "text-foreground" : "text-muted-foreground hover:text-foreground")}
           >
             {o.label}
-            {o.hint ? <span className="rounded-full bg-success/12 px-1.5 py-px text-[11px] font-semibold text-success">{o.hint}</span> : null}
+            {o.hint ? <span className="rounded-full border border-border-strong px-1.5 py-px font-mono text-[10.5px] font-normal text-foreground">{o.hint}</span> : null}
           </button>
         ))}
       </div>
@@ -168,12 +167,12 @@ function PlanCard({ p, prev, currency, interval, compact, fit }: { p: PricingPla
   const line = p.prices ? priceLine(p.prices, currency, interval) : null;
   const extras = p.features.filter((f) => !isLimitLine(f));
   return (
-    <div className="relative flex h-full flex-col p-6 sm:p-7">
-      <div className="relative flex items-center justify-between gap-2">
-        <h3 className="text-[17px] font-semibold tracking-[-0.01em]">{p.name}</h3>
-        {p.highlight ? <span className="sr-only">Recommended</span> : null}
+    <div className="relative flex h-full flex-col">
+      <div className="relative flex min-h-[22px] items-center justify-between gap-2">
+        <h3 className={cn("font-mono text-[12px] font-normal uppercase tracking-[0.06em]", p.highlight ? "text-foreground" : "text-muted-foreground")}>{p.name}</h3>
+        {p.highlight ? <span className="rounded-full bg-foreground px-2 py-px text-[11px] font-medium text-background">Recommended</span> : null}
       </div>
-      <p className="relative mt-1.5 min-h-[2.75rem] text-[13.5px] leading-snug text-muted-foreground">{p.tagline}</p>
+      <p className="relative mt-3 min-h-[2.75rem] text-[14px] leading-snug text-foreground/80">{p.tagline}</p>
       {/* Fixed height for the price and its note, so every card's button (and the meters under it)
           sits on one line for every currency and interval: the number is sized from the card width
           and the longest price in the row (`--price-em`, set on the list), the unit never splits
@@ -182,8 +181,8 @@ function PlanCard({ p, prev, currency, interval, compact, fit }: { p: PricingPla
         {line ? (
           <>
             <p className="flex flex-wrap items-baseline gap-x-1.5">
-              <PriceRoll minor={line.perMonth} currency={currency} className="mk-price__num font-display font-bold leading-none tracking-[-0.025em] [font-stretch:104%]" />
-              <span className="whitespace-nowrap text-sm text-muted-foreground">/ month</span>
+              <PriceRoll minor={line.perMonth} currency={currency} className="mk-price__num font-semibold leading-none tracking-[-0.045em]" />
+              <span className="whitespace-nowrap text-sm text-(--g-dim)">/ month</span>
             </p>
             <p className="mt-2 min-h-[2.75em] text-[12.5px] leading-snug text-muted-foreground">
               {line.perMonth === 0
@@ -195,20 +194,20 @@ function PlanCard({ p, prev, currency, interval, compact, fit }: { p: PricingPla
           </>
         ) : (
           <>
-            <p data-custom="" className="mk-price__num mk-num font-display font-bold leading-none tracking-[-0.025em] [font-stretch:104%]">
+            <p data-custom="" className="mk-price__num mk-num font-semibold leading-none tracking-[-0.045em]">
               Custom
             </p>
             <p className="mt-2 min-h-[2.75em] text-[12.5px] leading-snug text-muted-foreground">Priced per agreement; invoice billing available.</p>
           </>
         )}
       </div>
-      <Link href={p.cta.href} data-btn="" className={cn("mk-btn relative mt-6 w-full", p.highlight ? "mk-btn--primary" : "mk-btn--secondary")}>
+      <Link href={p.cta.href} className={cn("mkb mkb--block relative mt-6 h-10", p.highlight && "mkb--solid")} aria-label={`${p.cta.label}: ${p.name} plan`}>
         {p.cta.label}
         {p.highlight ? <ArrowRight className="size-4" aria-hidden="true" /> : null}
       </Link>
       {!compact ? (
         <>
-          <div className="relative mt-7 border-t border-border pt-6">
+          <div className="relative mt-7 border-t border-dashed border-border pt-6">
             <Meters meters={p.meters} />
           </div>
           <div className="relative mt-6">
@@ -216,7 +215,7 @@ function PlanCard({ p, prev, currency, interval, compact, fit }: { p: PricingPla
             <ul className="mt-3 space-y-2 text-[13.5px]">
               {extras.map((f) => (
                 <li key={f} className="flex gap-2.5">
-                  <Check className="mt-0.5 size-4 shrink-0 text-success" aria-hidden="true" />
+                  <Check className="mt-0.5 size-3.5 shrink-0 text-foreground" aria-hidden="true" />
                   <span className="text-foreground/85">{f}</span>
                 </li>
               ))}
@@ -247,14 +246,14 @@ function PlanFinder({ usage, onUsage, currency, interval, plans }: { usage: Usag
   const blockers = ruledOut.filter((r) => r.by.length).map((r) => `${name(r.plan)} allows fewer ${list(r.by.map((k) => USAGE_LABELS[k].unit))}`);
   const reason = blockers.length ? `${blockers.join("; ")}.` : "It is the cheapest plan, and your usage is within its limits.";
   return (
-    <section aria-labelledby={`${id}-title`} className="mk-card mt-14 overflow-hidden rounded-[20px]">
-      <div className="grid grid-cols-1 gap-8 p-6 sm:p-8 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] lg:gap-12">
+    <section aria-labelledby={`${id}-title`} className="border-t border-border bg-(--pg-panel)">
+      <div className="grid grid-cols-1 gap-8 px-(--g-pad) py-10 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] lg:gap-12 lg:py-12">
         <div>
-          <p className="flex items-center gap-2 text-[13px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">
-            <span aria-hidden="true" className="inline-block size-2 rounded-[3px] bg-border-strong" />
-            Plan finder
+          <p className="mk-eyebrow">
+            <i aria-hidden="true" />
+            <span>Plan finder</span>
           </p>
-          <h3 id={`${id}-title`} className="text-display-4 mt-4">
+          <h3 id={`${id}-title`} className="mt-4 text-[clamp(1.5rem,1.2rem+1vw,2rem)] font-semibold leading-tight tracking-[-0.04em]">
             Which plan fits your month?
           </h3>
           <p aria-live="polite" className="mt-4 text-[15px] leading-relaxed text-muted-foreground">
@@ -263,7 +262,7 @@ function PlanFinder({ usage, onUsage, currency, interval, plans }: { usage: Usag
           {/* The answer itself, with its price and button: the plan cards above may be off-screen
               while the sliders move (the card's "Fits your usage" ring is secondary feedback). */}
           {match ? (
-            <div className="mt-5 flex flex-wrap items-center gap-x-4 gap-y-3 rounded-[14px] border border-border bg-background/60 py-3 pl-4 pr-3 shadow-[inset_0_1px_0_var(--hairline)]">
+            <div className="mt-5 flex flex-wrap items-center gap-x-4 gap-y-3 rounded-[10px] border border-border bg-background py-3 pl-4 pr-3">
               <span className="min-w-0 flex-1">
                 <span className="block text-[15px] font-semibold tracking-[-0.01em]">{match.name}</span>
                 <span className="mk-num block text-[13px] text-muted-foreground">
@@ -272,7 +271,7 @@ function PlanFinder({ usage, onUsage, currency, interval, plans }: { usage: Usag
                     : "Custom pricing"}
                 </span>
               </span>
-              <Link href={match.cta.href} className={buttonClasses("primary", "sm", "h-9 px-4")}>
+              <Link href={match.cta.href} className="mkb mkb--solid h-9">
                 {match.cta.label}
                 <ArrowRight className="size-3.5" aria-hidden="true" />
               </Link>
@@ -289,7 +288,7 @@ function PlanFinder({ usage, onUsage, currency, interval, plans }: { usage: Usag
                 <label htmlFor={inputId} className="block text-[13px] text-muted-foreground">
                   {USAGE_LABELS[k].label}
                 </label>
-                <output htmlFor={inputId} className="mk-num mt-1 block font-display text-[2rem] font-bold leading-none tracking-[-0.03em] tabular-nums [font-stretch:104%]">
+                <output htmlFor={inputId} className="mk-num mt-1 block text-[2rem] font-semibold leading-none tracking-[-0.045em]">
                   {fmt(usage[k])}
                 </output>
                 <input
@@ -326,30 +325,22 @@ export function PricingTableClient({ plans, compact, finder = false }: { plans: 
 
   return (
     <div>
-      <PricingToggles currency={currency} interval={interval} onCurrency={setCurrency} onInterval={setInterval} />
-      <ul className={cn("mt-14 grid grid-cols-1 gap-5 text-left", plans.length >= 4 ? "md:grid-cols-2 xl:grid-cols-4" : "md:grid-cols-3")} style={{ "--price-em": widest } as React.CSSProperties}>
+      <div className="flex justify-center px-(--g-pad) py-6">
+        <PricingToggles currency={currency} interval={interval} onCurrency={setCurrency} onInterval={setInterval} />
+      </div>
+      <ul className={cn("pg-plans text-left", plans.length >= 4 ? "pg-plans--4" : "pg-plans--3")} style={{ "--price-em": widest } as React.CSSProperties}>
         {plans.map((p, i) => {
           const fit = fitId === p.id;
           const card = <PlanCard p={p} prev={plans[i - 1]} currency={currency} interval={interval} compact={compact} fit={fit} />;
           return (
-            <li key={p.id} data-reveal style={{ "--reveal-delay": `${i * 70}ms` } as React.CSSProperties} className={cn("relative", p.highlight && "xl:-translate-y-2")}>
+            <li key={p.id} data-reveal style={{ "--reveal-delay": `${i * 70}ms` } as React.CSSProperties} data-highlight={p.highlight || undefined} data-fit={fit || undefined} className="pg-plan">
               {fit ? (
-                <span className="pop-in absolute -top-3 right-5 z-[3] inline-flex items-center gap-1 rounded-full bg-primary px-2.5 py-1 text-[11px] font-semibold text-primary-foreground shadow-md">
+                <span className="pop-in absolute right-4 top-3 z-[3] inline-flex items-center gap-1 rounded-full border border-foreground bg-background px-2 py-px text-[11px] font-medium text-foreground">
                   <Check className="size-3" aria-hidden="true" strokeWidth={3} />
                   Fits your usage
                 </span>
               ) : null}
-              {p.highlight ? (
-                <div className={cn("mk-pro h-full", fit && "ring-2 ring-primary ring-offset-2 ring-offset-background")}>
-                  <span className="mk-pro__badge">
-                    <Sparkles className="size-3" aria-hidden="true" />
-                    Most popular
-                  </span>
-                  <div className="h-full overflow-hidden">{card}</div>
-                </div>
-              ) : (
-                <div className={cn("mk-card mk-card--hover h-full overflow-hidden", fit && "ring-2 ring-primary ring-offset-2 ring-offset-background")}>{card}</div>
-              )}
+              {card}
             </li>
           );
         })}
@@ -366,7 +357,7 @@ export function PricingTableClient({ plans, compact, finder = false }: { plans: 
           }}
         />
       ) : null}
-      <p className="mt-6 text-center text-xs text-muted-foreground">
+      <p className="border-t border-border px-(--g-pad) py-5 text-center font-mono text-[11.5px] text-(--g-dim)">
         Prices exclude applicable taxes (GST in India, sales tax or VAT elsewhere). International cards are billed through Stripe; Indian customers can pay through Razorpay.
       </p>
     </div>

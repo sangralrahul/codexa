@@ -2,11 +2,9 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { ArrowRight, Boxes, FileCode2, Gauge, Layers, Package, Route, Sparkles, Terminal } from "lucide-react";
-import { Breadcrumbs } from "@/components/marketing/breadcrumbs";
 import { CTABand } from "@/components/marketing/cta-band";
-import { Kicker } from "@/components/marketing/page-header";
+import { GridFrame, GridRow, PageHero } from "@/components/marketing/page-grid";
 import { PromptBox } from "@/components/marketing/prompt-box";
-import { SplitHeading } from "@/components/motion/split-heading";
 import { BrowserFrame } from "@/components/frames/browser-frame";
 import { DeviceFrame } from "@/components/frames/device-frame";
 import { FrameCaption } from "@/components/frames/illustration-badge";
@@ -94,40 +92,33 @@ export default async function TemplatePreviewPage({ params, searchParams }: { pa
         })}
       />
 
-      {/* Header */}
-      <header className="container-x relative pt-6 sm:pt-8 lg:pt-10">
-        <Breadcrumbs
-          items={[
-            { name: "Templates", path: "/templates" },
-            { name: category.name, path: `/templates/${category.id}` },
-            { name: t.name, path: `/templates/preview/${t.id}` },
-          ]}
-        />
-        <div className="mt-10 grid gap-8 lg:mt-12 lg:grid-cols-12 lg:items-end">
-          <div className="lg:col-span-8">
-            <Kicker className="mb-5">
-              {category.name} · {FRAMEWORK_SHORT[t.framework]}
-              {featured ? " · Featured" : ""}
-            </Kicker>
-            <SplitHeading as="h1" size="display-2" className="max-w-[16ch]">
-              {t.name}
-            </SplitHeading>
-            <p data-reveal style={{ "--reveal-delay": "200ms" } as React.CSSProperties} className="text-lead mt-5">
-              {t.description}
-            </p>
-          </div>
-          <div data-reveal style={{ "--reveal-delay": "260ms" } as React.CSSProperties} className="flex flex-col gap-3 xs:flex-row lg:col-span-4 lg:hidden">
-            <UseTemplateLink templateId={t.id} signedIn={signedIn} size="lg" label="Use this template" />
-            <a href="#remix" className={buttonClasses("outline", "lg")}>
-              <Sparkles className="size-4" aria-hidden="true" />
-              Remix
-            </a>
-          </div>
+      <PageHero
+        crumbs={[
+          { name: "Templates", path: "/templates" },
+          { name: category.name, path: `/templates/${category.id}` },
+          { name: t.name, path: `/templates/preview/${t.id}` },
+        ]}
+        eyebrow={`${category.name} · ${FRAMEWORK_SHORT[t.framework]}${featured ? " · Featured" : ""}`}
+        title={t.name}
+        lede={t.description}
+        scene="milkyway"
+      >
+        <div className="pg-ctas">
+          <UseTemplateLink templateId={t.id} signedIn={signedIn} size="lg" label="Use this template" />
+          <a href="#remix" className="mkb mkb--lg pg-glass">
+            <Sparkles className="size-4" aria-hidden="true" />
+            Remix
+          </a>
+          <a href="#code" className="mkb mkb--lg mkb--ghost">
+            <FileCode2 className="size-4" aria-hidden="true" />
+            Read the {paths.length} files
+          </a>
         </div>
-      </header>
+      </PageHero>
 
+      <GridFrame>
       {/* Hero: the real screenshot, framed */}
-      <section aria-label={`${t.name} screenshot`} className="container-x relative mt-10 lg:mt-14">
+      <GridRow aria-label={`${t.name} screenshot`} className="px-(--g-pad) py-10 lg:py-12">
         <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_17.5rem] lg:gap-8">
           <figure className="relative min-w-0">
             <div aria-hidden="true" className="pointer-events-none absolute -inset-x-10 -bottom-10 top-16 -z-10 rounded-[48px] bg-[radial-gradient(60%_60%_at_50%_40%,color-mix(in_oklab,var(--glow)_16%,transparent),transparent_70%)] blur-2xl" />
@@ -136,7 +127,7 @@ export default async function TemplatePreviewPage({ params, searchParams }: { pa
                 <RouteList routes={routes} variant="hero" command={t.settings.devCommand || framework.devCommand} className="rounded-none border-0 shadow-none" />
               </div>
             ) : (
-              <BrowserFrame url={frameLabel} className={cn("e4 rounded-[18px] shadow-stage", phoneShot && "hidden lg:mr-24 lg:block")} bodyClassName="bg-white">
+              <BrowserFrame url={frameLabel} className={cn("pg-shot rounded-[14px]", phoneShot && "hidden lg:mr-24 lg:block")} bodyClassName="bg-white">
                 {srcDoc ? (
                   <RunItHere srcDoc={srcDoc} name={t.name}>
                     {shot}
@@ -162,8 +153,11 @@ export default async function TemplatePreviewPage({ params, searchParams }: { pa
           </figure>
 
           {/* Meta rail */}
-          <aside aria-label="Template details" className="e1 h-fit rounded-[18px] p-5 lg:sticky lg:top-24">
-            <p className="text-label text-muted-foreground">Template</p>
+          <aside aria-label="Template details" className="h-fit rounded-[12px] border border-border bg-(--pg-panel) p-5 lg:sticky lg:top-24">
+            <p className="mk-eyebrow">
+              <i aria-hidden="true" />
+              <span>Template</span>
+            </p>
             <dl className="mt-3 divide-y divide-border">
               {meta.map(({ icon: Icon, label, value, mono }) => (
                 <div key={label} className="flex min-w-0 items-center justify-between gap-4 py-2.5 first:pt-0">
@@ -192,26 +186,27 @@ export default async function TemplatePreviewPage({ params, searchParams }: { pa
             ) : null}
           </aside>
         </div>
-      </section>
+      </GridRow>
 
       {/* About */}
       {t.longDescription ? (
-        <section aria-labelledby="about-heading" className="container-x mt-20 lg:mt-24">
+        <GridRow aria-labelledby="about-heading" className="px-(--g-pad) py-14 lg:py-16">
           <div className="grid gap-6 lg:grid-cols-12">
-            <h2 id="about-heading" className="text-label text-muted-foreground lg:col-span-3 lg:pt-2">
-              What you get
+            <h2 id="about-heading" className="mk-eyebrow lg:col-span-3 lg:pt-2">
+              <i aria-hidden="true" />
+              <span>What you get</span>
             </h2>
             <p className="max-w-[62ch] text-pretty text-[1.0625rem] leading-relaxed text-foreground/90 sm:text-[1.25rem] lg:col-span-9">{t.longDescription}</p>
           </div>
-        </section>
+        </GridRow>
       ) : null}
 
       {/* Files: IDE-like split */}
-      <section aria-labelledby="files-heading" className="container-x mt-20 scroll-mt-24 lg:mt-24" id="code">
+      <GridRow aria-labelledby="files-heading" className="scroll-mt-24 px-(--g-pad) py-14 lg:py-16" id="code">
         <div className="flex flex-wrap items-end justify-between gap-4">
           <div>
-            <h2 id="files-heading" className="text-display-4">
-              Files
+            <h2 id="files-heading" className="pg-h2 mt-0">
+              Files, <span>exactly as copied.</span>
             </h2>
             <p className="mt-2 text-[15px] text-muted-foreground">Exactly what is copied into a new project: {paths.length} files, nothing generated.</p>
           </div>
@@ -220,7 +215,7 @@ export default async function TemplatePreviewPage({ params, searchParams }: { pa
             Raw data: <code className="font-mono">GET /api/v1/templates/{t.id}</code>
           </p>
         </div>
-        <div className="e4 mt-6 overflow-hidden !bg-code-bg text-code-fg">
+        <div className="mt-8 overflow-hidden rounded-[12px] border border-border-strong !bg-code-bg text-code-fg">
           <div className="grid lg:grid-cols-[16rem_minmax(0,1fr)]">
             <div className="border-b border-code-border lg:border-b-0 lg:border-r">
               <p className="flex h-10 items-center justify-between border-b border-code-border px-4 font-mono text-[10.5px] uppercase tracking-[0.12em] text-code-muted">
@@ -247,17 +242,19 @@ export default async function TemplatePreviewPage({ params, searchParams }: { pa
             </div>
           </div>
         </div>
-      </section>
+      </GridRow>
 
       {/* Remix */}
-      <section id="remix" aria-labelledby="remix-heading" className="container-x mt-20 scroll-mt-24 lg:mt-28">
-        <div className="relative overflow-hidden rounded-[24px] border border-border bg-surface/60 px-5 py-10 sm:px-10 lg:py-14">
-          <div aria-hidden="true" className="bg-blueprint absolute inset-0 opacity-70" />
+      <GridRow id="remix" aria-labelledby="remix-heading" className="scroll-mt-24 bg-(--pg-panel)">
+        <div className="relative px-(--g-pad) py-14 lg:py-16">
           <div className="relative grid gap-10 lg:grid-cols-12 lg:items-center">
             <div className="lg:col-span-5">
-              <p className="text-label text-muted-foreground">Remix</p>
-              <h2 id="remix-heading" className="text-display-4 mt-3">
-                Remix this template
+              <p className="mk-eyebrow">
+                <i aria-hidden="true" />
+                <span>Remix</span>
+              </p>
+              <h2 id="remix-heading" className="pg-h2">
+                Remix <span>this template.</span>
               </h2>
               <p className="mt-4 max-w-md text-[15px] leading-relaxed text-muted-foreground">
                 Describe what to change and the agent starts from {t.name}&apos;s files. The box is already started for you: finish <span className="text-foreground">“Start from {t.name} and …”</span>
@@ -268,11 +265,11 @@ export default async function TemplatePreviewPage({ params, searchParams }: { pa
             </div>
           </div>
         </div>
-      </section>
+      </GridRow>
 
       {/* Dependencies + how it runs */}
-      <section aria-label="Runtime details" className="container-x mt-20 grid gap-6 lg:mt-24 lg:grid-cols-2">
-        <div className="e1 rounded-[18px] p-6">
+      <GridRow aria-label="Runtime details" crosshairs={false} className="pg-cells pg-cells--2 pg-cells--flush">
+        <div>
           <h2 id="deps-heading" className="text-[17px] font-semibold tracking-tight">
             Dependencies
           </h2>
@@ -290,7 +287,7 @@ export default async function TemplatePreviewPage({ params, searchParams }: { pa
             </ul>
           ) : null}
         </div>
-        <div className="e1 rounded-[18px] p-6">
+        <div>
           <h2 id="run-heading" className="text-[17px] font-semibold tracking-tight">
             How it runs
           </h2>
@@ -316,14 +313,14 @@ export default async function TemplatePreviewPage({ params, searchParams }: { pa
             for settings, snapshots and deployment.
           </p>
         </div>
-      </section>
+      </GridRow>
 
       {/* Related */}
       {related.length ? (
-        <section aria-labelledby="related-heading" className="container-x mt-20 lg:mt-24">
+        <GridRow aria-labelledby="related-heading" className="px-(--g-pad) py-14 lg:py-16">
           <div className="flex items-end justify-between gap-4">
-            <h2 id="related-heading" className="text-display-4">
-              Keep browsing
+            <h2 id="related-heading" className="pg-h2 mt-0">
+              Keep <span>browsing.</span>
             </h2>
             <Link href="/templates" className="link-draw inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground">
               All templates
@@ -335,11 +332,11 @@ export default async function TemplatePreviewPage({ params, searchParams }: { pa
               <TemplateTile key={r.id} template={r} action={<UseTemplateLink templateId={r.id} signedIn={signedIn} />} />
             ))}
           </ul>
-        </section>
+        </GridRow>
       ) : null}
+      </GridFrame>
 
       <CTABand
-        className="mt-10"
         title={`Build on ${t.name}`}
         description="Create a free account, start from this template, and ask the AI agent to turn it into your app."
         primary={{ label: "Use this template", href: signedIn ? `/new-project?template=${t.id}` : `/signup?next=${encodeURIComponent(`/new-project?template=${t.id}`)}` }}

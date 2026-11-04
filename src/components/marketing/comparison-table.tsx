@@ -33,7 +33,8 @@ export function ComparisonTable({
   className?: string;
 }) {
   const hi = (i: number) => i === highlightColumn;
-  const rail = "shadow-[inset_1px_0_0_color-mix(in_oklab,var(--primary)_45%,transparent),inset_-1px_0_0_color-mix(in_oklab,var(--primary)_45%,transparent)]";
+  // The highlighted plan sits on the panel tone, capped with a 2px ink rule (the plan cells' treatment).
+  const rail = "bg-(--pg-panel)";
   return (
     <div className={className}>
       <div className="md:hidden">
@@ -44,7 +45,7 @@ export function ComparisonTable({
           <caption className="sr-only">{caption}</caption>
           <thead>
             <tr>
-              <th scope="col" className="sticky top-[74px] z-[4] w-[28%] border-b border-border bg-background/90 px-4 pb-4 pt-3 text-left align-bottom backdrop-blur-md">
+              <th scope="col" className="sticky top-[64px] z-[4] w-[28%] border-b border-border bg-background/90 pb-4 pl-(--g-pad,1rem) pr-4 pt-4 text-left align-bottom backdrop-blur-md">
                 <span className="sr-only">Feature</span>
               </th>
               {columns.map((c, i) => (
@@ -52,12 +53,12 @@ export function ComparisonTable({
                   scope="col"
                   key={c}
                   className={cn(
-                    "sticky top-[74px] z-[2] border-b border-border bg-background/90 px-4 pb-4 pt-3 text-left align-bottom font-normal backdrop-blur-md",
-                    hi(i) && cn(rail, "rounded-t-[14px] shadow-[inset_1px_0_0_color-mix(in_oklab,var(--primary)_45%,transparent),inset_-1px_0_0_color-mix(in_oklab,var(--primary)_45%,transparent),inset_0_2px_0_var(--primary)]"),
+                    "sticky top-[64px] z-[2] border-b border-l border-border bg-background/90 px-4 pb-4 pt-4 text-left align-bottom font-normal backdrop-blur-md",
+                    hi(i) && "bg-[color-mix(in_oklab,var(--pg-panel)_92%,transparent)] shadow-[inset_0_2px_0_var(--foreground)]",
                   )}
                 >
-                  <span className={cn("block text-[15px] font-semibold tracking-[-0.01em]", hi(i) && "text-foreground")}>{c}</span>
-                  {head?.[i]?.sub ? <span className="mt-0.5 block text-[12.5px] tabular-nums text-muted-foreground">{head[i].sub}</span> : null}
+                  <span className={cn("block font-mono text-[12px] uppercase tracking-[0.06em]", hi(i) ? "text-foreground" : "text-muted-foreground")}>{c}</span>
+                  {head?.[i]?.sub ? <span className="mt-1.5 block text-[15px] font-semibold tracking-[-0.02em] text-foreground">{head[i].sub}</span> : null}
                   {head?.[i]?.href && head[i].cta ? (
                     <Link href={head[i].href!} className={cn("mt-3 inline-flex h-7 items-center whitespace-nowrap rounded-full px-3 text-[12px] font-medium transition-colors", hi(i) ? "bg-foreground text-background hover:opacity-90" : "border border-border text-foreground hover:border-border-strong")}>
                       {head[i].cta}
@@ -70,18 +71,18 @@ export function ComparisonTable({
           {groups.map((g) => (
             <tbody key={g.heading} className="[&[data-collapsed]>tr:not(:first-child)]:hidden">
               <tr>
-                <th scope="colgroup" colSpan={columns.length + 1} className="text-label border-b border-border bg-surface/60 px-4 py-3 text-left text-muted-foreground">
+                <th scope="colgroup" colSpan={columns.length + 1} className="border-b border-border bg-(--pg-panel,var(--surface)) py-3 pl-(--g-pad,1rem) pr-4 text-left font-mono text-[11.5px] font-normal uppercase tracking-[0.06em] text-(--g-dim)">
                   {collapsible ? <GroupToggle label={g.heading} count={g.rows.length} /> : g.heading}
                 </th>
               </tr>
               {g.rows.map((r) => (
                 <tr key={r.label} className="group">
-                  <th scope="row" className="border-b border-border bg-background px-4 py-3.5 text-left align-top font-medium transition-colors group-hover:bg-surface">
+                  <th scope="row" className="border-b border-border bg-background py-3.5 pl-(--g-pad,1rem) pr-4 text-left align-top font-medium transition-colors group-hover:bg-(--pg-panel)">
                     {r.label}
                     {r.hint ? <span className="mt-0.5 block text-xs font-normal text-muted-foreground">{r.hint}</span> : null}
                   </th>
                   {r.values.map((v, i) => (
-                    <td key={i} className={cn("border-b border-border px-4 py-3.5 align-top text-foreground/85 transition-colors group-hover:bg-surface/70", hi(i) && rail)}>
+                    <td key={i} className={cn("border-b border-l border-border px-4 py-3.5 align-top text-foreground/85 transition-colors group-hover:bg-(--pg-panel)", hi(i) && rail)}>
                       <CellValue v={v} />
                     </td>
                   ))}

@@ -3,8 +3,7 @@ import { ArrowRight, ChevronDown } from "lucide-react";
 import { routeMetadata } from "@/lib/seo";
 import { formatDate, getBySection } from "@/lib/content";
 import type { ContentDoc } from "@/lib/content/types";
-import { Breadcrumbs } from "@/components/docs/breadcrumbs";
-import { HubHeader } from "@/components/docs/hub-header";
+import { Crosshairs, GridFrame, PageHero } from "@/components/marketing/page-grid";
 import { NewsletterForm } from "@/components/docs/newsletter-form";
 import { Markdown } from "@/components/content";
 import { ScrollFill } from "@/components/content/scroll-fill";
@@ -93,37 +92,57 @@ export default async function ChangelogPage() {
   const highlights = releaseHighlights(latestItems);
 
   return (
-    <div data-tone="docs" className="container-x pb-20 pt-6 sm:pt-8 lg:pt-10">
-      <Breadcrumbs items={[{ name: "Changelog", path: "/changelog" }]} className="mb-8" />
-      <HubHeader
-        kicker="Changelog"
+    <div data-tone="docs" className="relative overflow-x-clip">
+      <PageHero
+        crumbs={[{ name: "Changelog", path: "/changelog" }]}
+        eyebrow="Changelog"
         title="What shipped,"
         dim="release by release."
-        lead={
+        lede={
           <>
             What each release actually ships, by area. Entries describe implemented behaviour only; planned work lives on the{" "}
-            <Link href="/roadmap" className="link-draw text-foreground">
+            <Link href="/roadmap" className="pg-link">
               roadmap
             </Link>
             .
           </>
         }
-      />
+        scene="milkyway"
+      >
+        {entries.length ? (
+          <dl className="pg-facts">
+            <div>
+              <dt>Latest</dt>
+              <dd>{latestVersion && latestVersion !== "unversioned" ? `v${latestVersion}` : "Updates"}</dd>
+            </div>
+            <div>
+              <dt>Releases</dt>
+              <dd>{versions.size}</dd>
+            </div>
+            <div>
+              <dt>Entries</dt>
+              <dd>{entries.length}</dd>
+            </div>
+          </dl>
+        ) : null}
+      </PageHero>
+      <GridFrame>
+      <Crosshairs />
+      <div className="px-(--g-pad) pb-20 pt-4">
 
       {entries.length === 0 ? (
         <p className="mt-10 rounded-[18px] border border-dashed border-border-strong p-10 text-center text-sm text-muted-foreground">No releases yet.</p>
       ) : (
         <>
           {latestVersion ? (
-            <section aria-labelledby="latest-release" className="e2 relative mt-12 overflow-hidden rounded-[24px] p-6 sm:p-8">
-              <div aria-hidden="true" className="bg-blueprint absolute inset-0 opacity-50 [mask-image:linear-gradient(to_right,black,transparent_70%)]" />
+            <section aria-labelledby="latest-release" className="relative mt-12 overflow-hidden rounded-[12px] border border-border bg-(--pg-panel) p-6 sm:p-8">
               <div className="relative grid gap-8 lg:grid-cols-[minmax(0,0.75fr)_minmax(0,1.25fr)] lg:gap-12">
                 <div className="flex flex-col">
                   <p className="text-label flex items-center gap-2 text-muted-foreground">
-                    <span aria-hidden="true" className="size-1.5 rounded-full bg-signal shadow-[0_0_0_3px_color-mix(in_oklab,var(--signal)_18%,transparent)]" />
+                    <span aria-hidden="true" className="size-1.5 rounded-full bg-success shadow-[0_0_0_3px_color-mix(in_oklab,var(--success)_18%,transparent)]" />
                     Latest release
                   </p>
-                  <h2 id="latest-release" className="mt-4 font-mono text-[clamp(44px,7vw,76px)] font-medium leading-none tracking-[-0.025em]">
+                  <h2 id="latest-release" className="mt-4 text-[clamp(44px,7vw,76px)] font-semibold leading-none tracking-[-0.055em]">
                     {latestVersion === "unversioned" ? "Updates" : `v${latestVersion}`}
                   </h2>
                   <p className="text-meta mt-4 text-muted-foreground">
@@ -146,7 +165,7 @@ export default async function ChangelogPage() {
                         <li key={h.title}>
                           <a
                             href={h.href}
-                            className="group flex h-full flex-col rounded-[14px] border border-border bg-card/80 p-4 transition-[border-color,translate] duration-(--dur-3) ease-out hover:-translate-y-0.5 hover:border-border-strong focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring calm:hover:translate-y-0"
+                            className="group flex h-full flex-col rounded-[10px] border border-border bg-background p-4 transition-[border-color,translate] duration-(--dur-3) ease-out hover:-translate-y-0.5 hover:border-border-strong focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring calm:hover:translate-y-0"
                           >
                             <span className="flex items-center gap-2 text-[14px] font-semibold tracking-[-0.01em]">
                               <span aria-hidden="true" className="size-2 shrink-0 rounded-full" style={{ background: TONES[i % TONES.length] }} />
@@ -180,7 +199,7 @@ export default async function ChangelogPage() {
                     {items.map((e) => (
                       <li key={e.slug} id={e.slug} className="relative scroll-mt-28 pl-9">
                         <span aria-hidden="true" className="absolute left-[3px] top-[22px] size-[9px] rounded-full ring-4 ring-background" style={{ background: tone.get(e.slug) }} />
-                        <article className="rounded-[18px] border border-border bg-card p-5 shadow-[inset_0_1px_0_var(--hairline)] transition-colors duration-(--dur-2) hover:border-border-strong">
+                        <article className="rounded-[10px] border border-border bg-background p-5 transition-colors duration-(--dur-2) hover:border-border-strong">
                           <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
                             <h3 className="text-[17px] font-semibold tracking-[-0.01em]">
                               <Link href={e.href} className="link-draw">
@@ -211,7 +230,7 @@ export default async function ChangelogPage() {
         </>
       )}
 
-      <section aria-labelledby="changelog-subscribe" className="mt-20 grid gap-6 rounded-[22px] border border-border bg-surface/60 p-6 sm:p-8 lg:grid-cols-2 lg:items-center">
+      <section aria-labelledby="changelog-subscribe" className="mt-20 grid gap-6 rounded-[12px] border border-border bg-(--pg-panel) p-6 sm:p-8 lg:grid-cols-2 lg:items-center">
         <div>
           <h2 id="changelog-subscribe" className="text-display-4">
             Get release notes by email
@@ -220,6 +239,8 @@ export default async function ChangelogPage() {
         </div>
         <NewsletterForm source="changelog" />
       </section>
+      </div>
+      </GridFrame>
     </div>
   );
 }

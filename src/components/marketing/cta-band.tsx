@@ -6,7 +6,8 @@ import type { IdeaSource } from "@/lib/client/pending-idea";
 import { site } from "@/config/site";
 import type { Tone } from "@/content/marketing/types";
 import { cn } from "@/lib/utils";
-import { CtaLink, Mesh } from "./premium";
+import { SpaceBackdrop } from "@/components/space/space-backdrop";
+import { Crosshairs } from "./page-grid";
 import { PromptBox } from "./prompt-box";
 
 type Link_ = { label: string; href: string };
@@ -46,7 +47,7 @@ async function PromptSlot({ source }: { source: IdeaSource }) {
 }
 
 /**
- * Closing call to action on a gradient-mesh band.
+ * Closing call to action: the closing band of the home page (a live scene, the frame's rails, a two-tone line).
  * - prompt: the home PromptBox, compact variant (idea passport; `source` says which page sent it).
  * - sales / docs: two actions plus a direct line.
  * - links (default when only title/primary are given): the classic two-button band.
@@ -78,42 +79,56 @@ export function CTABand({
   const desc = description ?? d.description;
   const p = primary ?? d.primary;
   const s = secondary === undefined ? d.secondary : secondary;
+  // A title that ends in a short final sentence ("Describe it. Watch it build.") sets that sentence in the second tone.
+  const split = t.match(/^(.+?[.!?])\s+(\S.*)$/);
   return (
-    <section className={cn("relative isolate overflow-x-clip border-t border-border py-24 lg:py-32", className)}>
-      <Mesh variant="band" />
-      <div className="container-x text-center">
-        <h2 className="mk-h2 mx-auto max-w-[20ch]">{t}</h2>
-        <p className="mk-lead mx-auto mt-5 max-w-[56ch]">{desc}</p>
+    <section aria-label="Get started" className={cn("pg-final", className)} data-space-host>
+      <SpaceBackdrop scene="galaxy" variant="banner" />
+      <div aria-hidden="true" className="pg-hero__rails pg-hero__rails--full" />
+      <div className="pg-final__inner">
+        <h2 className="pg-final__h max-w-[22ch]">
+          {split ? (
+            <>
+              {split[1]}
+              <br />
+              <span>{split[2]}</span>
+            </>
+          ) : (
+            t
+          )}
+        </h2>
+        <p className="pg-lede pg-final__lede max-w-[56ch]">{desc}</p>
         {v === "prompt" ? (
           <>
-            <div className="mx-auto mt-9 max-w-2xl text-left">
+            <div className="mx-auto mt-9 w-full max-w-2xl text-left">
               <PromptSlot source={source} />
             </div>
-            <p className="mt-6 flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-[15px]">
+            <p className="mt-6 flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-[14px]">
               {[p, s].filter((x): x is Link_ => Boolean(x)).map((l) => (
-                <Link key={l.href} href={l.href} className="link-draw inline-flex items-center gap-1 font-semibold text-primary">
-                  {l.label} <ArrowRight className="size-4" aria-hidden="true" />
+                <Link key={l.href} href={l.href} className="pg-link inline-flex items-center gap-1 font-medium">
+                  {l.label} <ArrowRight className="size-3.5" aria-hidden="true" />
                 </Link>
               ))}
             </p>
           </>
         ) : (
           <>
-            <div className="mt-9 flex flex-col items-center justify-center gap-3 xs:flex-row">
-              <CtaLink href={p.href} arrow>
+            <div className="pg-ctas justify-center">
+              <Link href={p.href} className="mkb mkb--solid mkb--lg pg-cta">
                 {p.label}
-              </CtaLink>
+                <ArrowRight className="size-4" aria-hidden="true" />
+              </Link>
               {s ? (
-                <CtaLink href={s.href} variant="secondary">
+                <Link href={s.href} className="mkb mkb--lg pg-glass">
                   {s.label}
-                </CtaLink>
+                </Link>
               ) : null}
             </div>
             {v === "sales" ? (
-              <p className="mt-6 inline-flex items-center gap-2 text-sm text-muted-foreground">
+              <p className="mt-6 inline-flex flex-wrap items-center justify-center gap-2 text-sm text-muted-foreground">
                 <Mail className="size-4" aria-hidden="true" />
                 Or email{" "}
-                <a href={`mailto:${site.company.salesEmail}`} className="link-draw text-foreground">
+                <a href={`mailto:${site.company.salesEmail}`} className="pg-link">
                   {site.company.salesEmail}
                 </a>
               </p>
@@ -125,6 +140,9 @@ export function CTABand({
             ) : null}
           </>
         )}
+      </div>
+      <div aria-hidden="true" className="pg-hero__frame">
+        <Crosshairs corners={["tl", "tr"]} />
       </div>
     </section>
   );

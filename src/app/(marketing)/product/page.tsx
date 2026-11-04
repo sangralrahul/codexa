@@ -1,18 +1,15 @@
 import * as React from "react";
 import Link from "next/link";
-import { ArrowUpRight } from "lucide-react";
+import { ArrowUpRight, Info } from "lucide-react";
 import { routeMetadata } from "@/lib/seo";
 import { HOW_IT_WORKS_STEPS, PLATFORM_FEATURES, PRODUCT_FAQ, AI_KEY_LIMIT } from "@/content/marketing/product";
 import type { IllustrationId } from "@/content/marketing/types";
-import { PageHeader } from "@/components/marketing/page-header";
-import { Section, SectionHeader } from "@/components/marketing/section";
-import { FeatureGrid } from "@/components/marketing/feature-grid";
-import { Steps } from "@/components/marketing/steps";
 import { FAQ } from "@/components/marketing/faq";
 import { CTABand } from "@/components/marketing/cta-band";
-import { VignettePlate } from "@/components/marketing/vignette-window";
-import { CAPTURE_FOR_ILLUSTRATION, CaptureTile, CaptureWindow } from "@/components/marketing/captures";
-import { Alert } from "@/components/ui/misc";
+import { Inline } from "@/components/marketing/inline";
+import { TemplatePreview } from "@/components/templates/template-preview";
+import { CAPTURE_FOR_ILLUSTRATION, CaptureTile, CaptureShot } from "@/components/marketing/captures";
+import { Eyebrow, GridFrame, GridRow, PageHero, RowHead } from "@/components/marketing/page-grid";
 
 export const metadata = routeMetadata("/product");
 
@@ -25,64 +22,122 @@ const pillars: { title: string; href: string; body: string; visual: Illustration
 
 export default function ProductPage() {
   return (
-    <div data-tone="product">
-      <PageHeader
-        variant="product"
+    <div data-tone="product" className="relative overflow-x-clip">
+      <PageHero
         crumbs={[{ name: "Product", path: "/product" }]}
-        kicker="Product"
-        headline="One workspace, prompt to production."
-        mark="prompt to production."
+        eyebrow="Product"
+        title="One workspace,"
+        dim="prompt to production."
         lede="Prompt-to-app generation, a real editor, isolated runtimes, databases, GitHub and deployment in one place. Built so the generated code stays yours."
         actions={[
           { label: "Start building", href: "/signup" },
           { label: "See how it works", href: "/how-it-works" },
         ]}
-        visual={<CaptureWindow id="agent" priority />}
+        scene="rings"
+        aside={<CaptureShot id="agent" priority />}
+        asideWide
       />
 
-      <Section size="lg">
-        <SectionHeader index="01" eyebrow="The loop" title="Four things Codexa does." description="Every project moves through the same loop. Enter at any point: a prompt, a template, or an imported GitHub repository. Pictures are captured from the app; the preview tile is a labelled illustration." />
-        {/* From md each pair of tiles shares two rows (subgrid): the illustrations in a row are one height and
-            the captions start on one line, so no tile is left with an empty band. */}
-        <ul data-spotlight="grid" className="mt-12 grid grid-cols-1 gap-4 md:grid-cols-2">
-          {pillars.map((p, i) => (
-            <li key={p.title} data-reveal data-spotlight-tile style={{ "--reveal-delay": `${(i % 2) * 90}ms` } as React.CSSProperties} className="relative flex flex-col overflow-hidden rounded-[20px] border border-border bg-card p-3 shadow-[inset_0_1px_0_var(--hairline)] md:row-span-2 md:grid md:grid-rows-subgrid md:gap-0">
-              {CAPTURE_FOR_ILLUSTRATION[p.visual] ? <CaptureTile id={CAPTURE_FOR_ILLUSTRATION[p.visual]!} className="rounded-[14px]" /> : <VignettePlate id={p.visual} className="border-0 bg-surface/70" />}
-              <div className="flex items-start justify-between gap-4 px-3 pb-3 pt-5">
-                <div>
-                  <p className="text-label text-signal-ink">{String(i + 1).padStart(2, "0")}</p>
-                  <h3 className="text-display-4 mt-2">{p.title}</h3>
-                  <p className="mt-2 max-w-md text-[15px] leading-relaxed text-foreground/75">{p.body}</p>
-                </div>
-                <Link href={p.href} className="group mt-1 inline-flex shrink-0 items-center gap-1 rounded-full border border-border px-3 py-1.5 text-[13px] font-medium transition-colors hover:border-border-strong">
-                  {p.label}
-                  <ArrowUpRight className="size-3.5 transition-transform duration-300 group-hover:-translate-y-0.5 group-hover:translate-x-0.5" aria-hidden="true" />
-                </Link>
-              </div>
-            </li>
-          ))}
-        </ul>
-      </Section>
+      <GridFrame>
+        <GridRow aria-labelledby="loop-title">
+          <RowHead id="loop-title" index="01" label="The loop" title="Four things Codexa does." dim="Enter at any point.">
+            <p>Every project moves through the same loop: a prompt, a template, or an imported GitHub repository. Pictures are captured from the app; the preview tile is a starter screenshot.</p>
+          </RowHead>
+          <ul className="pg-cells pg-cells--2 pg-cells--hover">
+            {pillars.map((p, i) => {
+              const capture = CAPTURE_FOR_ILLUSTRATION[p.visual];
+              return (
+                <li key={p.title} className="flex flex-col gap-7">
+                  <div className="flex items-start justify-between gap-4">
+                    <div>
+                      <h3 className="pg-cell__h text-[20px]">
+                        <Link href={p.href} className="pg-cell__link">
+                          {p.title}
+                          <ArrowUpRight className="size-4" aria-hidden="true" />
+                        </Link>
+                      </h3>
+                      <p className="pg-cell__p max-w-md">{p.body}</p>
+                    </div>
+                    <span className="pg-cell__n shrink-0">{String(i + 1).padStart(2, "0")}</span>
+                  </div>
+                  <div className="mt-auto">
+                    {capture ? <CaptureTile id={capture} className="rounded-[10px]" /> : <TemplatePreview id="vite-react-ops-dashboard" category="dashboards" alt="The Ops dashboard starter, as its preview shows it" className="aspect-[16/10] rounded-[10px] shadow-none" imgClassName="h-full w-full object-cover object-top" />}
+                    <p className="mt-3 font-mono text-[11px] uppercase tracking-[0.06em] text-(--g-dim)">{capture ? "Captured from the app" : "Starter screenshot"} · {p.label}</p>
+                  </div>
+                </li>
+              );
+            })}
+          </ul>
+        </GridRow>
 
-      <Section size="sm" className="border-t border-border/60">
-        <SectionHeader index="02" eyebrow="How the agent works" title="Plan, generate, validate, run and ship." />
-        <Steps steps={HOW_IT_WORKS_STEPS} className="mt-12" />
-        <Alert variant="info" live={false} title="Requires an AI provider" className="mt-8 max-w-3xl">
-          {AI_KEY_LIMIT}
-        </Alert>
-      </Section>
+        <GridRow aria-labelledby="agent-title">
+          <RowHead id="agent-title" index="02" label="How the agent works" title="Plan, generate, validate," dim="run and ship.">
+            <p>Each run follows the same steps, and every tool call is shown in the agent panel as it happens.</p>
+          </RowHead>
+          <ol className="pg-cells pg-cells--5">
+            {HOW_IT_WORKS_STEPS.map((s, i) => (
+              <li key={s.title}>
+                <p className="pg-cell__n">{String(i + 1).padStart(2, "0")}</p>
+                <h3 className="pg-cell__h mt-6">
+                  <span className="sr-only">Step {i + 1}: </span>
+                  {s.title}
+                </h3>
+                <p className="pg-cell__p">
+                  <Inline text={s.description} />
+                </p>
+              </li>
+            ))}
+          </ol>
+          <p className="flex items-start gap-2.5 border-t border-border px-(--g-pad) py-5 text-[13.5px] text-muted-foreground">
+            <Info className="mt-0.5 size-4 shrink-0 text-foreground" aria-hidden="true" />
+            <span>
+              <span className="font-medium text-foreground">Requires an AI provider.</span> {AI_KEY_LIMIT}
+            </span>
+          </p>
+        </GridRow>
 
-      <Section size="sm" className="border-t border-border/60">
-        <SectionHeader index="03" eyebrow="Everything included" title="The rest of the toolbox." />
-        <FeatureGrid features={PLATFORM_FEATURES} columns={3} className="mt-10" />
-      </Section>
+        <GridRow aria-labelledby="toolbox-title">
+          <RowHead id="toolbox-title" index="03" label="Everything included" title="The rest" dim="of the toolbox." />
+          <ul className="pg-cells pg-cells--hover">
+            {PLATFORM_FEATURES.map((f) => {
+              const Icon = f.icon;
+              return (
+                <li key={f.title}>
+                  <h3 className="pg-cell__h">
+                    {Icon ? <Icon className="size-4" aria-hidden="true" /> : null}
+                    {f.href ? (
+                      <Link href={f.href} className="pg-cell__link">
+                        {f.title}
+                        <ArrowUpRight className="size-3.5" aria-hidden="true" />
+                      </Link>
+                    ) : (
+                      f.title
+                    )}
+                  </h3>
+                  <p className="pg-cell__p">
+                    <Inline text={f.description} />
+                  </p>
+                </li>
+              );
+            })}
+          </ul>
+        </GridRow>
 
-      <Section size="sm" className="border-t border-border/60">
-        <div className="grid grid-cols-1 gap-10 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] lg:gap-14">
-          <SectionHeader index="04" eyebrow="FAQ" title="Questions, answered." description="Ownership, stacks, AI configuration, where code runs, and what is not shipped yet." />
-          <FAQ items={PRODUCT_FAQ} />
-        </div>
-      </Section>
+        <GridRow aria-labelledby="faq-title" className="pg-split">
+          <div>
+            <div className="pg-split__sticky">
+              <Eyebrow index="04">FAQ</Eyebrow>
+              <h2 id="faq-title" className="pg-h2">
+                Questions,
+                <br />
+                <span>answered.</span>
+              </h2>
+              <p className="mt-5 max-w-md text-[15px] text-muted-foreground">Ownership, stacks, AI configuration, where code runs, and what is not shipped yet.</p>
+            </div>
+          </div>
+          <FAQ items={PRODUCT_FAQ} className="pg-faq" />
+        </GridRow>
+      </GridFrame>
 
       <CTABand variant="prompt" />
     </div>

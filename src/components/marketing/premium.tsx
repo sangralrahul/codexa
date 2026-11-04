@@ -15,10 +15,17 @@ export function Mesh({ className, variant = "hero" }: { className?: string; vari
   return <div aria-hidden="true" className={cn("mk-mesh", variant === "soft" && "mk-mesh--soft", variant === "band" && "mk-mesh--band", variant === "glow" && "mk-mesh--glow", className)} />;
 }
 
-/** Headlines are plain white: `phrase` is accepted for existing callers and rendered as ordinary text. */
+/** Two-tone headline (the home page's style): `phrase`, when it occurs in `text`, is set in the dimmed second tone. */
 export function GradientText({ text, phrase }: { text: string; phrase?: string }) {
-  void phrase;
-  return <>{text}</>;
+  if (!phrase || !text.includes(phrase)) return <>{text}</>;
+  const i = text.indexOf(phrase);
+  return (
+    <>
+      {text.slice(0, i)}
+      <span className="mk-gradient-text">{phrase}</span>
+      {text.slice(i + phrase.length)}
+    </>
+  );
 }
 
 /** Eyebrow pill above a hero headline: an optional gradient tag, the text, and an arrow when it links somewhere. */
@@ -95,12 +102,12 @@ export function BrowserWindow({ url, children, glow = true, className, bodyClass
   );
 }
 
-/** Section kicker: a small grey square plus a short grey label, used above section headings. */
+/** Section kicker: the home page's mono eyebrow (a small ink square and an uppercase mono label). */
 export function Kicker({ children, className, center }: { children: React.ReactNode; className?: string; center?: boolean }) {
   return (
-    <p className={cn("flex items-center gap-2 text-[13px] font-semibold uppercase tracking-[0.08em] text-muted-foreground", (center || className?.includes("justify-center")) && "justify-center", className)}>
-      <span aria-hidden="true" className="inline-block size-2 rounded-[3px] bg-border-strong" />
-      {children}
+    <p className={cn("mk-eyebrow", (center || className?.includes("justify-center")) && "justify-center", className)}>
+      <i aria-hidden="true" />
+      <span>{children}</span>
     </p>
   );
 }

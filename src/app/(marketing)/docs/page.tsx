@@ -5,14 +5,14 @@ import { routeMetadata } from "@/lib/seo";
 import { getNavigation } from "@/lib/content";
 import { sectionSidebar } from "@/lib/content/nav";
 import { ArticleShell } from "@/components/docs/article-layout";
-import { Breadcrumbs } from "@/components/docs/breadcrumbs";
 import { DocIcon, categoryIcon } from "@/components/docs/doc-icons";
 import { DeployArt, PreviewArt, PromptArt } from "@/components/docs/start-art";
 import { CodeBlock } from "@/components/content/code-block";
 import { SearchTrigger } from "@/components/search/search-dialog";
 import { SearchExamples } from "@/components/search/search-examples";
 import { tokenize, type TokenKind } from "@/components/vignettes/tokenize";
-import { CtaLink, IconTile, Kicker, Mesh } from "@/components/marketing/premium";
+import { CtaLink, IconTile } from "@/components/marketing/premium";
+import { PageHero } from "@/components/marketing/page-grid";
 import { CaptureWindow } from "@/components/marketing/captures";
 import { parseTemplateSearch, searchTemplates, summarizeTemplate } from "@/templates";
 
@@ -64,25 +64,23 @@ export default async function DocsIndexPage() {
   const sample = { templates: matches.slice(0, 1).map((t) => ({ id: t.id, name: t.name, category: t.category, framework: t.framework, fileCount: t.fileCount })), total: matches.length };
 
   return (
+    <>
+    <PageHero
+      crumbs={[{ name: "Documentation", path: "/docs" }]}
+      eyebrow="Documentation"
+      title="Build, run and ship"
+      dim="with Codexa."
+      lede="How Codexa works, from your first prompt to a deployed application. Everything here describes the product as it ships today; roadmap items are marked as such."
+      scene="milkyway"
+    >
+      <div className="mt-8 w-full max-w-2xl">
+        <SearchTrigger variant="hero" examples={HERO_EXAMPLES} />
+        <SearchExamples examples={CHIP_EXAMPLES} className="mt-4" />
+      </div>
+    </PageHero>
     <ArticleShell sidebar={sidebar}>
-      <Breadcrumbs items={[{ name: "Documentation", path: "/docs" }]} className="mb-8" />
-
-      {/* Search hero on a soft mesh */}
-      <header className="relative isolate max-w-3xl">
-        <Mesh variant="glow" className="-inset-x-32 -top-24 -bottom-24" />
-        <Kicker className="mb-4">Documentation</Kicker>
-        <h1 className="mk-h1 max-w-[20ch]">
-          Build, run and ship <span className="mk-gradient-text">with Codexa.</span>
-        </h1>
-        <p className="mk-lead mt-5">How Codexa works, from your first prompt to a deployed application. Everything here describes the product as it ships today; roadmap items are marked as such.</p>
-        <div className="mt-8 max-w-2xl">
-          <SearchTrigger variant="hero" examples={HERO_EXAMPLES} />
-          <SearchExamples examples={CHIP_EXAMPLES} className="mt-4" />
-        </div>
-      </header>
-
       {/* The three steps (the "Start here" category below lists every getting-started page) */}
-      <section aria-labelledby="start-heading" className="mt-16">
+      <section aria-labelledby="start-heading">
         <div className="flex items-end justify-between gap-4">
           <h2 id="start-heading" className="mk-h3">
             From prompt to deploy
@@ -208,5 +206,6 @@ export default async function DocsIndexPage() {
         ))}
       </section>
     </ArticleShell>
+    </>
   );
 }

@@ -3,8 +3,7 @@ import Link from "next/link";
 import { ArrowUpRight } from "lucide-react";
 import { routeMetadata } from "@/lib/seo";
 import { FEATURE_GROUPS } from "@/content/marketing/features";
-import { PageHeader } from "@/components/marketing/page-header";
-import { Section } from "@/components/marketing/section";
+import { GridFrame, GridRow, PageHero } from "@/components/marketing/page-grid";
 import { CTABand } from "@/components/marketing/cta-band";
 import { OnThisPage } from "@/components/marketing/on-this-page";
 import { SpecStage, type SpecScene } from "@/components/marketing/spec-stage";
@@ -22,22 +21,22 @@ const planned = FEATURE_GROUPS.reduce((n, g) => n + (g.planned?.length ?? 0), 0)
 /** Hero visual: the spec sheet's own index, counted from the content model (not a marketing number). */
 function SpecIndex() {
   return (
-    <div className="e3 overflow-hidden rounded-[18px]">
+    <div className="overflow-hidden rounded-[12px] border border-border bg-[color-mix(in_oklab,var(--background)_82%,transparent)] backdrop-blur-md">
       <div className="grid grid-cols-2 divide-x divide-border border-b border-border">
         <div className="p-5 sm:p-6">
-          <Odometer value={shipped} className="mk-num font-display text-[clamp(2.5rem,1.8rem+2vw,3.5rem)] font-bold tracking-[-0.025em] [font-stretch:108%]" />
-          <p className="mt-1 text-[13px] text-muted-foreground">features listed as shipped</p>
+          <Odometer value={shipped} className="mk-num text-[clamp(2.25rem,1.8rem+1.6vw,3rem)] font-semibold tracking-[-0.045em]" />
+          <p className="mt-1 font-mono text-[11px] uppercase tracking-[0.06em] text-(--g-dim)">Shipped</p>
         </div>
         <div className="p-5 sm:p-6">
-          <Odometer value={planned} className="mk-num font-display text-[clamp(2.5rem,1.8rem+2vw,3.5rem)] font-bold tracking-[-0.025em] text-foreground-dim [font-stretch:108%]" />
-          <p className="mt-1 text-[13px] text-muted-foreground">on the roadmap, marked as such</p>
+          <Odometer value={planned} className="mk-num text-[clamp(2.25rem,1.8rem+1.6vw,3rem)] font-semibold tracking-[-0.045em] text-(--g-dim)" />
+          <p className="mt-1 font-mono text-[11px] uppercase tracking-[0.06em] text-(--g-dim)">On the roadmap</p>
         </div>
       </div>
       <ol className="divide-y divide-border">
         {FEATURE_GROUPS.map((g, i) => (
           <li key={g.id}>
-            <a href={`#${g.id}`} className="group flex items-center gap-4 px-5 py-3 transition-colors hover:bg-foreground/[0.03] sm:px-6">
-              <span className="font-mono text-[11px] tabular-nums text-signal-ink">{String(i + 1).padStart(2, "0")}</span>
+            <a href={`#${g.id}`} className="group flex items-center gap-4 px-5 py-2.5 transition-colors hover:bg-(--pg-panel) sm:px-6">
+              <span className="font-mono text-[11px] tabular-nums text-(--g-dim)">{String(i + 1).padStart(2, "0")}</span>
               <span className="flex-1 text-[14px] font-medium">{g.navLabel}</span>
               <span className="font-mono text-[11px] tabular-nums text-muted-foreground">{g.features.length}</span>
               <ArrowUpRight className="size-3.5 text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100 group-focus-visible:opacity-100" aria-hidden="true" />
@@ -63,21 +62,22 @@ export default function FeaturesPage() {
   });
   return (
     <div data-tone="product">
-      <PageHeader
-        variant="product"
+      <PageHero
         crumbs={[{ name: "Features", path: "/features" }]}
-        kicker="Features"
-        headline="Everything shipped. Nothing implied."
-        mark="Nothing implied."
+        eyebrow="Features"
+        title="Everything shipped."
+        dim="Nothing implied."
         lede="Everything in Codexa, grouped by what you are doing: generation, the editor, previews, data, history, deployment and teams. Roadmap items are marked as not shipped."
         actions={[
           { label: "Start building", href: "/signup" },
           { label: "Compare plans", href: "/pricing/compare-plans" },
         ]}
-        visual={<SpecIndex />}
+        scene="rings"
+        aside={<SpecIndex />}
       />
 
-      <Section size="md" className="pt-12 sm:pt-16 lg:pt-20">
+      <GridFrame>
+      <GridRow aria-label="Spec sheet" crosshairs={false} className="px-(--g-pad) pb-20 pt-12 sm:pt-16 lg:pt-20">
         <div className="grid grid-cols-[minmax(0,1fr)] gap-x-10 lg:grid-cols-[140px_minmax(0,1fr)_minmax(0,1fr)] xl:grid-cols-[160px_minmax(0,1fr)_minmax(0,1fr)] xl:gap-x-12">
           <aside className="contents lg:sticky lg:top-24 lg:block lg:self-start">
             <OnThisPage items={FEATURE_GROUPS.map((g) => ({ id: g.id, title: g.navLabel }))} label="Spec sheet" rootMargin="-40% 0px -59% 0px" />
@@ -92,7 +92,7 @@ export default function FeaturesPage() {
                     <span aria-hidden="true" className="mk-num mk-chapter-num">
                       {String(i + 1).padStart(2, "0")}
                     </span>
-                    <h2 id={`${g.id}-title`} className="text-display-3 relative">
+                    <h2 id={`${g.id}-title`} className="pg-h2 relative mt-0">
                       {g.title}
                     </h2>
                     <p className="relative mt-4 max-w-xl text-pretty text-muted-foreground">{g.description}</p>
@@ -108,7 +108,7 @@ export default function FeaturesPage() {
                       return (
                         <li key={f.title} data-reveal className="group flex gap-4">
                           {Icon ? (
-                            <span aria-hidden="true" className="inline-flex size-9 shrink-0 items-start justify-center pt-0.5 text-signal-ink">
+                            <span aria-hidden="true" className="inline-flex size-9 shrink-0 items-start justify-center pt-0.5 text-(--g-dim)">
                               <Icon className="size-8" strokeWidth={1.25} />
                             </span>
                           ) : null}
@@ -156,7 +156,7 @@ export default function FeaturesPage() {
                     </Alert>
                   ) : null}
                   {g.planned?.length ? (
-                    <div className="mt-10 rounded-[16px] border border-dashed border-border-strong p-6">
+                    <div className="mt-10 rounded-[12px] border border-dashed border-border-strong bg-(--pg-panel) p-6">
                       <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
                         <h3 className="text-[16px] font-semibold tracking-tight">Not shipped yet</h3>
                         <span className="text-[13px] text-muted-foreground">
@@ -186,7 +186,8 @@ export default function FeaturesPage() {
             <SpecStage scenes={scenes} />
           </div>
         </div>
-      </Section>
+      </GridRow>
+      </GridFrame>
       <CTABand variant="prompt" title="Try the whole list in one project." />
     </div>
   );

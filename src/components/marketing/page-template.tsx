@@ -11,6 +11,7 @@ import { PageHeader, type HeaderMeta } from "./page-header";
 import { OnThisPage } from "./on-this-page";
 import { ReadingProgress } from "./reading-progress";
 import { VignetteWindow } from "./vignette-window";
+import { Crosshairs } from "./page-grid";
 
 function crumbsFor(path: string, explicit?: Crumb[]): Crumb[] {
   if (explicit) return explicit;
@@ -54,7 +55,7 @@ function HelpCard() {
     { label: "Contact", href: "/contact" },
   ];
   return (
-    <div className="e1 rounded-[16px] p-5">
+    <div className="rounded-[12px] border border-border bg-(--pg-panel) p-5">
       <LifeBuoy className="size-4 text-primary" aria-hidden="true" />
       <p className="mt-3 text-[14px] font-semibold">Need a hand?</p>
       <ul className="mt-3 space-y-1.5 text-[13.5px]">
@@ -160,7 +161,9 @@ export function PageTemplate({
           actions={!form && page.cta ? [page.cta.primary, ...(page.cta.secondary ? [page.cta.secondary] : [])] : undefined}
           visual={heroVisual}
         />
-        <div className="container-x pb-16 pt-16 lg:pt-24">
+        <div className="mk-frame pg-frame">
+        <Crosshairs />
+        <div className="px-(--g-pad) pb-16 pt-16 lg:pt-24">
           {page.review ? <ReviewNote kind={page.review} className="mb-12 max-w-3xl" /> : null}
           {landingToc ? (
             <div className="lg:grid lg:grid-cols-[minmax(0,1fr)_12rem] lg:gap-x-12 xl:gap-x-16">
@@ -182,6 +185,7 @@ export function PageTemplate({
           )}
           {!form && children ? <div className="mt-16">{children}</div> : null}
           {after}
+        </div>
         </div>
         {cta}
       </div>
@@ -215,7 +219,9 @@ export function PageTemplate({
     <div data-tone={tone}>
       {legal ? <ReadingProgress /> : null}
       <PageHeader variant="editorial" crumbs={crumbs} kicker={page.eyebrow} headline={headline} mark={page.mark} highlight={page.highlight} lede={page.intro} meta={meta} />
-      <div className="container-x pb-20 pt-12 lg:pt-16">
+      <div className="mk-frame pg-frame">
+      <Crosshairs />
+      <div className="px-(--g-pad) pb-20 pt-12 lg:pt-16">
         {page.review ? <ReviewNote kind={page.review} className="mb-12 max-w-3xl" /> : null}
         {form ? (
           <div className="grid grid-cols-[minmax(0,1fr)] gap-12 lg:grid-cols-[minmax(0,1fr)_minmax(0,28rem)] xl:gap-20">
@@ -240,6 +246,7 @@ export function PageTemplate({
           </div>
         )}
         {after}
+      </div>
       </div>
       {cta}
     </div>

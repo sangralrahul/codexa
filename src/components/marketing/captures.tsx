@@ -116,3 +116,31 @@ export function CaptureTile({ id, className }: { id: CaptureId; className?: stri
     </div>
   );
 }
+
+/**
+ * A capture in the Monochrome Grid window (hairline frame, mono address bar) with a "Captured" tag
+ * and its caption, the way the home page frames its pictures.
+ */
+export function CaptureShot({ id, className, priority, caption = true }: { id: CaptureId; className?: string; priority?: boolean; caption?: boolean }) {
+  const c = CAPTURES[id];
+  return (
+    <figure className={cn("min-w-0", className)}>
+      <div className="pg-shot">
+        <div aria-hidden="true" className="pg-shot__bar">
+          <span>
+            <i />
+            <i />
+            <i />
+          </span>
+          <b>{c.url}</b>
+          <span className="w-[39px]" />
+        </div>
+        <CaptureImage id={id} priority={priority} />
+      </div>
+      <figcaption className={cn("pg-cap", !caption && "sr-only")}>
+        <span className="pg-cap__tag">Captured</span>
+        {c.caption}
+      </figcaption>
+    </figure>
+  );
+}

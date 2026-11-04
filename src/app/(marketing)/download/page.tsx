@@ -2,12 +2,19 @@ import Link from "next/link";
 import { AppWindow, Download, ExternalLink, Globe, MonitorDown, MousePointerClick, RotateCcw, ShieldAlert, WifiOff } from "lucide-react";
 import { routeMetadata } from "@/lib/seo";
 import { DESKTOP } from "@/config/desktop";
-import { PageHeader } from "@/components/marketing/page-header";
-import { Section, SectionHeader } from "@/components/marketing/section";
-import { buttonClasses } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
+import { ThemedImg } from "@/components/marketing/captures";
+import { ClosingBand, Eyebrow, GridFrame, GridRow, PageHero, RowHead } from "@/components/marketing/page-grid";
 
 export const metadata = routeMetadata("/download");
+
+/**
+ * The desktop app's home screen, captured from Codexa for Windows (desktop/) signed in against a
+ * development server at 1440x900, in both themes (public/marketing/desktop-home[-light].webp).
+ */
+const CAPTURE = {
+  src: "/marketing/desktop-home.webp",
+  alt: "Codexa for Windows, signed in: the workspace sidebar with recent projects and usage, the animated 'Let's build' headline over the composer, the get-set-up checklist and the usage panel.",
+};
 
 const FEATURES = [
   { icon: AppWindow, title: "A native app", body: "Its own screens built for Windows: a home with the composer, projects, templates, settings and a Ctrl+K command palette. It doesn't load the website." },
@@ -20,116 +27,165 @@ const FEATURES = [
 
 const STEPS = [
   { title: "Download the installer", body: `Click "Download for Windows". The file is ${DESKTOP.fileName} (about ${DESKTOP.sizeMb} MB).` },
-  {
-    title: "Run it",
-    body: "Open the file. Windows may show \"Windows protected your PC\" because the installer is not code-signed yet: click More info, then Run anyway.",
-  },
+  { title: "Run it", body: 'Open the file. Windows may show "Windows protected your PC" because the installer is not code-signed yet: click More info, then Run anyway.' },
   { title: "Choose where to install", body: "Keep the default folder or pick another one, then click Install. Codexa opens when it finishes." },
+];
+
+const SPECS = [
+  { k: "Version", v: DESKTOP.version },
+  { k: "System", v: DESKTOP.requirements },
+  { k: "Installer", v: <code className="font-mono text-[13px]">{DESKTOP.fileName}</code> },
+  { k: "Download size", v: `About ${DESKTOP.sizeMb} MB` },
+  { k: "Connection", v: "Internet required: projects, AI runs, previews and deployments run on Codexa's servers" },
+  { k: "Account", v: "A Codexa account (the Free plan works)" },
+  { k: "Updates", v: "Automatic, in the background; installed on restart" },
+  { k: "Price", v: "Free" },
 ];
 
 export default function DownloadPage() {
   return (
-    <div data-tone="product">
-      <PageHeader
-        variant="product"
+    <div data-tone="product" className="relative overflow-x-clip">
+      <PageHero
         crumbs={[{ name: "Download", path: "/download" }]}
-        kicker="Desktop app"
-        headline="Codexa for Windows."
-        highlight="for Windows."
+        eyebrow="Desktop app · Windows"
+        title="Codexa"
+        dim="for Windows."
         lede="A native Windows app for building with AI: describe an app, chat with the agent, edit code, watch the live preview and publish, all in one window."
-        visual={
-          <figure className="e3 relative mx-auto flex aspect-[16/10] w-full max-w-[640px] flex-col overflow-hidden rounded-[22px]">
-            <div className="flex items-center gap-2 border-b border-border px-4 py-3">
-              {/* eslint-disable-next-line @next/next/no-img-element -- small static icon */}
-              <img src="/desktop/codexa-app-icon.png" alt="" width={20} height={20} className="rounded-[5px]" />
-              <span className="text-sm font-medium">Codexa</span>
-              <span aria-hidden="true" className="ml-auto flex gap-4 text-muted-foreground">
-                <span className="h-px w-3 translate-y-2 bg-current" />
-                <span className="size-3 border border-current" />
-                <span className="relative size-3 before:absolute before:inset-x-0 before:top-1/2 before:h-px before:-rotate-45 before:bg-current after:absolute after:inset-x-0 after:top-1/2 after:h-px after:rotate-45 after:bg-current" />
-              </span>
-            </div>
-            <div className="grid flex-1 place-items-center bg-[radial-gradient(60%_70%_at_50%_30%,color-mix(in_oklab,var(--glow)_16%,transparent),transparent_70%)] p-8">
-              <div className="flex flex-col items-center text-center">
-                {/* eslint-disable-next-line @next/next/no-img-element -- static app icon */}
-                <img src="/desktop/codexa-app-icon.png" alt="The Codexa app icon" width={112} height={112} className="rounded-[26px] shadow-[0_30px_60px_-20px_rgba(0,0,0,0.5)]" />
-                <p className="mt-6 font-display text-2xl font-bold tracking-[-0.03em]">codexa</p>
-                <p className="mt-1 text-sm text-muted-foreground">Version {DESKTOP.version} · Windows x64</p>
-              </div>
-            </div>
-            <figcaption className="sr-only">Illustration of the Codexa desktop window</figcaption>
-          </figure>
-        }
+        scene="milkyway"
+        align="center"
       >
-        <div data-reveal style={{ "--reveal-delay": "260ms" } as React.CSSProperties} className="mt-8 flex flex-col gap-4">
-          <div className="flex flex-wrap items-center gap-3">
-            <a href={DESKTOP.downloadUrl} download className={cn(buttonClasses("primary", "lg", "group"), "gap-2")}>
-              <Download className="size-4" aria-hidden="true" />
-              Download for Windows
-            </a>
-            <a href={DESKTOP.releasesUrl} className={buttonClasses("outline", "lg")} rel="noopener">
-              All versions
-            </a>
-          </div>
-          <p className="text-sm text-muted-foreground">
-            Version {DESKTOP.version} · {DESKTOP.requirements} · about {DESKTOP.sizeMb} MB · Free
-          </p>
+        <div className="pg-ctas justify-center">
+          <a href={DESKTOP.downloadUrl} download className="mkb mkb--solid mkb--lg pg-cta">
+            <Download className="size-4" aria-hidden="true" />
+            Download for Windows
+          </a>
+          <a href={DESKTOP.releasesUrl} className="mkb mkb--lg pg-glass" rel="noopener">
+            All versions
+          </a>
         </div>
-      </PageHeader>
+        <p className="mt-5 font-mono text-[12px] text-(--g-dim)">
+          v{DESKTOP.version} · {DESKTOP.requirements} · about {DESKTOP.sizeMb} MB · Free
+        </p>
+      </PageHero>
 
-      <Section size="sm">
-        <SectionHeader eyebrow="What you get" title="Codexa, at home on your desktop." />
-        <ul className="mt-10 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          {FEATURES.map((f) => (
-            <li key={f.title} className="e1 rounded-[18px] p-6">
-              <f.icon className="size-5 text-muted-foreground" aria-hidden="true" />
-              <h3 className="mt-4 font-semibold">{f.title}</h3>
-              <p className="mt-1.5 text-sm leading-relaxed text-muted-foreground">{f.body}</p>
-            </li>
-          ))}
-        </ul>
-      </Section>
+      <GridFrame>
+        <GridRow aria-label="The app, captured" className="px-(--g-pad) pb-10 pt-12 lg:pb-12 lg:pt-14">
+          <figure className="mx-auto max-w-[1040px]">
+            <div className="pg-shot">
+              <ThemedImg src={CAPTURE.src} alt={CAPTURE.alt} width={1440} height={900} sizes="(min-width: 1100px) 1040px, 100vw" eager={null} className="block h-auto w-full bg-card" />
+            </div>
+            <figcaption className="pg-cap">
+              <span className="pg-cap__tag">Captured</span>
+              The home screen of Codexa for Windows {DESKTOP.version}, captured from the desktop app.
+            </figcaption>
+          </figure>
+        </GridRow>
 
-      <Section size="sm" className="border-t border-border/60">
-        <div className="grid grid-cols-1 gap-10 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] lg:gap-16">
-          <SectionHeader eyebrow="Install" title="Three steps, about a minute." />
-          <ol className="grid gap-3">
-            {STEPS.map((s, i) => (
-              <li key={s.title} className="e1 flex gap-4 rounded-[18px] p-5">
-                <span className="grid size-8 shrink-0 place-items-center rounded-full bg-foreground text-sm font-semibold text-background">{i + 1}</span>
-                <div>
-                  <h3 className="font-semibold">{s.title}</h3>
-                  <p className="mt-1 text-sm leading-relaxed text-muted-foreground">{s.body}</p>
-                </div>
+        <GridRow aria-labelledby="included-title">
+          <RowHead id="included-title" index="01" label="What's included" title="Codexa," dim="at home on your desktop.">
+            <p>The same workspace as the web, in its own window: the composer, your projects, the agent, the editor, previews and publishing.</p>
+          </RowHead>
+          <ul className="pg-cells pg-cells--hover">
+            {FEATURES.map((f) => (
+              <li key={f.title}>
+                <h3 className="pg-cell__h">
+                  <f.icon className="size-4" aria-hidden="true" />
+                  {f.title}
+                </h3>
+                <p className="pg-cell__p">{f.body}</p>
               </li>
             ))}
-          </ol>
-        </div>
-        <div className="mt-10 grid gap-3 md:grid-cols-2">
-          <div className="e1 flex gap-3 rounded-[18px] p-5 text-sm">
-            <ShieldAlert className="mt-0.5 size-4 shrink-0 text-warning" aria-hidden="true" />
-            <p className="leading-relaxed text-muted-foreground">
-              <span className="font-medium text-foreground">About the Windows warning.</span> The installer is not code-signed yet, so Windows SmartScreen asks before running it. It is
-              built from the open source code in our{" "}
-              <a href="https://github.com/sangralrahul/codexa/tree/main/desktop" className="link-draw text-foreground" rel="noopener">
-                GitHub repository
-              </a>
-              , and each release lists the file&apos;s checksum.
-            </p>
+          </ul>
+        </GridRow>
+
+        <GridRow aria-labelledby="install-title" className="pg-split">
+          <div>
+            <div className="pg-split__sticky">
+              <Eyebrow index="02">Install</Eyebrow>
+              <h2 id="install-title" className="pg-h2">
+                Three steps,
+                <br />
+                <span>about a minute.</span>
+              </h2>
+            </div>
           </div>
-          <div className="e1 flex gap-3 rounded-[18px] p-5 text-sm">
-            <MonitorDown className="mt-0.5 size-4 shrink-0 text-muted-foreground" aria-hidden="true" />
-            <p className="leading-relaxed text-muted-foreground">
-              <span className="font-medium text-foreground">Needs an internet connection.</span> The app&apos;s screens run on your computer; projects, AI runs, previews and
-              deployments happen on Codexa&apos;s servers, as on the web. Not on Windows?{" "}
-              <Link href="/signup" className="link-draw text-foreground">
-                Use Codexa in your browser
-              </Link>
-              .
-            </p>
+          <div>
+            <ol className="divide-y divide-dashed divide-border border-y border-dashed border-border">
+              {STEPS.map((s, i) => (
+                <li key={s.title} className="grid grid-cols-[3rem_minmax(0,1fr)] gap-4 py-6">
+                  <span className="font-mono text-[12px] text-(--g-dim)">{String(i + 1).padStart(2, "0")}</span>
+                  <div>
+                    <h3 className="text-[16px] font-semibold tracking-[-0.015em]">{s.title}</h3>
+                    <p className="mt-1.5 text-[14.5px] leading-relaxed text-muted-foreground">{s.body}</p>
+                  </div>
+                </li>
+              ))}
+            </ol>
+            <div className="mt-8 grid gap-px overflow-hidden rounded-[12px] border border-border bg-border md:grid-cols-2">
+              <div className="flex gap-3 bg-background p-5 text-[14px]">
+                <ShieldAlert className="mt-0.5 size-4 shrink-0 text-warning" aria-hidden="true" />
+                <p className="leading-relaxed text-muted-foreground">
+                  <span className="font-medium text-foreground">About the Windows warning.</span> The installer is not code-signed yet, so Windows SmartScreen asks before running it. It is built from the open source code in our{" "}
+                  <a href="https://github.com/sangralrahul/codexa/tree/main/desktop" className="pg-link" rel="noopener">
+                    GitHub repository
+                  </a>
+                  , and each release lists the file&apos;s checksum.
+                </p>
+              </div>
+              <div className="flex gap-3 bg-background p-5 text-[14px]">
+                <MonitorDown className="mt-0.5 size-4 shrink-0 text-muted-foreground" aria-hidden="true" />
+                <p className="leading-relaxed text-muted-foreground">
+                  <span className="font-medium text-foreground">Needs an internet connection.</span> The app&apos;s screens run on your computer; projects, AI runs, previews and deployments happen on Codexa&apos;s servers, as on the web. Not on Windows?{" "}
+                  <Link href="/signup" className="pg-link">
+                    Use Codexa in your browser
+                  </Link>
+                  .
+                </p>
+              </div>
+            </div>
           </div>
+        </GridRow>
+
+        <GridRow aria-labelledby="req-title" className="pg-split">
+          <div>
+            <div className="pg-split__sticky">
+              <Eyebrow index="03">System requirements</Eyebrow>
+              <h2 id="req-title" className="pg-h2">
+                What you need,
+                <br />
+                <span>and nothing else.</span>
+              </h2>
+              <p className="mt-5 max-w-md text-[15px] text-muted-foreground">
+                Browser requirements for the web app are on{" "}
+                <Link href="/system-requirements" className="pg-link">
+                  system requirements
+                </Link>
+                .
+              </p>
+            </div>
+          </div>
+          <dl className="divide-y divide-border border-y border-border">
+            {SPECS.map((r) => (
+              <div key={r.k} className="grid grid-cols-1 gap-1 py-4 sm:grid-cols-[10rem_minmax(0,1fr)] sm:gap-6">
+                <dt className="font-mono text-[11.5px] uppercase tracking-[0.06em] text-(--g-dim) sm:pt-0.5">{r.k}</dt>
+                <dd className="text-[15px] text-foreground">{r.v}</dd>
+              </div>
+            ))}
+          </dl>
+        </GridRow>
+      </GridFrame>
+
+      <ClosingBand title="Build on your desktop." dim="Or right here in the browser." lede={`Codexa for Windows ${DESKTOP.version} is free with any Codexa account.`}>
+        <div className="pg-ctas justify-center">
+          <a href={DESKTOP.downloadUrl} download className="mkb mkb--solid mkb--lg pg-cta">
+            <Download className="size-4" aria-hidden="true" />
+            Download for Windows
+          </a>
+          <Link href="/signup" className="mkb mkb--lg pg-glass">
+            Start in the browser
+          </Link>
         </div>
-      </Section>
+      </ClosingBand>
     </div>
   );
 }
