@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { Check, Copy, ExternalLink, Gauge, Globe, History, Rocket, RotateCcw, Search, ShieldCheck, TriangleAlert } from "lucide-react";
+import { Check, Copy, ExternalLink, Gauge, Globe, History, Rocket, RotateCcw, Search, ShieldCheck, Smartphone, TriangleAlert } from "lucide-react";
 import { ApiError, deployApi, publishingApi, type Deployment, type DeploymentReport, type Provider } from "../../lib/api";
 import { cn, relativeTime } from "../../lib/util";
 import { Badge, Button, Dialog, Spinner, Tip, toast } from "../../ui";
@@ -21,7 +21,7 @@ const STATUS: Record<Deployment["status"], { label: string; tone: "neutral" | "s
 };
 
 /** Publish to Codexa hosting: start a deployment, follow it to live (or failed), then share the link. */
-export function PublishDialog({ projectId, open, onClose, canPublish, onChanged }: { projectId: string; open: boolean; onClose: () => void; canPublish: boolean; onChanged?: () => void }) {
+export function PublishDialog({ projectId, framework, open, onClose, canPublish, onChanged }: { projectId: string; framework?: string; open: boolean; onClose: () => void; canPublish: boolean; onChanged?: () => void }) {
   const [list, setList] = useState<{ deployments: Deployment[]; providers: Provider[] } | null>(null);
   const [canManage, setCanManage] = useState(false);
   const [report, setReport] = useState<DeploymentReport | null | "none">(null);
@@ -253,6 +253,15 @@ export function PublishDialog({ projectId, open, onClose, canPublish, onChanged 
                 })}
               </ul>
             </section>
+          ) : null}
+
+          {framework === "expo" ? (
+            <p className="flex gap-2 rounded-lg border border-border bg-panel px-3 py-2.5 text-[12px] leading-relaxed text-muted dark:bg-surface/40" data-testid="publish-expo-note">
+              <Smartphone className="mt-0.5 size-3.5 shrink-0 text-fg" aria-hidden="true" />
+              <span>
+                Mobile app: this publishes the <strong className="font-medium text-fg">web version</strong> (<code className="mono text-[11.5px]">expo export --platform web</code>). App Store and Google Play builds are not made by Codexa.
+              </span>
+            </p>
           ) : null}
 
           <div className="-mx-6 -mb-6 mt-5 flex items-center justify-between gap-2 rounded-b-[10px] border-t border-border bg-panel px-6 py-3 dark:bg-surface/40">

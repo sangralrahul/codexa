@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { ArrowRight, ArrowUpRight, BarChart3, Bot, Briefcase, Check, CheckCircle2, ChevronDown, Circle, ExternalLink, GitBranch, GitFork, Globe, LayoutTemplate, Rocket, Server, ShoppingBag, X } from "lucide-react";
+import { ArrowRight, ArrowUpRight, BarChart3, Bot, Briefcase, Check, CheckCircle2, ChevronDown, Circle, ExternalLink, GitBranch, GitFork, Globe, LayoutTemplate, Rocket, Server, ShoppingBag, Smartphone, X } from "lucide-react";
 import { useApp } from "../app/state";
 import { deployApi, historyApi, membersApi, showcaseApi, statusApi, templatesApi, type Deployment, type Project, type ShowcaseItem, type Snapshot, type SystemStatus, type TeamMember, type Template } from "../lib/api";
 import { cn, frameworkLabel, relativeTime } from "../lib/util";
@@ -18,13 +18,15 @@ const IDEAS = [
   { label: "Online store", icon: ShoppingBag, prompt: "An online store for handmade candles with a product grid, filters and a cart", template: "vite-react-storefront" },
   { label: "AI app", icon: Bot, prompt: "A support chatbot with a conversation sidebar and saved chats", template: "vite-react-ai-chat" },
   { label: "Portfolio", icon: Briefcase, prompt: "A personal portfolio with a projects grid, an about section and a contact form", template: "vite-react-portfolio" },
+  { label: "Mobile app", icon: Smartphone, prompt: "A mobile habit tracker with streaks, reminders and a weekly summary", template: "expo-habits" },
   { label: "Backend API", icon: Server, prompt: "A REST API for a library: books, members and loans with validation", template: "node-express-api" },
 ];
 const FEATURED = ["vite-react-saas", "vite-react-dashboard", "vite-react-storefront", "vite-react-landing", "vite-react-ai-chat", "vite-react-portfolio"];
-const STARTERS = [DEFAULT_TEMPLATE, "static-site", ...FEATURED, "node-express-api"];
+const STARTERS = [DEFAULT_TEMPLATE, "expo-starter", "static-site", ...FEATURED, "node-express-api"];
 /** The hero's runtime tabs: each sets a real starter template (shown once the template list confirms it exists). */
 const MODES = [
   { id: "web", label: "Web app", templateId: DEFAULT_TEMPLATE },
+  { id: "mobile", label: "Mobile app", templateId: "expo-starter" },
   { id: "site", label: "Website", templateId: "static-site" },
   { id: "api", label: "API", templateId: "node-express-api" },
 ] as const;
@@ -37,6 +39,12 @@ const PLACEHOLDERS = [
 ];
 /** Placeholder ideas that fit the selected runtime. */
 const PLACEHOLDERS_BY_TEMPLATE: Record<string, string[]> = {
+  "expo-starter": [
+    "Ask Codexa to build a mobile habit tracker with streaks and reminders",
+    "Ask Codexa to build a grocery delivery app with a cart",
+    "Ask Codexa to build a workout logger for my phone",
+    "Ask Codexa to build a mobile notes app with search and pinning",
+  ],
   "static-site": [
     "Ask Codexa to build a landing page for my bakery with opening hours and a menu",
     "Ask Codexa to build a one-page site for a yoga studio with a class timetable",

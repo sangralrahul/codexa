@@ -18,7 +18,7 @@ export function initials(name: string) {
   return ((parts[0]?.[0] ?? "?") + (parts[1]?.[0] ?? "")).toUpperCase();
 }
 
-const FRAMEWORKS: Record<string, string> = { "vite-react": "Vite + React", nextjs: "Next.js", "node-express": "Node + Express", static: "Static site" };
+const FRAMEWORKS: Record<string, string> = { "vite-react": "Vite + React", nextjs: "Next.js", "node-express": "Node + Express", static: "Static site", expo: "Expo · React Native" };
 export const frameworkLabel = (f: string) => FRAMEWORKS[f] ?? f;
 
 /** "A todo app with tags, for teams" → "Todo app". */

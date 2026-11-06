@@ -266,7 +266,7 @@ export function Workspace({ projectId, initialPrompt }: { projectId: string; ini
         <div className="-ml-[2px] flex min-w-0 flex-1 flex-col">
           <section className="relative min-h-0 min-w-0 flex-1" aria-label={view === "preview" ? "Preview" : "Code"}>
             <div className={cn("absolute inset-0", view !== "preview" && "invisible")}>
-              <Preview runtime={runtime} reloadKey={0} onOpenConsole={() => setConsoleOpen(true)} />
+              <Preview projectId={project.id} framework={project.framework} canEdit={canEdit} runtime={runtime} reloadKey={0} onOpenConsole={() => setConsoleOpen(true)} />
             </div>
             {codeSeen ? (
               <div className={cn("absolute inset-0", view !== "code" && "invisible")}>
@@ -317,7 +317,7 @@ export function Workspace({ projectId, initialPrompt }: { projectId: string; ini
         </span>
       </footer>
 
-      <PublishDialog projectId={project.id} open={publishOpen} onClose={() => setPublishOpen(false)} canPublish={canEdit} onChanged={refreshLive} />
+      <PublishDialog projectId={project.id} framework={project.framework} open={publishOpen} onClose={() => setPublishOpen(false)} canPublish={canEdit} onChanged={refreshLive} />
     </div>
   );
 }

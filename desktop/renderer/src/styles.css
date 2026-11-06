@@ -42,6 +42,10 @@
   --danger: #dc2626;
   --ring: #0a0a0a;
   --shadow: none;
+  /* Phone frame (Expo preview): a near-black bezel with a hairline edge in both themes. */
+  --phone-bezel: #0a0a0a;
+  --phone-edge: #d4d4d4;
+  --phone-key: #1a1a1a;
   color-scheme: light;
 }
 .dark {
@@ -66,6 +70,9 @@
   --danger: #f2555a;
   --ring: #ededed;
   --shadow: none;
+  --phone-bezel: #121212;
+  --phone-edge: #3a3a3a;
+  --phone-key: #1f1f1f;
   color-scheme: dark;
 }
 
@@ -813,6 +820,63 @@ button.ws-step:hover {
   border-color: var(--border);
   box-shadow: 0 0 0 1px #000, 0 24px 60px -30px #000;
 }
+/* Expo preview: a phone bezel around the web render, at the phone's real CSS size (scaled to fit). */
+.phone {
+  background: var(--phone-bezel);
+  box-shadow:
+    0 0 0 1px var(--phone-edge),
+    inset 0 0 0 2px color-mix(in oklab, #fff 12%, transparent),
+    0 28px 60px -28px color-mix(in oklab, var(--fg) 28%, transparent);
+}
+.dark .phone {
+  box-shadow:
+    0 0 0 1px var(--phone-edge),
+    inset 0 0 0 2px color-mix(in oklab, #fff 7%, transparent),
+    0 28px 70px -30px #000;
+}
+.phone__key {
+  background: var(--phone-key);
+  box-shadow: 0 0 0 1px var(--phone-edge);
+}
+.phone__island {
+  background: #000;
+}
+/* "app": the system bars sit on the app's own white surface. "theme": honest states follow the theme. */
+.phone__screen[data-tone="app"] {
+  background: #fff;
+  color: #000;
+}
+.phone__screen[data-tone="theme"] {
+  background: var(--card);
+  color: var(--fg);
+}
+.phone__home {
+  background: currentColor;
+  opacity: 0.85;
+}
+.dark .phone__screen[data-tone="theme"] .phone__island {
+  background: var(--phone-bezel);
+  box-shadow: 0 0 0 1px var(--border);
+}
+/* "Your Device" panel beside the phone. */
+.device-panel {
+  padding: 14px 16px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--card);
+}
+.dark .device-panel {
+  background: var(--panel);
+}
+/* QR codes stay black on white in both themes so phone cameras can read them. */
+.qr {
+  padding: 6px;
+  border-radius: 8px;
+  background: #fff;
+  color: #000;
+  box-shadow: 0 0 0 1px var(--border);
+}
+
 /* Honest-state illustration: drawn in the theme's own greys. */
 .ws-illo {
   color: var(--border-strong);

@@ -21,6 +21,8 @@ const LABELS: Record<string, string> = {
   portfolios: "Portfolios",
   "web-apps": "Web apps",
   apis: "APIs",
+  "mobile-first": "Mobile-first",
+  "mobile-apps": "Mobile apps",
 };
 const label = (c: string) => LABELS[c] ?? c.replace(/-/g, " ").replace(/^./, (x) => x.toUpperCase());
 

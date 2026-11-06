@@ -4,10 +4,10 @@ import { SpaceBackdrop } from "./SpaceBackdrop";
 import { Rise, RiseWords, RotatingText } from "../RotatingText";
 
 /** Things Codexa builds from its starters (same list as the web dashboard). */
-export const SPACE_HERO_PHRASES = ["a booking app", "a SaaS dashboard", "an online store", "a portfolio", "a REST API", "a landing page"] as const;
+export const SPACE_HERO_PHRASES = ["a booking app", "a SaaS dashboard", "a mobile app", "an online store", "a portfolio", "a REST API", "a landing page"] as const;
 /** Home's runtime tabs (MODES ids) dispatch this so the headline jumps to a matching phrase. */
 export const SPACE_MODE_EVENT = "codexa:space-mode";
-const MODE_PHRASE: Record<string, number> = { web: 1, site: 5, api: 4 };
+const MODE_PHRASE: Record<string, number> = { web: 1, mobile: 2, site: 6, api: 5 };
 
 /**
  * Home's opening hero (a port of the web dashboard's SpaceHero): a full-width live scene that follows
