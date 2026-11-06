@@ -16,7 +16,7 @@ A project is the unit everything else attaches to: files, snapshots, activity, e
 
 Projects start from a **template** or a **GitHub import**.
 
-- Templates are starter codebases in three families: React + Vite + TypeScript + Tailwind single-page apps, static HTML/CSS/JS sites, and Node + Express REST APIs. Browse them at [/templates](/templates). A Next.js full-stack template is on the [roadmap](/roadmap) and is not available yet.
+- Templates are starter codebases in four families: React + Vite + TypeScript + Tailwind single-page apps, static HTML/CSS/JS sites, Node + Express REST APIs, and Expo (React Native) mobile apps ([Mobile apps](/docs/mobile-apps)). Browse them at [/templates](/templates). A Next.js full-stack template is on the [roadmap](/roadmap) and is not available yet.
 - GitHub import copies a repository branch into a new project once GitHub is connected. See [GitHub](/docs/github).
 
 The number of active projects per workspace is limited by plan (3 on Free, 25 on Pro, 100 on Team). Creating one beyond the limit returns `quota_exceeded`.

@@ -86,8 +86,11 @@ export function WorkspaceHeader({
   publishOpen,
   onPublishOpenChange,
   projectId,
+  framework,
 }: {
   projectId: string;
+  /** Project framework id; "expo" adds the web-version note to Publish. */
+  framework?: string;
   name: string;
   template?: { id: string; name: string; category: string } | null;
   recent: RecentProject[];
@@ -292,7 +295,7 @@ export function WorkspaceHeader({
         </button>
         <span className="ws-divider mx-1 hidden lg:block" aria-hidden="true" />
         {/* Publish keeps its label at every width: it is the primary action. */}
-        <PublishPopover projectId={projectId} onManage={onManageDeployments} className="ws-publish max-sm:px-3" open={publishOpen} onOpenChange={onPublishOpenChange} />
+        <PublishPopover projectId={projectId} framework={framework} onManage={onManageDeployments} className="ws-publish max-sm:px-3" open={publishOpen} onOpenChange={onPublishOpenChange} />
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <button

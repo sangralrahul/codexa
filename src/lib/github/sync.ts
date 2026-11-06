@@ -16,12 +16,13 @@ export function syncSettings(project: Pick<Project, "settings">): GithubSyncSett
 }
 
 /** Pick the closest template for an imported repository (createProject needs a registered template). */
-export function detectTemplateId(files: Record<string, string>): "vite-react-starter" | "node-express-api" | "static-site" {
+export function detectTemplateId(files: Record<string, string>): "vite-react-starter" | "node-express-api" | "expo-starter" | "static-site" {
   const pkg = files["package.json"];
   if (pkg) {
     try {
       const parsed = JSON.parse(pkg) as { dependencies?: Record<string, string>; devDependencies?: Record<string, string> };
       const deps = { ...(parsed.dependencies ?? {}), ...(parsed.devDependencies ?? {}) };
+      if ("expo" in deps) return "expo-starter";
       if ("vite" in deps) return "vite-react-starter";
       if ("express" in deps) return "node-express-api";
     } catch {

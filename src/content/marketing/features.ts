@@ -1,4 +1,4 @@
-import { Bot, Bug, Cloud, Code2, Database, Eye, FileDiff, FolderTree, GitBranch, Globe, History, Keyboard, KeyRound, Layers, LayoutTemplate, ListChecks, Lock, MonitorSmartphone, Play, Rocket, RotateCcw, Search, Server, Share2, ShieldCheck, Sparkles, Terminal, Users, Wallet, Wrench } from "lucide-react";
+import { Bot, Bug, Cloud, Code2, Database, Eye, FileDiff, FolderTree, GitBranch, Globe, History, Keyboard, KeyRound, Layers, LayoutTemplate, ListChecks, Lock, MonitorSmartphone, Play, Rocket, RotateCcw, Search, Server, Share2, ShieldCheck, Smartphone, Sparkles, Terminal, Users, Wallet, Wrench } from "lucide-react";
 import type { ComparisonGroup } from "@/components/marketing/comparison-table";
 import type { ContentSection, FAQItem, Feature, IllustrationId } from "./types";
 
@@ -70,6 +70,7 @@ export const FEATURE_GROUPS: FeatureGroup[] = [
     features: [
       { title: "PostgreSQL and Supabase", description: "Workspace connections with a schema browser and a SQL runner that asks before destructive statements.", icon: Database, href: "/full-stack-development" },
       { title: "Node + Express APIs", description: "A starter template for REST APIs with TypeScript.", icon: Server },
+      { title: "Expo mobile apps", description: "React Native starters you preview in a phone frame and open on your phone with Expo Go. Publishing hosts the web version.", icon: Smartphone },
       { title: "Encrypted environment variables", description: "Encrypted at rest, masked in the UI, injected into previews and deployments.", icon: KeyRound },
     ],
   },
@@ -110,7 +111,7 @@ export const FEATURE_GROUPS: FeatureGroup[] = [
       { title: "Realtime presence", description: "See who is viewing which file over WebSockets. Concurrent editing is on the roadmap.", icon: Eye },
       { title: "Plans in INR and USD", description: "Free, Pro, Team, and Enterprise; Razorpay for India and Stripe internationally.", icon: Wallet, href: "/pricing" },
       { title: "Server-side limits", description: "AI requests and tokens, runtime minutes, deployments, storage, projects, and members.", icon: Lock, href: "/usage" },
-      { title: "Starter templates", description: "React + Vite SPA, static site, and Node + Express API.", icon: LayoutTemplate, href: "/templates" },
+      { title: "Starter templates", description: "React + Vite SPA, static site, Node + Express API, and Expo React Native app.", icon: LayoutTemplate, href: "/templates" },
     ],
     planned: [
       { title: "Concurrent editing", detail: "Several people typing in one file (CRDT). Presence is shipped; this is not." },
@@ -136,7 +137,7 @@ export const HOW_IT_WORKS_DETAIL: ContentSection[] = [
     heading: "Generate",
     blocks: [
       { type: "paragraph", text: "Edits happen through tools (read, write, rename, delete) against your real project files, stored by Codexa in Cloudflare D1 (snapshots go to R2). Each tool call and each file change is streamed to the browser as it happens, so you can follow along or cancel." },
-      { type: "list", items: ["Starter templates: React + Vite + TypeScript + Tailwind, static HTML/CSS/JS, Node + Express.", "Imported GitHub repositories are edited in place.", "Usage (requests and tokens) is recorded per run and counted against your plan; see [credits](/credits)."] },
+      { type: "list", items: ["Starter templates: React + Vite + TypeScript + Tailwind, static HTML/CSS/JS, Node + Express, Expo (React Native + TypeScript).", "Imported GitHub repositories are edited in place.", "Usage (requests and tokens) is recorded per run and counted against your plan; see [credits](/credits)."] },
     ],
   },
   {
@@ -224,7 +225,7 @@ export const ALTERNATIVES_TRADEOFFS: ContentSection[] = [
     id: "vs-ide",
     heading: "Compared with IDE assistants",
     blocks: [
-      { type: "paragraph", text: "IDE assistants live where experienced developers already work and have access to everything installed on your machine. Codexa runs in the browser with an isolated runtime, which makes it safer for untrusted generated code and easier to share, but it supports fewer stacks today (React + Vite, static sites, Node + Express) and does not replace a local toolchain. The two combine well: push to GitHub and keep working in your IDE." },
+      { type: "paragraph", text: "IDE assistants live where experienced developers already work and have access to everything installed on your machine. Codexa runs in the browser with an isolated runtime, which makes it safer for untrusted generated code and easier to share, but it supports fewer stacks today (React + Vite, static sites, Node + Express, Expo React Native) and does not replace a local toolchain. The two combine well: push to GitHub and keep working in your IDE." },
     ],
   },
   {

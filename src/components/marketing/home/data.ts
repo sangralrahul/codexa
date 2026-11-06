@@ -35,6 +35,7 @@ const RUNTIME_SHORT: Record<string, { tag: string; name: string }> = {
   "vite-react": { tag: "React", name: "React SPA" },
   static: { tag: "Static", name: "Static site" },
   "node-express": { tag: "Node", name: "Node + Express API" },
+  expo: { tag: "Expo", name: "Expo React Native app" },
 };
 
 /** The starter the product tour builds from: its prompt is the "Online store" idea chip, its files are real. */

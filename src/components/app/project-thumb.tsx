@@ -1,4 +1,4 @@
-import { Braces, Globe, LayoutTemplate } from "lucide-react";
+import { Braces, Globe, LayoutTemplate, Smartphone } from "lucide-react";
 import { TEMPLATE_SHOTS, templateShotFor } from "@/components/templates/shots";
 import { TEMPLATE_API_ROUTES } from "@/components/templates/api-routes.generated";
 import type { ApiRoute } from "@/components/templates/route-parse";
@@ -16,7 +16,7 @@ const SIZES = {
   lg: { box: "h-[30px] w-12 rounded-[7px]", icon: "size-4", px: 96 },
 } as const;
 
-const FRAMEWORK_ICON: Record<string, typeof Globe> = { "node-express": Braces, static: Globe };
+const FRAMEWORK_ICON: Record<string, typeof Globe> = { "node-express": Braces, static: Globe, expo: Smartphone };
 
 /** Route rows the code thumbnail draws per size (the boxes are 13–30px tall). */
 const ROUTE_ROWS = { xs: 2, sm: 3, md: 3, lg: 4 } as const;

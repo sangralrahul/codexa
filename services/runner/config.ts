@@ -45,6 +45,8 @@ export type RunnerConfig = {
   reapOrphans: boolean;
   limits: {
     memoryBytes: number;
+    /** Memory floor for Expo sandboxes: Metro bundling React Native for iOS/Android needs more than a Vite dev server. */
+    expoMemoryBytes: number;
     pidsMax: number;
     cpuSeconds: number;
     fsizeBytes: number;
@@ -91,6 +93,7 @@ export function loadConfig(): RunnerConfig {
     reapOrphans: process.env.RUNNER_REAP_ORPHANS !== "0",
     limits: {
       memoryBytes: int("RUNNER_MEMORY_BYTES", 1024 * 1024 * 1024),
+      expoMemoryBytes: int("RUNNER_EXPO_MEMORY_BYTES", 2560 * 1024 * 1024),
       pidsMax: int("RUNNER_PIDS_MAX", 256),
       cpuSeconds: int("RUNNER_CPU_SECONDS", 3600),
       fsizeBytes: int("RUNNER_FSIZE_BYTES", 256 * 1024 * 1024),
@@ -108,8 +111,13 @@ export function loadConfig(): RunnerConfig {
   };
 }
 
+/** Sandbox limits for a framework (Expo gets at least `expoMemoryBytes`). */
+export function limitsFor(limits: RunnerConfig["limits"], framework: string): RunnerConfig["limits"] {
+  return framework === "expo" ? { ...limits, memoryBytes: Math.max(limits.memoryBytes, limits.expoMemoryBytes) } : limits;
+}
+
 /** Frameworks with a prebuilt shared dependency set (see prepare.ts). */
-export const PREBUILT_FRAMEWORKS = ["vite-react", "node-express"] as const;
+export const PREBUILT_FRAMEWORKS = ["vite-react", "node-express", "expo"] as const;
 export type PrebuiltFramework = (typeof PREBUILT_FRAMEWORKS)[number];
-export const KNOWN_FRAMEWORKS = ["vite-react", "static", "node-express", "nextjs"] as const;
+export const KNOWN_FRAMEWORKS = ["vite-react", "static", "node-express", "expo", "nextjs"] as const;
 export type Framework = (typeof KNOWN_FRAMEWORKS)[number];

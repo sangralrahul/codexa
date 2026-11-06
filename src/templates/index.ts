@@ -2,12 +2,13 @@ import type { Template, TemplateCategory, Framework, TemplateDifficulty } from "
 import { viteReactTemplates } from "./vite-react";
 import { staticTemplates } from "./static";
 import { nodeExpressTemplates } from "./node-express";
+import { expoTemplates } from "./expo";
 import { catalogTemplates } from "./catalog";
 import { galleryTemplates } from "./gallery";
 
 export type { Template, TemplateCategory, Framework, TemplateDifficulty };
 
-export const TEMPLATES: Template[] = [...viteReactTemplates, ...staticTemplates, ...nodeExpressTemplates, ...catalogTemplates, ...galleryTemplates];
+export const TEMPLATES: Template[] = [...viteReactTemplates, ...staticTemplates, ...nodeExpressTemplates, ...expoTemplates, ...catalogTemplates, ...galleryTemplates];
 
 const byId = new Map(TEMPLATES.map((t) => [t.id, t]));
 
@@ -27,6 +28,7 @@ export const TEMPLATE_CATEGORIES: { id: TemplateCategory; name: string; descript
   { id: "crm", name: "CRM", description: "Contacts and pipelines" },
   { id: "landing-pages", name: "Landing pages", description: "Single conversion pages" },
   { id: "mobile-first", name: "Mobile-first", description: "Designed for phones first" },
+  { id: "mobile-apps", name: "Mobile apps", description: "Native iOS and Android apps with Expo" },
 ];
 
 export function isTemplateCategory(value: string): value is TemplateCategory {
@@ -34,19 +36,21 @@ export function isTemplateCategory(value: string): value is TemplateCategory {
 }
 
 /**
- * Frameworks the runtime can execute. Only the three with prebuilt dependency sets
- * are used by templates; "nextjs" is kept in the map for project rows that may
- * reference it (roadmap) but no template may use it.
+ * Frameworks the runtime can execute. Only the four in TEMPLATE_FRAMEWORKS (the runner has
+ * prebuilt dependency sets for them) are used by templates; "nextjs" is kept in the map for
+ * project rows that may reference it (roadmap) but no template may use it.
+ * `runtime` is the plain-language kind of thing the framework builds.
  */
-export const FRAMEWORKS: Record<Framework, { name: string; description: string; devCommand: string; buildCommand: string; outputDir: string; port: number }> = {
-  "vite-react": { name: "Vite + React + TypeScript", description: "Fast SPA with Tailwind CSS", devCommand: "npm run dev", buildCommand: "npm run build", outputDir: "dist", port: 5173 },
-  static: { name: "Static HTML/CSS/JS", description: "No build step", devCommand: "codexa-static", buildCommand: "", outputDir: ".", port: 5173 },
-  "node-express": { name: "Node.js + Express", description: "REST API with TypeScript", devCommand: "npm run dev", buildCommand: "npm run build", outputDir: "dist", port: 3000 },
-  nextjs: { name: "Next.js", description: "Full-stack React (roadmap)", devCommand: "npm run dev", buildCommand: "npm run build", outputDir: ".next", port: 3000 },
+export const FRAMEWORKS: Record<Framework, { name: string; runtime: string; description: string; devCommand: string; buildCommand: string; outputDir: string; port: number }> = {
+  "vite-react": { name: "Vite + React + TypeScript", runtime: "Web app", description: "Fast SPA with Tailwind CSS", devCommand: "npm run dev", buildCommand: "npm run build", outputDir: "dist", port: 5173 },
+  static: { name: "Static HTML/CSS/JS", runtime: "Website", description: "No build step", devCommand: "codexa-static", buildCommand: "", outputDir: ".", port: 5173 },
+  "node-express": { name: "Node.js + Express", runtime: "API", description: "REST API with TypeScript", devCommand: "npm run dev", buildCommand: "npm run build", outputDir: "dist", port: 3000 },
+  expo: { name: "Expo · React Native", runtime: "Mobile app", description: "iOS, Android and web from one TypeScript codebase", devCommand: "npm run dev", buildCommand: "npm run build", outputDir: "dist", port: 8081 },
+  nextjs: { name: "Next.js", runtime: "Web app", description: "Full-stack React (roadmap)", devCommand: "npm run dev", buildCommand: "npm run build", outputDir: ".next", port: 3000 },
 };
 
 /** Frameworks templates may use (the runner has prebuilt dependency sets for these). */
-export const TEMPLATE_FRAMEWORKS = ["vite-react", "static", "node-express"] as const satisfies readonly Framework[];
+export const TEMPLATE_FRAMEWORKS = ["vite-react", "static", "node-express", "expo"] as const satisfies readonly Framework[];
 export type TemplateFramework = (typeof TEMPLATE_FRAMEWORKS)[number];
 
 export function isTemplateFramework(value: string): value is TemplateFramework {

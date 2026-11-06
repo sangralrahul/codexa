@@ -11,14 +11,15 @@ export type TemplateCategory =
   | "admin-panels"
   | "crm"
   | "landing-pages"
-  | "mobile-first";
+  | "mobile-first"
+  | "mobile-apps";
 
 /**
- * Runtime frameworks. Templates may only use vite-react, static and node-express
+ * Runtime frameworks. Templates may only use vite-react, static, node-express and expo
  * (the runner has prebuilt dependency sets for those); "nextjs" exists for the
  * roadmap and for typing project rows, never for templates.
  */
-export type Framework = "vite-react" | "static" | "node-express" | "nextjs";
+export type Framework = "vite-react" | "static" | "node-express" | "expo" | "nextjs";
 
 export type TemplateDifficulty = "beginner" | "intermediate" | "advanced";
 

@@ -48,6 +48,8 @@ import { cn } from "@/lib/utils";
 import { toolButton } from "./panel-tabs";
 import { VisualEditHint, VisualEditPanel, type InspectedElement } from "./visual-edit";
 import { filesApi } from "@/lib/client/workspace/api";
+import { readLocal, writeLocal, wsKey } from "@/lib/client/workspace/storage";
+import { DevicePanel, MOBILE_VIEW_IDS, MOBILE_VIEWS, MobileViewSwitch, PhoneFrame, type MobileView } from "./mobile-preview";
 
 /**
  * The preview: the workspace card that holds it is the browser window (toolbar + viewport, one
@@ -65,6 +67,7 @@ export const DEVICES: Record<Device, { width: number | null; label: string; Icon
 };
 
 const SANDBOX = "allow-scripts allow-forms allow-same-origin allow-popups allow-modals allow-downloads";
+const MOBILE_VIEW_KEY = "mobile-view.v1";
 
 function splitUrl(url: string) {
   try {
@@ -77,18 +80,34 @@ function splitUrl(url: string) {
 
 export function PreviewPanel({
   projectId,
+  framework,
   device = "desktop",
   onDeviceChange,
   canEdit,
   showOperatorDetails,
 }: {
   projectId: string;
+  /** Project framework id. "expo" switches to the mobile preview (phone frames + Your Device). */
+  framework?: string;
   device?: Device;
   onDeviceChange?: (d: Device) => void;
   canEdit: boolean;
   showOperatorDetails: boolean;
 }) {
   const rt = useRuntime();
+  // Expo (React Native) projects: Web | iOS | Android | Your Device, remembered per project.
+  const isExpo = framework === "expo";
+  const [mobileView, setMobileViewState] = useState<MobileView>("ios");
+  useEffect(() => {
+    if (!isExpo) return;
+    const saved = readLocal<string | null>(wsKey(projectId, MOBILE_VIEW_KEY), null);
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- restore the saved mode after mount (no SSR mismatch)
+    if (saved && (MOBILE_VIEW_IDS as readonly string[]).includes(saved)) setMobileViewState(saved as MobileView);
+  }, [isExpo, projectId]);
+  const setMobileView = (v: MobileView) => {
+    setMobileViewState(v);
+    writeLocal(wsKey(projectId, MOBILE_VIEW_KEY), v);
+  };
   const agent = useAgent();
   const calm = useCalm();
   const { status, previewUrl, frameKey, lastSync } = rt;
@@ -193,8 +212,10 @@ export function PreviewPanel({
 
   const agentFiles = agent.run?.files.length ?? 0;
   const editing = agent.running;
-  const width = DEVICES[device].width;
-  const framed = device !== "desktop";
+  // Expo projects use the phone frames below instead of the desktop/tablet/mobile widths.
+  const width = isExpo ? null : DEVICES[device].width;
+  const framed = !isExpo && device !== "desktop";
+  const phone = isExpo && mobileView !== "web";
 
   // Status chip in the toolbar: the real runtime state with uptime while running.
   const startedAt = rt.session?.startedAt ? Date.parse(rt.session.startedAt) : null;
@@ -211,6 +232,40 @@ export function PreviewPanel({
             : status === "unknown"
               ? { dot: "idle" as const, label: "Checking…", pulse: false }
               : { dot: "idle" as const, label: "Stopped", pulse: false };
+
+  // The page itself (or the state card while it is not running), shared by every frame below.
+  const screen =
+    status === "running" && src ? (
+      <iframe
+        ref={frameRef}
+        key={frameKey}
+        src={src}
+        title="Project preview"
+        sandbox={SANDBOX}
+        onLoad={() => {
+          const el = frameRef.current;
+          if (!el) return;
+          if (!calm) {
+            // First real load of this preview URL: the app assembles top-down under a
+            // scanline (M11). Later loads (reload, sync, restart) develop back into focus.
+            const target = loadedOnce.current ? el : viewportRef.current;
+            const cls = loadedOnce.current ? "ws-frame-develop" : "ws-assemble";
+            if (target) {
+              target.classList.remove(cls);
+              void target.offsetWidth;
+              target.classList.add(cls);
+              // Drop the wrapper class once played so a later iframe (reload) does not re-assemble.
+              if (cls === "ws-assemble") setTimeout(() => target.classList.remove(cls), 800);
+            }
+          }
+          loadedOnce.current = true;
+          setPicked(null);
+        }}
+        className="block size-full border-0 bg-white"
+      />
+    ) : (
+      <FrameState canEdit={canEdit} showOperatorDetails={showOperatorDetails} />
+    );
 
   return (
     <section className="@container/preview flex h-full min-h-0 flex-col" aria-label="Preview">
@@ -276,7 +331,7 @@ export function PreviewPanel({
               </span>
             )}
           </form>
-          {onDeviceChange ? (
+          {onDeviceChange && !isExpo ? (
             <div role="radiogroup" aria-label="Preview size" className="hidden shrink-0 items-center gap-px rounded-md bg-muted p-0.5 shadow-[inset_0_0_0_1px_var(--border)] @[520px]/preview:flex">
               {(Object.keys(DEVICES) as Device[]).map((d) => {
                 const { Icon, label } = DEVICES[d];
@@ -297,7 +352,7 @@ export function PreviewPanel({
               })}
             </div>
           ) : null}
-          {canEdit ? (
+          {canEdit && !isExpo ? (
             <Tooltip content={inspectable ? (inspecting ? "Stop editing" : "Visual edit: click an element to change it") : "Visual edit is available once the preview is running"}>
               <button
                 type="button"
@@ -312,6 +367,13 @@ export function PreviewPanel({
               </button>
             </Tooltip>
           ) : null}
+          {isExpo ? (
+            <Tooltip content="Open on your phone with Expo Go">
+              <button type="button" aria-label="Open on your phone with Expo Go" aria-pressed={mobileView === "device"} onClick={() => setMobileView("device")} className={cn(toolButton, "size-7", mobileView === "device" && "bg-muted text-foreground")}>
+                <QrIcon className="size-3.5" aria-hidden="true" />
+              </button>
+            </Tooltip>
+          ) : (
           <Popover>
             <Tooltip content="Open on your phone">
               <PopoverTrigger asChild>
@@ -330,6 +392,7 @@ export function PreviewPanel({
               ) : null}
             </PopoverContent>
           </Popover>
+          )}
           <Tooltip content="Open in a new tab">
             {src ? (
               <a href={src} target="_blank" rel="noopener noreferrer" aria-label="Open preview in a new tab" className={cn(toolButton, "size-7")}>
@@ -369,7 +432,7 @@ export function PreviewPanel({
               <DropdownMenuItem disabled={!canEdit || rt.busy !== null || status === "unavailable"} onSelect={() => void rt.run("build")}>
                 <Hammer /> Run the build
               </DropdownMenuItem>
-              {onDeviceChange ? (
+              {onDeviceChange && !isExpo ? (
                 <>
                   <DropdownMenuSeparator />
                   <DropdownMenuLabel>Device</DropdownMenuLabel>
@@ -389,7 +452,7 @@ export function PreviewPanel({
                 </label>
                 <Switch id="preview-autorefresh" checked={rt.autoRefresh} onCheckedChange={rt.setAutoRefresh} />
               </div>
-              <p className="px-2 pb-1.5 text-[11.5px] leading-snug text-muted-foreground">Off: edits hot-reload through Vite. On: the whole page reloads after each sync.</p>
+              <p className="px-2 pb-1.5 text-[11.5px] leading-snug text-muted-foreground">{isExpo ? "Off: edits apply with Fast Refresh (Metro). On: the whole page reloads after each sync." : "Off: edits hot-reload through Vite. On: the whole page reloads after each sync."}</p>
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
@@ -403,8 +466,17 @@ export function PreviewPanel({
           </div>
         ) : null}
 
+        {isExpo ? (
+          <div className="flex h-11 shrink-0 items-center gap-3 border-b border-border px-2.5" data-testid="mobile-preview-bar">
+            <MobileViewSwitch value={mobileView} onChange={setMobileView} />
+            <p className="hidden min-w-0 truncate text-[11.5px] text-muted-foreground @[620px]/preview:block" aria-live="polite">
+              {MOBILE_VIEWS[mobileView].caption}
+            </p>
+          </div>
+        ) : null}
+
         {/* Viewport */}
-        <div className={cn("relative min-h-0 flex-1 overflow-hidden", framed ? "ws-stage flex items-start justify-center overflow-y-auto p-4" : "bg-card")}>
+        <div className={cn("relative min-h-0 flex-1 overflow-hidden", phone ? "ws-stage flex items-stretch justify-center gap-8 p-5" : framed ? "ws-stage flex items-start justify-center overflow-y-auto p-4" : "bg-card")}>
           {editing && !calm ? <span className="ws-beam" aria-hidden="true" /> : null}
           {editing ? (
             // Visual only: the agent column's live region already announces each stage once.
@@ -433,6 +505,21 @@ export function PreviewPanel({
               }}
             />
           ) : null}
+          {phone ? (
+            <>
+              <PhoneFrame platform={mobileView === "android" ? "android" : "ios"} className={mobileView === "device" ? "hidden @[720px]/preview:flex" : undefined}>
+                <div ref={viewportRef} className="relative size-full bg-card">
+                  {screen}
+                </div>
+              </PhoneFrame>
+              {mobileView === "device" ? (
+                // my-auto centres the panel when it fits and lets it scroll from the top when it does not.
+                <div className="flex min-h-0 flex-1 flex-col items-center overflow-y-auto @[720px]/preview:flex-none">
+                  <DevicePanel className="my-auto" previewUrl={rt.session?.previewUrl ?? previewUrl} status={status} configured={rt.configured} canEdit={canEdit} starting={rt.busy === "start"} onStart={() => void rt.run("start")} />
+                </div>
+              ) : null}
+            </>
+          ) : (
           <div
             className={cn("ws-frame relative mx-auto h-full", framed && (device === "mobile" ? "rounded-[44px] bg-code-bg p-3 shadow-xl ring-1 ring-border-strong" : "rounded-[26px] bg-code-bg p-2.5 shadow-xl ring-1 ring-border-strong"))}
             style={{ width: width ? width + (device === "mobile" ? 24 : 20) : "100%", maxWidth: "100%", height: framed ? "min(100%, 900px)" : "100%" }}
@@ -441,39 +528,10 @@ export function PreviewPanel({
             {device === "mobile" ? <span aria-hidden="true" className="absolute left-1/2 top-[19px] z-[2] h-[18px] w-[28%] -translate-x-1/2 rounded-full bg-code-bg" /> : null}
             {/* On the phone bezel the app starts below a status strip, so the island never covers it. */}
             <div ref={viewportRef} className={cn("relative h-full overflow-hidden bg-card", framed && (device === "mobile" ? "rounded-[32px] pt-[30px]" : "rounded-[18px]"))}>
-              {status === "running" && src ? (
-                <iframe
-                  ref={frameRef}
-                  key={frameKey}
-                  src={src}
-                  title="Project preview"
-                  sandbox={SANDBOX}
-                  onLoad={() => {
-                    const el = frameRef.current;
-                    if (!el) return;
-                    if (!calm) {
-                      // First real load of this preview URL: the app assembles top-down under a
-                      // scanline (M11). Later loads (reload, sync, restart) develop back into focus.
-                      const target = loadedOnce.current ? el : viewportRef.current;
-                      const cls = loadedOnce.current ? "ws-frame-develop" : "ws-assemble";
-                      if (target) {
-                        target.classList.remove(cls);
-                        void target.offsetWidth;
-                        target.classList.add(cls);
-                        // Drop the wrapper class once played so a later iframe (reload) does not re-assemble.
-                        if (cls === "ws-assemble") setTimeout(() => target.classList.remove(cls), 800);
-                      }
-                    }
-                    loadedOnce.current = true;
-                    setPicked(null);
-                  }}
-                  className="block size-full border-0 bg-white"
-                />
-              ) : (
-                <FrameState canEdit={canEdit} showOperatorDetails={showOperatorDetails} />
-              )}
+              {screen}
             </div>
           </div>
+          )}
         </div>
       </div>
     </section>

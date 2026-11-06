@@ -96,3 +96,31 @@ describe("mock provider script", () => {
     expect(events).toEqual([{ type: "stop", reason: "cancelled" }]);
   });
 });
+
+describe("mock provider on an Expo project", () => {
+  const base = { system: "sys", model: "mock-1", maxTokens: 100 };
+
+  it("reads App.tsx and writes React Native code (no DOM, no CSS classes)", async () => {
+    const messages: ChatMessage[] = [{ role: "user", content: `<project_files count="3">\nApp.tsx (10 B)\napp.json (10 B)\nindex.ts (10 B)\n</project_files>\n\n<user_request>\nAdd a "streak" <badge>\n</user_request>` }];
+    const seen: { name: string; input: unknown }[] = [];
+    for (let i = 0; i < 6; i++) {
+      const events = await collect({ ...base, messages, tools: WORK_TOOLS });
+      const calls = events.filter((e): e is Extract<ProviderEvent, { type: "tool_call" }> => e.type === "tool_call");
+      messages.push({ role: "assistant", text: "", toolCalls: calls.map((c) => ({ id: c.id, name: c.name, input: c.input })) });
+      if (!calls.length) break;
+      seen.push(...calls.map((c) => ({ name: c.name, input: c.input })));
+      messages.push({ role: "tool", results: calls.map((c) => ({ toolCallId: c.id, name: c.name, output: c.name === "list_files" ? "App.tsx (300 B)\napp.json (200 B)\nindex.ts (90 B)\npackage.json (400 B)" : "ok" })) });
+      if (calls.some((c) => c.name === "finish")) break;
+    }
+    expect(seen.find((c) => c.name === "read_file")?.input).toEqual({ path: "App.tsx" });
+    const writes = seen.filter((c) => c.name === "write_file").map((c) => c.input as { path: string; content: string });
+    expect(writes.map((w) => w.path)).toEqual(["src/components/Feature.tsx", "App.tsx"]);
+    for (const w of writes) {
+      expect(w.content).toContain('from "react-native"');
+      expect(w.content).not.toMatch(/className=|<div|<button|<main/);
+    }
+    expect(writes[1].content).toContain("SafeAreaProvider");
+    // The prompt is embedded as a string literal, never as raw JSX text.
+    expect(writes[0].content).toContain('const PROMPT = "Add a \\"streak\\" <badge>";');
+  });
+});

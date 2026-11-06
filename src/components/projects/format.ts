@@ -23,6 +23,7 @@ export const FRAMEWORK_LABELS: Record<string, string> = {
   "vite-react": "Vite + React",
   static: "Static",
   "node-express": "Node + Express",
+  expo: "Expo · React Native",
   nextjs: "Next.js",
 };
 

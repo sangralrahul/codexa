@@ -119,7 +119,7 @@ Other properties:
 
 ### Prebuilt dependency sets (`prepare.ts`)
 
-`npm run runner:prepare` installs `base/vite-react` and `base/node-express` from the `package.json` of
+`npm run runner:prepare` installs `base/vite-react`, `base/node-express` and `base/expo` from the `package.json` of
 the corresponding template, chowns them to the sandbox uid and writes `base/manifest.json` with every
 installed version. A new session gets `node_modules/` as **one symlink per package** pointing at
 `/work/base/<framework>/node_modules/<pkg>` (plus `.bin`). Trade-offs:
@@ -129,6 +129,30 @@ installed version. A new session gets `node_modules/` as **one symlink per packa
 - Version ranges are not compared: the base set is what the template declared. `depsCoveredByBase()` only checks package *names*; a project pinning other versions should run `install`.
 - `install` (`installPrelude`) replaces the links with a private `cp -a` copy and runs `npm install`, so custom dependencies work at the cost of a real copy. On hosts without registry access the copy succeeds and only new packages fail (clearly, in the logs).
 - Deployments reuse the same mechanism and skip `npm install` entirely when every dependency is covered.
+
+### Expo (React Native) sessions
+
+`framework: "expo"` runs the template's `npm run dev` (`expo start --port $PORT --max-workers 2`). Metro
+serves both the web build (react-native-web, for the browser preview) and the Expo Go manifest and
+native bundles on that one port, so one preview host covers the editor and a phone. The runner adds:
+
+- `EXPO_PACKAGER_PROXY_URL=<public preview URL>` so the manifest Expo Go downloads (`GET /` with an
+  `expo-platform: ios|android` header) points its bundle, asset and debugger URLs at the preview host,
+  not at `127.0.0.1:<port>` inside the sandbox.
+- `EXPO_OFFLINE=1` and `EXPO_NO_TELEMETRY=1`: no calls to Expo's servers (manifests are unsigned,
+  which Expo Go accepts for development).
+- `CODEXA_SHARED_NODE_MODULES=/work/base/expo/node_modules`: the template's `metro.config.js` adds it to
+  Metro's `watchFolders`, because Metro only reads files inside watch folders and the linked packages
+  resolve there.
+- `CI` is **removed** for the dev server: with `CI` set, Expo turns off file watching and Fast Refresh.
+- A memory floor of `RUNNER_EXPO_MEMORY_BYTES` (default 2.5 GiB): bundling React Native for iOS/Android
+  peaks around 1.2 GiB in the sandbox cgroup, above the 1 GiB default.
+
+The proxy never sends Expo Go's manifest request through the HTML (inspector) path and gives `*.bundle`
+/ `*.map` requests a 5-minute timeout (a cold Metro bundle can be slow). WebSockets (`/hot`,
+`/message`) pass through like Vite HMR. Publishing runs `expo export --platform web` and hosts `dist/`
+(the web version only); build outputs may contain `node_modules` folders (Expo puts package assets such
+as icon fonts under `dist/assets/**/node_modules/`), which are copied.
 
 ## Preview + sites proxy (`services/runner/proxy.ts`)
 

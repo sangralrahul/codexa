@@ -25,6 +25,7 @@ A deployment builds the project in a sandbox and publishes the output. Codexa sh
 | React + Vite + TS      | Yes            | Yes            | `npm run build` → `dist/`                       |
 | Static HTML/CSS/JS     | Yes            | Yes            | No build step; the project root is served       |
 | Node + Express API     | No             | No             | Needs a long-running process; run it in a preview or host it elsewhere for now |
+| Expo (React Native)    | Web version    | Web version    | `expo export --platform web` → `dist/`. App Store and Google Play builds are not made by Codexa; see [Mobile apps](/docs/mobile-apps) |
 | Next.js                | Not yet        | Not yet        | A Next.js template is on the roadmap            |
 
 Codexa hosting is **static** hosting: it serves files, not server processes. Deploy the API part of a project to a Node host and point the frontend at it with an environment variable.

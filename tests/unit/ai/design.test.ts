@@ -81,3 +81,23 @@ describe("project knowledge", () => {
     expect(buildUserMessage("build", "a bakery website", withKnowledge, [])).not.toContain("<design_direction>");
   });
 });
+
+describe("expo (React Native) projects", () => {
+  it("get the React Native rules and the mobile design standard instead of the web one", () => {
+    const system = buildSystemPrompt("build", ctx("expo"));
+    expect(system).toContain("EXPO / REACT NATIVE PROJECT");
+    expect(system).toMatch(/View, Text, Pressable/);
+    expect(system).toMatch(/NEVER use HTML elements/);
+    expect(system).toContain("DESIGN STANDARD (mobile app, React Native)");
+    expect(system).not.toContain(DESIGN_RULES);
+    expect(buildSystemPrompt("ask", ctx("expo"))).toContain("EXPO / REACT NATIVE PROJECT");
+    expect(buildSystemPrompt("build", ctx("vite-react"))).not.toContain("EXPO / REACT NATIVE PROJECT");
+  });
+
+  it("keep the design direction's palette but use the system font", () => {
+    const msg = buildUserMessage("build", "A habit tracker for my phone", ctx("expo"), []);
+    expect(msg).toContain("<design_direction>");
+    expect(msg).toContain("Typography: the platform system font");
+    expect(msg).not.toMatch(/Google Fonts|'Inter'/);
+  });
+});

@@ -72,6 +72,7 @@ const RAW_ROUTES: Omit<RouteEntry, "navLabel">[] = [
   { path: "/templates/crm", title: "CRM templates", description: "Contacts, pipelines, and activity tracking.", group: "templates" },
   { path: "/templates/landing-pages", title: "Landing page templates", description: "Conversion-focused single pages.", group: "templates" },
   { path: "/templates/mobile-first", title: "Mobile-first templates", description: "Responsive starters designed for phones first.", group: "templates" },
+  { path: "/templates/mobile-apps", title: "Mobile app templates", description: "React Native apps with Expo: run them on your phone with Expo Go and publish the web version.", group: "templates" },
   { path: "/showcase", title: "Showcase", description: "Real projects built and published by the Codexa community.", group: "templates" },
 
   // Docs
@@ -82,6 +83,7 @@ const RAW_ROUTES: Omit<RouteEntry, "navLabel">[] = [
   { path: "/docs/projects", title: "Projects", description: "Project structure, settings, files, and snapshots.", group: "docs" },
   { path: "/docs/editor", title: "Editor", description: "Editing files, search, diffs, and keyboard shortcuts.", group: "docs" },
   { path: "/docs/ai-agent", title: "AI agent", description: "How the agent plans, edits, validates, and repairs.", group: "docs" },
+  { path: "/docs/mobile-apps", title: "Mobile apps", description: "Expo and React Native projects: phone previews, Expo Go and publishing the web version.", group: "docs" },
   { path: "/docs/databases", title: "Databases", description: "Connecting PostgreSQL and Supabase, migrations, and queries.", group: "docs" },
   { path: "/docs/authentication", title: "Authentication", description: "Adding authentication to generated applications.", group: "docs" },
   { path: "/docs/integrations", title: "Integrations", description: "Connecting third-party services.", group: "docs" },

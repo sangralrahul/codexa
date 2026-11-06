@@ -5,6 +5,8 @@ import { GridFrame, GridRow, PageHero, RowHead } from "@/components/marketing/pa
 import { TemplateGallery, TEMPLATE_SHOTS, UseTemplateLink } from "@/components/templates";
 import { TemplatePreview } from "@/components/templates/template-preview";
 import { templatePreviewHref } from "@/components/templates/template-card";
+import { templatePhoneShotSrc } from "@/components/templates/shots";
+import { DeviceFrame } from "@/components/frames/device-frame";
 import Link from "next/link";
 import { getCurrentUser } from "@/lib/auth/session";
 import { getTemplate, parseTemplateSearch, TEMPLATE_CATEGORIES, TEMPLATE_FRAMEWORKS, TEMPLATES, type TemplateCategory } from "@/templates";
@@ -67,6 +69,15 @@ export async function PublicGalleryPage({
           visual && hero ? (
             <figure className="hidden min-w-0 lg:block">
               <Link href={templatePreviewHref(hero.id)} aria-label={`Preview the ${hero.name} starter`} className="group/shot block rounded-[14px] outline-offset-8">
+                {TEMPLATE_SHOTS.get(hero.id)?.device === "phone" && templatePhoneShotSrc(hero.id) ? (
+                  // Mobile apps have only a phone capture: show it on a phone, not in a browser window.
+                  <div className="mx-auto w-[248px] transition-transform duration-500 ease-out group-hover/shot:-translate-y-1">
+                    <DeviceFrame device="phone" className="!w-full drop-shadow-2xl">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img src={templatePhoneShotSrc(hero.id)!} alt={`${hero.name} starter on a phone`} width={390} height={844} decoding="async" className="size-full object-cover object-top" />
+                    </DeviceFrame>
+                  </div>
+                ) : (
                 <div className="pg-shot transition-transform duration-500 ease-out group-hover/shot:-translate-y-1">
                   <div aria-hidden="true" className="pg-shot__bar">
                     <span>
@@ -79,6 +90,7 @@ export async function PublicGalleryPage({
                   </div>
                   <TemplatePreview id={hero.id} category={hero.category} priority sizes="(min-width: 1024px) 680px, 1px" className="rounded-none border-0 shadow-none" />
                 </div>
+                )}
               </Link>
               <figcaption className="pg-cap">
                 <span className="pg-cap__tag">Screenshot</span>

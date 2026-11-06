@@ -189,6 +189,7 @@ const layouts: Record<string, () => React.ReactNode> = {
   ),
 };
 layouts["landing-pages"] = layouts.websites;
+layouts["mobile-apps"] = layouts["mobile-first"];
 
 export function TemplateThumb({ category, className }: { category: string; className?: string }) {
   const draw = layouts[category];

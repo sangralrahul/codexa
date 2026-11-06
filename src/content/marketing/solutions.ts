@@ -43,14 +43,14 @@ const F = {
   sandbox: { title: "Isolated runtimes", description: "Projects run as an unprivileged user inside Linux namespaces with memory and process limits, never in the web process.", icon: ShieldCheck, href: "/security" },
   share: { title: "Share links", description: "Share a project for viewing or editing with an expiring link.", icon: Share2 },
   billing: { title: "INR and USD billing", description: "Pay in INR through Razorpay or in USD through Stripe; usage limits are enforced server-side.", icon: Wallet, href: "/pricing" },
-  templates: { title: "Starter templates", description: "React + Vite + TypeScript + Tailwind SPAs, static sites, and Node + Express APIs with documented dependencies.", icon: Globe, href: "/templates" },
+  templates: { title: "Starter templates", description: "React + Vite + TypeScript + Tailwind SPAs, static sites, Node + Express APIs, and Expo React Native apps with documented dependencies.", icon: Globe, href: "/templates" },
   audit: { title: "Audit logs and rate limits", description: "Security-relevant actions are logged and public endpoints are rate limited.", icon: Lock },
 } satisfies Record<string, Feature>;
 
 const commonLimits = [
   "AI generation requires an Anthropic or OpenAI API key configured by the operator of your Codexa instance; without one the agent shows a \"not configured\" state.",
   "Generated code is a starting point. Review it like any other contribution before shipping to customers.",
-  "Starter templates currently cover single-page React apps, static sites, and Node + Express APIs. Other stacks can be imported from GitHub but have not been tuned for the sandbox.",
+  "Starter templates currently cover single-page React apps, static sites, Node + Express APIs, and Expo (React Native) mobile apps. Other stacks can be imported from GitHub but have not been tuned for the sandbox.",
 ];
 
 export const SOLUTIONS: Solution[] = [

@@ -14,6 +14,7 @@ import {
   Search,
   Settings2,
   ShieldCheck,
+  Smartphone,
   Sparkles,
   TriangleAlert,
   Wand2,
@@ -235,7 +236,7 @@ function ScoreRing({ value, label }: { value: number; label: string }) {
  * 3. Live: the address with a QR code, and a speed & SEO report measured on the published files.
  * Domains, analytics, history and site settings live in the Publishing pane (publishing-sheet.tsx).
  */
-export function PublishPopover({ projectId, onManage, className, compact, open: openProp, onOpenChange }: { projectId: string; onManage: (tab?: string) => void; className?: string; compact?: boolean; open?: boolean; onOpenChange?: (o: boolean) => void }) {
+export function PublishPopover({ projectId, framework, onManage, className, compact, open: openProp, onOpenChange }: { projectId: string; framework?: string; onManage: (tab?: string) => void; className?: string; compact?: boolean; open?: boolean; onOpenChange?: (o: boolean) => void }) {
   const d = useDeployments();
   const calm = useCalm();
   const [openState, setOpenState] = useState(false);
@@ -618,6 +619,14 @@ export function PublishPopover({ projectId, onManage, className, compact, open: 
                 )}
               </div>
               <p className="-mt-2 text-[11.5px] text-muted-foreground">Publishing snapshots the current files, builds them and makes the result public. Anyone with the link can open it.</p>
+              {framework === "expo" ? (
+                <p className="-mt-2 flex gap-1.5 text-[11.5px] text-muted-foreground" data-testid="publish-expo-note">
+                  <Smartphone className="mt-px size-3.5 shrink-0" aria-hidden="true" />
+                  <span>
+                    Mobile app: this publishes the <strong className="font-medium text-foreground">web version</strong> (<code className="font-mono">expo export --platform web</code>). App Store and Google Play builds are not made by Codexa.
+                  </span>
+                </p>
+              ) : null}
             </div>
           ) : (
             <div className="space-y-5 px-6 pb-6">

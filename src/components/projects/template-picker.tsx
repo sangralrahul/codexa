@@ -37,9 +37,10 @@ export const CATEGORY_NAMES: Record<string, string> = {
   crm: "CRM",
   "landing-pages": "Landing pages",
   "mobile-first": "Mobile-first",
+  "mobile-apps": "Mobile apps",
 };
 
-const FRAMEWORK_SHORT: Record<string, string> = { "vite-react": "React", static: "HTML & CSS", "node-express": "Express", nextjs: "Next.js" };
+const FRAMEWORK_SHORT: Record<string, string> = { "vite-react": "React", static: "HTML & CSS", "node-express": "Express", expo: "Expo", nextjs: "Next.js" };
 
 /** "React · 12 files · Beginner" */
 export function pickerMeta(t: Pick<PickerTemplate, "framework" | "fileCount" | "difficulty">) {

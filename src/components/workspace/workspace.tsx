@@ -640,7 +640,7 @@ function Shell({
     <ChatPanel projectId={projectId} projectName={project.name} templateCategory={template?.category ?? null} framework={project.framework} canEdit={canEdit} showOperatorDetails={isAdmin} />
   );
 
-  const preview = <PreviewPanel projectId={projectId} device={isDesktop ? device : "desktop"} onDeviceChange={isDesktop ? setDevice : undefined} canEdit={canEdit} showOperatorDetails={isAdmin} />;
+  const preview = <PreviewPanel projectId={projectId} framework={project.framework} device={isDesktop ? device : "desktop"} onDeviceChange={isDesktop ? setDevice : undefined} canEdit={canEdit} showOperatorDetails={isAdmin} />;
 
   const dockEl = <Dock open={isDesktop ? dock.open : true} collapsible={isDesktop} onOpenChange={(o) => setDockOpen(o)} tab={dock.tab} onTabChange={(t) => setDock((d) => ({ ...d, tab: t }))} problems={problems} />;
 
@@ -673,6 +673,7 @@ function Shell({
           isDesktop={isDesktop}
           publishOpen={publishOpen}
           onPublishOpenChange={setPublishOpen}
+          framework={project.framework}
         />
 
         <div className="ws-body flex min-h-0 flex-1 flex-col px-1.5">

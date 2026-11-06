@@ -1,6 +1,6 @@
 import type { ProjectContext } from "./context";
 import type { AgentMode } from "./tools";
-import { DESIGN_RULES, designDirection, hasUi } from "./design";
+import { designDirection, designRulesFor, hasUi } from "./design";
 import { cloudPromptSection } from "./cloud-docs";
 
 const SAFETY = `SECURITY RULES (always apply):
@@ -22,6 +22,16 @@ const PLAN_RULES = `You are planning a change with the user before anything is b
 
 const FIX_RULES = `You are repairing a broken build or runtime error. Start from the error below, locate the cause with read_file/search_files, apply the smallest correct fix, then re-run "typecheck"/"build" if run_command is available. Call finish with what was wrong and what you changed.`;
 
+/** Framework rules for Expo (React Native) projects; they replace the web assumptions (HTML, CSS, Tailwind). */
+export const EXPO_RULES = `EXPO / REACT NATIVE PROJECT (framework "expo"):
+- This is a React Native app built with Expo SDK 58 and TypeScript. It runs on iOS and Android (Expo Go) and on the web through react-native-web. Entry: index.ts registers App.tsx; screens live in src/.
+- UI is React Native components only: View, Text, Pressable, ScrollView, FlatList / SectionList, TextInput, Image, Switch, Modal, KeyboardAvoidingView, ActivityIndicator. Style with StyleSheet.create objects (flexbox, column by default). NEVER use HTML elements (div, span, button, img, a), className, CSS files, Tailwind classes or the DOM (document, window.localStorage); they crash on phones. Every string must be inside <Text>.
+- Safe area: wrap the app in SafeAreaProvider and pad screens with useSafeAreaInsets() from react-native-safe-area-context. Status bar: StatusBar from expo-status-bar.
+- Navigation: keep it in React state (a tab id or a small stack array) unless the project already uses a navigation library. Do not add expo-router or react-navigation unless the user asks; they need extra native packages.
+- Icons: Ionicons from @expo/vector-icons (type names as ComponentProps<typeof Ionicons>["name"]). Storage: @react-native-async-storage/async-storage. Shadows: the boxShadow style prop.
+- Available packages (already installed and supported by Expo Go): expo, expo-status-bar, react, react-native, react-native-web, react-native-safe-area-context, @expo/vector-icons, @react-native-async-storage/async-storage. Other native modules may not work in Expo Go or need an install; prefer what is listed. Never edit metro.config.js, index.ts or app.json unless asked.
+- Validate with run_command "typecheck" (tsc). Publishing builds the web version only (expo export --platform web); native store builds are not available in Codexa.`;
+
 const IMAGE_RULES = `IMAGES: the generate_image tool is available. Use it for real imagery where a professional site would have photos or illustrations (hero, products, team, gallery, section art): describe the subject, setting and colours that match the design, no text in images. At most 6 per request; reuse URLs. This replaces the colour-block guidance for those places.`;
 
 export function buildSystemPrompt(mode: AgentMode, ctx: ProjectContext, opts: { images?: boolean } = {}): string {
@@ -29,7 +39,8 @@ export function buildSystemPrompt(mode: AgentMode, ctx: ProjectContext, opts: { 
     `You are Codexa, an expert full-stack engineer working inside a user's project (${ctx.frameworkName}, framework id "${ctx.framework}"). You edit the project only through tools; file paths are relative to the project root.`,
     SAFETY,
     mode === "ask" ? ASK_RULES : mode === "fix" ? FIX_RULES : mode === "plan" ? PLAN_RULES : BUILD_RULES,
-    ...((mode === "build" || mode === "plan") && hasUi(ctx.framework) ? [DESIGN_RULES] : []),
+    ...(ctx.framework === "expo" ? [EXPO_RULES] : []),
+    ...((mode === "build" || mode === "plan") && hasUi(ctx.framework) ? [designRulesFor(ctx.framework)] : []),
     ...(opts.images && mode === "build" && hasUi(ctx.framework) ? [IMAGE_RULES] : []),
     ...(ctx.knowledge
       ? [
@@ -62,7 +73,11 @@ export function buildUserMessage(mode: AgentMode, prompt: string, ctx: ProjectCo
   // A plan approved in plan mode counts as the first build turn (its conversation holds only the plan).
   const firstBuild = history.length === 0 || (approvedPlan !== undefined && history.length <= 2);
   const direction = (mode === "build" || mode === "plan") && firstBuild && hasUi(ctx.framework) ? designDirection(ctx.knowledge ? `${prompt}\n${ctx.knowledge}` : prompt, seed) : null;
-  if (direction) sections.push(`<design_direction>\n${direction.text}\n</design_direction>`);
+  if (direction) {
+    // React Native apps use the system font; keep the direction's palette and mood only.
+    const text = ctx.framework === "expo" ? direction.text.replace(/\n- Typography:.*$/m, "\n- Typography: the platform system font (no web fonts in a React Native app)") : direction.text;
+    sections.push(`<design_direction>\n${text}\n</design_direction>`);
+  }
   if (approvedPlan?.length) sections.push(`<approved_plan>\n${approvedPlan.map((s, i) => `${i + 1}. ${s}`).join("\n")}\n</approved_plan>\n\nThe user reviewed and approved this plan. Implement it now with the tools (it is already recorded, so do not call propose_plan). Call finish when you are done.`);
   else if (mode !== "ask") sections.push(PLAN_INSTRUCTION);
   return sections.join("\n\n");

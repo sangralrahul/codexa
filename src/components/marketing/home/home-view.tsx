@@ -16,7 +16,7 @@ import { HomeCta, HomeFaq, HomePricing } from "./closing-sections";
 export function HomeView({ data, signedIn }: { data: HomeData; signedIn: boolean }) {
   const facts = [
     { value: String(data.templateCount), label: "Templates", note: `${data.categoryCount} categories, all running` },
-    { value: String(data.runtimes.length), label: "Runtimes", note: "React, static and Node" },
+    { value: String(data.runtimes.length), label: "Runtimes", note: "React, static, Node and Expo" },
     { value: String(data.publishChecks), label: "Pre-publish checks", note: "On every publish" },
     { value: "Cloudflare", label: "Runs on", note: "Workers, Containers, D1, R2" },
     { value: "Windows", label: "Desktop app", note: "Native, x64" },

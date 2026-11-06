@@ -7,7 +7,7 @@
 import fs from "node:fs/promises";
 import path from "node:path";
 import type { RunnerConfig } from "./config";
-import { PREBUILT_FRAMEWORKS, KNOWN_FRAMEWORKS, type Framework } from "./config";
+import { PREBUILT_FRAMEWORKS, KNOWN_FRAMEWORKS, limitsFor, type Framework } from "./config";
 import { HttpError } from "./http";
 import { copyTree, depsCoveredByBase, linkBaseNodeModules, materialize, readPackageScripts, validateFileMap, FilesError } from "./lib/files";
 import { installPrelude } from "./lib/allowlist";
@@ -15,7 +15,7 @@ import { isSafeId, isSafeLabel, resolveInside } from "./lib/paths";
 import { LogBuffer } from "./lib/ring-buffer";
 import { SANDBOX_PATHS, type SandboxDriver, type SandboxSpec } from "./sandbox/types";
 import { hostFor } from "../../src/lib/hosts";
-import { proxyPassthrough, type ProjectSettings } from "./sessions";
+import { expoEnv, proxyPassthrough, type ProjectSettings } from "./sessions";
 
 export type DeployInput = {
   projectId: string;
@@ -32,6 +32,8 @@ const DEFAULT_BUILD: Record<Framework, { command: string | null; outputDir: stri
   "vite-react": { command: "npm run build", outputDir: "dist" },
   static: { command: null, outputDir: "." },
   "node-express": { command: null, outputDir: "." }, // no static output; refused below
+  // The web version only (`expo export --platform web` → dist/). Native app binaries are not built here.
+  expo: { command: "npm run build", outputDir: "dist" },
   nextjs: { command: null, outputDir: ".next" },
 };
 
@@ -125,7 +127,7 @@ export class DeploymentManager {
     const dir = path.join(this.cfg.sandboxesDir, id);
     const projectDir = path.join(dir, "project");
     const owner = { uid: this.cfg.uid, gid: this.cfg.gid };
-    const spec: SandboxSpec = { id, dir, projectDir, baseDir: this.cfg.baseDir, binDir: this.cfg.binDir, uid: this.cfg.uid, gid: this.cfg.gid, limits: this.cfg.limits, ports: [] };
+    const spec: SandboxSpec = { id, dir, projectDir, baseDir: this.cfg.baseDir, binDir: this.cfg.binDir, uid: this.cfg.uid, gid: this.cfg.gid, limits: limitsFor(this.cfg.limits, framework), ports: [] };
     const siteDir = this.siteDir(input.deploymentId);
     const persistLog = async () => {
       await fs.writeFile(path.join(this.cfg.sitesDir, `${input.deploymentId}.log`), log.text()).catch(() => {});
@@ -159,13 +161,13 @@ export class DeploymentManager {
         }
         if (needsInstall) {
           log.push("system", `$ ${needsInstall}`);
-          const r = await this.driver.exec(spec, { command: needsInstall, env: buildEnv(), timeoutMs: this.cfg.limits.buildTimeoutMs, onOutput: (s, c) => log.write(s, c) });
+          const r = await this.driver.exec(spec, { command: needsInstall, env: buildEnv(framework), timeoutMs: this.cfg.limits.buildTimeoutMs, onOutput: (s, c) => log.write(s, c) });
           log.flush();
           if (r.exitCode !== 0) throw new HttpError(422, `Install failed with exit code ${r.exitCode}`, "build_failed");
         }
         if (buildCommand === "npm run build" && !scripts.build) throw new HttpError(422, "package.json has no build script", "build_failed");
         log.push("system", `$ ${buildCommand}`);
-        const r = await this.driver.exec(spec, { command: buildCommand, env: buildEnv(), timeoutMs: this.cfg.limits.buildTimeoutMs, onOutput: (s, c) => log.write(s, c) });
+        const r = await this.driver.exec(spec, { command: buildCommand, env: buildEnv(framework), timeoutMs: this.cfg.limits.buildTimeoutMs, onOutput: (s, c) => log.write(s, c) });
         log.flush();
         if (r.timedOut) throw new HttpError(422, `Build timed out after ${Math.round(this.cfg.limits.buildTimeoutMs / 1000)}s`, "build_failed");
         if (r.exitCode !== 0) throw new HttpError(422, `Build failed with exit code ${r.exitCode}`, "build_failed");
@@ -184,7 +186,10 @@ export class DeploymentManager {
       const hasIndex = await fs.stat(path.join(outAbs, "index.html")).then((s) => s.isFile()).catch(() => false);
       if (!hasIndex) throw new HttpError(422, `Output directory "${outputDir}" has no index.html`, "build_failed");
       await fs.rm(siteDir, { recursive: true, force: true });
-      const fileCount = await copyTree(outAbs, siteDir);
+      // A build output may legitimately contain "node_modules" folders (Expo's web export puts
+      // package assets such as icon fonts under dist/assets/**/node_modules/...); only the project
+      // root's own node_modules is skipped, when the project itself is the output (static sites).
+      const fileCount = await copyTree(outAbs, siteDir, outAbs === projectDir ? {} : { skip: (n) => n === ".git" });
       if (fileCount === 0) throw new HttpError(422, "Build produced no files", "build_failed");
       log.push("system", `Published ${fileCount} files`);
       const alias = await this.setAlias(input.slug, input.deploymentId);
@@ -210,6 +215,6 @@ export class DeploymentManager {
   }
 }
 
-function buildEnv(): Record<string, string> {
-  return { ...proxyPassthrough(), NODE_ENV: "production", CI: "1", NO_COLOR: "1", HOME: SANDBOX_PATHS.home };
+function buildEnv(framework: Framework): Record<string, string> {
+  return { ...proxyPassthrough(), ...(framework === "expo" ? expoEnv(null) : {}), NODE_ENV: "production", CI: "1", NO_COLOR: "1", HOME: SANDBOX_PATHS.home };
 }

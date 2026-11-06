@@ -52,6 +52,7 @@ describe("github client helpers", () => {
   it("maps package.json to a template", () => {
     expect(detectTemplateId({ "package.json": JSON.stringify({ devDependencies: { vite: "^5" } }) })).toBe("vite-react-starter");
     expect(detectTemplateId({ "package.json": JSON.stringify({ dependencies: { express: "^4" } }) })).toBe("node-express-api");
+    expect(detectTemplateId({ "package.json": JSON.stringify({ dependencies: { expo: "~58.0.0", "react-native": "0.88.1" } }) })).toBe("expo-starter");
     expect(detectTemplateId({ "index.html": "<h1>hi</h1>" })).toBe("static-site");
     expect(detectTemplateId({ "package.json": "{not json" })).toBe("static-site");
   });

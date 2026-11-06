@@ -10,7 +10,10 @@
  * For each Vite or static template it writes the files to a temp directory, type-checks and builds
  * Vite templates with the runner's prebuilt dependency set (no install), serves the output over a
  * tiny local HTTP server, and captures a 1440×900 viewport at 2× with the preinstalled Playwright
- * Chromium (never `playwright install`). Outputs in public/templates/:
+ * Chromium (never `playwright install`). Expo (React Native) templates are type-checked, exported
+ * for the web (`expo export --platform web`) and captured in a 390×844 phone viewport only: the
+ * phone capture is <id>-phone.webp, and the 1440×900 files show that same capture centred on a
+ * plain canvas (no desktop render exists for a phone app). Outputs in public/templates/:
  *   <id>@2x.webp  2880w (quality 78)   <id>.webp  1440w   <id>-720.webp  720w
  * then rewrites the data block in src/components/templates/shots.ts. When a capture fails the old
  * <id>.webp is kept and marked `retina: false`, so srcset never points at a missing file.
@@ -47,7 +50,7 @@ const dryDir = (() => {
   return i >= 0 ? path.resolve(args[i + 1] ?? ".") : null;
 })();
 
-type ShotEntry = { retina: boolean; small: boolean; phone?: boolean };
+type ShotEntry = { retina: boolean; small: boolean; phone?: boolean; device?: "phone" };
 const PHONE = { width: 390, height: 844 };
 
 function log(msg: string) {
@@ -96,6 +99,17 @@ function prepare(t: Template): string {
   const modules = path.join(BASE, t.framework, "node_modules");
   if (!existsSync(modules)) throw new Error(`prebuilt dependencies not found at ${modules} (set CODEXA_BASE_DIR)`);
   symlinkSync(modules, path.join(dir, "node_modules"), "dir");
+  if (t.framework === "expo") {
+    // Same as the template's `npm run typecheck` and `npm run build` (expo export --platform web).
+    run(process.execPath, [path.join(modules, "typescript", "bin", "tsc"), "-p", "tsconfig.json", "--noEmit"], dir);
+    const r = spawnSync(process.execPath, [path.join(modules, "expo", "bin", "cli"), "export", "--platform", "web"], {
+      cwd: dir,
+      encoding: "utf8",
+      env: { ...process.env, NODE_ENV: "production", CI: "1", EXPO_OFFLINE: "1", EXPO_NO_TELEMETRY: "1", CODEXA_SHARED_NODE_MODULES: modules },
+    });
+    if (r.status !== 0) throw new Error(`expo export failed:\n${(r.stdout ?? "") + (r.stderr ?? "")}`.slice(0, 4000));
+    return path.join(dir, "dist");
+  }
   // Same as the template's `npm run build` (tsc -b && vite build), without writing tsbuildinfo.
   run(process.execPath, [path.join(modules, "typescript", "bin", "tsc"), "-p", "tsconfig.json", "--noEmit"], dir);
   run(process.execPath, [path.join(modules, "vite", "bin", "vite.js"), "build", "--logLevel", "error", "--emptyOutDir"], dir);
@@ -114,6 +128,7 @@ const TYPES: Record<string, string> = {
   ".webp": "image/webp",
   ".ico": "image/x-icon",
   ".woff2": "font/woff2",
+  ".ttf": "font/ttf",
 };
 
 /** Static file server with an index.html fallback (SPA routes and directory indexes). */
@@ -132,10 +147,49 @@ function serve(root: string): Promise<{ server: Server; url: string }> {
 
 /* ---------------------------------------------------------------- capture */
 
+/** Expo templates: one real capture in a phone viewport, plus the card image built from it. */
+async function capturePhoneOnly(browser: Browser, t: Template, url: string): Promise<ShotEntry> {
+  const mobile = await browser.newContext({ viewport: PHONE, deviceScaleFactor: 2, isMobile: true, hasTouch: true, colorScheme: "light", reducedMotion: "reduce", locale: "en-US", timezoneId: "UTC" });
+  const mp = await mobile.newPage();
+  const errors: string[] = [];
+  mp.on("pageerror", (e) => errors.push(e.message));
+  await mp.goto(url + (t.previewPath ?? "/"), { waitUntil: "networkidle" });
+  await mp.evaluate(() => document.fonts.ready);
+  await mp.waitForTimeout(600);
+  if (errors.length) throw new Error(`page errors: ${errors.join(" | ")}`);
+  const png = await mp.screenshot({ type: "png" });
+  await mobile.close();
+  // The card image: the phone capture (rounded like a screen) centred on a plain 2880×1800 canvas.
+  const H = 1640;
+  const W = Math.round((H * PHONE.width) / PHONE.height);
+  const r = 96;
+  const mask = Buffer.from(`<svg width="${W}" height="${H}"><rect width="${W}" height="${H}" rx="${r}" ry="${r}"/></svg>`);
+  const screen = await sharp(png).resize({ width: W, height: H }).composite([{ input: mask, blend: "dest-in" }]).png().toBuffer();
+  const border = Buffer.from(`<svg width="${W + 8}" height="${H + 8}"><rect x="2" y="2" width="${W + 4}" height="${H + 4}" rx="${r + 2}" ry="${r + 2}" fill="#111111"/></svg>`);
+  const card = await sharp({ create: { width: 2880, height: 1800, channels: 3, background: "#f1f1ef" } })
+    .composite([
+      { input: border, left: Math.round((2880 - W - 8) / 2), top: Math.round((1800 - H - 8) / 2) },
+      { input: screen, left: Math.round((2880 - W) / 2), top: Math.round((1800 - H) / 2) },
+    ])
+    .png()
+    .toBuffer();
+  if (dryDir) {
+    await sharp(png).png().toFile(path.join(dryDir, `${t.id}-phone.png`));
+    await sharp(card).resize({ width: 1440 }).png().toFile(path.join(dryDir, `${t.id}.png`));
+    return { retina: true, small: true, phone: true, device: "phone" };
+  }
+  await sharp(png).webp({ quality: 80, effort: 6 }).toFile(path.join(PUBLIC_DIR, `${t.id}-phone.webp`));
+  await sharp(card).webp({ quality: 78, effort: 6 }).toFile(path.join(PUBLIC_DIR, `${t.id}@2x.webp`));
+  await sharp(card).resize({ width: 1440 }).webp({ quality: 80, effort: 6 }).toFile(path.join(PUBLIC_DIR, `${t.id}.webp`));
+  await sharp(card).resize({ width: 720 }).webp({ quality: 80, effort: 6 }).toFile(path.join(PUBLIC_DIR, `${t.id}-720.webp`));
+  return { retina: true, small: true, phone: true, device: "phone" };
+}
+
 async function capture(browser: Browser, t: Template): Promise<ShotEntry> {
   const root = prepare(t);
   const { server, url } = await serve(root);
   try {
+    if (t.framework === "expo") return await capturePhoneOnly(browser, t, url);
     const context = await browser.newContext({ viewport: VIEWPORT, deviceScaleFactor: 2, colorScheme: "light", reducedMotion: "reduce", locale: "en-US", timezoneId: "UTC" });
     const page = await context.newPage();
     const errors: string[] = [];
@@ -182,8 +236,12 @@ async function capture(browser: Browser, t: Template): Promise<ShotEntry> {
 function readCurrentShots(): Map<string, ShotEntry> {
   const src = readFileSync(SHOTS_FILE, "utf8");
   const map = new Map<string, ShotEntry>();
-  for (const m of src.matchAll(/\["([a-z0-9-]+)", \{ retina: (true|false), small: (true|false)(?:, phone: (true|false))? \}\]/g))
-    map.set(m[1], m[4] === "true" ? { retina: m[2] === "true", small: m[3] === "true", phone: true } : { retina: m[2] === "true", small: m[3] === "true" });
+  for (const m of src.matchAll(/\["([a-z0-9-]+)", \{ retina: (true|false), small: (true|false)(?:, phone: (true|false))?(?:, device: "(phone)")? \}\]/g)) {
+    const entry: ShotEntry = { retina: m[2] === "true", small: m[3] === "true" };
+    if (m[4] === "true") entry.phone = true;
+    if (m[5] === "phone") entry.device = "phone";
+    map.set(m[1], entry);
+  }
   return map;
 }
 
@@ -191,7 +249,7 @@ function writeShots(map: Map<string, ShotEntry>) {
   const src = readFileSync(SHOTS_FILE, "utf8");
   const rows = [...map.entries()]
     .sort(([a], [b]) => a.localeCompare(b))
-    .map(([id, s]) => `  ["${id}", { retina: ${s.retina}, small: ${s.small}${s.phone ? ", phone: true" : ""} }],`)
+    .map(([id, s]) => `  ["${id}", { retina: ${s.retina}, small: ${s.small}${s.phone ? ", phone: true" : ""}${s.device ? `, device: "${s.device}"` : ""} }],`)
     .join("\n");
   const block = `// <capture-data> (generated by scripts/capture-template-shots.ts; edit by re-running the script)\nconst DATA: [string, TemplateShot][] = [\n${rows}\n];\n// </capture-data>`;
   const next = src.replace(/\/\/ <capture-data>[\s\S]*?\/\/ <\/capture-data>/, block);
@@ -206,7 +264,7 @@ async function main() {
   mkdirSync(PUBLIC_DIR, { recursive: true });
   mkdirSync(WORK, { recursive: true });
   const shots = readCurrentShots();
-  const targets = TEMPLATES.filter((t) => t.framework === "vite-react" || t.framework === "static").filter((t) => !only || only.has(t.id));
+  const targets = TEMPLATES.filter((t) => t.framework === "vite-react" || t.framework === "static" || t.framework === "expo").filter((t) => !only || only.has(t.id));
   const browser = await chromium.launch();
   const failed: string[] = [];
   try {

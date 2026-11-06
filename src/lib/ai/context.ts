@@ -10,7 +10,7 @@ import { truncateMiddle, truncateTail } from "./tools/truncate";
 /** Character budget for file excerpts in the initial context (~ 6k tokens). */
 export const CONTEXT_FILE_BUDGET = 24_000;
 const MAX_TREE_ENTRIES = 400;
-const KEY_FILES = ["package.json", "src/App.tsx", "src/main.tsx", "index.html", "src/index.ts", "src/server.ts", "server.ts", "app/page.tsx", "src/app/page.tsx", "src/index.css", "README.md"];
+const KEY_FILES = ["package.json", "App.tsx", "app.json", "src/theme.ts", "src/App.tsx", "src/main.tsx", "index.html", "src/index.ts", "src/server.ts", "server.ts", "app/page.tsx", "src/app/page.tsx", "src/index.css", "README.md"];
 
 export type ProjectContext = {
   framework: string;

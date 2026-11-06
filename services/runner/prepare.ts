@@ -2,7 +2,7 @@
  * One-time host preparation for the runner:
  *   - creates the RUNNER_DATA_DIR layout (sandboxes/, sites/, base/, bin/)
  *   - installs the prebuilt base dependency sets that sandboxes link to
- *     (base/vite-react and base/node-express), using the exact package.json
+ *     (base/vite-react, base/node-express and base/expo), using the exact package.json
  *     of the corresponding project template so templates run without a
  *     per-project `npm install`
  *   - chowns everything to the sandbox uid and writes base/manifest.json
@@ -22,11 +22,12 @@ import { loadConfig, PREBUILT_FRAMEWORKS, type PrebuiltFramework } from "./confi
 import { ensureLayout } from "./lib/layout";
 import { viteReactTemplates } from "../../src/templates/vite-react";
 import { nodeExpressTemplates } from "../../src/templates/node-express";
+import { expoTemplates } from "../../src/templates/expo";
 
 type PackageJson = { name?: string; dependencies?: Record<string, string>; devDependencies?: Record<string, string> };
 
 function templatePackageJson(framework: PrebuiltFramework): PackageJson {
-  const list = framework === "vite-react" ? viteReactTemplates : nodeExpressTemplates;
+  const list = framework === "vite-react" ? viteReactTemplates : framework === "expo" ? expoTemplates : nodeExpressTemplates;
   const raw = list[0]?.files["package.json"];
   if (!raw) throw new Error(`Template for ${framework} has no package.json`);
   const parsed = JSON.parse(raw) as PackageJson;

@@ -20,6 +20,16 @@ The result must look like a real product designed by a professional for this spe
 - Components: realistic navigation, buttons with hover and focus states, form fields with labels, empty and loading states where data appears. Accessible contrast (WCAG AA) and visible keyboard focus.
 - Finish: a proper footer, a favicon/title in index.html matching the brand name, and consistent border radius (pick one: 6, 8 or 12px) across the whole app.`;
 
+/** The same standard for React Native (Expo) apps: native components and StyleSheet, not HTML/CSS. */
+export const MOBILE_DESIGN_RULES = `DESIGN STANDARD (mobile app, React Native):
+The result must look like a real, well-made phone app for this specific subject, not a web page squeezed onto a phone.
+- Colour: one neutral base plus ONE accent from the design direction, kept in src/theme.ts (or the project's existing theme file) and imported everywhere. Never use purple, violet, indigo or fuchsia, or gradients, unless the user asks.
+- Typography: the platform system font (do not load web fonts). Clear hierarchy: a 28-34px bold screen title, 16-17px semibold headings, 15-16px body, 12-13px captions in the muted colour.
+- Layout: a 4/8px spacing scale, 16px screen padding, cards with 12-16px radius and hairline borders (StyleSheet.hairlineWidth). Respect safe areas. Touch targets at least 44x44 (use hitSlop on small icons).
+- Navigation: bottom tabs for 2-5 top-level sections, a back button (chevron-back) on pushed screens. No hamburger menus.
+- Content: specific, believable copy and sample data for the subject. No lorem ipsum, no marketing clichés, no emoji used as icons: use @expo/vector-icons (Ionicons).
+- States: pressed feedback on every Pressable, empty states with a clear action, disabled states that look disabled. Accessible: accessibilityRole, accessibilityLabel on icon-only buttons, accessibilityState for toggles and tabs, AA contrast.`;
+
 type Direction = {
   id: string;
   label: string;
@@ -136,6 +146,11 @@ export function designDirection(prompt: string, seed = ""): DesignDirection {
     label: d.label,
     text: `Design direction "${d.label}" (chosen for this subject; apply it unless the user later asks otherwise):\n- Mood: ${d.mood}\n- Palette: ${d.palette}\n- Typography: ${d.type}`,
   };
+}
+
+/** The design standard for a framework: the mobile one for Expo, the web one otherwise. */
+export function designRulesFor(framework: string) {
+  return framework === "expo" ? MOBILE_DESIGN_RULES : DESIGN_RULES;
 }
 
 /** Frameworks that render a UI (the Express API starters do not). */

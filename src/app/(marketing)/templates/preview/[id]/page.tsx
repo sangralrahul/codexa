@@ -58,6 +58,8 @@ export default async function TemplatePreviewPage({ params, searchParams }: { pa
   const routes = TEMPLATE_API_ROUTES[t.id];
   const hasShot = TEMPLATE_SHOTS.has(t.id);
   const phoneShot = templatePhoneShotSrc(t.id);
+  // Mobile apps (Expo) have no desktop render: only the phone capture is shown.
+  const phoneOnly = TEMPLATE_SHOTS.get(t.id)?.device === "phone" && Boolean(phoneShot);
   const srcDoc = hasShot ? staticSrcDoc(t) : null;
   const port = t.settings.port ?? framework.port;
   const entryRoute = t.previewPath ?? "/";
@@ -126,7 +128,7 @@ export default async function TemplatePreviewPage({ params, searchParams }: { pa
               <div className="e4 overflow-hidden">
                 <RouteList routes={routes} variant="hero" command={t.settings.devCommand || framework.devCommand} className="rounded-none border-0 shadow-none" />
               </div>
-            ) : (
+            ) : phoneOnly ? null : (
               <BrowserFrame url={frameLabel} className={cn("pg-shot rounded-[14px]", phoneShot && "hidden lg:mr-24 lg:block")} bodyClassName="bg-white">
                 {srcDoc ? (
                   <RunItHere srcDoc={srcDoc} name={t.name}>
@@ -137,7 +139,14 @@ export default async function TemplatePreviewPage({ params, searchParams }: { pa
                 )}
               </BrowserFrame>
             )}
-            {phoneShot ? (
+            {phoneShot && phoneOnly ? (
+              <div className="mx-auto w-[min(300px,76vw)] py-2">
+                <DeviceFrame device="phone" className="!w-full drop-shadow-2xl">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={phoneShot} alt={`${t.name} starter, as built from its own files`} width={390} height={844} decoding="async" data-develop="" className="size-full object-cover object-top" />
+                </DeviceFrame>
+              </div>
+            ) : phoneShot ? (
               <div className="mx-auto w-[min(260px,72vw)] lg:pointer-events-none lg:absolute lg:-bottom-8 lg:right-0 lg:mx-0 lg:w-[200px]">
                 <DeviceFrame device="phone" className="!w-full drop-shadow-2xl">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -145,10 +154,12 @@ export default async function TemplatePreviewPage({ params, searchParams }: { pa
                 </DeviceFrame>
               </div>
             ) : null}
-            <FrameCaption className={cn("mx-0 max-w-none text-left", phoneShot && "lg:mr-24")}>
+            <FrameCaption className={cn("mx-0 max-w-none text-left", phoneShot && !phoneOnly && "lg:mr-24", phoneOnly && "text-center")}>
               {routes && !hasShot
                 ? `These routes are read from this template's own source files. It is an API, so there is no screen to capture.`
-                : `Starter screenshot captured from this template's own build at 1440×900${phoneShot ? ", plus a 390px phone capture" : ""}. It shows the template as it ships, not output generated from a prompt.`}
+                : phoneOnly
+                  ? `Starter screenshot captured from this template's own web build (react-native-web) in a 390×844 phone viewport. In Codexa you can also open it on your phone with Expo Go.`
+                  : `Starter screenshot captured from this template's own build at 1440×900${phoneShot ? ", plus a 390px phone capture" : ""}. It shows the template as it ships, not output generated from a prompt.`}
             </FrameCaption>
           </figure>
 

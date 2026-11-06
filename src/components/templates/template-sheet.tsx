@@ -11,7 +11,7 @@ import { cn } from "@/lib/utils";
 import { FileTree } from "./file-tree";
 import { RouteList, TemplatePreview } from "./template-preview";
 import { TEMPLATE_API_ROUTES } from "./api-routes.generated";
-import { TEMPLATE_SHOTS } from "./shots";
+import { TEMPLATE_SHOTS, templatePhoneShotSrc } from "./shots";
 import { templatePreviewHref } from "./template-card";
 import type { ReadmeBlock, TemplateSheetDetail } from "./template-details";
 import { useGallery } from "./gallery-state";
@@ -105,6 +105,14 @@ export function TemplatePreviewSheet({ details, actions }: { details: Record<str
               <RouteList routes={routes} variant="hero" command={d.devCommand} className="relative rounded-md shadow-xl" />
             ) : !hasShot ? (
               <TemplatePreview id={t.id} category={t.category} className="relative shadow-xl" />
+            ) : TEMPLATE_SHOTS.get(t.id)?.device === "phone" && templatePhoneShotSrc(t.id) ? (
+              // Mobile apps (Expo) only have a phone capture of their web render.
+              <div className="relative mx-auto h-[360px] [container-type:size]">
+                <DeviceFrame device="phone" fit="height">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={templatePhoneShotSrc(t.id)!} alt={`${t.name} starter on a phone`} width={390} height={844} loading="lazy" decoding="async" className="size-full object-cover object-top" />
+                </DeviceFrame>
+              </div>
             ) : t.category === "mobile-first" ? (
               <div className="relative mx-auto h-[360px] [container-type:size]">
                 <DeviceFrame device="phone" fit="height">
@@ -117,7 +125,7 @@ export function TemplatePreviewSheet({ details, actions }: { details: Record<str
               </BrowserFrame>
             )}
             <p className="text-meta relative mt-3 text-center text-muted-foreground">
-              {hasShot ? "Starter screenshot, captured from this template\u2019s own build." : "An API with no screen: these routes are read from the template\u2019s own source."}
+              {hasShot ? (TEMPLATE_SHOTS.get(t.id)?.device === "phone" ? "Starter screenshot, captured from this template\u2019s own web build in a 390\u00d7844 phone viewport." : "Starter screenshot, captured from this template\u2019s own build.") : "An API with no screen: these routes are read from the template\u2019s own source."}
             </p>
           </div>
 

@@ -91,7 +91,15 @@ const API: Suggestion[] = [
   { title: "Explain the routes", prompt: "Explain how routing and the data store work in this API.", mode: "ask", icon: "explain" },
 ];
 
+const MOBILE_APP: Suggestion[] = [
+  { title: "Add a screen", prompt: "Add a Settings screen with a few Switch toggles and link it from the tab bar.", mode: "build", icon: "phone" },
+  { title: "Save the data", prompt: "Persist the app's data with AsyncStorage so it survives closing the app.", mode: "build", icon: "form" },
+  { title: "Pull to refresh", prompt: "Add pull-to-refresh to the main list with a RefreshControl.", mode: "build", icon: "bolt" },
+  { title: "Explain the navigation", prompt: "Explain how screens and navigation work in this React Native app.", mode: "ask", icon: "explain" },
+];
+
 export function suggestionsFor(category?: string | null, framework?: string | null): Suggestion[] {
   if (framework === "node-express") return API;
+  if (framework === "expo") return MOBILE_APP;
   return (category && BY_CATEGORY[category]) || GENERIC;
 }

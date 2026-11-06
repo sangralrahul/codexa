@@ -26,6 +26,7 @@ export default async function NewProjectPage({ searchParams }: { searchParams: S
     { label: "Landing page", prompt: "A landing page for a coffee subscription with pricing, FAQ and an email signup.", templateId: byCategory("landing-pages") },
     { label: "Dashboard", prompt: "A sales dashboard with revenue charts, a customers table and date filters.", templateId: byCategory("dashboards") },
     { label: "Online store", prompt: "An online store for handmade candles with a product grid, filters and a cart.", templateId: byCategory("ecommerce") },
+    { label: "Mobile app", prompt: "A mobile habit tracker with daily check-ins, streaks and reminders.", templateId: templates.find((t) => t.framework === "expo")?.id },
     { label: "REST API", prompt: "A REST API for a library: books, members and loans with validation.", templateId: templates.find((t) => t.framework === "node-express")?.id },
   ].filter((p): p is PromptPreset => Boolean(p.templateId));
   // ?template= (or ?tab=template) opens the template tab with that starter selected.

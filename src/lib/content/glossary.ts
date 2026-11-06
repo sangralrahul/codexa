@@ -32,7 +32,7 @@ export const GLOSSARY: GlossaryTerm[] = [
   t("Diff view", "A side-by-side or inline comparison of two versions of a file, used to review snapshot differences and the changes made by an AI run before keeping or reverting them.", "/docs/editor", ["editor", "projects"]),
   t("Environment variable", "A named value (often a secret) made available to a project's preview and deployment. Values are encrypted with the platform key before storage and masked in the UI by default.", "/docs/environment-variables", ["projects"]),
   t("Fix mode", "An AI mode focused on a reported error: the agent reads the failing output, locates the cause and applies a targeted repair.", "/docs/ai-agent", ["ai"]),
-  t("Framework", "The project type that decides how it is installed, run and built: vite-react, static or node-express today. Next.js projects are on the roadmap.", "/docs/projects", ["projects"]),
+  t("Framework", "The project type that decides how it is installed, run and built: vite-react, static, node-express or expo today. Next.js projects are on the roadmap.", "/docs/projects", ["projects"]),
   t("Generation run", "One execution of the AI agent for a prompt. A run records its stage, plan, changed files, token usage, repair attempts and the snapshot taken before it started.", "/docs/ai-agent", ["ai"]),
   t("Idempotent webhook", "A webhook handler that produces the same result no matter how many times the same event is delivered. Codexa records every billing event id in webhook_events and skips duplicates.", "/api/webhooks", ["billing", "api"]),
   t("Import from GitHub", "Creating a project from an existing repository and branch through the GitHub integration. Files are copied into Codexa's database; the repository is remembered for later pushes.", "/docs/github", ["github"]),
@@ -56,7 +56,7 @@ export const GLOSSARY: GlossaryTerm[] = [
   t("Share link", "A tokenized URL that grants view or edit access to a project without a workspace membership. Links can expire and can be revoked.", "/docs/projects", ["projects"]),
   t("Snapshot", "A named, immutable copy of every file in a project. Codexa takes one automatically before each AI run and before deployments; you can create them manually at any time.", "/docs/projects", ["projects"]),
   t("SSE (server-sent events)", "The streaming format used by the generation endpoint and runtime logs: a long-lived HTTP response that emits named events as they happen.", "/api/generations", ["api"]),
-  t("Template", "A starter project with real files and documented dependencies (React + Vite, static site, Node + Express). Every new project begins from a template or a GitHub import.", "/templates", ["projects"]),
+  t("Template", "A starter project with real files and documented dependencies (React + Vite, static site, Node + Express, Expo React Native). Every new project begins from a template or a GitHub import.", "/templates", ["projects"]),
   t("Token (AI)", "The unit AI providers bill by. Codexa records input and output tokens for every run and enforces the plan's monthly token limit.", "/docs/billing", ["ai", "billing"]),
   t("Workspace", "The container for projects, members, integrations, usage and billing. Every user has a personal workspace and may belong to team workspaces.", "/docs/getting-started", ["workspaces"]),
 ];

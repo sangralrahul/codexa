@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ArrowUpRight, Atom, Bookmark, Braces, Copy, ExternalLink, FileCode2, Globe, Hexagon, Link2, Lock, MoreHorizontal, Pencil, Trash2, type LucideIcon } from "lucide-react";
+import { ArrowUpRight, Atom, Bookmark, Braces, Copy, ExternalLink, FileCode2, Globe, Hexagon, Link2, Lock, MoreHorizontal, Pencil, Smartphone, Trash2, type LucideIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { projectsApi } from "@/lib/client/workspace/api";
 import type { ProjectListItem } from "@/lib/client/workspace/types";
@@ -41,9 +41,9 @@ const VisibilityIcon = ({ v, className }: { v: ProjectListItem["visibility"]; cl
   v === "public" ? <Globe className={className} aria-hidden="true" /> : v === "unlisted" ? <Link2 className={className} aria-hidden="true" /> : <Lock className={className} aria-hidden="true" />;
 
 /** Thumbnail layout when the project has no known template: by runtime framework. */
-const FRAMEWORK_CATEGORY: Record<string, string> = { "node-express": "apis", static: "websites", "vite-react": "web-apps", nextjs: "web-apps" };
-/** A generic glyph per runtime (lucide, no brand marks): React → atom, Next.js → hexagon, Express → braces, static → globe. */
-const FRAMEWORK_ICON: Record<string, LucideIcon> = { "vite-react": Atom, nextjs: Hexagon, "node-express": Braces, static: Globe };
+const FRAMEWORK_CATEGORY: Record<string, string> = { "node-express": "apis", static: "websites", "vite-react": "web-apps", expo: "mobile-apps", nextjs: "web-apps" };
+/** A generic glyph per runtime (lucide, no brand marks): React → atom, Next.js → hexagon, Express → braces, static → globe, Expo → phone. */
+const FRAMEWORK_ICON: Record<string, LucideIcon> = { "vite-react": Atom, nextjs: Hexagon, "node-express": Braces, static: Globe, expo: Smartphone };
 
 /** Framework glyph and label as one unit ("⚛ Vite + React"). */
 export function FrameworkTag({ framework, className }: { framework: string; className?: string }) {

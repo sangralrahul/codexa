@@ -59,7 +59,7 @@ export const PLATFORM_FEATURES: Feature[] = [
 
 export const PRODUCT_FAQ: FAQItem[] = [
   { question: "Do I own the code?", answer: "Yes. Projects are ordinary files stored in your workspace. You can download them, push them to GitHub, or deploy elsewhere at any time." },
-  { question: "Which stacks are supported today?", answer: "Starter templates cover React + Vite + TypeScript + Tailwind single-page apps, static HTML/CSS/JS sites, and Node + Express REST APIs. You can import other repositories from GitHub, but the sandbox is tuned for these three." },
+  { question: "Which stacks are supported today?", answer: "Starter templates cover React + Vite + TypeScript + Tailwind single-page apps, static HTML/CSS/JS sites, Node + Express REST APIs, and Expo (React Native) mobile apps. You can import other repositories from GitHub, but the sandbox is tuned for these four." },
   { question: "Does the AI work out of the box?", answer: "Only when the operator of the Codexa instance has configured an Anthropic or OpenAI API key. Without one, AI features show a \"not configured\" state. Everything else (editor, runtime, deployment) works without AI." },
   { question: "What happens when the AI makes a mistake?", answer: "A snapshot is taken before every run, each run records its plan, tool calls, and changed files, and you can revert the run with one click. Validation (type-check, build, tests) runs in the sandbox and the agent repairs errors at most twice before handing control back." },
   { question: "Where does my code run?", answer: "Never inside the web application. On Cloudflare each project gets its own Container, started on demand, where the runner executes commands as an unprivileged user. Self-hosted runners use Linux namespaces with cgroup memory and process limits; Docker and E2B drivers are available for operators who prefer them." },
@@ -100,7 +100,7 @@ export const PRODUCT_PAGES: Record<string, ProductPage> = {
     limitations: [
       AI_KEY_LIMIT,
       "Generation quality depends on the prompt and the model; see the [prompting guide](/docs/prompting). Vague prompts produce generic apps.",
-      "Starter templates are React + Vite, static, and Node + Express. Full Next.js generation is not available yet.",
+      "Starter templates are React + Vite, static, Node + Express, and Expo (React Native). Full Next.js generation is not available yet.",
       "Each generation counts against your plan's AI request and token limits; see [credits](/credits).",
     ],
     faq: [
@@ -343,5 +343,5 @@ export const PRODUCT_PAGES: Record<string, ProductPage> = {
 export const ALTERNATIVES_FAQ: FAQItem[] = [
   { question: "Why not name specific competitors?", answer: "Other products change quickly and we would rather not misrepresent them. The categories below describe approaches, and you can map the products you know onto them." },
   { question: "Can I use Codexa with my existing IDE assistant?", answer: "Yes. Push the project to GitHub and keep working in your own editor; import it again whenever you want to use Codexa's sandbox or deployment." },
-  { question: "What is Codexa not good at yet?", answer: "Concurrent editing, native mobile apps, non-JavaScript runtimes, and drag-and-drop design. See the [roadmap](/roadmap)." },
+  { question: "What is Codexa not good at yet?", answer: "Concurrent editing, App Store and Google Play builds (Expo apps run in Expo Go and publish as a web app), non-JavaScript runtimes, and drag-and-drop design. See the [roadmap](/roadmap)." },
 ];

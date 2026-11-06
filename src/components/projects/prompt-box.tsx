@@ -44,7 +44,7 @@ export type PromptPreset = {
   templateId: string;
 };
 export type PromptWorkspace = { id: string; name: string; plan: string };
-/** A hero tab: a real starter template for one runtime (React app, static site, Express API). */
+/** A hero tab: a real starter template for one runtime (React app, Expo mobile app, static site, Express API). */
 export type PromptMode = { id: string; label: string; templateId: string; framework: string; detail: string };
 /** A recent project for the hero's quick picks. */
 export type PromptRecent = { id: string; name: string; templateId: string | null; framework: string | null };
@@ -62,6 +62,7 @@ const IDEAS_BY_FRAMEWORK: Record<string, readonly string[]> = {
   "vite-react": ["a habit tracker with streaks and weekly charts", "an internal tool to review support tickets", "a recipe app where I can save and tag recipes", "an invoice tracker with GST totals"],
   static: ["a landing page for a coffee subscription", "a portfolio site with a projects grid and contact form", "a one-page site for a yoga studio with a class timetable"],
   "node-express": ["a REST API for a library with books, members and loans", "a webhook receiver that validates and logs events", "a URL shortener API with click counts"],
+  expo: ["a mobile habit tracker with streaks and reminders", "a grocery delivery app with a cart", "a workout logger for my phone", "a mobile notes app with search and pinning"],
 };
 
 const VIS_ICON: Record<ProjectVisibility, typeof Lock> = {

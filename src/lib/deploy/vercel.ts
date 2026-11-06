@@ -19,7 +19,7 @@ const API = "https://api.vercel.com";
 const POLL_INTERVAL_MS = 4000;
 const POLL_TIMEOUT_MS = 10 * 60_000;
 
-const FRAMEWORK_MAP: Record<string, string | null> = { "vite-react": "vite", static: null, "node-express": null, nextjs: "nextjs" };
+const FRAMEWORK_MAP: Record<string, string | null> = { "vite-react": "vite", static: null, "node-express": null, expo: null, nextjs: "nextjs" };
 
 export function vercelUrl(path: string, teamId = env.VERCEL_TEAM_ID): string {
   const u = new URL(`${API}${path}`);

@@ -56,6 +56,12 @@ export function isImmutableAsset(urlPath: string): boolean {
   return /^\/assets\/[^/]+[-.][A-Za-z0-9_]{8,}\.[a-z0-9]+$/.test(urlPath) || /\.[A-Fa-f0-9]{8,}\.(js|css|woff2?|png|jpe?g|svg|webp|avif)$/.test(urlPath);
 }
 
+/** Metro (Expo) bundle and source-map requests, which may take longer than a page request. */
+export function isBundleRequest(urlPath: string): boolean {
+  return /\.(bundle|map)$/.test(urlPath);
+}
+const BUNDLE_TIMEOUT_MS = 300_000;
+
 function page(title: string, body: string, status = 404, extraHead = ""): { status: number; html: string } {
   return {
     status,
@@ -139,12 +145,14 @@ export function createProxyServer(cfg: RunnerConfig, sessions: SessionManager, d
         res.end(INSPECTOR_JS);
         return;
       }
-      if (req.method === "GET" && String(req.headers.accept ?? "").includes("text/html")) {
+      // Expo Go asks for the manifest at "/" with an expo-platform header and never wants HTML.
+      if (req.method === "GET" && String(req.headers.accept ?? "").includes("text/html") && !req.headers["expo-platform"]) {
         req.headers["accept-encoding"] = "identity";
         htmlProxy.web(req, res, { target: `http://127.0.0.1:${session.port}` });
         return;
       }
-      proxy.web(req, res, { target: `http://127.0.0.1:${session.port}` });
+      // Metro builds a bundle on its first request (cold cache: can take minutes on a small sandbox).
+      proxy.web(req, res, { target: `http://127.0.0.1:${session.port}`, ...(isBundleRequest(urlPath) ? { proxyTimeout: BUNDLE_TIMEOUT_MS } : {}) });
       return;
     }
     if (route.kind === "site") {

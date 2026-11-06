@@ -12,6 +12,7 @@ import path from "node:path";
 import { createRunner, type RunnerApp } from "../../../services/runner/app";
 import { viteReactTemplates } from "../../../src/templates/vite-react";
 import { staticTemplates } from "../../../src/templates/static";
+import { expoTemplates } from "../../../src/templates/expo";
 
 const isRoot = typeof process.getuid === "function" && process.getuid() === 0;
 const BASE_DIR = path.join(process.env.RUNNER_DATA_DIR || "/var/codexa", "base");
@@ -20,6 +21,10 @@ const hasBase = await fs
   .then((s) => s.isDirectory())
   .catch(() => false);
 const canRun = process.platform === "linux" && isRoot && hasBase;
+const hasExpoBase = await fs
+  .stat(path.join(BASE_DIR, "expo", "node_modules", "expo"))
+  .then((s) => s.isDirectory())
+  .catch(() => false);
 const TOKEN = "test-runner-token";
 
 let app: RunnerApp;
@@ -228,6 +233,62 @@ describe.skipIf(!canRun)("runner service (in-process, local sandbox driver)", ()
 
     expect((await request("DELETE", `/sessions/${id}`)).status).toBe(200);
   }, 150_000);
+
+  it.skipIf(!hasExpoBase)("runs an Expo project: web render, Expo Go manifest and native bundle through the preview proxy", async () => {
+    const token = "expotoken0123456789xyz";
+    const tpl = expoTemplates[0];
+    const created = await request("POST", "/sessions", { projectId: "proj-expo", framework: "expo", settings: tpl.settings, files: tpl.files, env: {}, previewToken: token });
+    expect(created.status).toBe(200);
+    const { id } = created.json() as { id: string };
+    expect(await waitFor(id, ["running", "error"], 120_000)).toBe("running");
+    const host = `${token}.preview.test`;
+
+    // Browser: Metro's web HTML (with the inspector tag) and the react-native-web bundle.
+    const page = await proxyGet(host, "/", { accept: "text/html" });
+    expect(page.status).toBe(200);
+    const bundle = /src="(\/index\.ts\.bundle\?[^"]+)"/.exec(page.text)?.[1];
+    expect(bundle).toBeTruthy();
+    expect((await proxyGet(host, bundle!.replace(/&amp;/g, "&"))).status).toBe(200);
+
+    // Expo Go: the manifest at "/" (expo-platform header) points its bundle at the public preview host.
+    for (const platform of ["ios", "android"]) {
+      const m = await proxyGet(host, "/", { "expo-platform": platform, accept: "application/expo+json,application/json" });
+      expect(m.status).toBe(200);
+      expect(m.headers["content-type"]).toContain("application/expo+json");
+      const manifest = m.json() as { launchAsset: { url: string }; extra: { expoClient: { hostUri: string } } };
+      expect(manifest.launchAsset.url.startsWith(`http://${host}:4100/index.ts.bundle?platform=${platform}`)).toBe(true);
+      // hostUri follows the Host header Expo Go sent (here: no port).
+      expect(manifest.extra.expoClient.hostUri).toBe(host);
+      const native = await proxyGet(host, new URL(manifest.launchAsset.url).pathname + new URL(manifest.launchAsset.url).search);
+      expect(native.status).toBe(200);
+      expect(native.text.length).toBeGreaterThan(100_000);
+    }
+
+    const tc = (await request("POST", `/sessions/${id}/exec`, { command: "typecheck" })).json() as { exitCode: number; skipped: boolean };
+    expect(tc.skipped).toBe(false);
+    expect(tc.exitCode).toBe(0);
+    expect((await request("DELETE", `/sessions/${id}`)).status).toBe(200);
+  }, 240_000);
+
+  it.skipIf(!hasExpoBase)("publishes the web version of an Expo project, including package assets such as icon fonts", async () => {
+    const tpl = expoTemplates.find((t) => t.id === "expo-grocery")!;
+    const r = await request("POST", "/deployments", { projectId: "proj-expo", deploymentId: "dep-expo-1", framework: "expo", settings: tpl.settings, files: tpl.files, slug: "my-mobile-app" });
+    expect(r.status).toBe(200);
+    const d = r.json() as { fileCount: number; log: string };
+    expect(d.log).toContain("expo export --platform web");
+    expect(d.fileCount).toBeGreaterThan(3);
+    const home = await proxyGet("my-mobile-app.sites.test", "/", { accept: "text/html" });
+    expect(home.status).toBe(200);
+    const js = /src="(\/_expo\/static\/js\/web\/[^"]+\.js)"/.exec(home.text)?.[1];
+    expect(js).toBeTruthy();
+    const bundle = await proxyGet("my-mobile-app.sites.test", js!);
+    expect(bundle.status).toBe(200);
+    const font = /\/assets\/[^"]+Ionicons\.[a-f0-9]+\.ttf/.exec(bundle.text)?.[0];
+    expect(font).toBeTruthy();
+    const ttf = await proxyGet("my-mobile-app.sites.test", font!);
+    expect(ttf.status).toBe(200);
+    expect(ttf.headers["content-type"]).toBe("font/ttf");
+  }, 300_000);
 
   it("sweeper stops idle and old sessions", async () => {
     const token = "sweeptoken0123456789a";

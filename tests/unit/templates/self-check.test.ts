@@ -6,11 +6,13 @@
 import { describe, expect, it } from "vitest";
 import { FRAMEWORKS, TEMPLATE_CATEGORIES, TEMPLATE_FRAMEWORKS, TEMPLATES, type Template } from "@/templates";
 import { NODE_SETTINGS, STATIC_SETTINGS, VITE_SETTINGS } from "@/templates/shared";
+import { EXPO_PACKAGE_DEPENDENCIES, EXPO_PACKAGE_DEV_DEPENDENCIES, EXPO_SETTINGS, expoTemplates } from "@/templates/expo";
 
 const ALLOWED_DEPS: Record<string, (name: string) => boolean> = {
   "vite-react": (n) => ["react", "react-dom", "vite", "@vitejs/plugin-react", "tailwindcss", "@tailwindcss/vite", "typescript", "@types/react", "@types/react-dom"].includes(n),
   static: () => false,
   "node-express": (n) => ["express", "zod", "tsx", "typescript"].includes(n) || n.startsWith("@types/"),
+  expo: (n) => n in EXPO_PACKAGE_DEPENDENCIES || n in EXPO_PACKAGE_DEV_DEPENDENCIES,
 };
 
 type Pkg = { name?: string; scripts?: Record<string, string>; dependencies?: Record<string, string>; devDependencies?: Record<string, string> };
@@ -106,6 +108,17 @@ describe("template catalog", () => {
         expect(t.files["vite.config.ts"]).toBeDefined();
         expect(t.files["index.html"]).toContain("/src/main.tsx");
         expect(t.settings).toEqual(VITE_SETTINGS);
+      } else if (t.framework === "expo") {
+        // Metro serves the web preview and the Expo Go manifest on $PORT; publishing exports the web build.
+        expect(pkg!.scripts!.dev).toMatch(/^expo start\b.*--port \$PORT/);
+        expect(pkg!.scripts!.build).toBe("expo export --platform web");
+        expect(pkg!.scripts!.typecheck).toBe("tsc --noEmit");
+        expect(t.files["index.ts"]).toContain("registerRootComponent(App)");
+        expect(t.files["App.tsx"]).toBeDefined();
+        expect(t.files["app.json"]).toBeDefined();
+        expect(t.files["metro.config.js"]).toContain("CODEXA_SHARED_NODE_MODULES");
+        expect(t.category).toBe("mobile-apps");
+        expect(t.settings).toEqual(EXPO_SETTINGS);
       } else {
         expect(pkg!.scripts!.dev).toMatch(/^tsx\b/);
         expect(pkg!.scripts!.build).toMatch(/^tsc\b/);
@@ -134,5 +147,23 @@ describe("template catalog", () => {
         for (const spec of specs) expect(resolveImport(t.files, path, spec), `${path} imports ${spec} which does not exist`).toBe(true);
       }
     });
+  });
+});
+
+describe("expo templates", () => {
+  it("ship at least four mobile app starters with one shared dependency set", () => {
+    expect(expoTemplates.length).toBeGreaterThanOrEqual(4);
+    const sets = new Set(expoTemplates.map((t) => t.files["package.json"]).map((raw) => JSON.stringify({ ...JSON.parse(raw), name: "" })));
+    expect(sets.size).toBe(1);
+  });
+
+  it("use React Native components only (no DOM elements or CSS classes)", () => {
+    for (const t of expoTemplates) {
+      for (const [path, content] of Object.entries(t.files)) {
+        if (!path.endsWith(".tsx")) continue;
+        expect(content, `${t.id}/${path} uses className`).not.toMatch(/className=/);
+        expect(content, `${t.id}/${path} uses an HTML element`).not.toMatch(/<(div|span|button|img|a|p|h[1-6]|ul|li)[\s>]/);
+      }
+    }
   });
 });

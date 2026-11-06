@@ -84,7 +84,7 @@ DELETE /api/v1/projects/:id/github        unlink (keeps files)                  
 Import reads the tree with `GET /repos/{o}/{r}/git/trees/{sha}?recursive=1` and each blob with
 `GET /repos/{o}/{r}/git/blobs/{sha}` (base64), 8 in parallel. Skips `node_modules/.git/dist/build/.next/...`, binary
 extensions, NUL/invalid-UTF-8 content, symlinks, files > 1 MB, and caps at 2000 files (`truncated: true`). The project
-template is picked from `package.json` (`vite` → `vite-react-starter`, `express` → `node-express-api`, else `static-site`)
+template is picked from `package.json` (`expo` → `expo-starter`, `vite` → `vite-react-starter`, `express` → `node-express-api`, else `static-site`)
 and `createProject({ files })` uses the imported files. Tarballs (`codeload.github.com`) are never used.
 
 Push uses the Git Data API: blobs for changed files only (compared by git blob sha), a tree based on the branch head tree

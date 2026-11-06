@@ -7,7 +7,7 @@ import crypto from "node:crypto";
 import fs from "node:fs/promises";
 import path from "node:path";
 import type { RunnerConfig } from "./config";
-import { PREBUILT_FRAMEWORKS, KNOWN_FRAMEWORKS, type Framework } from "./config";
+import { PREBUILT_FRAMEWORKS, KNOWN_FRAMEWORKS, limitsFor, type Framework } from "./config";
 import { HttpError } from "./http";
 import { hostFor } from "../../src/lib/hosts";
 import { EXEC_COMMANDS, resolveExec, type ExecCommand } from "./lib/allowlist";
@@ -72,8 +72,31 @@ const DEV_COMMANDS: Record<Framework, string> = {
   "vite-react": "npm run dev",
   static: `node ${SANDBOX_PATHS.bin}/static-server.cjs`,
   "node-express": "npm run dev",
+  // `expo start --port $PORT`: Metro serves the web build (for the browser preview) and the Expo Go
+  // manifest + native bundles (for phones) on the same port, so one preview host covers both.
+  expo: "npm run dev",
   nextjs: "npm run dev",
 };
+
+/**
+ * Extra environment for Expo's dev server and `expo export` (see docs/RUNTIME.md):
+ * - EXPO_PACKAGER_PROXY_URL makes the manifest Expo Go downloads point its bundle, asset and
+ *   debugger URLs at the public preview host instead of the sandbox's 127.0.0.1:<port>.
+ * - EXPO_OFFLINE / EXPO_NO_TELEMETRY: no calls to Expo's servers (version checks, signing, telemetry).
+ * - CODEXA_SHARED_NODE_MODULES: the template's metro.config.js adds the linked prebuilt set to
+ *   Metro's watch folders (Metro only reads files inside them).
+ * - CI is removed for the dev server: with CI set, Expo turns off file watching and Fast Refresh,
+ *   so synced edits would never reach the preview.
+ */
+export function expoEnv(previewUrl: string | null): Record<string, string> {
+  const out: Record<string, string> = {
+    EXPO_NO_TELEMETRY: "1",
+    EXPO_OFFLINE: "1",
+    CODEXA_SHARED_NODE_MODULES: `${SANDBOX_PATHS.base}/expo/node_modules`,
+  };
+  if (previewUrl) out.EXPO_PACKAGER_PROXY_URL = previewUrl.replace(/\/+$/, "");
+  return out;
+}
 
 export function newId(prefix = "s"): string {
   return `${prefix}${crypto.randomBytes(8).toString("hex")}`;
@@ -174,7 +197,7 @@ export class SessionManager {
       binDir: this.cfg.binDir,
       uid: this.cfg.uid,
       gid: this.cfg.gid,
-      limits: this.cfg.limits,
+      limits: limitsFor(this.cfg.limits, framework),
       ports: [port],
     };
     const hostLabel = hostFor(input.previewToken, this.cfg.previewHost);
@@ -194,7 +217,9 @@ export class SessionManager {
       CODEXA_PREVIEW_URL: previewUrl,
       CODEXA_PREVIEW_PROTOCOL: this.cfg.previewProtocol,
       STATIC_ROOT: SANDBOX_PATHS.project,
+      ...(framework === "expo" ? expoEnv(previewUrl) : {}),
     };
+    if (framework === "expo") delete env.CI;
     const session: Session = {
       id,
       projectId: input.projectId,

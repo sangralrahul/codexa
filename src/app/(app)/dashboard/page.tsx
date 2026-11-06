@@ -29,6 +29,7 @@ const RECENT = 8;
 /** The hero's runtime tabs: one real starter template per runtime the runner supports. */
 const MODE_DEFS = [
   { id: "web", label: "Web app", templateId: "vite-react-starter" },
+  { id: "mobile", label: "Mobile app", templateId: "expo-starter" },
   { id: "site", label: "Website", templateId: "static-site" },
   { id: "api", label: "API", templateId: "node-express-api" },
 ] as const;
@@ -130,6 +131,11 @@ export default async function DashboardPage({ searchParams }: { searchParams: Se
       label: "Portfolio",
       prompt: "A personal portfolio with a projects grid, about section and contact form.",
       templateId: byCategory("portfolios"),
+    },
+    {
+      label: "Mobile app",
+      prompt: "A mobile habit tracker with daily check-ins, streaks and reminders.",
+      templateId: templates.find((t) => t.framework === "expo")?.id,
     },
     {
       label: "REST API",

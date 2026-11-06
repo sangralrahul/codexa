@@ -16,6 +16,7 @@ const INTROS: Record<TemplateCategory, string> = {
   crm: "Contacts, deal stages and pipeline boards with inline editing.",
   "landing-pages": "Conversion-focused single pages with hero, features, pricing, FAQ and email capture sections.",
   "mobile-first": "Phone-first shells with bottom navigation and safe-area handling, framed as a device on larger screens.",
+  "mobile-apps": "React Native apps built with Expo and TypeScript. Preview the web render in a phone frame, open the app on your own phone with Expo Go, and publish the web version. App Store and Google Play builds are not made by Codexa.",
 };
 
 export async function generateMetadata({ params }: { params: Promise<{ category: string }> }): Promise<Metadata> {

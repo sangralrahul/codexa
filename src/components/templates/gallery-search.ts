@@ -43,7 +43,7 @@ export function galleryQuery(s: GalleryFilterState, categoryMode: "path" | "quer
 }
 
 /** Short framework name for meta lines ("React · 12 files · Beginner"). */
-export const FRAMEWORK_SHORT: Record<string, string> = { "vite-react": "React", static: "HTML & CSS", "node-express": "Express", nextjs: "Next.js" };
+export const FRAMEWORK_SHORT: Record<string, string> = { "vite-react": "React", static: "HTML & CSS", "node-express": "Express", expo: "Expo", nextjs: "Next.js" };
 
 export function templateMeta(t: Pick<TemplateCardData, "framework" | "fileCount" | "difficulty">) {
   const level = t.difficulty.charAt(0).toUpperCase() + t.difficulty.slice(1);
