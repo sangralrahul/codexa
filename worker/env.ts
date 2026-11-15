@@ -15,6 +15,12 @@ export type Env = {
   PREVIEW_PROTOCOL?: string;
   /** The app's own address (a secret, see wrangler.jsonc); review pages on it frame published sites. */
   APP_URL?: string;
+  /** The app's canonical host (e.g. codexa.host); old addresses redirect here (worker/redirects.ts). */
+  CANONICAL_HOST?: string;
+  /** Old app hosts, comma separated, that redirect to CANONICAL_HOST. */
+  LEGACY_APP_HOSTS?: string;
+  /** Old base for published sites (e.g. -sites.creditvault.tech); redirects to DEPLOY_HOST. */
+  LEGACY_DEPLOY_HOST?: string;
 };
 
 export const RUNNER_CONTROL_HEADER = "x-codexa-runner";

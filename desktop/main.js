@@ -8,7 +8,7 @@ const path = require("node:path");
 const fs = require("node:fs");
 const { pathToFileURL } = require("node:url");
 
-const APP_URL = (process.env.CODEXA_URL || "https://codexa.creditvault.tech").replace(/\/+$/, "");
+const APP_URL = (process.env.CODEXA_URL || "https://codexa.host").replace(/\/+$/, "");
 const APP_ORIGIN = new URL(APP_URL).origin;
 const RENDERER_DIR = path.join(__dirname, "dist-renderer");
 const STATE_FILE = path.join(app.getPath("userData"), "window-state.json");

@@ -60,7 +60,7 @@ jobs:
       - name: Check the site answers
         run: |
           for i in 1 2 3 4 5 6; do
-            code=$(curl -s -o /dev/null -w "%{http_code}" -m 30 https://codexa.creditvault.tech/login || true)
+            code=$(curl -s -o /dev/null -w "%{http_code}" -m 30 https://codexa.host/login || true)
             echo "attempt $i: HTTP $code"
             [ "$code" = "200" ] && exit 0
             sleep 10

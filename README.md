@@ -10,7 +10,7 @@
 Codexa is an AI-native app builder. Describe what you want, and Codexa plans the files, writes real code,<br>
 checks it in a sandbox, runs a live preview and deploys it. Every change is yours to read, edit or undo.
 
-[**Website**](https://codexa.creditvault.tech) · [Docs](https://codexa.creditvault.tech/docs) · [Templates](https://codexa.creditvault.tech/templates) · [Changelog](https://codexa.creditvault.tech/changelog) · [Status](https://codexa.creditvault.tech/status)
+[**Website**](https://codexa.host) · [Docs](https://codexa.host/docs) · [Templates](https://codexa.host/templates) · [Changelog](https://codexa.host/changelog) · [Status](https://codexa.host/status)
 
 ![Next.js](https://img.shields.io/badge/Next.js_16-000000?style=flat-square&logo=nextdotjs&logoColor=white)
 ![React](https://img.shields.io/badge/React_19-149ECA?style=flat-square&logo=react&logoColor=white)
@@ -221,7 +221,7 @@ docs/             Architecture, runtime, AI engine, billing, Cloudflare, design 
 - Generated code runs only in isolated containers, never in the web process
 - Audit logs, idempotent payment webhooks, confirmation for destructive SQL
 
-To report a vulnerability, see [responsible disclosure](https://codexa.creditvault.tech/responsible-disclosure). No third-party security certifications are claimed.
+To report a vulnerability, see [responsible disclosure](https://codexa.host/responsible-disclosure). No third-party security certifications are claimed.
 
 ## Documentation
 

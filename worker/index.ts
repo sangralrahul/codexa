@@ -13,6 +13,7 @@
 import openNext from "../.open-next/worker.js";
 import { hmac, hostOnly, labelUnder, timingSafeEqualStr, type Env } from "./env";
 import { isCustomDomain, serveSite } from "./sites";
+import { legacyRedirect } from "./redirects";
 
 import { previewProblem } from "./sandbox";
 
@@ -75,6 +76,11 @@ const worker = {
   async fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
     const url = new URL(request.url);
     const host = url.hostname.toLowerCase();
+
+    // Old domain (and www.) → the canonical address, and old published-site addresses → the new
+    // sites host, permanently, keeping the path and query (worker/redirects.ts).
+    const moved = legacyRedirect(url, env);
+    if (moved) return Response.redirect(moved, 301);
 
     // www.<app host> → <app host>, permanently, keeping the path and query.
     const appHost = appHostOf(env);

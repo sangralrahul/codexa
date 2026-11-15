@@ -210,6 +210,37 @@ domains that are not yours. That is **Cloudflare for SaaS** (custom hostnames), 
 The Worker serves a verified custom domain from the project's live version. Until those steps
 are done, verification still works, but visitors to the custom domain won't reach the site.
 
+## Moving to a new domain
+
+Codexa moved from `codexa.creditvault.tech` to `codexa.host`. The old addresses stay attached to the
+Worker, which answers them with permanent (301) redirects that keep the path and query:
+
+| Old | New |
+| --- | --- |
+| `codexa.creditvault.tech/…`, `www.codexa.creditvault.tech/…` | `codexa.host/…` |
+| `<name>-sites.creditvault.tech/…` (published sites) | `<name>-sites.codexa.host/…` |
+| `www.codexa.host/…` | `codexa.host/…` |
+
+This is set in `wrangler.jsonc` (`routes`, and `CANONICAL_HOST`, `LEGACY_APP_HOSTS`,
+`LEGACY_DEPLOY_HOST` under `vars`) and handled in `worker/redirects.ts`. Previews are not redirected:
+they get a new `*-preview.codexa.host` address each time a project runs.
+
+To move to another domain later, add the new zone to Cloudflare, change the four `codexa.host` routes
+and `PREVIEW_HOST`, `DEPLOY_HOST`, `CANONICAL_HOST`, put the old app host in `LEGACY_APP_HOSTS` and the
+old sites base in `LEGACY_DEPLOY_HOST`, then:
+
+1. In the new zone's **DNS**, add one record: type `AAAA`, name `*`, address `100::`, **Proxied**
+   (this lets `*-preview` and `*-sites` addresses reach the Worker; the bare and `www` addresses are
+   created for you by the custom-domain routes).
+2. `npx wrangler secret put APP_URL` and enter the new address, e.g. `https://codexa.host`
+   (links in emails, sign-in redirects and page metadata come from it).
+3. If GitHub sign-in is set up: in the GitHub OAuth app, change the homepage and callback URL to
+   the new domain (`https://codexa.host/api/auth/github/callback`). Do the same for any payment
+   webhooks (Stripe, Razorpay) that point at the old address.
+4. `npm run cf:deploy`.
+
+Everyone is signed out once, because sign-in cookies belong to a domain.
+
 ## Updating later
 
 ```bash
