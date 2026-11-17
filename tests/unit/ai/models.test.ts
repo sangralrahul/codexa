@@ -109,29 +109,74 @@ describe("model resolution", () => {
     process.env.AI_MOCK = "";
     vi.resetModules();
     vi.doMock("@/lib/env", () => ({
-      env: { ANTHROPIC_API_KEY: keys.anthropic, OPENAI_API_KEY: keys.openai, AI_DEFAULT_MODEL: "claude-opus-5-5", AI_DEFAULT_PROVIDER: "anthropic" },
+      env: { ANTHROPIC_API_KEY: keys.anthropic, OPENAI_API_KEY: keys.openai, AI_DEFAULT_MODEL: "claude-sonnet-5-5", AI_DEFAULT_PROVIDER: "anthropic" },
       capabilities: { anthropic: Boolean(keys.anthropic), openai: Boolean(keys.openai) },
     }));
     return import("@/lib/ai/keys");
   }
 
-  it("uses the picked model with its provider's key", async () => {
-    const { resolveAiCredentials } = await load({ anthropic: "sk-ant", openai: "sk-oa" });
-    expect(await resolveAiCredentials("ws", "gpt-6-astra")).toMatchObject({ provider: "openai", model: "gpt-6-astra", configured: true });
-    expect(await resolveAiCredentials("ws", "claude-fable-5-2")).toMatchObject({ provider: "anthropic", model: "claude-fable-5-2", configured: true });
+  it("runs every Codexa mode on Claude Sonnet 5.5 with its own effort", async () => {
+    const { resolveAiCredentials } = await load({ anthropic: "sk-ant" });
+    expect(await resolveAiCredentials("ws", "codexa-fast")).toMatchObject({ provider: "anthropic", model: "claude-sonnet-5-5", effort: "low", choice: "codexa-fast" });
+    expect(await resolveAiCredentials("ws", "codexa-pro")).toMatchObject({ provider: "anthropic", model: "claude-sonnet-5-5", effort: "high" });
+    expect(await resolveAiCredentials("ws", "codexa-max")).toMatchObject({ provider: "anthropic", model: "claude-sonnet-5-5", effort: "xhigh", maxTokens: 32_000 });
   });
 
-  it("defaults to Claude Opus 5.5, and to GPT-6 Astra when only an OpenAI key exists", async () => {
-    expect(await (await load({ anthropic: "sk-ant" })).resolveAiCredentials("ws")).toMatchObject({ provider: "anthropic", model: "claude-opus-5-5" });
+  it("defaults to Codexa Pro, and to the OpenAI default when only an OpenAI key exists", async () => {
+    expect(await (await load({ anthropic: "sk-ant" })).resolveAiCredentials("ws")).toMatchObject({ provider: "anthropic", model: "claude-sonnet-5-5", choice: "codexa-pro" });
     expect(await (await load({ openai: "sk-oa" })).resolveAiCredentials("ws")).toMatchObject({ provider: "openai", model: "gpt-6-astra" });
   });
 
-  it("refuses unknown models and models whose key is missing", async () => {
+  it("refuses unknown models, and lists the modes with what powers them", async () => {
     const { resolveAiCredentials, getAiStatus } = await load({ anthropic: "sk-ant" });
-    await expect(resolveAiCredentials("ws", "gpt-unknown")).rejects.toMatchObject({ status: 400 });
-    await expect(resolveAiCredentials("ws", "gpt-6.1-sol")).rejects.toMatchObject({ status: 503 });
+    await expect(resolveAiCredentials("ws", "gpt-6.1-sol")).rejects.toMatchObject({ status: 400 });
     const status = await getAiStatus("ws");
-    expect(status.models.find((m) => m.id === "gpt-6.1-sol")).toMatchObject({ available: false, missingEnv: "OPENAI_API_KEY" });
-    expect(status.models.find((m) => m.id === "claude-opus-5-5")).toMatchObject({ available: true, missingEnv: null });
+    expect(status.models.map((m) => m.id)).toEqual(["codexa-fast", "codexa-pro", "codexa-max"]);
+    expect(status.models.every((m) => m.available)).toBe(true);
+    expect(status).toMatchObject({ defaultModel: "codexa-pro", poweredBy: "Claude Sonnet 5.5" });
+  });
+
+  it("marks the modes unavailable without the Anthropic key", async () => {
+    const { resolveAiCredentials, getAiStatus } = await load({ openai: "sk-oa" });
+    await expect(resolveAiCredentials("ws", "codexa-pro")).rejects.toMatchObject({ status: 503 });
+    expect((await getAiStatus("ws")).models[0]).toMatchObject({ available: false, missingEnv: "ANTHROPIC_API_KEY" });
+  });
+});
+
+/* ---------------------------------------------------------------------------
+   Anthropic provider: the mode's effort reaches the request.
+   --------------------------------------------------------------------------- */
+
+const anthropicBodies: Record<string, unknown>[] = [];
+vi.mock("@anthropic-ai/sdk", () => {
+  class Anthropic {
+    messages = {
+      stream: (body: Record<string, unknown>) => {
+        anthropicBodies.push(body);
+        return (async function* () {
+          yield { type: "message_start", message: { usage: { input_tokens: 3 } } };
+          yield { type: "content_block_delta", index: 0, delta: { type: "text_delta", text: "ok" } };
+          yield { type: "message_delta", delta: { stop_reason: "end_turn" }, usage: { output_tokens: 1 } };
+        })();
+      },
+    };
+    static AuthenticationError = class extends Error {};
+    static RateLimitError = class extends Error {};
+    static BadRequestError = class extends Error {};
+    static APIError = class extends Error {};
+    static APIConnectionError = class extends Error {};
+  }
+  return { default: Anthropic };
+});
+
+describe("Anthropic provider", () => {
+  it("sends the mode's effort as output_config.effort, and nothing when unset", async () => {
+    const { createAnthropicProvider } = await import("@/lib/ai/providers/anthropic");
+    const p = createAnthropicProvider("sk-ant");
+    const base = { model: "claude-sonnet-5-5", system: "s", maxTokens: 100, tools: [], messages: [{ role: "user" as const, content: "hi" }] };
+    await collect(p.stream({ ...base, effort: "xhigh" }));
+    await collect(p.stream(base));
+    expect(anthropicBodies[0]).toMatchObject({ model: "claude-sonnet-5-5", output_config: { effort: "xhigh" } });
+    expect(anthropicBodies[1]).not.toHaveProperty("output_config");
   });
 });

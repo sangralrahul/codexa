@@ -68,6 +68,7 @@ export function createAnthropicProvider(apiKey: string): AiProvider {
           system: request.system,
           messages: toAnthropicMessages(request.messages),
           tools: request.tools.length ? toAnthropicTools(request.tools) : undefined,
+          ...(request.effort ? { output_config: { effort: request.effort } } : {}),
         },
         { signal: request.abortSignal, timeout: TIMEOUT_MS },
       );

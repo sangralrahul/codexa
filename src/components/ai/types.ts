@@ -15,6 +15,9 @@ export type AiStatus = {
   lastError: string | null;
   /** Every pickable model and whether its provider key is set on this server. */
   models?: AiModelChoice[];
+  /** The mode the composer starts on, and the model behind the modes. */
+  defaultModel?: string;
+  poweredBy?: string;
 };
 
 export type AiModelChoice = { id: string; label: string; provider: "anthropic" | "openai"; featured: boolean; note: string; available: boolean; missingEnv: string | null };

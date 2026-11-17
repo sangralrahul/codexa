@@ -298,7 +298,7 @@ export async function executeRun(prepared: PreparedRun, handlers: { onEvent: (ev
   const callProvider = async (system: string, messages: ChatMessage[], tools: ToolDefinition[]): Promise<ProviderTurn> => {
     for (let attempt = 0; ; attempt++) {
       const turn: ProviderTurn = { text: "", toolCalls: [], stop: "other", error: null, inputTokens: 0, outputTokens: 0 };
-      for await (const ev of provider.stream({ system, messages, tools, model: prepared.creds.model, maxTokens: LIMITS.maxOutputTokensPerCall, abortSignal: controller.signal })) {
+      for await (const ev of provider.stream({ system, messages, tools, model: prepared.creds.model, maxTokens: prepared.creds.maxTokens ?? LIMITS.maxOutputTokensPerCall, effort: prepared.creds.effort, abortSignal: controller.signal })) {
         if (ev.type === "text_delta") {
           turn.text += ev.text;
           lastText = turn.text;

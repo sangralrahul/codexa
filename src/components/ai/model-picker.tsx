@@ -6,14 +6,12 @@ import { cn } from "@/lib/utils";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuLabel, DropdownMenuRadioGroup, DropdownMenuRadioItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown";
 import type { AiModelChoice } from "./types";
 
-const PROVIDER_NAME = { anthropic: "Claude", openai: "ChatGPT" } as const;
-
 /**
- * The composer's model menu: the featured models first (Claude Fable, Claude Opus, GPT-6 Astra,
- * GPT-6.1 Sol), the rest under "More models". A model whose provider key is not set on the server is
- * listed but disabled, with the variable it needs, so nothing pretends to work.
+ * The composer's model menu: Codexa's modes (Fast, Pro, Max), with the model that powers them named
+ * underneath. A mode whose provider key is not set on the server is listed but disabled, with the
+ * variable it needs, so nothing pretends to work.
  */
-export function ModelPicker({ models, value, onChange, disabled }: { models: AiModelChoice[]; value: string; onChange: (id: string) => void; disabled?: boolean }) {
+export function ModelPicker({ models, value, onChange, poweredBy, disabled }: { models: AiModelChoice[]; value: string; onChange: (id: string) => void; poweredBy?: string; disabled?: boolean }) {
   const current = models.find((m) => m.id === value);
   const featured = models.filter((m) => m.featured);
   const more = models.filter((m) => !m.featured);
@@ -26,10 +24,7 @@ export function ModelPicker({ models, value, onChange, disabled }: { models: AiM
       title={m.available ? undefined : `Set ${m.missingEnv} on the server to use ${m.label}.`}
     >
       <span className="min-w-0 flex-1">
-        <span className="flex items-center gap-1.5 text-[13px] text-foreground">
-          {m.label}
-          <span className="rounded-[4px] px-1 font-mono text-[9.5px] uppercase tracking-wider text-muted-foreground shadow-[inset_0_0_0_1px_var(--border)]">{PROVIDER_NAME[m.provider]}</span>
-        </span>
+        <span className="block text-[13px] text-foreground">{m.label}</span>
         <span className="block text-[11.5px] leading-snug text-muted-foreground">{m.available ? m.note : `Needs ${m.missingEnv}`}</span>
       </span>
       {m.id === value ? <Check className="mt-0.5 size-4 shrink-0" aria-hidden="true" /> : null}
@@ -59,6 +54,12 @@ export function ModelPicker({ models, value, onChange, disabled }: { models: AiM
             </>
           ) : null}
         </DropdownMenuRadioGroup>
+        {poweredBy ? (
+          <>
+            <DropdownMenuSeparator />
+            <p className="px-2 py-1.5 text-[11px] text-muted-foreground">Powered by {poweredBy}</p>
+          </>
+        ) : null}
       </DropdownMenuContent>
     </DropdownMenu>
   );

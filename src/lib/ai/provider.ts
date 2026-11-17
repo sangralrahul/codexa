@@ -31,6 +31,8 @@ export type ProviderRequest = {
   tools: ToolDefinition[];
   model: string;
   maxTokens: number;
+  /** Thinking effort (Anthropic `output_config.effort`); the model's default when unset. */
+  effort?: "low" | "medium" | "high" | "xhigh" | "max";
   abortSignal?: AbortSignal;
 };
 

@@ -101,7 +101,7 @@ export function ChatPanel({
   const agent = useAgent();
   const { report, setAi, activeFile } = agent;
   const [status, setStatus] = React.useState<AiStatus | null>(null);
-  const [pickedModel, pickModel] = usePickedModel(status?.models, status?.model);
+  const [pickedModel, pickModel] = usePickedModel(status?.models, status?.defaultModel);
   const [statusError, setStatusError] = React.useState<string | null>(null);
   const [conversations, setConversations] = React.useState<ConversationView[]>([]);
   const [activeId, setActiveId] = React.useState<string | null>(initialConversationId ?? null);
@@ -683,6 +683,7 @@ export function ChatPanel({
         textareaRef={textareaRef}
         model={status?.configured ? { name: status.model, provider: status.provider, mock: status.mock } : null}
         models={status?.configured ? status.models : undefined}
+        poweredBy={status?.poweredBy}
         selectedModel={pickedModel}
         onModelChange={pickModel}
         activeFile={activeFile}

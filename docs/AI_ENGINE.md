@@ -15,7 +15,7 @@ Code lives in `src/lib/ai/**` (engine), `src/app/api/v1/projects/[id]/ai/**` (HT
 | `ANTHROPIC_API_KEY` | Enables the Anthropic provider (`@anthropic-ai/sdk`, Messages streaming with tools). | unset |
 | `OPENAI_API_KEY` | Enables the OpenAI provider (`openai`, Chat Completions streaming with tools). | unset |
 | `AI_DEFAULT_PROVIDER` | `anthropic` or `openai`. Used when both keys exist. Falls back to whichever key is present. | `anthropic` |
-| `AI_DEFAULT_MODEL` | Default model when the person has not picked one in the composer. | `claude-opus-5-5` (Anthropic) / `gpt-6-astra` (OpenAI fallback) |
+| `AI_DEFAULT_MODEL` | Model used when no Codexa mode applies (e.g. only an OpenAI key is set). | `claude-sonnet-5-5` (Anthropic) / `gpt-6-astra` (OpenAI fallback) |
 | `AI_MOCK` | `1` enables the scripted mock provider **outside production only**. | unset |
 
 Provider selection (`src/lib/ai/keys.ts` → `resolveAiCredentials`): mock if `AI_MOCK=1` and
@@ -189,20 +189,17 @@ npx vitest run tests/integration/ai   # agent end to end on the test DB with the
 
 ## Picking a model
 
-The editor's composer has a model menu (`src/components/ai/model-picker.tsx`). The list lives in
-`src/config/ai-models.ts`:
+The editor's composer has a model menu (`src/components/ai/model-picker.tsx`) with Codexa's three
+modes, defined in `src/config/ai-models.ts`. All three run on **Claude Sonnet 5.5** (the menu says so)
+and differ in the API's thinking `effort`:
 
-| Model | API id | Provider key |
-| --- | --- | --- |
-| Claude Fable 5.2 | `claude-fable-5-2` | `ANTHROPIC_API_KEY` |
-| Claude Opus 5.5 (default) | `claude-opus-5-5` | `ANTHROPIC_API_KEY` |
-| GPT-6 Astra | `gpt-6-astra` | `OPENAI_API_KEY` |
-| GPT-6.1 Sol | `gpt-6.1-sol` | `OPENAI_API_KEY` |
-| Claude Sonnet 5.5 | `claude-sonnet-5-5` | `ANTHROPIC_API_KEY` |
-| Claude Haiku 5.5 | `claude-haiku-5-5` | `ANTHROPIC_API_KEY` |
+| Mode | Model | `effort` | Output budget per call |
+| --- | --- | --- | --- |
+| Codexa Fast | `claude-sonnet-5-5` | `low` | 16k |
+| Codexa Pro (default) | `claude-sonnet-5-5` | `high` | 16k |
+| Codexa Max | `claude-sonnet-5-5` | `xhigh` | 32k |
 
-The pick is remembered per browser and sent with each `/ai/generate` request as `model`. The server
-accepts only catalog ids and only when that provider's key is set (400 `unknown_model`, 503
-`ai_model_not_configured` otherwise); models without a key are listed but disabled in the menu.
-OpenAI models run through the Responses API (`store: false`), which is where current GPT models take
-function tools.
+The pick is remembered per browser and sent with each `/ai/generate` request as `model`; the server
+accepts only these ids (400 `unknown_model`) and needs `ANTHROPIC_API_KEY` (503
+`ai_model_not_configured`). Runs and messages record the real model id (`claude-sonnet-5-5`).
+OpenAI (when only `OPENAI_API_KEY` is set) runs through the Responses API with `AI_DEFAULT_MODEL`.

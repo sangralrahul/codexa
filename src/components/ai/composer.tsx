@@ -58,6 +58,7 @@ export function Composer({
   textareaRef,
   model,
   models,
+  poweredBy,
   selectedModel,
   onModelChange,
   activeFile,
@@ -87,6 +88,8 @@ export function Composer({
   model?: { name: string; provider: string; mock: boolean } | null;
   /** Pickable models; with onModelChange set, the footer shows the model menu instead of the name. */
   models?: AiModelChoice[];
+  /** "Powered by …" line in the model menu. */
+  poweredBy?: string;
   selectedModel?: string;
   onModelChange?: (id: string) => void;
   activeFile?: string | null;
@@ -344,7 +347,7 @@ export function Composer({
                 </span>
               ) : null}
               {models?.length && onModelChange && selectedModel ? (
-                <ModelPicker models={models} value={selectedModel} onChange={onModelChange} disabled={running} />
+                <ModelPicker models={models} value={selectedModel} onChange={onModelChange} poweredBy={poweredBy} disabled={running} />
               ) : model && !model.mock ? (
                 <span className="font-mono" title={`Provider: ${model.provider}`}>
                   {model.name}
