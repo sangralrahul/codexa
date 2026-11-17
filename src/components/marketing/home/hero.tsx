@@ -1,92 +1,63 @@
 import Link from "next/link";
-import { ArrowRight, Monitor } from "lucide-react";
+import { ArrowRight, Play } from "lucide-react";
 import { SpaceBackdrop } from "@/components/space/space-backdrop";
-import { HOME_SCENE_SET } from "@/components/space/home-scenes";
-import { RotatingText } from "@/components/motion/rotating-text";
-import { Rise, RiseWords } from "@/components/motion/rise-words";
-import { tokenize } from "@/components/vignettes/tokenize";
-import { Crosshairs } from "./frame";
-import { ProductTour, type TourScript } from "./product-tour";
-import { TOKEN_KINDS, type CompactToken } from "./types";
-import type { HomeTour } from "./data";
-
-/** Token runs as compact [kindIndex, text] tuples, so the tour's code crosses into the client small. */
-function compact(lines: string[]): CompactToken[][] {
-  return tokenize(lines.join("\n"), "tsx").map((line) => line.map((tok) => [Math.max(0, TOKEN_KINDS.indexOf(tok.k)), tok.v] as CompactToken));
-}
-
-/** What the headline's first line cycles through: kinds of app the starters cover. */
-const HERO_PHRASES = ["a storefront.", "a dashboard.", "a booking app.", "an internal tool.", "a REST API.", "a portfolio."] as const;
+import { RiseWords } from "@/components/motion/rise-words";
+import { CAPTURES, ThemedImg } from "@/components/marketing/captures";
 
 /**
- * The opening: a full-bleed live scene (the home's own set, HOME_SCENE_SET: a ringed giant, totality,
- * an aurora and the Milky Way at night; their daylight counterparts in the light theme, crossfading every
- * 25 s), the frame's rails running through it, the
- * "New" pill, the headline (the LCP: server-rendered text with the first phrase in place, rising in
- * with CSS; RotatingText takes over the cycle after hydration; screen readers get the stable sentence), two CTAs, the price line, and the product tour rising from the horizon.
+ * Scene 01: a full-height planet horizon (the orbit scene by night, its daylight pair by day; live
+ * starfield or dust and a slow drift, still under reduced motion), the gigantic two-tone headline, the
+ * subline and two pill CTAs, side captions, and a real capture of the New project page rising over the
+ * curve. The page's only <h1>.
  */
-export function HomeHero({ signedIn, templateCount, priceLine, tour }: { signedIn: boolean; templateCount: number; priceLine: string; tour: HomeTour }) {
-  const script: TourScript = { ...tour, code: compact(tour.code) };
+export function HomeHero({ signedIn, runtimeKinds, eager }: { signedIn: boolean; runtimeKinds: string[]; eager: "light" | "dark" | null }) {
+  const shot = CAPTURES.demoDescribe;
+  const half = Math.ceil(runtimeKinds.length / 2);
   return (
-    <section aria-labelledby="home-title" className="hm-hero" data-space-hero data-space-host>
-      <SpaceBackdrop sets={HOME_SCENE_SET} variant="stage" picker={false} />
-      <div aria-hidden="true" className="hm-hero__rails" />
-      <div className="hm-hero__copy">
-        <Link href="/download" className="hm-pill">
-          <b>New</b>
-          <Monitor className="size-3.5 shrink-0" aria-hidden="true" />
-          <span>Codexa for Windows</span>
-          <ArrowRight className="size-3.5 shrink-0" aria-hidden="true" />
-        </Link>
-        <h1 id="home-title" className="hm-h1">
-          <span className="sr-only">Describe your app. Ship real code.</span>
-          <span aria-hidden="true">
-            <RiseWords text="Describe" />{" "}
-            <br className="hm-h1__br" />
-            <Rise index={1}>
-              <RotatingText phrases={HERO_PHRASES} />
-            </Rise>
-            <br />
-            <Rise index={2}>
-              <span className="hm-h1__sheen">Ship real code.</span>
-            </Rise>
-          </span>
-        </h1>
-        <p className="hm-lede">
-          An agent plans the files, writes <em>real TypeScript and React</em>, runs it in an isolated sandbox with a live preview, and publishes it to your domain.
+    <section aria-labelledby="home-title" className="cx-hero" data-space-hero data-space-host>
+      <div className="cx-hero__scene">
+        <SpaceBackdrop scene="orbit" variant="stage" />
+      </div>
+      <div className="cx-hero__copy">
+        <p className="cx-cap cx-cap--hi">
+          An AI app builder<span aria-hidden="true">&nbsp;&nbsp;·&nbsp;&nbsp;</span>
+          <span className="sr-only">, </span>runs on Cloudflare
         </p>
-        <div className="hm-ctas">
-          <Link href={signedIn ? "/dashboard" : "/signup"} className="mkb mkb--solid mkb--lg">
-            {signedIn ? "Open dashboard" : "Start building for free"}
+        <h1 id="home-title" className="cx-disp cx-hero__h1">
+          <RiseWords text="Say it." /> <span className="cx-mute"><RiseWords text="Ship it." start={2} /></span>
+        </h1>
+        <p className="cx-hero__lede">Describe an app in plain words. An agent plans it, writes real TypeScript and React, runs it in a sandbox, and puts it on the web.</p>
+        <div className="cx-ctas">
+          <Link href={signedIn ? "/dashboard" : "/signup"} className="cx-btn cx-btn--solid">
+            {signedIn ? "Open dashboard" : "Start building free"}
             <ArrowRight className="size-4" aria-hidden="true" />
           </Link>
-          <Link href="/templates" className="mkb mkb--lg hm-glassbtn">
-            Browse {templateCount} templates
+          <Link href="#build" className="cx-btn">
+            <Play className="size-3.5 fill-current" aria-hidden="true" />
+            See it work
           </Link>
         </div>
-        <p className="hm-cmd">{priceLine}</p>
       </div>
-      <div className="hm-hero__stage">
-        <ProductTour script={script} />
-      </div>
-    </section>
-  );
-}
-
-/** The facts strip under the hero: numbers read from code, no visitor or customer counts. */
-export function HomeFacts({ facts }: { facts: { value: string; label: string; note: string }[] }) {
-  return (
-    <section aria-label="Codexa at a glance" className="mkg-row">
-      <ul className="hm-facts">
-        {facts.map((f) => (
-          <li key={f.label}>
-            <p className="hm-facts__v">{f.value}</p>
-            <p className="hm-facts__l">{f.label}</p>
-            <p className="hm-facts__n">{f.note}</p>
-          </li>
-        ))}
-      </ul>
-      <Crosshairs corners={["tl", "tr"]} />
+      <p className="cx-side cx-side--l" aria-hidden="true">
+        Scene 01
+        <br />
+        Orbit
+      </p>
+      <p className="cx-side cx-side--r">
+        {runtimeKinds.slice(0, half).join(" · ")}
+        <br />
+        {runtimeKinds.slice(half).join(" · ")}
+      </p>
+      <figure className="cx-rise">
+        <figcaption className="cx-rise__lab">
+          <span className="cx-cap">Fig. 1 — New project</span>
+          <span className="cx-cap max-sm:hidden">Captured from the app</span>
+        </figcaption>
+        <div className="cx-rise__w">
+          <ThemedImg src={shot.src} alt={shot.alt} width={shot.width} height={shot.height} eager={eager} />
+        </div>
+      </figure>
+      <div className="cx-hero__fade" aria-hidden="true" />
     </section>
   );
 }

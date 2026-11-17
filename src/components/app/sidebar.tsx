@@ -44,6 +44,9 @@ const MORE: NavItem[] = [
   { href: "/docs", label: "Documentation", icon: BookOpen, external: true },
 ];
 const ADMIN: NavItem = { href: "/admin", label: "Admin", icon: Shield };
+/** The dashboard's pill bar names (Cinematic Orbit): shorter, film-credit words for the same destinations. */
+const PILL_LABEL: Record<string, string> = { "/dashboard": "Create", "/dashboard/deployments": "Deploys", "/settings/members": "Team" };
+const PILL_HIDDEN = new Set(["/settings/usage"]);
 
 const under = (pathname: string, href: string) => pathname === href || pathname.startsWith(href + "/");
 function isActive(pathname: string, item: NavItem) {
@@ -61,23 +64,28 @@ function moreItems(isStaff: boolean) {
  * Settings, then "More" for the rest. The active tab has a 2px underline; the row scrolls inside
  * itself on narrow screens.
  */
-export function AppTabs({ isStaff }: { isStaff: boolean }) {
+export function AppTabs({ isStaff, variant = "row", className }: { isStaff: boolean; variant?: "row" | "pills"; className?: string }) {
   const pathname = usePathname();
-  const more = moreItems(isStaff);
+  const pills = variant === "pills";
+  // The pill bar (dashboard) keeps the six everyday tabs and moves Usage into "More".
+  const tabs = pills ? TABS.filter((t) => !PILL_HIDDEN.has(t.href)) : TABS;
+  const more = pills ? [TABS.find((t) => t.href === "/settings/usage")!, ...moreItems(isStaff)] : moreItems(isStaff);
   // Billing has its own tab (Usage), so it never lights "More".
   const moreCurrent = more.find((m) => m.href !== "/settings/billing" && isActive(pathname, m));
+  const cls = pills ? "app-pill" : "app-tab";
   return (
-    <nav aria-label="Workspace" className="app-tabs px-2 sm:px-4">
-      {TABS.map((t) => {
+    <nav aria-label="Workspace" className={cn(pills ? "app-pills" : "app-tabs px-2 sm:px-4", className)}>
+      {tabs.map((t) => {
         const current = isActive(pathname, t);
+        const label = (pills && PILL_LABEL[t.href]) || t.label;
         return (
-          <Link key={t.href} href={t.href} aria-current={current ? "page" : undefined} className="app-tab" title={t.keys ? `${t.label} (${t.keys.join(" then ")})` : undefined}>
-            {t.label}
+          <Link key={t.href} href={t.href} aria-current={current ? "page" : undefined} className={cls} title={t.keys ? `${t.label} (${t.keys.join(" then ")})` : label !== t.label ? t.label : undefined}>
+            {label}
           </Link>
         );
       })}
       <DropdownMenu>
-        <DropdownMenuTrigger className="app-tab outline-none" data-current={moreCurrent ? "true" : undefined}>
+        <DropdownMenuTrigger className={cn(cls, "outline-none")} data-current={moreCurrent ? "true" : undefined}>
           {moreCurrent ? moreCurrent.label : "More"}
           <ChevronDown className="size-3.5" aria-hidden="true" />
           {moreCurrent ? <span className="sr-only"> (current page). More pages</span> : null}

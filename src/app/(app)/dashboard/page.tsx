@@ -23,8 +23,10 @@ export const metadata = { title: "Overview", robots: { index: false } };
 
 type SearchParams = Promise<{ prompt?: string; template?: string }>;
 
-/** Rows in the recent projects table (per filter). */
+/** Frames in the projects filmstrip (per filter). */
 const RECENT = 8;
+/** Quick starts shown under the composer. */
+const HERO_PRESETS = ["Online store", "Mobile app", "Dashboard", "REST API"];
 
 /** The hero's runtime tabs: one real starter template per runtime the runner supports. */
 const MODE_DEFS = [
@@ -143,7 +145,8 @@ export default async function DashboardPage({ searchParams }: { searchParams: Se
       templateId: templates.find((t) => t.framework === "node-express")?.id,
     },
   ];
-  const presets = presetDefs.filter((p): p is PromptPreset => Boolean(p.templateId));
+  // The hero's "Try" row: one quick start per kind of thing (web app, mobile app, API, dashboard).
+  const presets = presetDefs.filter((p): p is PromptPreset => Boolean(p.templateId) && HERO_PRESETS.includes(p.label));
   const modes: PromptMode[] = MODE_DEFS.flatMap((m) => {
     const t = templates.find((x) => x.id === m.templateId);
     return t ? [{ id: m.id, label: m.label, templateId: t.id, framework: t.framework, detail: t.frameworkName }] : [];
@@ -156,6 +159,8 @@ export default async function DashboardPage({ searchParams }: { searchParams: Se
   return (
     <Overview
       workspace={current ? { id: current.workspace.id, name: current.workspace.name, plan: PLANS[current.workspace.plan].name } : null}
+      greeting={user.name?.trim().split(/\s+/)[0] || null}
+      templateCount={templates.length}
       modes={modes}
       composer={{
         workspaceId: createIn,
@@ -171,7 +176,6 @@ export default async function DashboardPage({ searchParams }: { searchParams: Se
         initialPrompt: carriedPrompt,
         initialTemplateId: carriedTemplate,
       }}
-      showPresets={projectCount === 0}
       projects={projectItems}
       lists={lists}
       deployments={deployments}

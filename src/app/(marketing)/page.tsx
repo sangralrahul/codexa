@@ -3,6 +3,7 @@ import { site } from "@/config/site";
 import { getCurrentUser } from "@/lib/auth/session";
 import { getHomeData } from "@/components/marketing/home/data";
 import { HomeView } from "@/components/marketing/home/home-view";
+import { serverTheme } from "@/components/marketing/captures";
 import "@/components/marketing/home/home.css";
 
 export const metadata = routeMetadata("/");
@@ -11,6 +12,7 @@ export default async function HomePage() {
   const user = await getCurrentUser();
   const signedIn = Boolean(user);
   const data = getHomeData();
+  const eager = await serverTheme();
 
   return (
     <>
@@ -32,7 +34,7 @@ export default async function HomePage() {
           ],
         })}
       />
-      <HomeView data={data} signedIn={signedIn} />
+      <HomeView data={data} signedIn={signedIn} eager={eager} />
     </>
   );
 }

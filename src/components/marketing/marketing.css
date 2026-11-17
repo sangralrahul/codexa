@@ -463,6 +463,33 @@ a.mk-pill:hover { border-color: var(--border-strong); color: var(--foreground); 
 .mk-navitem[data-current],
 .mk-navitem[aria-expanded="true"] { color: var(--foreground); }
 
+/* Home bar (Cinematic Orbit): 84px, transparent over the hero scene until the page scrolls, uppercase
+   letter-spaced links on the left, the wordmark centred, Docs / Sign in / a white "Start" pill on the right.
+   The negative margin lets the hero start under it; the height never changes, so nothing shifts. */
+.mk-header[data-home] { height: 84px; margin-bottom: -84px; }
+.mk-header[data-home]:not([data-scrolled]):not([data-mega]):not([data-sheet]) { border-bottom-color: transparent; background: transparent; }
+.mk-header[data-home] .mk-bar { height: 83px; }
+@media (min-width: 64rem) {
+  .mk-header[data-home] .mk-bar { padding-inline: 48px; }
+  .mk-header[data-home] .mk-navitem { padding-inline: 14px; font-size: 12px; font-weight: 500; letter-spacing: 0.24em; text-transform: uppercase; color: color-mix(in oklab, var(--foreground) 82%, transparent); }
+  .mk-header[data-home] .mk-navitem:hover, .mk-header[data-home] .mk-navitem[aria-expanded="true"] { color: var(--foreground); }
+}
+.mk-brand--word { display: none; }
+@media (min-width: 64rem) {
+  .mk-brand.mk-brand--word { display: inline-flex; }
+  .mk-header[data-home] .mk-brand:not(.mk-brand--word) { display: none; }
+}
+.mk-brand--word span { font-size: 15px; font-weight: 600; letter-spacing: 0.5em; text-transform: uppercase; margin-right: -0.5em; }
+.mk-brand--word { gap: 12px; }
+.mk-pill {
+  display: inline-flex; align-items: center; height: 36px; padding: 0 18px; border-radius: 999px; flex: none;
+  background: var(--foreground); color: var(--background);
+  font-size: 12px; font-weight: 500; letter-spacing: 0.2em; text-transform: uppercase;
+  transition: background-color var(--dur-2);
+}
+.mk-pill:hover { background: color-mix(in oklab, var(--foreground) 86%, var(--background)); }
+.mk-pill:focus-visible { outline: 2px solid var(--ring); outline-offset: 2px; }
+
 /* --------------------------------------------------------------------------
    Monochrome Grid buttons: 32px / 6px radius hairline buttons, white solid
    primary, and a 44px pill size for hero and closing CTAs.

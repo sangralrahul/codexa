@@ -95,6 +95,8 @@ export function AppShell({
   const [slot, setSlot] = useState<HTMLElement | null>(null);
   const pathname = usePathname();
   const focus = isFocusRoute(pathname);
+  /** The dashboard's "Cinematic Orbit" bar: it floats over the hero scene with the tabs as centred pills. */
+  const cine = pathname === "/dashboard";
   const current = workspaces.find((w) => w.id === currentWorkspaceId) ?? workspaces[0];
   const canCreate = Boolean(current && current.role !== "viewer");
 
@@ -182,8 +184,8 @@ export function AppShell({
         </RD.Root>
 
         {/* Top bar (scrolls away) — brand / workspace, search, actions, account. */}
-        <header className="bg-background">
-          <div className="flex h-14 items-center gap-2 px-3 sm:gap-3.5 sm:px-6">
+        <header className={cine ? "app-cine-bar" : "bg-background"}>
+          <div className={cn("flex h-14 items-center gap-2 px-3 sm:gap-3.5 sm:px-6", cine && "relative min-[90rem]:h-[72px] min-[90rem]:px-8")}>
             <button type="button" onClick={() => setDrawer(true)} className="app-btn app-btn--icon -ml-1 shrink-0 border-transparent md:hidden" aria-label="Open navigation">
               <Menu className="size-[18px]" aria-hidden="true" />
             </button>
@@ -193,17 +195,18 @@ export function AppShell({
             <span className="app-slash -mx-1.5 hidden sm:inline" aria-hidden="true">
               /
             </span>
-            <WorkspaceSwitcher workspaces={workspaces} currentId={currentWorkspaceId} variant="bar" upgrade={upsell} className="max-w-[min(340px,48vw)]" />
+            <WorkspaceSwitcher workspaces={workspaces} currentId={currentWorkspaceId} variant="bar" upgrade={upsell} className={cine ? "max-w-[min(340px,48vw)] min-[90rem]:max-w-[250px]" : "max-w-[min(340px,48vw)]"} />
+            {cine ? <AppTabs isStaff={isStaff} variant="pills" className="app-pills--bar" /> : null}
 
             <div className="ml-auto flex min-w-0 items-center gap-2 sm:gap-2.5">
-              <button type="button" onClick={openCommandMenu} aria-keyshortcuts="Control+K Meta+K" className="app-search hidden lg:flex">
+              <button type="button" onClick={openCommandMenu} aria-keyshortcuts="Control+K Meta+K" className={cn("app-search hidden", !cine && "lg:flex")}>
                 <Search className="size-4 shrink-0" aria-hidden="true" />
                 <span className="flex-1 truncate text-left">Find a project…</span>
                 <kbd className="app-kbd" aria-hidden="true">
                   {mod} K
                 </kbd>
               </button>
-              <button type="button" onClick={openCommandMenu} aria-label="Search or jump to" aria-keyshortcuts="Control+K Meta+K" className="app-btn app-btn--icon lg:hidden">
+              <button type="button" onClick={openCommandMenu} aria-label="Search or jump to" aria-keyshortcuts="Control+K Meta+K" className={cn("app-btn app-btn--icon", !cine && "lg:hidden")}>
                 <Search className="size-4" aria-hidden="true" />
               </button>
               {showVerify ? (
@@ -232,11 +235,18 @@ export function AppShell({
               <UserMenu user={user} />
             </div>
           </div>
+          {cine ? (
+            <div className="app-pills-row px-3 pb-2 sm:px-6">
+              <AppTabs isStaff={isStaff} variant="pills" className="mx-auto" />
+            </div>
+          ) : null}
         </header>
-        {/* The tab row sticks to the top while the page scrolls. */}
-        <div className="sticky top-0 z-40 border-b border-border bg-background">
-          <AppTabs isStaff={isStaff} />
-        </div>
+        {/* The tab row sticks to the top while the page scrolls (the dashboard has the pills in its bar instead). */}
+        {cine ? null : (
+          <div className="sticky top-0 z-40 border-b border-border bg-background">
+            <AppTabs isStaff={isStaff} />
+          </div>
+        )}
 
         <main id="main" className="flex-1">
           {children}

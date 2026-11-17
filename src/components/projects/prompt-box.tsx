@@ -480,7 +480,7 @@ export function PromptBox({
                 className={cn(
                   "block w-full resize-none bg-transparent leading-relaxed placeholder:text-muted-foreground/70 focus:outline-none disabled:opacity-60",
                   hero
-                    ? "min-h-[92px] px-4 pb-3 pt-4 text-[16px] placeholder:text-[color:var(--app-dim)] sm:px-5 sm:pt-5"
+                    ? "min-h-[84px] px-4 pb-3 pt-4 text-[16px] tracking-[-0.01em] placeholder:text-[color:var(--app-dim)] sm:px-[26px] sm:pt-[22px] sm:text-[18px]"
                     : compact
                       ? "min-h-[56px] px-4 pb-2.5 pt-4 text-[15px] placeholder:text-[color:var(--app-dim)]"
                       : "min-h-[120px] px-4 pb-2 pt-4 text-base sm:px-5",
@@ -531,7 +531,7 @@ export function PromptBox({
                     title="Attach a screenshot, sketch or design. You can also paste or drop images."
                   >
                     <ImagePlus className="size-3.5" aria-hidden="true" />
-                    <span className="hidden sm:inline">Image</span>
+                    <span className="hidden sm:inline">{hero ? "Attach image" : "Image"}</span>
                   </button>
                   {aiConfigured ? (
                     preEnhance !== null && !enhancing ? (
@@ -796,9 +796,10 @@ export function PromptBox({
           </ul>
         </nav>
       ) : presets.length ? (
-        <div className={cn(start ? "" : "mx-auto max-w-4xl", hero ? "mt-4 sm:mt-5" : compact ? "mt-3.5" : "mt-5")}>
-          <p className="sr-only" id="presets-label">
-            Quick starts
+        <div className={cn(start ? "" : "mx-auto max-w-4xl", hero ? "space-try" : compact ? "mt-3.5" : "mt-5")}>
+          <p className={hero ? "space-try__label" : "sr-only"} id="presets-label">
+            {hero ? <span aria-hidden="true">Try</span> : null}
+            <span className={hero ? "sr-only" : undefined}>Quick starts</span>
           </p>
           <ul
             aria-labelledby="presets-label"

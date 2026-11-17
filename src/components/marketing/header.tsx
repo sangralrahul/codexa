@@ -60,6 +60,12 @@ const LINKS = [
   { label: "Pricing", href: "/pricing" },
   { label: "Desktop", href: "/download", wide: true },
 ];
+/** The home page's bar (Cinematic Orbit): Product menu and these links on the left, the wordmark centred, Docs / Sign in / Start on the right. */
+const HOME_LINKS: { label: string; href: string; wide?: boolean }[] = [
+  { label: "Mobile", href: "/#mobile" },
+  { label: "Templates", href: "/templates" },
+  { label: "Pricing", href: "/pricing" },
+];
 
 const ICONS: Record<string, LucideIcon> = {
   "/ai-app-builder": Sparkles,
@@ -92,11 +98,11 @@ const CLOSE_GRACE = 200;
 /** Idle nav text: muted on the plain bar, foreground on hover. */
 const TRIGGER_IDLE = "text-muted-foreground hover:text-foreground";
 
-/** The brand: the Codexa mark and name, linking home. */
-function Brand() {
+/** The brand: the Codexa mark and name, linking home. `word`: the home bar's centred, letter-spaced wordmark. */
+function Brand({ word, className }: { word?: boolean; className?: string }) {
   return (
-    <Link href="/" className="mk-brand" aria-label="Codexa home">
-      <LogoMark size={22} />
+    <Link href="/" className={cn("mk-brand", word && "mk-brand--word", className)} aria-label="Codexa home">
+      <LogoMark size={word ? 20 : 22} />
       <span aria-hidden="true">Codexa</span>
     </Link>
   );
@@ -132,6 +138,8 @@ function SearchPill({ className, iconOnlyBelow = "xl" }: { className?: string; i
 
 export function MarketingHeader({ signedIn, wells }: { signedIn: boolean; wells?: Partial<Record<string, React.ReactNode>> }) {
   const pathname = usePathname();
+  const home = pathname === "/";
+  const links = home ? HOME_LINKS : LINKS;
   const [open, setOpen] = React.useState<GroupKey | null>(null);
   const [focusItem, setFocusItem] = React.useState<Record<GroupKey, number>>({ product: 0, solutions: 0, resources: 0, company: 0 });
   const [mobileOpen, setMobileOpen] = React.useState(false);
@@ -270,6 +278,7 @@ export function MarketingHeader({ signedIn, wells }: { signedIn: boolean; wells?
         data-mega={open ? "" : undefined}
         data-sheet={mobileOpen ? "" : undefined}
         data-armed={armed || open ? "" : undefined}
+        data-home={home ? "" : undefined}
       >
         <div className="mk-bar">
           <div className="relative flex h-full items-center justify-between gap-3">
@@ -394,7 +403,7 @@ export function MarketingHeader({ signedIn, wells }: { signedIn: boolean; wells?
                       </li>
                     );
                   })}
-                  {LINKS.map((l) => (
+                  {links.map((l) => (
                     <li key={l.href} className={cn(l.wide && "hidden xl:block")}>
                       <Link
                         href={l.href}
@@ -415,6 +424,30 @@ export function MarketingHeader({ signedIn, wells }: { signedIn: boolean; wells?
                 <div ref={bgRef} aria-hidden="true" className="mk-mega-bg" />
               </nav>
             </div>
+            {home ? <Brand word className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2" /> : null}
+            {home ? (
+              <div className="hidden items-center gap-1 lg:flex">
+                <SearchPill iconOnlyBelow="always" className={cn("h-8 border-transparent bg-transparent shadow-none hover:border-transparent hover:shadow-none", TRIGGER_IDLE)} />
+                <ThemeSwitch />
+                <Link href="/docs" className="mk-navitem">
+                  Docs
+                </Link>
+                {signedIn ? (
+                  <Link href="/dashboard" className="mk-pill ml-2">
+                    Dashboard
+                  </Link>
+                ) : (
+                  <>
+                    <Link href="/login" className="mk-navitem">
+                      Sign in
+                    </Link>
+                    <Link href="/signup" className="mk-pill ml-2">
+                      Start
+                    </Link>
+                  </>
+                )}
+              </div>
+            ) : (
             <div className="hidden items-center gap-2 lg:flex">
               <SearchPill iconOnlyBelow="always" className={cn("h-8 border-transparent bg-transparent shadow-none hover:border-transparent hover:shadow-none", TRIGGER_IDLE)} />
               <ThemeSwitch />
@@ -441,6 +474,7 @@ export function MarketingHeader({ signedIn, wells }: { signedIn: boolean; wells?
                 </>
               )}
             </div>
+            )}
             <div className="flex items-center gap-1 lg:hidden">
               <SearchPill iconOnlyBelow="xl" className={cn("border-transparent bg-transparent shadow-none", TRIGGER_IDLE)} />
               <ThemeSwitch className="size-9" />

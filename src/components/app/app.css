@@ -205,123 +205,237 @@
 .app-grid .text-app-title { font-size: 24px; font-weight: 600; letter-spacing: -0.02em; }
 
 /* ==========================================================================
-   Dashboard space hero and page banners (src/components/app/space-hero; the
-   shared backdrop and its base styles live in src/components/space), over
-   generated art (public/space): night scenes in the dark theme, a daylight set
-   in the light theme. Scene layers with a slow Ken Burns drift, a canvas
-   (stars / dust and glints), an optional mist veil, legibility scrims and a
-   fade into the page. Calm = static image.
+   Dashboard "Cinematic Orbit" (src/components/app/overview.tsx, space-hero/,
+   the shell's cine bar) and the shared scene picker / page banners. The shared
+   backdrop and its base styles live in src/components/space, over generated
+   art (public/space): night scenes in the dark theme, a daylight set in the
+   light theme. Tokens only; calm = static image, no fades.
    ========================================================================== */
-.space-hero-wrap { --hero-page: var(--background); }
-.space-hero { position: relative; isolation: isolate; overflow: clip; background: var(--background); color: var(--foreground); }
-/* Scrims: darken the centre column behind the copy, settle the top edge under the tab row, fade the bottom into the page. */
+
+/* ---- The top bar floats over the scene; the tabs are centred pills (a row under it below 1600px, where the centred pills would meet the workspace switcher). ---- */
+.app-cine-bar { position: absolute; top: 0; left: 0; right: 0; z-index: 30; background: transparent; }
+.app-pills {
+  display: flex; gap: 2px; width: fit-content; max-width: 100%; padding: 4px; overflow-x: auto; scrollbar-width: none;
+  border: 1px solid color-mix(in oklab, var(--foreground) 22%, transparent); border-radius: 999px;
+  background: color-mix(in oklab, var(--background) 55%, transparent); backdrop-filter: blur(10px);
+}
+.app-pills::-webkit-scrollbar { display: none; }
+.app-pills--bar { display: none; position: absolute; left: 50%; top: 50%; translate: -50% -50%; }
+@media (min-width: 100rem) { .app-pills--bar { display: flex; } .app-pills-row { display: none; } }
+.app-pill {
+  flex: none; display: inline-flex; align-items: center; gap: 4px; height: 32px; padding: 0 14px; border-radius: 999px;
+  font: 500 11px/1 var(--font-sans); letter-spacing: 0.2em; text-transform: uppercase; white-space: nowrap;
+  color: color-mix(in oklab, var(--foreground) 74%, transparent); transition: color 120ms, background-color 120ms;
+}
+.app-pill:hover { color: var(--foreground); }
+.app-pill[aria-current="page"], .app-pill[data-current="true"] { background: var(--foreground); color: var(--background); }
+.app-pill:focus-visible { outline: 2px solid var(--ring); outline-offset: 1px; }
+:root:not(.dark) .app-pills { background: color-mix(in oklab, var(--background) 72%, transparent); border-color: var(--border-strong); }
+
+/* ---- The scene ---- */
+.space-hero {
+  --ov-hi: color-mix(in oklab, var(--foreground), white 60%);
+  --ov-soft: color-mix(in oklab, var(--foreground) 84%, var(--background));
+  --ov-mute: color-mix(in oklab, var(--foreground) 62%, var(--background));
+  --ov-ln: color-mix(in oklab, var(--foreground) 12%, transparent);
+  --ov-ln2: color-mix(in oklab, var(--foreground) 22%, transparent);
+  --ov-film: color-mix(in oklab, var(--foreground) 2.5%, var(--background));
+  --ov-perf: color-mix(in oklab, var(--foreground) 14%, var(--background));
+  position: relative; isolation: isolate; overflow: clip; display: flex; flex-direction: column;
+  padding-top: 156px; background: var(--background); color: var(--foreground);
+}
+:root:not(.dark) .space-hero {
+  --ov-hi: var(--foreground);
+  --ov-soft: color-mix(in oklab, var(--foreground) 86%, var(--background));
+  --ov-mute: color-mix(in oklab, var(--foreground) 56%, var(--background));
+  --ov-film: var(--surface-2);
+  --ov-perf: color-mix(in oklab, var(--foreground) 14%, var(--background));
+}
+@media (min-width: 80rem) { .space-hero { min-height: max(900px, 100svh); } }
+@media (min-width: 100rem) { .space-hero { padding-top: 128px; } }
 .space-backdrop[data-variant="hero"] .space-backdrop__scrim {
   background:
-    radial-gradient(ellipse 46% 56% at 50% 48%, color-mix(in oklab, var(--background) 62%, transparent), color-mix(in oklab, var(--background) 22%, transparent) 70%, transparent),
-    linear-gradient(to bottom, color-mix(in oklab, var(--background) 55%, transparent), transparent 24%),
-    linear-gradient(to bottom, transparent 56%, color-mix(in oklab, var(--hero-page) 72%, transparent) 84%, var(--hero-page) 98%);
+    radial-gradient(60% 50% at 50% 38%, color-mix(in oklab, var(--background) 18%, transparent), color-mix(in oklab, var(--background) 66%, transparent)),
+    linear-gradient(180deg, color-mix(in oklab, var(--background) 50%, transparent), transparent 18%, transparent 52%, color-mix(in oklab, var(--background) 92%, transparent) 82%);
 }
+:root:not(.dark) .space-backdrop[data-variant="hero"] .space-backdrop__scrim {
+  background:
+    radial-gradient(46% 46% at 50% 36%, color-mix(in oklab, var(--background) 62%, transparent), color-mix(in oklab, var(--background) 20%, transparent) 75%, transparent),
+    linear-gradient(180deg, color-mix(in oklab, var(--background) 45%, transparent), transparent 20%, transparent 60%, color-mix(in oklab, var(--background) 85%, transparent) 88%);
+}
+/* The scene picker: a quiet row of dots in the top right corner, labels for assistive tech and on hover. */
+.space-hero .space-picker { top: 112px; bottom: auto; right: 50%; translate: 50% 0; opacity: 0.6; transition: opacity 160ms; }
+.space-hero .space-picker:hover, .space-hero .space-picker:focus-within { opacity: 1; }
+.space-hero .space-picker__btn > span:not(.space-picker__dot):not(.sr-only) { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+.space-hero .space-picker__btn { padding: 0; width: 22px; min-width: 22px; height: 22px; }
+@media (min-width: 100rem) { .space-hero .space-picker { top: 84px; right: 32px; translate: none; } }
 
-.space-hero__content {
-  position: relative; z-index: 10; margin-inline: auto; display: flex; flex-direction: column; align-items: center;
-  max-width: 1080px; padding: 56px 16px 96px; text-align: center;
+.space-hero__grid {
+  position: relative; z-index: 10; flex: 1; display: grid; gap: 40px 24px; align-content: start;
+  grid-template-columns: minmax(0, 1fr); grid-template-areas: "center" "left" "right"; padding: 0 16px 40px;
 }
-@media (min-width: 40rem) { .space-hero__content { padding: 84px 24px 128px; } }
-@media (min-width: 64rem) { .space-hero__content { padding: 96px 24px 136px; } }
-.space-hero__chip {
-  display: inline-flex; align-items: center; gap: 8px; max-width: 100%; height: 30px; padding: 0 5px 0 4px;
-  border: 1px solid color-mix(in oklab, var(--foreground) 14%, transparent); border-radius: 999px;
-  background: color-mix(in oklab, var(--background) 62%, transparent); backdrop-filter: blur(8px);
-  font-size: 13px; transition: border-color 120ms, background-color 120ms;
-}
-.space-hero__chip:hover { border-color: color-mix(in oklab, var(--foreground) 30%, transparent); background: color-mix(in oklab, var(--background) 80%, transparent); }
-.space-hero__chip:focus-visible { outline: 2px solid var(--ring); outline-offset: 2px; }
-.space-hero__plan {
-  display: inline-flex; align-items: center; height: 20px; padding: 0 8px; border-radius: 999px; flex: none;
-  background: color-mix(in oklab, var(--foreground) 9%, transparent);
-  font-family: var(--font-mono); font-size: 10.5px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted-foreground);
-}
+@media (min-width: 40rem) { .space-hero__grid { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); grid-template-areas: "center center" "left right"; padding-inline: 24px; } }
+@media (min-width: 80rem) { .space-hero__grid { grid-template-columns: 220px minmax(0, 1fr) 280px; grid-template-areas: "left center right"; gap: 40px; padding: 0 40px 40px; } }
+.space-hero__content { grid-area: center; width: 100%; max-width: 760px; margin-inline: auto; text-align: center; }
+.space-hero__left { grid-area: left; min-width: 0; }
+.space-hero__right { grid-area: right; min-width: 0; }
+@media (min-width: 80rem) { .space-hero__left, .space-hero__right { padding-top: 22px; } }
+.space-hero__cap { font: 500 11px/1.5 var(--font-sans); letter-spacing: 0.42em; text-transform: uppercase; color: var(--ov-soft); }
 .space-hero__title {
-  margin-top: 22px; font-family: var(--font-display); font-weight: 600;
-  font-size: clamp(34px, 8.6vw, 68px); line-height: 1.02; letter-spacing: -0.045em; text-wrap: balance;
-  color: color-mix(in oklab, var(--foreground), white 70%);
-  text-shadow: 0 2px 32px color-mix(in oklab, var(--background) 65%, transparent);
+  margin-top: 18px; font-family: var(--font-display); font-weight: 600; font-size: clamp(44px, 5.3vw, 76px);
+  line-height: 0.94; letter-spacing: -0.055em; color: var(--ov-hi);
 }
-/* "Let's build" + the cycling phrase (RotatingText): one line from sm up, the phrase on its own line on phones. */
-.space-hero__br { display: none; }
-@media (width < 40rem) { .space-hero__br { display: inline; } }
+.space-hero__phrase { color: var(--ov-mute); }
+:root:not(.dark) .space-hero__title { text-shadow: 0 1px 30px color-mix(in oklab, var(--background) 92%, transparent); }
+@media (width < 40rem) { .space-hero__cap { letter-spacing: 0.3em; } }
 
-/* Runtime tabs above the composer: scroll inside themselves on phones, centred otherwise. */
-.space-modes { display: flex; gap: 4px; margin: 0 -16px 12px; padding: 2px 16px; overflow-x: auto; scrollbar-width: none; overscroll-behavior-x: contain; }
+/* Runtime tabs above the composer: letter-spaced words with an underline on the current one. */
+.space-modes { display: flex; gap: 28px; margin: 30px -16px 20px; padding: 2px 16px; overflow-x: auto; scrollbar-width: none; overscroll-behavior-x: contain; }
 .space-modes::-webkit-scrollbar { display: none; }
 .space-modes > :first-child { margin-left: auto; }
 .space-modes > :last-child { margin-right: auto; }
 .space-mode {
-  flex: none; display: inline-flex; align-items: center; height: 32px; padding: 0 14px; border-radius: 999px;
-  border: 1px solid transparent; font-size: 13.5px; font-weight: 500; white-space: nowrap;
-  color: color-mix(in oklab, var(--foreground) 64%, transparent);
-  transition: color 120ms, background-color 120ms, border-color 120ms;
+  flex: none; display: inline-flex; align-items: center; padding: 4px 0 8px; white-space: nowrap;
+  font: 500 11px/1 var(--font-sans); letter-spacing: 0.24em; text-transform: uppercase;
+  color: color-mix(in oklab, var(--foreground) 72%, transparent); transition: color 120ms, box-shadow 120ms;
 }
-.space-mode:hover { color: var(--foreground); background: color-mix(in oklab, var(--foreground) 7%, transparent); }
-.space-mode[aria-pressed="true"] {
-  color: var(--foreground); background: color-mix(in oklab, var(--card) 80%, transparent);
-  border-color: color-mix(in oklab, var(--foreground) 20%, transparent);
-}
-.space-mode:focus-visible { outline: 2px solid var(--ring); outline-offset: 1px; }
+.space-mode:hover { color: var(--foreground); }
+.space-mode[aria-pressed="true"] { color: var(--ov-hi); box-shadow: inset 0 -1px currentColor; }
+.space-mode:focus-visible { outline: 2px solid var(--ring); outline-offset: 3px; border-radius: 2px; }
 .space-mode:disabled { opacity: 0.5; pointer-events: none; }
+@media (width < 40rem) { .space-modes { gap: 20px; margin-top: 24px; } }
 
-/* The composer panel: solid enough for contrast over any scene, one hairline, a lift of shadow. */
+/* The composer panel: near-solid over any scene, one hairline, a deep shadow. */
 .space-composer {
-  text-align: left; border: 1px solid color-mix(in oklab, var(--foreground) 15%, transparent); border-radius: 16px;
-  background: color-mix(in oklab, var(--card) 90%, transparent); backdrop-filter: blur(16px);
-  box-shadow: inset 0 1px 0 color-mix(in oklab, var(--foreground) 7%, transparent), 0 30px 90px -30px var(--background), 0 12px 32px -16px color-mix(in oklab, var(--background) 80%, transparent);
+  text-align: left; border: 1px solid var(--ov-ln2); border-radius: 20px;
+  background: color-mix(in oklab, var(--background) 86%, transparent); backdrop-filter: blur(16px);
+  box-shadow: 0 40px 100px color-mix(in oklab, var(--background) 70%, transparent);
   transition: border-color 160ms, box-shadow 160ms;
 }
-.space-composer:focus-within {
-  border-color: color-mix(in oklab, var(--foreground) 32%, transparent);
-  box-shadow: inset 0 1px 0 color-mix(in oklab, var(--foreground) 7%, transparent), 0 30px 90px -30px var(--background), 0 0 0 4px color-mix(in oklab, var(--foreground) 6%, transparent);
+.space-composer:focus-within { border-color: color-mix(in oklab, var(--foreground) 40%, transparent); box-shadow: 0 40px 100px color-mix(in oklab, var(--background) 70%, transparent), 0 0 0 4px color-mix(in oklab, var(--foreground) 6%, transparent); }
+.space-composer > div { border-radius: 19px; }
+.space-composer .app-chip { height: 34px; padding: 0 14px; border-radius: 999px; background: transparent; border-color: var(--ov-ln2); font-size: 13px; color: var(--ov-soft); }
+.space-composer .app-chip:hover, .space-composer .app-chip[data-state="open"] { background: color-mix(in oklab, var(--foreground) 7%, transparent); color: var(--foreground); }
+.space-build { height: 42px; padding: 0 22px; border-radius: 999px; font-size: 14px; font-weight: 600; }
+@media (width < 40rem) { .space-build { height: 36px; padding: 0 16px; } }
+:root:not(.dark) .space-composer {
+  background: var(--card); border-color: var(--border-strong); backdrop-filter: none;
+  box-shadow: 0 1px 2px color-mix(in oklab, var(--foreground) 5%, transparent), 0 32px 72px -28px color-mix(in oklab, var(--foreground) 26%, transparent);
 }
-.space-composer .app-chip { background: transparent; border-color: color-mix(in oklab, var(--foreground) 14%, transparent); height: 28px; }
-.space-composer .app-chip:hover, .space-composer .app-chip[data-state="open"] { background: color-mix(in oklab, var(--foreground) 7%, transparent); }
-.space-build { height: 32px; padding: 0 14px; font-size: 13.5px; border-radius: 8px; }
+:root:not(.dark) .space-composer:focus-within { border-color: color-mix(in oklab, var(--foreground) 40%, transparent); }
+:root:not(.dark) .space-composer .app-chip { background: var(--card); border-color: var(--border-strong); }
+:root:not(.dark) .space-composer .app-chip:hover, :root:not(.dark) .space-composer .app-chip[data-state="open"] { background: var(--surface-2); }
 
-/* Quick picks under the composer (recent projects, or presets on a first run). */
+/* "Try" quick starts under the composer. */
+.space-try { display: flex; align-items: center; justify-content: center; gap: 10px; margin-top: 22px; }
+.space-try > ul { min-width: 0; }
+.space-try__label { flex: none; margin-right: 6px; font: 500 10px/1 var(--font-sans); letter-spacing: 0.42em; text-transform: uppercase; color: var(--ov-soft); }
 .space-pick {
-  display: inline-flex; align-items: center; gap: 7px; height: 30px; padding: 0 12px; border-radius: 999px;
-  border: 1px solid color-mix(in oklab, var(--foreground) 13%, transparent); background: color-mix(in oklab, var(--background) 55%, transparent);
-  font-size: 12.5px; color: var(--muted-foreground); white-space: nowrap; transition: color 120ms, border-color 120ms, background-color 120ms;
+  display: inline-flex; align-items: center; gap: 7px; height: 34px; padding: 0 14px; border-radius: 999px;
+  border: 1px solid color-mix(in oklab, var(--foreground) 16%, transparent); background: color-mix(in oklab, var(--background) 45%, transparent);
+  font-size: 13px; color: var(--ov-soft, var(--muted-foreground)); white-space: nowrap; transition: color 120ms, border-color 120ms, background-color 120ms;
 }
-.space-pick:hover, .space-pick[aria-pressed="true"] { color: var(--foreground); border-color: color-mix(in oklab, var(--foreground) 28%, transparent); background: color-mix(in oklab, var(--background) 80%, transparent); }
+.space-pick:hover, .space-pick[aria-pressed="true"] { color: var(--foreground); border-color: color-mix(in oklab, var(--foreground) 34%, transparent); background: color-mix(in oklab, var(--background) 75%, transparent); }
 .space-pick:focus-visible { outline: 2px solid var(--ring); outline-offset: 2px; }
 .space-pick > span:first-child { border-radius: 3px; }
+:root:not(.dark) .space-pick { background: color-mix(in oklab, var(--card) 88%, transparent); border-color: var(--border-strong); }
+:root:not(.dark) .space-pick:hover, :root:not(.dark) .space-pick[aria-pressed="true"] { background: var(--card); }
 
-/* Light theme hero: daylight scenes, dark copy, white panels with one hairline and a soft lift. The
-   scrim brightens the centre column behind the copy and dissolves the bottom into the white page. */
-:root:not(.dark) .space-backdrop[data-variant="hero"] .space-backdrop__scrim {
-  background:
-    radial-gradient(ellipse 44% 50% at 50% 40%, color-mix(in oklab, var(--background) 58%, transparent), color-mix(in oklab, var(--background) 18%, transparent) 70%, transparent),
-    linear-gradient(to bottom, color-mix(in oklab, var(--background) 45%, transparent), transparent 20%),
-    linear-gradient(to bottom, transparent 74%, color-mix(in oklab, var(--hero-page) 60%, transparent) 90%, var(--hero-page) 99%);
+/* ---- Left: usage numbers ---- */
+.ov-cap { font: 500 10px/1.4 var(--font-sans); letter-spacing: 0.3em; text-transform: uppercase; color: var(--ov-soft, var(--muted-foreground)); }
+.ov-cap a { color: inherit; }
+.ov-cap a:hover, .ov-cap--link:hover { color: var(--foreground); }
+.ov-cap a:focus-visible, .ov-cap--link:focus-visible { outline: 2px solid var(--ring); outline-offset: 2px; border-radius: 2px; }
+.ov-empty { margin-top: 12px; font-size: 13px; color: var(--muted-foreground); text-wrap: pretty; }
+.ov-tele { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 26px 20px; }
+.ov-tele > .ov-cap { grid-column: 1 / -1; }
+@media (min-width: 80rem) { .ov-tele { grid-template-columns: minmax(0, 1fr); gap: 28px; } }
+.ov-tele__v { font: 600 26px/1 var(--font-display); letter-spacing: -0.03em; color: var(--ov-hi); font-variant-numeric: tabular-nums; }
+.ov-tele__v small { font-size: 14px; font-weight: 500; letter-spacing: 0; color: var(--muted-foreground); }
+.ov-tele__l { margin-top: 8px; font: 500 10px/1.3 var(--font-sans); letter-spacing: 0.3em; text-transform: uppercase; color: var(--ov-soft); }
+.ov-tele__bar { width: 100%; max-width: 160px; height: 2px; margin-top: 10px; background: var(--ov-ln2); }
+.ov-tele__bar > span { display: block; height: 100%; background: var(--ov-hi); transition: width 600ms var(--ease-out); }
+.ov-tele__bar[data-tone="warn"] > span { background: var(--warning); }
+.ov-tele__bar[data-tone="error"] > span { background: var(--danger); }
+
+/* ---- Right: recent deploys ---- */
+.ov-logs__head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
+.ov-logs ol { margin-top: 8px; }
+.ov-logs__e { display: grid; grid-template-columns: 44px minmax(0, 1fr); gap: 10px; padding: 9px 0; border-bottom: 1px solid var(--ov-ln); font-size: 13px; }
+.ov-logs__e time { font: 400 11px/18px var(--font-mono); color: var(--muted-foreground); }
+.ov-logs__n { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--foreground); }
+.ov-logs__n:hover { text-decoration: underline; text-underline-offset: 4px; }
+.ov-logs__e small { display: flex; align-items: center; gap: 6px; margin-top: 2px; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; font-size: 12px; color: var(--muted-foreground); }
+.ov-logs__e small .app-dot { width: 6px; height: 6px; }
+
+/* ---- Bottom: the projects filmstrip ---- */
+.ov-film { position: relative; z-index: 10; padding: 30px 0 28px; background: var(--ov-film); border-top: 1px solid var(--ov-ln); }
+.ov-film::before, .ov-film::after { content: ""; position: absolute; left: 0; right: 0; height: 8px; pointer-events: none; background: repeating-linear-gradient(90deg, transparent 0 12px, var(--ov-perf) 12px 24px); }
+.ov-film::before { top: 8px; }
+.ov-film::after { bottom: 8px; }
+.ov-film__inner { padding-left: 16px; }
+.ov-film__inner > div:first-child { padding-right: 16px; }
+.ov-film__hd { display: flex; align-items: baseline; gap: 10px 14px; flex-wrap: wrap; }
+.ov-film__n { font: 600 18px/1.1 var(--font-display); letter-spacing: -0.02em; color: var(--ov-hi); }
+.ov-film__p { font-size: 12.5px; color: var(--muted-foreground); }
+.ov-film__all { display: inline-block; padding-bottom: 4px; border-bottom: 1px solid currentColor; font: 500 10.5px/1 var(--font-sans); letter-spacing: 0.24em; text-transform: uppercase; color: var(--ov-hi); }
+.ov-film__all:focus-visible { outline: 2px solid var(--ring); outline-offset: 2px; }
+.ov-film .ov-filters { border-color: var(--ov-ln2); border-radius: 999px; }
+.ov-film .ov-filter { border-radius: 999px; font-size: 12px; }
+@media (min-width: 40rem) { .ov-film__inner { padding-left: 24px; } }
+@media (min-width: 80rem) {
+  .ov-film__inner { display: grid; grid-template-columns: 188px minmax(0, 1fr); column-gap: 32px; padding-left: 32px; }
+  .ov-film__inner > div:first-child { margin: 0; padding: 0; flex-direction: column; align-items: flex-start; flex-wrap: nowrap; gap: 12px; }
+  .ov-film__inner > div:first-child > :last-child { margin-left: 0; }
+  .ov-film__hd { flex-direction: column; gap: 8px; }
+  .ov-film__n { font-size: 22px; }
+  .ov-film__inner > [role="tabpanel"] { grid-column: 2; grid-row: 1; min-width: 0; }
 }
-:root:not(.dark) .space-hero__title { color: var(--foreground); text-shadow: 0 1px 30px color-mix(in oklab, var(--background) 92%, transparent); }
-:root:not(.dark) .space-hero__chip { background: color-mix(in oklab, var(--card) 86%, transparent); border-color: var(--border); box-shadow: var(--shadow-sm); }
-:root:not(.dark) .space-hero__chip:hover { background: var(--card); border-color: var(--border-strong); }
-:root:not(.dark) .space-hero__plan { background: var(--surface-2); }
-:root:not(.dark) .space-mode { color: color-mix(in oklab, var(--foreground) 62%, transparent); }
-:root:not(.dark) .space-mode:hover { background: color-mix(in oklab, var(--card) 70%, transparent); }
-:root:not(.dark) .space-mode[aria-pressed="true"] { color: var(--foreground); background: var(--card); border-color: var(--border); box-shadow: var(--shadow-sm); }
-:root:not(.dark) .space-composer {
-  background: var(--card); border-color: var(--border); backdrop-filter: none;
-  box-shadow: 0 1px 2px color-mix(in oklab, var(--foreground) 5%, transparent), 0 10px 24px -14px color-mix(in oklab, var(--foreground) 14%, transparent), 0 32px 72px -32px color-mix(in oklab, var(--foreground) 22%, transparent);
+.ov-reels { display: flex; gap: 14px; overflow-x: auto; padding: 2px 16px 4px 0; scroll-snap-type: x proximity; scrollbar-width: thin; scrollbar-color: var(--ov-ln2) transparent; }
+.ov-reel { flex: none; width: 262px; scroll-snap-align: start; }
+@media (width < 40rem) { .ov-reel { width: 220px; } }
+.ov-reel__a { display: block; border-radius: 3px; }
+.ov-reel__a:focus-visible { outline: 2px solid var(--ring); outline-offset: 3px; }
+.ov-reel__im { position: relative; display: block; height: 140px; overflow: hidden; border-radius: 2px; background: var(--surface-2); box-shadow: inset 0 0 0 1px var(--ov-ln); }
+@media (width < 40rem) { .ov-reel__im { height: 118px; } }
+.ov-reel__im > img { width: 100%; height: 100%; object-fit: cover; object-position: top; transition: transform 500ms var(--ease-out); }
+.ov-reel__a:hover .ov-reel__im > img { transform: scale(1.03); }
+.ov-reel__im--m { background: radial-gradient(80% 100% at 50% 100%, color-mix(in oklab, var(--foreground) 14%, var(--background)), color-mix(in oklab, var(--foreground) 3%, var(--background))); }
+.ov-phone {
+  position: absolute; left: 50%; top: 8px; display: flex; width: 62px; height: 136px; overflow: hidden; translate: -50% 0;
+  border-radius: 10px; background: var(--surface-2);
+  box-shadow: 0 0 0 3px color-mix(in oklab, var(--foreground) 6%, var(--background)), 0 0 0 4px var(--ov-ln2);
 }
-:root:not(.dark) .space-composer:focus-within {
-  border-color: var(--border-strong);
-  box-shadow: 0 1px 2px color-mix(in oklab, var(--foreground) 5%, transparent), 0 32px 72px -32px color-mix(in oklab, var(--foreground) 22%, transparent), 0 0 0 4px color-mix(in oklab, var(--foreground) 5%, transparent);
+:root:not(.dark) .ov-phone { box-shadow: 0 0 0 3px color-mix(in oklab, var(--foreground) 92%, var(--background)), 0 0 0 4px var(--ov-ln2); }
+.ov-phone img { width: 100%; height: 100%; object-fit: cover; object-position: top; }
+.ov-reel__tg { position: absolute; right: 10px; bottom: 10px; font: 400 10px/1 var(--font-mono); letter-spacing: 0.08em; text-transform: uppercase; color: var(--ov-soft); }
+.ov-reel__im--glyph { display: grid; place-items: center; }
+.ov-reel__im--new {
+  display: flex; align-items: center; justify-content: center; gap: 8px; background: transparent; box-shadow: none;
+  border: 1px dashed var(--ov-ln2); font: 500 11px/1 var(--font-sans); letter-spacing: 0.24em; text-transform: uppercase; color: var(--ov-soft);
+  transition: border-color 160ms, color 160ms;
 }
-:root:not(.dark) .space-composer .app-chip { background: var(--card); border-color: var(--border); }
-:root:not(.dark) .space-composer .app-chip:hover, :root:not(.dark) .space-composer .app-chip[data-state="open"] { background: var(--surface-2); }
-:root:not(.dark) .space-pick { background: color-mix(in oklab, var(--card) 88%, transparent); border-color: var(--border); color: var(--foreground-dim); box-shadow: var(--shadow-sm); }
-:root:not(.dark) .space-pick:hover, :root:not(.dark) .space-pick[aria-pressed="true"] { background: var(--card); border-color: var(--border-strong); color: var(--foreground); }
+.ov-reel__a:hover .ov-reel__im--new { border-color: color-mix(in oklab, var(--foreground) 45%, transparent); color: var(--foreground); }
+.ov-reel__ln { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; margin-top: 9px; }
+.ov-reel__n { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 13px; color: var(--ov-hi); }
+.ov-reel__n--dim { color: var(--muted-foreground); }
+.ov-reel__s { display: inline-flex; flex: none; align-items: center; gap: 6px; font: 400 10.5px/18px var(--font-mono); letter-spacing: 0.04em; text-transform: uppercase; color: var(--muted-foreground); }
+.ov-reel__s .app-dot { width: 6px; height: 6px; }
+.ov-reels__empty { display: flex; flex: none; flex-direction: column; justify-content: center; gap: 4px; width: 300px; height: 140px; padding: 16px; border: 1px solid var(--ov-ln); border-radius: 2px; font-size: 13px; color: var(--muted-foreground); }
+.ov-reels__empty b { font-weight: 500; color: var(--foreground); }
+
+/* ---- Under the scene: getting started and the team ---- */
+.ov-after { display: grid; gap: 32px; width: 100%; max-width: 1296px; margin-inline: auto; padding: 36px 16px 48px; }
+@media (min-width: 40rem) { .ov-after { padding-inline: 24px; } }
+.ov-crew__head { display: flex; align-items: center; gap: 20px; }
+.ov-crew__rule { flex: 1; height: 1px; background: var(--border); }
+.ov-crew__meta { font: 400 11px/1 var(--font-mono); letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted-foreground); }
+.ov-crew__list { display: flex; flex-wrap: wrap; gap: 12px 28px; margin-top: 18px; }
+.ov-crew__list li { display: inline-flex; min-width: 0; max-width: 100%; align-items: center; gap: 8px; font-size: 13.5px; }
+.ov-crew__role { font: 400 10.5px/1 var(--font-mono); letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted-foreground); }
+.ov-crew__link { display: inline-flex; align-items: center; gap: 4px; margin-top: 16px; font-size: 13px; color: var(--muted-foreground); }
+.ov-crew__link:hover { color: var(--foreground); }
+
 :root:not(.dark) .space-picker { background: color-mix(in oklab, var(--card) 88%, transparent); border-color: var(--border); box-shadow: var(--shadow-sm); }
 :root:not(.dark) .space-picker__btn { color: var(--muted-foreground); }
 :root:not(.dark) .space-picker__btn:hover, :root:not(.dark) .space-picker__btn[aria-pressed="true"] { color: var(--foreground); }

@@ -1,21 +1,23 @@
 import Link from "next/link";
-import { ArrowUpRight, Plus } from "lucide-react";
+import { ArrowUpRight, Plus, Smartphone } from "lucide-react";
 import { Avatar } from "@/components/ui/avatar";
-import { PromptBox, type PromptMode, type PromptRecent } from "@/components/projects/prompt-box";
+import { PromptBox, type PromptMode } from "@/components/projects/prompt-box";
 import type { ProjectCardItem } from "@/components/projects/project-card";
 import type { DeploymentRow } from "@/components/projects/deployments-card";
 import type { KpiEntitlements } from "@/components/projects/kpi-row";
 import { GettingStarted, type ChecklistMilestones } from "@/components/projects/getting-started";
 import { absoluteTime, frameworkLabel, lastTouch, relativeTime } from "@/components/projects/format";
+import { TEMPLATE_SHOTS, templatePhoneShotSrc, templateShotFor } from "@/components/templates/shots";
+import { getTemplate } from "@/templates";
 import { ProjectThumb } from "./project-thumb";
-import { shortAgo, UsageBar } from "./grid-bits";
+import { shortAgo } from "./grid-bits";
 import { ProjectFilters } from "./project-filters";
 import { SpaceHero, type SpaceHeroWorkspace } from "./space-hero/space-hero";
 
 export type OverviewMember = { id: string; name: string; avatarUrl: string | null; role: string };
 type Tone = "ok" | "warn" | "error" | "info" | undefined;
 
-/** A project's state for the table, from its database status only (never inferred). */
+/** A project's state, from its database status only (never inferred). */
 export function projectState(p: ProjectCardItem): { label: string; tone: Tone } {
   const s = p.status;
   if (s?.deploy === "building") return { label: "Building", tone: "warn" };
@@ -50,108 +52,196 @@ function resetLabel(periodStart: Date) {
   return d.toLocaleDateString("en-US", { month: "short", day: "numeric", timeZone: "UTC" });
 }
 
-/** The d01 projects table: thumbnail + name + files, runtime, status dot, domain, checkpoint, updated. */
-export function ProjectsTable({ projects, label, empty }: { projects: ProjectCardItem[]; label: string; empty?: React.ReactNode }) {
+/* ------------------------------------------------------------------------------------------------
+   Left: usage numbers stacked (the plan's real limits)
+   ------------------------------------------------------------------------------------------------ */
+
+function Meter({ label, used, limit, unit }: { label: string; used: number; limit: number; unit?: string }) {
+  const unlimited = limit < 0;
+  const ratio = unlimited || limit <= 0 ? 0 : Math.min(1, used / limit);
+  const tone = ratio >= 0.9 ? "error" : ratio >= 0.7 ? "warn" : undefined;
+  const fmt = (n: number) => n.toLocaleString("en-US");
   return (
-    <div className="app-box overflow-x-auto">
-      <table className="app-table" aria-label={label}>
-        <thead>
-          <tr>
-            <th scope="col">Project</th>
-            <th scope="col" className="hidden md:table-cell">
-              Runtime
-            </th>
-            <th scope="col">Status</th>
-            <th scope="col" className="hidden sm:table-cell">
-              Domain
-            </th>
-            <th scope="col" className="hidden lg:table-cell">
-              Checkpoint
-            </th>
-            <th scope="col" className="text-right sm:text-left">
-              Updated
-            </th>
-          </tr>
-        </thead>
-        <tbody>
-          {projects.length === 0 ? (
-            <tr>
-              <td colSpan={6} className="py-8 text-center">
-                {empty ?? "No projects yet."}
-              </td>
-            </tr>
-          ) : (
-            projects.map((p) => {
-              const st = projectState(p);
-              const touch = lastTouch(p);
-              return (
-                <tr key={p.id}>
-                  <td className="w-full max-w-0 font-medium text-foreground sm:w-auto sm:max-w-none">
-                    <Link
-                      href={`/projects/${p.id}`}
-                      className="group/pr flex min-w-0 items-center gap-3 rounded-[4px] outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
-                    >
-                      <ProjectThumb
-                        templateId={p.templateId}
-                        framework={p.framework}
-                        size="lg"
-                        className="hidden h-10 w-16 rounded-[4px] shadow-[inset_0_0_0_1px_var(--border-strong)] min-[420px]:inline-flex"
-                      />
-                      <span className="min-w-0">
-                        <span className="block truncate group-hover/pr:underline group-hover/pr:underline-offset-4">{p.name}</span>
-                        <small className="app-dim app-mono block whitespace-nowrap text-[11px] font-normal">
-                          {p.fileCount ?? 0} file{p.fileCount === 1 ? "" : "s"}
-                        </small>
-                      </span>
-                    </Link>
-                  </td>
-                  <td className="hidden whitespace-nowrap md:table-cell">{frameworkLabel(p.framework)}</td>
-                  <td className="whitespace-nowrap">
-                    <span className="inline-flex items-center gap-[7px] text-foreground">
-                      <span className="app-dot" data-tone={st.tone} aria-hidden="true" />
-                      {st.label}
-                    </span>
-                  </td>
-                  <td className="mono hidden max-w-[220px] truncate sm:table-cell">
-                    {p.status?.live ? (
-                      <a
-                        href={p.status.live.url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="hover:text-foreground hover:underline hover:underline-offset-4"
-                        title={`Open ${p.status.live.url}`}
-                      >
-                        {p.status.live.host}
-                      </a>
-                    ) : (
-                      <span className="app-dim">Not published</span>
-                    )}
-                  </td>
-                  <td className="mono hidden whitespace-nowrap lg:table-cell">
-                    {p.lastCheckpointId ? (
-                      <span title={`${p.checkpointCount ?? 1} checkpoint${p.checkpointCount === 1 ? "" : "s"} · latest ${absoluteTime(p.lastCheckpointAt)}`}>
-                        {p.lastCheckpointId.replace(/-/g, "").slice(0, 7)}
-                      </span>
-                    ) : (
-                      <span className="app-dim">None</span>
-                    )}
-                  </td>
-                  <td className="whitespace-nowrap text-right sm:text-left">
-                    <time dateTime={touch.iso} title={`${touch.label} · ${absoluteTime(touch.iso)}`} suppressHydrationWarning>
-                      {relativeTime(touch.iso)}
-                    </time>
-                  </td>
-                </tr>
-              );
-            })
-          )}
-        </tbody>
-      </table>
+    <div className="ov-tele__m">
+      <p className="ov-tele__v">
+        {fmt(used)}
+        <small>{unlimited ? (unit ? ` ${unit}` : "") : ` / ${fmt(limit)}${unit ? ` ${unit}` : ""}`}</small>
+      </p>
+      <p className="ov-tele__l">{label}</p>
+      <div
+        role="progressbar"
+        aria-label={label}
+        aria-valuemin={0}
+        aria-valuemax={unlimited ? undefined : limit}
+        aria-valuenow={unlimited ? undefined : Math.min(used, Math.max(limit, 0))}
+        aria-valuetext={unlimited ? `${used} used, no fixed limit` : `${used} of ${limit}${unit ? ` ${unit}` : ""}`}
+        className="ov-tele__bar"
+        data-tone={tone}
+      >
+        <span style={{ width: `${Math.round(ratio * 100)}%` }} />
+      </div>
     </div>
   );
 }
 
-/** Project ids per filter (most recently touched first, at most the table's length) and the real totals. */
+function Telemetry({ e, projectCount, plan }: { e: KpiEntitlements | null; projectCount: number; plan: string | null }) {
+  return (
+    <section aria-labelledby="ov-usage" className="ov-tele">
+      <h2 id="ov-usage" className="ov-cap">
+        <Link href="/settings/usage">Usage</Link>
+        {e ? <span> · resets {resetLabel(e.periodStart)}</span> : null}
+      </h2>
+      {e ? (
+        <>
+          <Meter label="AI requests" used={e.used.ai_request} limit={e.limits.aiRequestsPerMonth} />
+          <Meter label="Preview time" used={e.used.runtime_minutes} limit={e.limits.runtimeMinutesPerMonth} unit="min" />
+          <Meter label={plan ? `Projects · ${plan} plan` : "Projects"} used={projectCount} limit={e.limits.projects} />
+          <Meter label="Deployments" used={e.used.deployment} limit={e.limits.deploymentsPerMonth} />
+        </>
+      ) : (
+        <p className="ov-empty">No workspace selected.</p>
+      )}
+    </section>
+  );
+}
+
+/* ------------------------------------------------------------------------------------------------
+   Right: recent deploys
+   ------------------------------------------------------------------------------------------------ */
+
+function RecentDeploys({ deployments }: { deployments: DeploymentRow[] }) {
+  return (
+    <section aria-labelledby="ov-deploys" className="ov-logs">
+      <div className="ov-logs__head">
+        <h2 id="ov-deploys" className="ov-cap">
+          Recent deploys
+        </h2>
+        <Link href="/dashboard/deployments" className="ov-cap ov-cap--link">
+          View all
+        </Link>
+      </div>
+      {deployments.length ? (
+        <ol>
+          {deployments.map((d) => {
+            const line = deploymentLine(d);
+            return (
+              <li key={d.id} className="ov-logs__e">
+                <time dateTime={d.at} title={absoluteTime(d.at)} suppressHydrationWarning>
+                  {shortAgo(d.at)}
+                </time>
+                <span className="min-w-0">
+                  <Link href={`/projects/${d.projectId}`} className="ov-logs__n">
+                    {d.projectName}
+                  </Link>
+                  <small title={line.text}>
+                    <span className="app-dot" data-tone={line.tone} aria-hidden="true" />
+                    {line.text}
+                  </small>
+                </span>
+              </li>
+            );
+          })}
+        </ol>
+      ) : (
+        <p className="ov-empty">No deployments yet. Publish a project from the editor and it shows up here.</p>
+      )}
+    </section>
+  );
+}
+
+/* ------------------------------------------------------------------------------------------------
+   Bottom: projects as a perforated filmstrip (All / Live / Drafts)
+   ------------------------------------------------------------------------------------------------ */
+
+/** The frame's picture: the starter's real capture (phone frame for Expo projects), else the drawn thumbnail. Decorative. */
+function FilmThumb({ p }: { p: ProjectCardItem }) {
+  const phone = p.framework === "expo";
+  const phoneSrc = p.templateId ? templatePhoneShotSrc(p.templateId) : null;
+  if (phone) {
+    return (
+      <span className="ov-reel__im ov-reel__im--m" aria-hidden="true">
+        <span className="ov-phone">
+          {phoneSrc ? (
+            // eslint-disable-next-line @next/next/no-img-element -- real capture of the starter
+            <img src={phoneSrc} alt="" width={780} height={1688} loading="lazy" decoding="async" />
+          ) : (
+            <Smartphone className="m-auto size-4 text-muted-foreground" />
+          )}
+        </span>
+        <span className="ov-reel__tg">Expo</span>
+      </span>
+    );
+  }
+  if (p.templateId && TEMPLATE_SHOTS.has(p.templateId)) {
+    return (
+      <span className="ov-reel__im" aria-hidden="true">
+        {/* eslint-disable-next-line @next/next/no-img-element -- real capture of the starter */}
+        <img src={templateShotFor(p.templateId, 360)} alt="" width={720} height={450} loading="lazy" decoding="async" />
+      </span>
+    );
+  }
+  return (
+    <span className="ov-reel__im ov-reel__im--glyph" aria-hidden="true">
+      <ProjectThumb templateId={p.templateId} framework={p.framework} size="lg" className="h-[60px] w-24 rounded-[6px]" />
+    </span>
+  );
+}
+
+function Reels({ projects, empty, canCreate, templateCount }: { projects: ProjectCardItem[]; empty: React.ReactNode; canCreate: boolean; templateCount: number }) {
+  return (
+    <ul className="ov-reels" aria-label="Projects">
+      {projects.length === 0 ? <li className="ov-reels__empty">{empty}</li> : null}
+      {projects.map((p) => {
+        const st = projectState(p);
+        const touch = lastTouch(p);
+        const starter = p.templateId ? getTemplate(p.templateId)?.name : null;
+        return (
+          <li key={p.id} className="ov-reel">
+            <Link
+              href={`/projects/${p.id}`}
+              className="ov-reel__a"
+              title={[p.name, frameworkLabel(p.framework), p.status?.live?.host, starter ? `Picture: the ${starter} starter` : null].filter(Boolean).join(" · ")}
+            >
+              <FilmThumb p={p} />
+              <span className="ov-reel__ln">
+                <span className="ov-reel__n">{p.name}</span>
+                <span className="ov-reel__s">
+                  <span className="app-dot" data-tone={st.tone} aria-hidden="true" />
+                  {st.label} ·{" "}
+                  <time dateTime={touch.iso} suppressHydrationWarning>
+                    {shortAgo(touch.iso)}
+                  </time>
+                </span>
+              </span>
+            </Link>
+          </li>
+        );
+      })}
+      <li className="ov-reel ov-reel--new">
+        {canCreate ? (
+          <Link href="/new-project" className="ov-reel__a">
+            <span className="ov-reel__im ov-reel__im--new">
+              <Plus className="size-3.5" aria-hidden="true" /> New project
+            </span>
+            <span className="ov-reel__ln">
+              <span className="ov-reel__n ov-reel__n--dim">Blank, a template or GitHub</span>
+            </span>
+          </Link>
+        ) : (
+          <Link href="/dashboard/templates" className="ov-reel__a">
+            <span className="ov-reel__im ov-reel__im--new">Browse templates</span>
+            <span className="ov-reel__ln">
+              <span className="ov-reel__n ov-reel__n--dim">Starters</span>
+              <span className="ov-reel__s">{templateCount}</span>
+            </span>
+          </Link>
+        )}
+      </li>
+    </ul>
+  );
+}
+
+/** Project ids per filter (most recently touched first, at most the strip's length) and the real totals. */
 export type OverviewLists = Record<"all" | "live" | "drafts", { ids: string[]; total: number }>;
 
 const FILTERS: { id: keyof OverviewLists; label: string }[] = [
@@ -161,16 +251,17 @@ const FILTERS: { id: keyof OverviewLists; label: string }[] = [
 ];
 
 /**
- * Overview (the signed-in dashboard), d01 "Monochrome Grid": a full-bleed space hero with the composer
- * (runtime tabs, recent projects as quick picks), then the projects table with All / Live / Drafts
- * filters in the main column and usage, recent deployments and members in a 320px aside. Every value
+ * Overview (the signed-in dashboard), "Cinematic Orbit": a full-bleed live scene with the composer
+ * centred (runtime tabs, starter, attach image, visibility, Build, quick starts), the plan's usage
+ * stacked on the left, recent deploys on the right and the projects as a perforated filmstrip along the
+ * bottom (All / Live / Drafts). Under the scene: the getting-started strip and the team. Every value
  * comes from the page's database reads and the plan config.
  */
 export function Overview({
   workspace,
+  greeting,
   composer,
   modes,
-  showPresets,
   projects,
   lists,
   deployments,
@@ -179,14 +270,15 @@ export function Overview({
   memberLimit,
   canCreate,
   checklist,
+  templateCount,
 }: {
-  /** The current workspace for the hero chip (plan as its display name). */
+  /** The current workspace (plan as its display name). */
   workspace: SpaceHeroWorkspace | null;
+  /** The signed-in person's first name, for the caption. */
+  greeting: string | null;
   composer: React.ComponentProps<typeof PromptBox>;
   /** Runtime tabs above the composer (each a real starter template). */
   modes: PromptMode[];
-  /** Quick-start presets under the composer (first run only, to keep the page quiet afterwards). */
-  showPresets: boolean;
   /** Card data for every project any filter shows. */
   projects: ProjectCardItem[];
   lists: OverviewLists;
@@ -197,28 +289,26 @@ export function Overview({
   memberLimit: number | null;
   canCreate: boolean;
   checklist: { milestones: ChecklistMilestones; emailVerified: boolean; emailConfigured: boolean } | null;
+  templateCount: number;
 }) {
-  const e = entitlements;
   const projectCount = lists.all.total;
-  const shownMembers = members.slice(0, 5);
+  const shownMembers = members.slice(0, 8);
   const byId = new Map(projects.map((p) => [p.id, p]));
   const pick = (ids: string[]) => ids.map((id) => byId.get(id)).filter((p): p is ProjectCardItem => Boolean(p));
-  const recent: PromptRecent[] = pick(lists.all.ids)
-    .slice(0, 4)
-    .map((p) => ({ id: p.id, name: p.name, templateId: p.templateId, framework: p.framework }));
+  const newest = pick(lists.all.ids)[0];
   const empty: Record<keyof OverviewLists, React.ReactNode> = {
     all: (
       <>
-        <span className="block font-medium text-foreground">No projects yet</span>
-        <span className="mt-1 block">
+        <b>No projects yet</b>
+        <span>
           Describe your first app above, start from a{" "}
-          <Link href="/dashboard/templates" className="text-foreground underline underline-offset-4">
+          <Link href="/dashboard/templates" className="underline underline-offset-4">
             template
           </Link>
           {canCreate ? (
             <>
               , or{" "}
-              <Link href="/import-project" className="text-foreground underline underline-offset-4">
+              <Link href="/import-project" className="underline underline-offset-4">
                 import from GitHub
               </Link>
             </>
@@ -229,167 +319,120 @@ export function Overview({
     ),
     live: (
       <>
-        <span className="block font-medium text-foreground">Nothing is live yet</span>
-        <span className="mt-1 block">Publish a project from the editor and it shows up here with its domain.</span>
+        <b>Nothing is live yet</b>
+        <span>Publish a project from the editor and it shows up here with its domain.</span>
       </>
     ),
     drafts: (
       <>
-        <span className="block font-medium text-foreground">No drafts</span>
-        <span className="mt-1 block">Every project in this workspace is published.</span>
+        <b>No drafts</b>
+        <span>Every project in this workspace is published.</span>
       </>
     ),
   };
 
+  const film = (
+    <section aria-labelledby="ov-projects" className="ov-film">
+      <div className="ov-film__inner">
+        <ProjectFilters
+          label="Filter projects"
+          heading={
+            <div className="ov-film__hd">
+              <h2 id="ov-projects" className="ov-cap">
+                Projects
+              </h2>
+              <p className="ov-film__n">
+                {projectCount} project{projectCount === 1 ? "" : "s"}
+              </p>
+              {newest ? (
+                <p className="ov-film__p">
+                  Last touched{" "}
+                  <time dateTime={lastTouch(newest).iso} suppressHydrationWarning>
+                    {relativeTime(lastTouch(newest).iso)}
+                  </time>
+                </p>
+              ) : null}
+            </div>
+          }
+          actions={
+            <Link href="/projects" className="ov-film__all">
+              All projects
+            </Link>
+          }
+          tabs={FILTERS.map((f) => {
+            const list = pick(lists[f.id].ids);
+            return {
+              id: f.id,
+              label: f.label,
+              count: lists[f.id].total,
+              panel: <Reels projects={list} empty={projectCount === 0 ? empty.all : empty[f.id]} canCreate={canCreate} templateCount={templateCount} />,
+            };
+          })}
+        />
+      </div>
+    </section>
+  );
+
   return (
     <>
-      <SpaceHero workspace={workspace}>
-        <PromptBox {...composer} presets={showPresets ? composer.presets : []} hero={{ modes, recent }} />
+      <SpaceHero
+        caption={
+          <>
+            {greeting ? `Welcome back, ${greeting}` : "Welcome back"}
+            {workspace ? (
+              <>
+                <span aria-hidden="true">&nbsp;&nbsp;·&nbsp;&nbsp;</span>
+                <span className="sr-only">, </span>
+                {workspace.plan} plan
+              </>
+            ) : null}
+          </>
+        }
+        left={<Telemetry e={entitlements} projectCount={projectCount} plan={workspace?.plan ?? null} />}
+        right={<RecentDeploys deployments={deployments} />}
+        bottom={film}
+      >
+        <PromptBox {...composer} hero={{ modes, recent: [] }} />
       </SpaceHero>
 
-      <div className="mx-auto grid w-full max-w-[1296px] grid-cols-1 gap-8 px-4 pb-8 pt-2 sm:px-6 lg:grid-cols-[minmax(0,1fr)_320px]">
-        <div className="min-w-0">
-          {checklist ? (
-            <GettingStarted
-              milestones={checklist.milestones}
-              canCreate={canCreate}
-              emailVerified={checklist.emailVerified}
-              emailConfigured={checklist.emailConfigured}
-              resumeHref={recent[0] ? `/projects/${recent[0].id}` : undefined}
-              layout="strip"
-              className="mb-7"
-            />
-          ) : null}
+      <div className="ov-after">
+        {checklist ? (
+          <GettingStarted
+            milestones={checklist.milestones}
+            canCreate={canCreate}
+            emailVerified={checklist.emailVerified}
+            emailConfigured={checklist.emailConfigured}
+            resumeHref={newest ? `/projects/${newest.id}` : undefined}
+            layout="strip"
+          />
+        ) : null}
 
-          <section aria-labelledby="ov-projects">
-            <ProjectFilters
-              label="Filter projects"
-              heading={
-                <h2 id="ov-projects" className="text-[16px] font-semibold tracking-[-0.01em]">
-                  Projects
-                </h2>
-              }
-              actions={
-                <>
-                  <Link href="/projects" className="app-chip">
-                    All projects
-                  </Link>
-                  {canCreate ? (
-                    <Link href="/new-project" className="app-chip">
-                      <Plus className="size-3.5" aria-hidden="true" /> New project
-                    </Link>
-                  ) : null}
-                </>
-              }
-              tabs={FILTERS.map((f) => {
-                const list = pick(lists[f.id].ids);
-                const total = lists[f.id].total;
-                return {
-                  id: f.id,
-                  label: f.label,
-                  count: total,
-                  panel: (
-                    <>
-                      <ProjectsTable projects={list} label={f.id === "all" ? "Recent projects" : `${f.label} projects`} empty={projectCount === 0 ? empty.all : empty[f.id]} />
-                      {total > list.length ? (
-                        <p className="mt-3 text-[13px] text-muted-foreground">
-                          Showing the {list.length} most recent of {total}.{" "}
-                          <Link href="/projects" className="text-foreground underline-offset-4 hover:underline">
-                            View all projects
-                          </Link>
-                        </p>
-                      ) : null}
-                    </>
-                  ),
-                };
-              })}
-            />
-          </section>
-        </div>
-
-        <aside aria-label="Workspace summary" className="flex min-w-0 flex-col gap-5">
-          <section className="app-box" aria-labelledby="ov-usage">
-            <div className="app-box__head">
-              <h2 id="ov-usage">
-                <Link href="/settings/usage">Usage</Link>
-              </h2>
-              {e ? <span>Resets {resetLabel(e.periodStart)}</span> : null}
-            </div>
-            {e ? (
-              <div className="space-y-3.5 px-3.5 py-3">
-                <UsageBar label="AI requests" used={e.used.ai_request} limit={e.limits.aiRequestsPerMonth} metered />
-                <UsageBar label="Preview minutes" used={e.used.runtime_minutes} limit={e.limits.runtimeMinutesPerMonth} metered />
-                <UsageBar label="Projects" used={projectCount} limit={e.limits.projects} metered />
-                <UsageBar label="Deployments" used={e.used.deployment} limit={e.limits.deploymentsPerMonth} metered />
-              </div>
-            ) : (
-              <p className="px-3.5 py-3 text-[13px] text-muted-foreground">No workspace selected.</p>
-            )}
-          </section>
-
-          <section className="app-box" aria-labelledby="ov-deploys">
-            <div className="app-box__head">
-              <h2 id="ov-deploys">Recent deployments</h2>
-              <Link href="/dashboard/deployments">View all</Link>
-            </div>
-            {deployments.length ? (
-              <ol className="app-feed px-3.5">
-                {deployments.map((d) => {
-                  const line = deploymentLine(d);
-                  return (
-                    <li key={d.id}>
-                      <span className="app-dot" data-tone={line.tone} aria-hidden="true" />
-                      <span className="min-w-0">
-                        <Link href={`/projects/${d.projectId}`} className="block truncate font-medium text-foreground hover:underline hover:underline-offset-4">
-                          {d.projectName}
-                        </Link>
-                        <span className="block truncate" title={line.text}>
-                          {line.text}
-                        </span>
-                      </span>
-                      <time dateTime={d.at} title={absoluteTime(d.at)} suppressHydrationWarning>
-                        {shortAgo(d.at)}
-                      </time>
-                    </li>
-                  );
-                })}
-              </ol>
-            ) : (
-              <p className="px-3.5 py-3 text-[13px] text-muted-foreground">No deployments yet. Publish a project from the editor and it shows up here.</p>
-            )}
-          </section>
-
-          <section className="app-box" aria-labelledby="ov-members">
-            <div className="app-box__head">
-              <h2 id="ov-members">
-                <Link href="/settings/members">Members</Link>
-              </h2>
-              {memberLimit !== null ? <span className="app-mono">{memberLimit < 0 ? `${members.length} seats` : `${members.length} of ${memberLimit} seats`}</span> : null}
-            </div>
-            {shownMembers.length ? (
-              <ul className="app-feed px-3.5">
-                {shownMembers.map((m) => (
-                  <li key={m.id} className="!grid-cols-[22px_minmax(0,1fr)_auto] items-center">
-                    <Avatar name={m.name} src={m.avatarUrl} size="xs" className="[&>span]:size-[22px]" />
-                    <span className="truncate font-medium text-foreground">{m.name}</span>
-                    <span className="app-meta uppercase">{m.role}</span>
-                  </li>
-                ))}
-              </ul>
-            ) : (
-              <p className="px-3.5 py-3 text-[13px] text-muted-foreground">No members.</p>
-            )}
-            <div className="border-t border-border px-3.5 py-2.5 text-[13px]">
-              <Link
-                href={members.length > shownMembers.length ? "/settings/members" : "/settings/members#invite"}
-                className="inline-flex items-center gap-1 text-muted-foreground hover:text-foreground"
-              >
-                {members.length > shownMembers.length ? `View all ${members.length} members` : "Invite members"}
-                <ArrowUpRight className="size-3.5" aria-hidden="true" />
-              </Link>
-            </div>
-          </section>
-        </aside>
+        <section className="ov-crew" aria-labelledby="ov-members">
+          <div className="ov-crew__head">
+            <h2 id="ov-members" className="ov-cap">
+              <Link href="/settings/members">Team</Link>
+            </h2>
+            <span aria-hidden="true" className="ov-crew__rule" />
+            {memberLimit !== null ? <p className="ov-crew__meta">{memberLimit < 0 ? `${members.length} seats` : `${members.length} of ${memberLimit} seats`}</p> : null}
+          </div>
+          {shownMembers.length ? (
+            <ul className="ov-crew__list">
+              {shownMembers.map((m) => (
+                <li key={m.id}>
+                  <Avatar name={m.name} src={m.avatarUrl} size="xs" className="[&>span]:size-[22px]" />
+                  <span className="truncate text-foreground">{m.name}</span>
+                  <span className="ov-crew__role">{m.role}</span>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p className="ov-empty">No members.</p>
+          )}
+          <Link href={members.length > shownMembers.length ? "/settings/members" : "/settings/members#invite"} className="ov-crew__link">
+            {members.length > shownMembers.length ? `View all ${members.length} members` : "Invite members"}
+            <ArrowUpRight className="size-3.5" aria-hidden="true" />
+          </Link>
+        </section>
       </div>
     </>
   );
