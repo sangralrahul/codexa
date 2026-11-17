@@ -38,7 +38,8 @@ export function useSpaceTheme(): SpaceTheme {
 
 /* ---- The viewer's pinned scene per theme (localStorage, with an in-memory fallback when storage is blocked) ---- */
 
-const storageKey = (theme: SpaceTheme, set = "") => (set ? `codexa:space-scene:${set}:${theme}` : theme === "dark" ? "codexa:space-scene" : "codexa:space-scene:light");
+// "v2": pins saved before scenes rotated every five seconds are dropped, so every viewer starts on the rotation.
+const storageKey = (theme: SpaceTheme, set = "") => (set ? `codexa:space-scene-v2:${set}:${theme}` : theme === "dark" ? "codexa:space-scene-v2" : "codexa:space-scene-v2:light");
 const EVENT = "codexa:space-scene";
 const memory = new Map<string, string | null>();
 
@@ -114,11 +115,12 @@ function useOnScreen(ref: React.RefObject<HTMLElement | null>) {
  * server, so the viewer's stored choice and theme never cause a hydration mismatch; the first image fades in.
  */
 export function SpaceBackdrop({
-  interval = 25_000,
+  interval = 5_000,
   scene: fixed,
   variant = "hero",
   sets = DEFAULT_SET,
   picker = true,
+  caption,
   className,
 }: {
   interval?: number;
@@ -126,6 +128,8 @@ export function SpaceBackdrop({
   sets?: BackdropSceneSet;
   /** Show the scene picker (when not fixed to one scene). */
   picker?: boolean;
+  /** Class for a "Scene 0N / Name" caption that follows the scene on screen (none when unset). */
+  caption?: string;
   /** Show this scene (its daylight pair in the light theme) instead of rotating; hides the picker. */
   scene?: DarkSceneId;
   /** "banner" uses each scene's short-crop focus and a quieter canvas; "stage" is the hero's canvas with a scrim its page styles (marketing home). */
@@ -239,6 +243,13 @@ export function SpaceBackdrop({
         )
       ) : null}
       <div className="space-backdrop__scrim" aria-hidden="true" />
+      {mounted && caption && currentScene ? (
+        <p className={caption} aria-hidden="true">
+          Scene {String(Math.max(0, scenes.findIndex((s) => s.id === current)) + 1).padStart(2, "0")}
+          <br />
+          <span key={current} className="stage-swap inline-block">{currentScene.label}</span>
+        </p>
+      ) : null}
 
       {mounted && !fixed && picker ? (
         <div role="group" aria-label="Backdrop scene" className="space-picker">

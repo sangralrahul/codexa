@@ -22,7 +22,8 @@ export function useSpaceTheme(): SpaceTheme {
 
 /* ---- The pinned scene per theme (localStorage, with an in-memory fallback when storage is blocked) ---- */
 
-const KEYS: Record<SpaceTheme, string> = { dark: "codexa:space-scene", light: "codexa:space-scene:light" };
+// "v2": pins saved before scenes rotated every five seconds are dropped, so the app starts on the rotation.
+const KEYS: Record<SpaceTheme, string> = { dark: "codexa:space-scene-v2", light: "codexa:space-scene-v2:light" };
 const EVENT = "codexa:space-scene";
 const memory: Record<SpaceTheme, SpaceSceneId | null> = { dark: null, light: null };
 
@@ -92,7 +93,7 @@ function useOnScreen(ref: React.RefObject<HTMLElement | null>) {
  * drift, no veil movement, no rotation. Scrolled away or with the window hidden, everything pauses.
  */
 export function SpaceBackdrop({
-  interval = 25_000,
+  interval = 5_000,
   scene: fixed,
   start,
   onScene,

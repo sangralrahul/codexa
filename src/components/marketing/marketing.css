@@ -536,6 +536,32 @@ a.mk-pill:hover { border-color: var(--border-strong); color: var(--foreground); 
 .mk-foot__links li { margin-bottom: 8px; }
 .mk-foot__links a { transition: color var(--dur-2); }
 .mk-foot__links a:hover { color: var(--foreground); }
+/* The giant footer wordmark: dim letters with one soft band of light crossing the whole word; it rises in on scroll where supported. */
+.mk-foot__word {
+  display: block; width: fit-content; margin: 8px auto 0; padding-bottom: 0.05em;
+  font-weight: 700; font-size: clamp(64px, 20vw, 290px); line-height: 0.8; letter-spacing: -0.045em; white-space: nowrap;
+  user-select: none; pointer-events: none;
+  color: transparent; -webkit-background-clip: text; background-clip: text;
+  background-image: linear-gradient(100deg,
+    color-mix(in oklab, var(--foreground) 16%, transparent) 0%,
+    color-mix(in oklab, var(--foreground) 16%, transparent) 40%,
+    color-mix(in oklab, var(--foreground) 92%, transparent) 50%,
+    color-mix(in oklab, var(--foreground) 16%, transparent) 60%,
+    color-mix(in oklab, var(--foreground) 16%, transparent) 100%);
+  background-size: 300% 100%; background-position: 50% 0;
+  animation: mk-word-sweep 6s linear infinite;
+}
+@keyframes mk-word-sweep { from { background-position: 100% 0; } to { background-position: 0% 0; } }
+@supports (animation-timeline: view()) {
+  .mk-foot__word {
+    animation: mk-word-rise linear both, mk-word-sweep 6s linear infinite;
+    animation-timeline: view(), auto;
+    animation-range: entry 0% entry 80%, normal;
+  }
+}
+@keyframes mk-word-rise { from { opacity: 0; translate: 0 30%; } to { opacity: 1; translate: 0 0; } }
+:where([data-motion="reduced"]) .mk-foot__word { animation: none; }
+@media (prefers-reduced-motion: reduce) { .mk-foot__word { animation: none; } }
 .mk-foot__bar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px 24px; padding: 16px 48px; border-top: 1px solid var(--border); font-size: 12px; color: var(--muted-foreground); }
 @media (width < 64rem) {
   .mk-foot__grid { grid-template-columns: repeat(3, minmax(0, 1fr)); padding: 40px 32px 48px; }

@@ -13,7 +13,8 @@ const GROUPS = Object.entries(FOOTER) as [keyof typeof FOOTER, readonly string[]
 /**
  * Site footer (Monochrome Grid): inside the 1200px frame, the brand column with the tagline and the
  * live status pill, then one link column per route-manifest group (plus its "All …" link), and a
- * hairline bottom bar with the legal line and the theme and motion settings.
+ * giant CODEXA wordmark (rises in as it scrolls into view; a soft band of light crosses it),
+ * and a hairline bottom bar with the legal line and the theme and motion settings.
  */
 export function MarketingFooter() {
   return (
@@ -62,6 +63,9 @@ export function MarketingFooter() {
             </nav>
           ))}
         </div>
+        <p className="mk-foot__word" aria-hidden="true">
+          CODEXA
+        </p>
         <div className="mk-foot__bar">
           <p>
             © {new Date().getFullYear()} {site.company.legalName}

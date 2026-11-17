@@ -7,7 +7,7 @@
  * the lower third. `focus`, `band`, `drift`, `motion` and `veil` mean the same as on `SpaceScene`.
  */
 import type { BackdropSceneSet } from "./space-backdrop";
-import type { SpaceScene } from "./scenes";
+import { LIGHT_SPACE_SCENES, SPACE_SCENES, type SpaceScene } from "./scenes";
 
 export type HomeDarkSceneId = "home-rings" | "home-eclipse" | "home-aurora" | "home-milkyway";
 export type HomeLightSceneId = "home-light-rings" | "home-light-orrery" | "home-light-dawn" | "home-light-eclipse";
@@ -35,3 +35,13 @@ export const HOME_LIGHT_SCENES: readonly HomeScene[] = [
 
 /** The home hero's set for `SpaceBackdrop`; pins are kept apart from the dashboard's. */
 export const HOME_SCENE_SET: BackdropSceneSet = { key: "home", dark: HOME_DARK_SCENES, light: HOME_LIGHT_SCENES };
+
+/**
+ * The home hero's rotation: the orbit horizon first (the product capture rises over its curve), then the
+ * home scenes; daylight pairs in the light theme. Its own key, so it keeps its own pin.
+ */
+export const HOME_HERO_SCENE_SET: BackdropSceneSet = {
+  key: "home-hero",
+  dark: [SPACE_SCENES[0], ...HOME_DARK_SCENES],
+  light: [LIGHT_SPACE_SCENES[0], ...HOME_LIGHT_SCENES],
+};

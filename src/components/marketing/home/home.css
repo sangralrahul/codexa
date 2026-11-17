@@ -73,6 +73,7 @@
 .cx-hero__scene { position: absolute; inset: 0 0 210px; z-index: -1; overflow: clip; }
 .cx-hero .space-backdrop__scrim {
   background:
+    radial-gradient(42% 26% at 50% 30%, color-mix(in oklab, var(--background) 55%, transparent), transparent 100%),
     radial-gradient(80% 60% at 50% 35%, transparent 40%, color-mix(in oklab, var(--background) 60%, transparent)),
     linear-gradient(180deg, color-mix(in oklab, var(--background) 50%, transparent), transparent 20%),
     linear-gradient(180deg, transparent 82%, var(--background));

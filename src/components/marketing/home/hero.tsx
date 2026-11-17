@@ -1,11 +1,12 @@
 import Link from "next/link";
 import { ArrowRight, Play } from "lucide-react";
 import { SpaceBackdrop } from "@/components/space/space-backdrop";
+import { HOME_HERO_SCENE_SET } from "@/components/space/home-scenes";
 import { RiseWords } from "@/components/motion/rise-words";
 import { CAPTURES, ThemedImg } from "@/components/marketing/captures";
 
 /**
- * Scene 01: a full-height planet horizon (the orbit scene by night, its daylight pair by day; live
+ * Scene 01: a full-height space scene that changes every five seconds (night scenes by dark, daylight by day; live
  * starfield or dust and a slow drift, still under reduced motion), the gigantic two-tone headline, the
  * subline and two pill CTAs, side captions, and a real capture of the New project page rising over the
  * curve. The page's only <h1>.
@@ -16,7 +17,7 @@ export function HomeHero({ signedIn, runtimeKinds, eager }: { signedIn: boolean;
   return (
     <section aria-labelledby="home-title" className="cx-hero" data-space-hero data-space-host>
       <div className="cx-hero__scene">
-        <SpaceBackdrop scene="orbit" variant="stage" />
+        <SpaceBackdrop sets={HOME_HERO_SCENE_SET} variant="stage" picker={false} caption="cx-side cx-side--l" />
       </div>
       <div className="cx-hero__copy">
         <p className="cx-cap cx-cap--hi">
@@ -38,11 +39,6 @@ export function HomeHero({ signedIn, runtimeKinds, eager }: { signedIn: boolean;
           </Link>
         </div>
       </div>
-      <p className="cx-side cx-side--l" aria-hidden="true">
-        Scene 01
-        <br />
-        Orbit
-      </p>
       <p className="cx-side cx-side--r">
         {runtimeKinds.slice(0, half).join(" · ")}
         <br />

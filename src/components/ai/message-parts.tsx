@@ -61,31 +61,44 @@ type FilePart = Extract<MessagePart, { type: "file_change" }>;
    Plan
    --------------------------------------------------------------------------- */
 
-/** Plan steps as a numbered checklist. Steps are ticked only once the run has really succeeded. */
-export function PlanPart({ steps, done, pending }: { steps: string[]; done: boolean; pending?: boolean }) {
+/**
+ * One folded row in the run card (plan, files, actions): a single line with a label, a count and an
+ * optional live detail; the list opens on demand so the panel stays calm while the agent works.
+ */
+function Fold({ label, count, detail, open, children, live }: { label: string; count?: React.ReactNode; detail?: React.ReactNode; open?: boolean; children: React.ReactNode; live?: boolean }) {
   return (
-    <section className="space-y-2" aria-label="Plan">
-      <h3 className="ws-label">{pending ? "Proposed plan" : "Plan"}</h3>
-      <ol className="space-y-1.5">
-        {steps.map((step, i) => (
-          <li key={i} className="flex items-start gap-2.5 text-[13px] leading-[1.45]">
-            <span
-              role="checkbox"
-              aria-checked={done}
-              aria-readonly="true"
-              aria-label={`Step ${i + 1}`}
-              className={cn(
-                "mt-px inline-flex size-[17px] shrink-0 items-center justify-center rounded-[5px] border font-mono text-[10px] tabular-nums transition-colors duration-300",
-                done ? "border-success/45 bg-success/10 text-success" : "border-border-strong bg-muted/50 text-muted-foreground",
-              )}
-            >
-              {done ? <Check className="check-draw size-2.5" strokeWidth={3.25} style={{ ["--check-delay" as string]: `${i * 60}ms` }} aria-hidden="true" /> : i + 1}
-            </span>
-            <span className={cn("min-w-0", done && "text-muted-foreground")}>{step}</span>
-          </li>
-        ))}
-      </ol>
-    </section>
+    <details className="group/fold" open={open}>
+      <summary className="flex h-8 cursor-pointer list-none items-center gap-2 px-2.5 text-[12.5px] transition-colors hover:bg-muted/60 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-ring [&::-webkit-details-marker]:hidden">
+        <ChevronRight className="size-3.5 shrink-0 text-muted-foreground transition-transform group-open/fold:rotate-90" aria-hidden="true" />
+        <span className="shrink-0 font-medium">{label}</span>
+        {count !== undefined ? <span className="shrink-0 font-mono text-[11px] tabular-nums text-muted-foreground">{count}</span> : null}
+        {detail ? <span className="min-w-0 flex-1 truncate text-right font-mono text-[11px] text-muted-foreground">{detail}</span> : null}
+        {live ? <Loader2 className="size-3.5 shrink-0 animate-spin text-muted-foreground" aria-label="Working" /> : null}
+      </summary>
+      <div className="px-2.5 pb-2.5 pt-0.5">{children}</div>
+    </details>
+  );
+}
+
+/** Plan steps as a quiet numbered list. Steps are ticked only once the run has really succeeded. */
+export function PlanPart({ steps, done }: { steps: string[]; done: boolean; pending?: boolean }) {
+  return (
+    <ol className="space-y-1.5" aria-label="Plan">
+      {steps.map((step, i) => (
+        <li key={i} className="flex items-start gap-2 text-[12.5px] leading-[1.45]">
+          <span
+            role="checkbox"
+            aria-checked={done}
+            aria-readonly="true"
+            aria-label={`Step ${i + 1}`}
+            className={cn("mt-px w-4 shrink-0 text-right font-mono text-[10.5px] tabular-nums", done ? "text-success" : "text-muted-foreground")}
+          >
+            {done ? <Check className="ml-auto size-3" strokeWidth={3} aria-hidden="true" /> : i + 1}
+          </span>
+          <span className={cn("min-w-0", done ? "text-muted-foreground" : "text-foreground/90")}>{step}</span>
+        </li>
+      ))}
+    </ol>
   );
 }
 
@@ -153,11 +166,7 @@ export function StageRail({ stages, status, running, stageTimes, finishedAt }: {
         const timed = typeof t === "number" && (states[i] === "done" || states[i] === "active" || states[i] === "error") && seg.id !== "done";
         return (
           <li key={seg.id} className="min-w-0">
-            <span className="ws-rail-seg block" data-state={states[i]} aria-hidden="true" />
-            <span aria-hidden="true" className="mt-1.5 flex items-baseline justify-between gap-1 text-[10.5px] leading-none">
-              <span className={cn("truncate", states[i] === "active" ? "font-medium text-foreground" : states[i] === "done" ? "text-muted-foreground" : states[i] === "error" ? "text-danger" : "text-muted-foreground/60")}>{seg.label}</span>
-              {timed ? <span className="shrink-0 font-mono text-[10px] tabular-nums text-foreground-dim">{shortMs(t)}</span> : null}
-            </span>
+            <span className="ws-rail-seg block" data-state={states[i]} aria-hidden="true" title={timed ? `${seg.label} · ${shortMs(t)}` : seg.label} />
             <span className="sr-only">
               {seg.title}: {SEG_TEXT[states[i]]}
               {timed ? `, ${shortMs(t)}` : ""}
@@ -167,49 +176,6 @@ export function StageRail({ stages, status, running, stageTimes, finishedAt }: {
       })}
     </ol>
   );
-}
-
-const compactN = (n: number) => (n >= 1000 ? `${(n / 1000).toFixed(n >= 10_000 ? 0 : 1)}k` : String(n));
-
-/**
- * The facts strip under the rail: files touched with +/- lines (from the run's real diff when
- * loaded), tokens in and out, repair attempts. Only facts the run recorded are shown.
- */
-export function RunMetaStrip({ changed, stats, tokens, repairAttempts }: { changed: number; stats?: FileChangeStat[]; tokens?: { in: number; out: number }; repairAttempts?: number }) {
-  const added = stats?.reduce((a, s) => a + s.added, 0) ?? null;
-  const removed = stats?.reduce((a, s) => a + s.removed, 0) ?? null;
-  const items: React.ReactNode[] = [];
-  if (changed > 0) {
-    items.push(
-      <span key="files" className="inline-flex items-center gap-1.5">
-        <FilePen className="size-3 text-foreground-dim" aria-hidden="true" />
-        <span className="tabular-nums">
-          {changed} file{changed === 1 ? "" : "s"}
-        </span>
-        {added !== null && removed !== null && stats?.length ? (
-          <span className="font-mono tabular-nums">
-            <span className="text-success">+{added}</span> <span className="text-danger">−{removed}</span>
-          </span>
-        ) : null}
-      </span>,
-    );
-  }
-  if (tokens && (tokens.in || tokens.out)) {
-    items.push(
-      <span key="tokens" className="inline-flex items-center gap-1 tabular-nums" title={`${tokens.in.toLocaleString("en-US")} tokens in · ${tokens.out.toLocaleString("en-US")} out`}>
-        <span className="text-foreground-dim">tokens</span> {compactN(tokens.in)} in · {compactN(tokens.out)} out
-      </span>,
-    );
-  }
-  if (repairAttempts) {
-    items.push(
-      <span key="repairs" className="inline-flex items-center gap-1 tabular-nums">
-        <Wrench className="size-3 text-foreground-dim" aria-hidden="true" /> {repairAttempts} repair{repairAttempts === 1 ? "" : "s"}
-      </span>,
-    );
-  }
-  if (!items.length) return null;
-  return <p className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[11.5px] text-muted-foreground">{items}</p>;
 }
 
 type CheckCell = { id: "typecheck" | "build" | "security"; label: string; state: "passed" | "failed" | "skipped" | "pending"; note?: string };
@@ -240,25 +206,15 @@ export function ChecksRow({ validation, running, onFix }: { validation?: RunVali
   });
   return (
     <section aria-label="Checks" className="space-y-2">
-      <h3 className="ws-label">Checks</h3>
-      <ul className="grid grid-cols-3 gap-1.5">
+      <ul className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[11.5px]">
         {cells.map((c) => {
           const Icon = c.state === "passed" ? ShieldCheck : c.state === "failed" ? XCircle : c.state === "pending" ? Loader2 : CircleSlash;
+          const word = c.state === "pending" ? "waiting" : c.state === "passed" ? "passed" : c.state === "failed" ? "failed" : c.id === "security" ? "runs in Publish" : "skipped";
           return (
-            <li
-              key={c.id}
-              className={cn(
-                "flex min-w-0 items-start gap-2 rounded-md border px-2 py-1.5 text-[12px]",
-                c.state === "passed" ? "border-success/25 bg-success/[0.05]" : c.state === "failed" ? "border-danger/30 bg-danger/[0.05]" : "border-border bg-muted/40",
-              )}
-              title={c.note}
-            >
-              <Icon className={cn("mt-0.5 size-3.5 shrink-0", c.state === "passed" ? "text-success" : c.state === "failed" ? "text-danger" : "text-muted-foreground", c.state === "pending" && "animate-spin")} aria-hidden="true" />
-              <span className="min-w-0">
-                <span className="block font-medium leading-tight">{c.label}</span>
-                <span className={cn("block truncate text-[11px] leading-tight", c.state === "failed" ? "text-danger" : c.state === "passed" ? "text-success" : "text-muted-foreground")}>
-                  {c.state === "pending" ? "Waiting" : c.state === "skipped" ? (c.note ?? "Skipped") : c.state === "passed" ? "Passed" : "Failed"}
-                </span>
+            <li key={c.id} className="inline-flex min-w-0 items-center gap-1.5" title={c.note}>
+              <Icon className={cn("size-3.5 shrink-0", c.state === "passed" ? "text-success" : c.state === "failed" ? "text-danger" : "text-muted-foreground/70", c.state === "pending" && "animate-spin")} aria-hidden="true" />
+              <span className={cn(c.state === "failed" ? "text-danger" : c.state === "passed" ? "text-foreground/90" : "text-muted-foreground")}>
+                {c.label} <span className="text-muted-foreground">{word}</span>
               </span>
             </li>
           );
@@ -344,43 +300,14 @@ function formatInput(input: unknown) {
   return String(input ?? "");
 }
 
-/** "Ran 14 actions" with per-tool icons; expands to every call and its output. */
-export function ActionsSummary({ calls, results, running }: { calls: ToolCallPart[]; results: Map<string, ToolResultPart>; running: boolean }) {
-  if (!calls.length) return null;
-  const pending = calls.filter((c) => !results.has(c.id));
-  const failed = calls.filter((c) => results.get(c.id)?.isError).length;
-  const icons = [...new Set(calls.map((c) => toolIcon(c.name)))].slice(0, 5);
-  const live = running ? pending[pending.length - 1] : undefined;
+/** Every tool call the agent made and its output (inside the run card's "Actions" row). */
+function ActionsList({ calls, results }: { calls: ToolCallPart[]; results: Map<string, ToolResultPart> }) {
   return (
-    <details className="group rounded-lg border border-border bg-muted/30">
-      <summary className="flex h-8 cursor-pointer list-none items-center gap-2 rounded-lg px-2 text-[12.5px] transition-colors hover:bg-muted/70 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-ring [&::-webkit-details-marker]:hidden">
-        <span className="flex -space-x-1" aria-hidden="true">
-          {icons.map((Icon, i) => (
-            <span key={i} className="flex size-5 items-center justify-center rounded-[5px] border border-border bg-card text-muted-foreground">
-              <Icon className="size-3" />
-            </span>
-          ))}
-        </span>
-        <span className="shrink-0 whitespace-nowrap font-medium">
-          Ran <span className="font-mono tabular-nums">{calls.length}</span> action{calls.length === 1 ? "" : "s"}
-        </span>
-        {failed ? <span className="shrink-0 whitespace-nowrap text-danger">· {failed} failed</span> : null}
-        {live ? (
-          <span className="min-w-0 truncate font-mono text-[11px] text-muted-foreground">
-            · {live.name} {summarizeToolInput(live.name, live.input)}
-          </span>
-        ) : null}
-        <span className="ml-auto flex items-center gap-1.5">
-          {running && pending.length ? <Loader2 className="size-3.5 animate-spin text-muted-foreground" aria-label="Running" /> : null}
-          <ChevronRight className="size-3.5 text-muted-foreground transition-transform group-open:rotate-90" aria-hidden="true" />
-        </span>
-      </summary>
-      <div className="border-t border-border p-1" aria-label="Agent actions">
-        {calls.map((c) => (
-          <ToolCallRow key={c.id} call={c} result={results.get(c.id)} />
-        ))}
-      </div>
-    </details>
+    <div className="-mx-1" aria-label="Agent actions">
+      {calls.map((c) => (
+        <ToolCallRow key={c.id} call={c} result={results.get(c.id)} />
+      ))}
+    </div>
   );
 }
 
@@ -421,11 +348,7 @@ export function WritingFiles({ files, running, stats }: { files: FilePart[]; run
   const rows = [...byPath.values()];
   const statOf = new Map((stats ?? []).map((s) => [s.path, s]));
   return (
-    <section aria-label={running ? "Writing files" : "Files changed"} className="space-y-1.5">
-      <h3 className="flex items-center gap-2">
-        <span className="ws-label">{running ? "Writing files" : "Files changed"}</span>
-        <span className="rounded-[4px] bg-muted px-1 font-mono text-[10px] font-medium leading-4 tabular-nums text-muted-foreground shadow-[inset_0_0_0_1px_var(--border)]">{rows.length}</span>
-      </h3>
+    <section aria-label={running ? "Writing files" : "Files changed"}>
       <ul className="overflow-hidden rounded-lg border border-border">
         {rows.map((f, i) => {
           const meta = ACTION_META[f.action];
@@ -544,6 +467,30 @@ export function ErrorPart({ message }: { message: string }) {
    The Agent Run card
    --------------------------------------------------------------------------- */
 
+const uniqueCount = (files: FilePart[]) => new Set(files.map((f) => f.path)).size;
+
+/** "+120 −30" from the run's real diff, when loaded. */
+function lineTotals(stats?: FileChangeStat[]) {
+  if (!stats?.length) return undefined;
+  const added = stats.reduce((a, x) => a + x.added, 0);
+  const removed = stats.reduce((a, x) => a + x.removed, 0);
+  return (
+    <>
+      <span className="text-success">+{added}</span> <span className="text-danger">−{removed}</span>
+    </>
+  );
+}
+
+/** The live tool call while running; failures once finished. */
+function actionsDetail(calls: ToolCallPart[], results: Map<string, ToolResultPart>, running: boolean) {
+  if (running) {
+    const live = [...calls].reverse().find((c) => !results.has(c.id));
+    return live ? `${live.name} ${summarizeToolInput(live.name, live.input)}` : undefined;
+  }
+  const failed = calls.filter((c) => results.get(c.id)?.isError).length;
+  return failed ? <span className="text-danger">{failed} failed</span> : undefined;
+}
+
 export type RunCardMeta = {
   /** Client start time for live runs, or the server createdAt for persisted ones (ms). */
   startedAt?: number | null;
@@ -615,7 +562,7 @@ export function AssistantParts({ parts, status, streaming, meta = {} }: { parts:
   return (
     <div className="space-y-3">
       {isRun ? (
-        <div className="space-y-3.5 rounded-xl border border-border bg-card p-3">
+        <div className="space-y-3 rounded-xl border border-border bg-card p-3">
           <div className="flex items-center gap-2.5">
             <span className="ws-orb rounded-lg" data-running={running && !calm ? "" : undefined}>
               <LogoMark size={20} state={logoState} />
@@ -632,10 +579,9 @@ export function AssistantParts({ parts, status, streaming, meta = {} }: { parts:
             <RunTimer startedAt={meta.startedAt} finishedAt={meta.finishedAt} running={running} className="shrink-0 rounded-[5px] bg-muted px-1.5 py-0.5 text-[11px] leading-none shadow-[inset_0_0_0_1px_var(--border)]" />
           </div>
           <StageRail stages={stages} status={status} running={running} stageTimes={meta.stageTimes} finishedAt={meta.finishedAt} />
-          {!running ? <RunMetaStrip changed={Math.max(files.length, meta.changedFiles?.length ?? 0)} stats={meta.stats} tokens={meta.tokens} repairAttempts={meta.repairAttempts} /> : null}
-          {plan ? <PlanPart steps={plan} done={done && !planPending} pending={planPending} /> : null}
+          {plan && planPending && done ? <PlanPart steps={plan} done={false} pending /> : null}
           {plan && planPending && done && meta.onApprovePlan ? (
-            <div className="flex flex-wrap items-center gap-2 border-t border-border pt-3">
+            <div className="flex flex-wrap items-center gap-2">
               <Button size="sm" appearance="app" onClick={() => meta.onApprovePlan?.(plan ?? [])}>
                 <Hammer className="size-3.5" aria-hidden="true" /> Approve and build
               </Button>
@@ -646,9 +592,36 @@ export function AssistantParts({ parts, status, streaming, meta = {} }: { parts:
               ) : null}
             </div>
           ) : null}
-          <WritingFiles files={files} running={running} stats={meta.stats} />
-          <ActionsSummary calls={calls} results={results} running={running} />
-          {/* The Checks row: shown for every run that edited files or validated, so "skipped" is said out loud. */}
+          {(plan && !(planPending && done)) || files.length || calls.length ? (
+            <div className="divide-y divide-border overflow-hidden rounded-lg border border-border">
+              {plan && !(planPending && done) ? (
+                <Fold label="Plan" count={`${plan.length} steps`}>
+                  <PlanPart steps={plan} done={done && !planPending} />
+                </Fold>
+              ) : null}
+              {files.length ? (
+                <Fold
+                  label={running ? "Writing" : "Files"}
+                  count={uniqueCount(files)}
+                  detail={running ? files[files.length - 1]?.path : lineTotals(meta.stats)}
+                  live={running}
+                >
+                  <WritingFiles files={files} running={running} stats={meta.stats} />
+                </Fold>
+              ) : null}
+              {calls.length ? (
+                <Fold
+                  label="Actions"
+                  count={calls.length}
+                  detail={actionsDetail(calls, results, running)}
+                  live={running && calls.some((c) => !results.has(c.id))}
+                >
+                  <ActionsList calls={calls} results={results} />
+                </Fold>
+              ) : null}
+            </div>
+          ) : null}
+          {/* Checks: shown for every run that edited files or validated, so "skipped" is said out loud. */}
           {validation || (!running && (files.length > 0 || (meta.changedFiles?.length ?? 0) > 0)) || (running && stages.some((s) => s.stage === "validating")) ? (
             <ChecksRow validation={validation} running={running && !validation} onFix={meta.onFix} />
           ) : null}
