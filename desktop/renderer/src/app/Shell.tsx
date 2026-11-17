@@ -131,11 +131,11 @@ function Sidebar() {
           align="start"
           width={216}
           trigger={(open, toggle) => (
-            <button type="button" onClick={toggle} aria-expanded={open} className="flex h-11 w-full items-center gap-2.5 rounded-md px-2 text-left hover:bg-surface">
+            <button type="button" onClick={toggle} aria-expanded={open} className="side-item flex h-11 w-full items-center gap-2.5 px-2 text-left">
               <span className="flex size-6 items-center justify-center rounded-full bg-fg text-[11px] font-semibold text-bg">{(workspace?.name ?? "W")[0]?.toUpperCase()}</span>
               <span className="min-w-0 flex-1">
                 <span className="block truncate text-[13px] font-semibold">{workspace?.name ?? "Workspace"}</span>
-                <span className="mono block truncate text-[10.5px] uppercase tracking-[0.06em] text-dim">{workspace?.plan ?? "free"} plan</span>
+                <span className="side-cap block truncate">{workspace?.plan ?? "free"} plan</span>
               </span>
               <ChevronsUpDown className="size-3.5 text-dim" />
             </button>
@@ -175,7 +175,7 @@ function Sidebar() {
             go({ name: "home" });
             setTimeout(() => document.getElementById("composer")?.focus(), 50);
           }}
-          className="mt-2 flex h-8 w-full items-center gap-2 rounded-md border border-border-strong bg-bg px-2.5 text-[13px] font-medium transition-colors hover:bg-surface"
+          className="side-new mt-2 flex h-8 w-full items-center gap-2 px-3 text-[13px] font-medium"
         >
           <Plus className="size-4" /> New project
           <span className="ml-auto">
@@ -185,7 +185,7 @@ function Sidebar() {
       </div>
 
       <nav className="scroll mt-3 min-h-0 flex-1 px-3" aria-label="Main">
-        <p className="eyebrow mb-1 px-2.5 pt-2">Workspace</p>
+        <p className="side-cap mb-1.5 px-2.5 pt-2">Workspace</p>
         <ul className="space-y-px">
           {NAV.map((n) => {
             const active = route.name === n.name;
@@ -195,15 +195,12 @@ function Sidebar() {
                   type="button"
                   onClick={() => go({ name: n.name } as Route)}
                   aria-current={active ? "page" : undefined}
-                  className={cn(
-                    "group relative flex h-8 w-full items-center gap-2.5 rounded-md px-2.5 text-[13.5px] transition-colors",
-                    active ? "bg-surface font-medium text-fg" : "text-muted hover:bg-surface hover:text-fg",
-                  )}
+                  className="side-item side-nav group relative flex h-8 w-full items-center gap-2.5 px-2.5 text-[13.5px]"
                 >
-                  {active ? <span aria-hidden="true" className="absolute -left-3 top-1.5 h-5 w-[2px] bg-fg" /> : null}
+                  {active ? <span aria-hidden="true" className="absolute -left-3 top-1.5 h-5 w-px bg-fg" /> : null}
                   <n.icon className="size-4" />
                   <span className="flex-1 text-left">{n.label}</span>
-                  {n.name === "projects" && projects ? <span className="mono rounded-full border border-border-strong px-1.5 text-[10.5px] text-dim">{projects.length}</span> : null}
+                  {n.name === "projects" && projects ? <span className="mono text-[10.5px] tracking-[0.08em] text-dim">{String(projects.length).padStart(2, "0")}</span> : null}
                 </button>
               </li>
             );
@@ -218,7 +215,7 @@ function Sidebar() {
             ] as const
           ).map(([path, label, Icon]) => (
             <li key={path}>
-              <button type="button" onClick={() => void window.codexa.openWeb(path)} className="group flex h-8 w-full items-center gap-2.5 rounded-md px-2.5 text-[13.5px] text-muted transition-colors hover:bg-surface hover:text-fg">
+              <button type="button" onClick={() => void window.codexa.openWeb(path)} className="side-item side-nav group flex h-8 w-full items-center gap-2.5 px-2.5 text-[13.5px]">
                 <Icon className="size-4" />
                 <span className="flex-1 text-left">{label}</span>
                 <ArrowUpRight className="size-3.5 text-dim opacity-0 transition-opacity group-hover:opacity-100" />
@@ -227,13 +224,13 @@ function Sidebar() {
           ))}
         </ul>
 
-        <p className="eyebrow mb-1 mt-5 border-t border-border px-2.5 pt-4">Recent</p>
+        <p className="side-cap mb-1.5 mt-5 border-t border-border px-2.5 pt-4">Recent</p>
         {recent.length ? (
           <ul className="space-y-px">
             {recent.map((p) => (
               <li key={p.id}>
-                <button type="button" onClick={() => go({ name: "project", id: p.id })} className="flex h-8 w-full items-center gap-2.5 rounded-md px-2 text-[13px] text-muted hover:bg-surface hover:text-fg">
-                  <ProjectThumb templateId={p.templateId} name={p.name} className="h-[18px] w-[28px] rounded-[3px] border border-border-strong" />
+                <button type="button" onClick={() => go({ name: "project", id: p.id })} className="side-item side-nav flex h-8 w-full items-center gap-2.5 px-2 text-[13px]">
+                  <ProjectThumb templateId={p.templateId} name={p.name} className="h-[18px] w-[28px] rounded-[2px] border border-border opacity-80" />
                   <span className="min-w-0 flex-1 truncate text-left">{p.name}</span>
                 </button>
               </li>
@@ -250,19 +247,16 @@ function Sidebar() {
           type="button"
           onClick={() => go({ name: "settings" })}
           aria-current={route.name === "settings" ? "page" : undefined}
-          className={cn(
-            "relative flex h-8 w-full items-center gap-2.5 rounded-md px-2.5 text-[13.5px] transition-colors",
-            route.name === "settings" ? "bg-surface font-medium text-fg" : "text-muted hover:bg-surface hover:text-fg",
-          )}
+          className="side-item side-nav relative flex h-8 w-full items-center gap-2.5 px-2.5 text-[13.5px]"
         >
-          {route.name === "settings" ? <span aria-hidden="true" className="absolute -left-3 top-1.5 h-5 w-[2px] bg-fg" /> : null}
+          {route.name === "settings" ? <span aria-hidden="true" className="absolute -left-3 top-1.5 h-5 w-px bg-fg" /> : null}
           <Settings className="size-4" /> Settings
         </button>
         <Menu
           align="start"
           width={216}
           trigger={(open, toggle) => (
-            <button type="button" onClick={toggle} aria-expanded={open} className="flex h-11 w-full items-center gap-2.5 rounded-md px-2 text-left hover:bg-surface">
+            <button type="button" onClick={toggle} aria-expanded={open} className="side-item flex h-11 w-full items-center gap-2.5 px-2 text-left">
               <Avatar name={user.name || user.email} size={26} />
               <span className="min-w-0 flex-1">
                 <span className="block truncate text-[13px] font-medium">{user.name || "You"}</span>
@@ -314,18 +308,18 @@ function UsageCard({ usage }: { usage: NonNullable<ReturnType<typeof useApp>["us
   ].filter((r) => r.limit > 0 && r.limit < 1e9);
   const paid = usage.plan !== "free";
   return (
-    <div className="mx-3 mb-3 rounded-lg border border-border">
-      <div className="flex items-center justify-between border-b border-border px-3 py-2">
-        <span className="text-[12.5px] font-medium">Usage</span>
+    <div className="mx-3 mb-3 border-t border-border pt-3">
+      <div className="flex items-center justify-between px-2.5">
+        <span className="side-cap">Usage</span>
         {paid ? (
-          <span className="mono text-[10.5px] uppercase tracking-[0.06em] text-dim">{usage.plan}</span>
+          <span className="side-cap">{usage.plan}</span>
         ) : (
-          <button type="button" onClick={() => void window.codexa.openWeb("/settings/billing")} className="text-[12px] font-medium text-fg underline-offset-2 hover:underline">
+          <button type="button" onClick={() => void window.codexa.openWeb("/settings/billing")} className="side-cap text-fg underline-offset-4 hover:underline">
             Upgrade
           </button>
         )}
       </div>
-      <div className="space-y-3 p-3">
+      <div className="space-y-3 px-2.5 pb-1 pt-3">
         {rows.map((r) => {
           const pct = Math.min(100, (r.used / r.limit) * 100);
           return (
@@ -336,8 +330,8 @@ function UsageCard({ usage }: { usage: NonNullable<ReturnType<typeof useApp>["us
                   {r.used.toLocaleString()} / {r.limit.toLocaleString()}
                 </span>
               </div>
-              <div className="mt-1.5 h-1 overflow-hidden rounded-sm bg-track">
-                <div className={cn("h-full rounded-sm", pct > 90 ? "bg-danger" : pct > 70 ? "bg-warning" : "bg-fg")} style={{ width: `${Math.max(pct, 2)}%` }} />
+              <div className="mt-1.5 h-0.5 overflow-hidden bg-track">
+                <div className={cn("h-full", pct > 90 ? "bg-danger" : pct > 70 ? "bg-warning" : "bg-fg")} style={{ width: `${Math.max(pct, 2)}%` }} />
               </div>
             </div>
           );

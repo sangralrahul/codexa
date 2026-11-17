@@ -1865,3 +1865,716 @@ html:not(.dark) .space-banner__subtitle {
   align-items: center;
   gap: 8px;
 }
+
+/* ==========================================================================
+   Home "Cinematic Orbit" (components/space/SpaceHero + screens/Home): a film
+   poster over the live scene. A wide letter-spaced caption, a gigantic tight
+   two-tone headline, underlined runtime tabs and the composer in the centre;
+   usage figures on the left, recent deploys on the right; a perforated
+   filmstrip of projects along the bottom. Dark is the design; the light twin
+   keeps the composition on the daylight scenes with black ink.
+   Selectors start at :root so they outrank the generic space rules above.
+   ========================================================================== */
+.cine {
+  --cine-hi: #ffffff;
+  --cine-fg: #e6e6e6;
+  --cine-mu: #a8a8a8;
+  --cine-dim: #8c8c8c;
+  --cine-phrase: #9a9a9a;
+  --cine-ln: rgba(255, 255, 255, 0.11);
+  --cine-ln2: rgba(255, 255, 255, 0.22);
+  --cine-panel: rgba(8, 8, 8, 0.86);
+  --cine-pill: rgba(0, 0, 0, 0.42);
+  --film-h: 226px;
+  --film-bg: #060606;
+  --film-edge: #1e1e1e;
+  --film-perf: #232323;
+  --film-cell: #141414;
+  display: flex;
+  flex-direction: column;
+  min-height: calc(100vh - 44px);
+  container: cine / inline-size;
+  background: #000;
+}
+:root:not(.dark) .cine {
+  --cine-hi: #000000;
+  --cine-fg: #161616;
+  --cine-mu: #575757;
+  --cine-dim: #6b6b6b;
+  --cine-phrase: #7c7c7c;
+  --cine-ln: rgba(0, 0, 0, 0.1);
+  --cine-ln2: rgba(0, 0, 0, 0.2);
+  --cine-panel: rgba(255, 255, 255, 0.94);
+  --cine-pill: rgba(255, 255, 255, 0.72);
+  --film-bg: #f3f3f1;
+  --film-edge: #e0e0dc;
+  --film-perf: #d6d6d2;
+  --film-cell: #e8e8e5;
+  background: var(--bg);
+}
+/* Scrim: a soft vignette, the top settled under the title bar, the lower third sinking into the strip. */
+:root .cine .space-backdrop__scrim {
+  background:
+    radial-gradient(60% 52% at 50% 36%, rgba(0, 0, 0, 0.18), rgba(0, 0, 0, 0.66)),
+    linear-gradient(180deg, rgba(0, 0, 0, 0.5), transparent 18%, transparent 58%, rgba(0, 0, 0, 0.92) 100%);
+}
+:root:not(.dark) .cine .space-backdrop__scrim {
+  background:
+    radial-gradient(56% 50% at 50% 36%, rgba(255, 255, 255, 0.7), rgba(255, 255, 255, 0.4) 72%, rgba(255, 255, 255, 0.36)),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.55), transparent 18%, transparent 60%, rgba(255, 255, 255, 0.85) 100%);
+}
+/* The scene picker sits just above the filmstrip, quiet until hovered or focused. */
+:root .cine .space-picker {
+  right: 24px;
+  bottom: calc(var(--film-h) + 14px);
+  border-color: transparent;
+  background: transparent;
+  backdrop-filter: none;
+  box-shadow: none;
+  opacity: 0.62;
+  transition: opacity 160ms, background-color 160ms, border-color 160ms;
+}
+:root .cine .space-picker:hover,
+:root .cine .space-picker:focus-within {
+  opacity: 1;
+  border-color: var(--cine-ln);
+  background: color-mix(in oklab, var(--bg) 55%, transparent);
+}
+:root .cine .space-picker__btn {
+  font-size: 10px;
+  letter-spacing: 0.16em;
+}
+
+/* Wide letter-spaced caption (scene + greeting, column labels). */
+.cine-cap {
+  font-family: var(--font-sans);
+  font-size: 11px;
+  font-weight: 500;
+  line-height: 1.5;
+  letter-spacing: 0.42em;
+  text-transform: uppercase;
+  color: var(--cine-mu);
+}
+
+.cine__stage {
+  position: relative;
+  z-index: 10;
+  flex: 1 0 auto;
+  display: grid;
+  /* Symmetric side columns so the composer stays on the page's centre line; the centre takes up to 760px. */
+  grid-template-columns: minmax(176px, 1fr) minmax(0, 760px) minmax(176px, 1fr);
+  column-gap: 24px;
+  align-items: start;
+  padding: 52px 32px 40px;
+}
+.cine__center {
+  grid-column: 2;
+  grid-row: 1;
+  justify-self: center;
+  width: 100%;
+  max-width: 760px;
+  min-width: 0;
+  text-align: center;
+  container: cine-center / inline-size;
+}
+.cine__left {
+  grid-column: 1;
+  grid-row: 1;
+  min-width: 0;
+}
+.cine__right {
+  grid-column: 3;
+  grid-row: 1;
+  min-width: 0;
+  display: flex;
+  justify-content: flex-end;
+}
+.cine__caption {
+  padding-left: 0.42em;
+  color: color-mix(in oklab, var(--cine-hi) 80%, transparent);
+  text-wrap: balance;
+}
+.cine__scene {
+  white-space: nowrap;
+}
+.cine__sep {
+  margin: 0 0.6em;
+}
+.cine__title {
+  margin-top: 16px;
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: clamp(44px, 12cqi, 86px);
+  line-height: 0.94;
+  letter-spacing: -0.055em;
+  color: var(--cine-hi);
+  text-shadow: 0 2px 40px rgba(0, 0, 0, 0.45);
+}
+:root:not(.dark) .cine__title {
+  text-shadow: 0 1px 34px rgba(255, 255, 255, 0.85);
+}
+.cine__lead,
+.cine__phrase {
+  display: block;
+  white-space: nowrap;
+}
+.cine__phrase {
+  color: var(--cine-phrase);
+  /* Room for descenders ("a mobile app.") under the tight leading. */
+  padding-bottom: 0.06em;
+}
+.cine__composer {
+  margin-top: 26px;
+}
+
+/* Runtime tabs: letter-spaced caps, an underline under the active one. */
+:root .cine .space-modes {
+  flex-wrap: wrap;
+  gap: 10px 28px;
+  margin: 0 0 18px;
+  padding: 0;
+}
+:root .cine .space-mode {
+  height: auto;
+  padding: 0 0 8px;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  color: var(--cine-mu);
+}
+:root .cine .space-mode:hover {
+  color: var(--cine-hi);
+  background: transparent;
+}
+:root .cine .space-mode[aria-pressed="true"] {
+  color: var(--cine-hi);
+  background: transparent;
+  box-shadow: inset 0 -1px currentColor;
+}
+
+/* The composer: a dark slab with one hairline and a long shadow (a white card in light). */
+:root .cine .space-composer {
+  border-radius: 20px;
+  border-color: var(--cine-ln2);
+  background: var(--cine-panel);
+  backdrop-filter: blur(14px);
+  box-shadow: 0 40px 100px rgba(0, 0, 0, 0.7);
+}
+:root .cine .space-composer:focus-within {
+  border-color: color-mix(in oklab, var(--cine-hi) 40%, transparent);
+  box-shadow:
+    0 40px 100px rgba(0, 0, 0, 0.7),
+    0 0 0 4px color-mix(in oklab, var(--cine-hi) 7%, transparent);
+}
+:root:not(.dark) .cine .space-composer {
+  backdrop-filter: none;
+  box-shadow:
+    0 1px 2px rgba(0, 0, 0, 0.05),
+    0 30px 80px -30px rgba(0, 0, 0, 0.3);
+}
+:root:not(.dark) .cine .space-composer:focus-within {
+  box-shadow:
+    0 30px 80px -30px rgba(0, 0, 0, 0.3),
+    0 0 0 4px rgba(0, 0, 0, 0.05);
+}
+.space-composer__input {
+  display: block;
+  width: 100%;
+  min-height: 84px;
+  resize: none;
+  background: transparent;
+  padding: 22px 26px 6px;
+  font-size: 18px;
+  line-height: 1.45;
+  letter-spacing: -0.01em;
+  color: var(--cine-hi);
+  outline: none;
+}
+.space-composer__input::placeholder {
+  color: var(--cine-dim);
+}
+:root .cine .space-chip {
+  height: 34px;
+  padding: 0 14px;
+  gap: 7px;
+  border-radius: 999px;
+  border-color: var(--cine-ln2);
+  background: transparent;
+  font-size: 13px;
+  color: color-mix(in oklab, var(--cine-hi) 82%, transparent);
+}
+:root .cine .space-chip:hover,
+:root .cine .space-chip[aria-expanded="true"] {
+  color: var(--cine-hi);
+  background: color-mix(in oklab, var(--cine-hi) 8%, transparent);
+}
+.cine-go {
+  margin-left: auto;
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  height: 42px;
+  padding: 0 22px;
+  border-radius: 999px;
+  background: var(--cine-hi);
+  color: var(--bg);
+  font-size: 14px;
+  font-weight: 600;
+  transition: opacity 120ms, transform 120ms;
+}
+.dark .cine-go {
+  color: #000;
+}
+.cine-go:hover {
+  opacity: 0.9;
+}
+.cine-go:active {
+  transform: translateY(1px);
+}
+.cine-go:disabled {
+  opacity: 0.4;
+  pointer-events: none;
+}
+.cine-go:focus-visible {
+  outline-offset: 3px;
+}
+
+/* "Try" ideas: as many as fit on one line (hidden ones leave the tab order too). */
+.cine-try {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
+  margin-top: 22px;
+}
+.cine-try > li:nth-child(n + 6) {
+  display: none;
+}
+@container cine-center (max-width: 640px) {
+  .cine-try > li:nth-child(n + 5) {
+    display: none;
+  }
+}
+@container cine-center (max-width: 500px) {
+  .cine-try > li:nth-child(n + 4) {
+    display: none;
+  }
+}
+.cine-try__cap {
+  margin-right: 6px;
+  font-size: 10px;
+}
+:root .cine .space-pick {
+  height: 32px;
+  padding: 0 14px;
+  border-color: color-mix(in oklab, var(--cine-hi) 16%, transparent);
+  background: var(--cine-pill);
+  box-shadow: none;
+  font-size: 13px;
+  color: color-mix(in oklab, var(--cine-hi) 80%, transparent);
+}
+:root .cine .space-pick:hover,
+:root .cine .space-pick[aria-pressed="true"] {
+  color: var(--cine-hi);
+  border-color: color-mix(in oklab, var(--cine-hi) 34%, transparent);
+}
+
+/* Left: usage figures, stacked. */
+.cine-tele {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 28px;
+  padding-top: 8px;
+}
+.cine-ws {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  max-width: 100%;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--cine-ln);
+  font-size: 12.5px;
+  font-weight: 500;
+  color: var(--cine-fg);
+  transition: color 120ms;
+}
+.cine-ws:hover {
+  color: var(--cine-hi);
+}
+.cine-tele__num {
+  font-weight: 600;
+  font-size: 26px;
+  line-height: 1;
+  letter-spacing: -0.03em;
+  color: var(--cine-hi);
+  font-variant-numeric: tabular-nums;
+}
+.cine-tele__num small {
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: 0;
+  color: var(--cine-mu);
+}
+.cine-tele__label {
+  margin-top: 8px;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.22em;
+  color: color-mix(in oklab, var(--cine-hi) 72%, transparent);
+}
+.cine-tele__bar {
+  display: block;
+  width: 120px;
+  max-width: 100%;
+  height: 2px;
+  margin-top: 10px;
+  background: color-mix(in oklab, var(--cine-hi) 18%, transparent);
+}
+.cine-tele__bar i {
+  display: block;
+  height: 100%;
+  background: var(--cine-hi);
+}
+.cine-tele__bar i[data-tone="warning"] {
+  background: var(--warning);
+}
+.cine-tele__bar i[data-tone="danger"] {
+  background: var(--danger);
+}
+.cine-tele__plan {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.2em;
+}
+.cine-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--cine-hi);
+  border-bottom: 1px solid currentColor;
+  padding-bottom: 3px;
+}
+
+/* Right: recent deploys as a log. */
+.cine-logs {
+  justify-self: end;
+  width: 100%;
+  max-width: 270px;
+  padding-top: 8px;
+  text-align: left;
+}
+.cine-logs h2 {
+  padding-bottom: 6px;
+  font-size: 10px;
+  letter-spacing: 0.3em;
+  color: color-mix(in oklab, var(--cine-hi) 80%, transparent);
+}
+.cine-logs__row {
+  display: grid;
+  grid-template-columns: 58px minmax(0, 1fr);
+  gap: 10px;
+  width: 100%;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--cine-ln);
+  text-align: left;
+  font-size: 13px;
+  color: var(--cine-fg);
+}
+.cine-logs__time {
+  font-size: 10.5px;
+  line-height: 19px;
+  letter-spacing: 0.04em;
+  color: var(--cine-mu);
+}
+.cine-logs__name {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--cine-hi);
+}
+button.cine-logs__row:hover .cine-logs__name {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.cine-logs__detail {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 2px;
+  font-size: 12px;
+  color: var(--cine-mu);
+}
+.cine-logs__empty {
+  padding-top: 10px;
+  font-size: 12.5px;
+  line-height: 1.55;
+  color: var(--cine-mu);
+}
+
+/* Narrow (the window under ~1220px): the side columns drop under the composer, side by side. */
+@container cine (max-width: 980px) {
+  .cine__stage {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    row-gap: 40px;
+    padding-top: 40px;
+  }
+  .cine__center {
+    grid-column: 1 / -1;
+  }
+  .cine__left {
+    grid-column: 1;
+    grid-row: 2;
+  }
+  .cine__right {
+    grid-column: 2;
+    grid-row: 2;
+  }
+  .cine-tele {
+    flex-flow: row wrap;
+    gap: 22px 28px;
+  }
+  .cine-ws {
+    flex-basis: 100%;
+  }
+  .cine-logs {
+    max-width: none;
+  }
+}
+
+/* The filmstrip: perforated edges, a header frame, then the projects as frames (scrolls sideways). */
+.cine-film {
+  position: relative;
+  z-index: 10;
+  display: flex;
+  height: var(--film-h);
+  flex: none;
+  background: var(--film-bg);
+  border-top: 1px solid var(--film-edge);
+  border-bottom: 1px solid var(--film-edge);
+}
+.cine-film::before,
+.cine-film::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 8px;
+  pointer-events: none;
+  background: repeating-linear-gradient(90deg, transparent 0 12px, var(--film-perf) 12px 24px);
+}
+.cine-film::before {
+  top: 8px;
+}
+.cine-film::after {
+  bottom: 8px;
+}
+.cine-film__hd {
+  flex: none;
+  width: 196px;
+  padding: 32px 20px 0 32px;
+  text-align: left;
+}
+.cine-film__hd .cine-cap {
+  font-size: 10px;
+  letter-spacing: 0.32em;
+}
+.cine-film__count {
+  margin-top: 12px;
+  font-size: 22px;
+  font-weight: 600;
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+  color: var(--cine-hi);
+}
+.cine-film__sub {
+  margin-top: 8px;
+  font-size: 12.5px;
+  color: var(--cine-mu);
+}
+:root .cine-film__all {
+  margin-top: 14px;
+  padding-bottom: 4px;
+  border-bottom: 1px solid currentColor;
+  font-size: 10.5px;
+  letter-spacing: 0.24em;
+  color: var(--cine-hi);
+}
+.cine-film__reel {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  gap: 14px;
+  padding: 28px 32px 0 2px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scrollbar-width: none;
+  scroll-snap-type: x proximity;
+  scroll-padding-left: 2px;
+  -webkit-mask-image: linear-gradient(90deg, #000 calc(100% - 48px), transparent);
+  mask-image: linear-gradient(90deg, #000 calc(100% - 48px), transparent);
+}
+.cine-film__reel::-webkit-scrollbar {
+  display: none;
+}
+.cine-film__reel > li {
+  flex: none;
+  scroll-snap-align: start;
+}
+.cine-frame {
+  display: block;
+  width: 262px;
+  text-align: left;
+  border-radius: 3px;
+}
+.cine-frame:focus-visible {
+  outline-offset: 3px;
+}
+.cine-frame__im {
+  position: relative;
+  display: block;
+  height: 140px;
+  overflow: hidden;
+  border-radius: 2px;
+  background: var(--film-cell);
+  transition: filter 200ms, box-shadow 200ms;
+}
+button.cine-frame:hover .cine-frame__im {
+  box-shadow: 0 0 0 1px var(--cine-ln2);
+  filter: brightness(1.06);
+}
+.cine-frame__im[data-mobile] {
+  background: radial-gradient(80% 100% at 50% 100%, #262626, #0c0c0c);
+}
+:root:not(.dark) .cine-frame__im[data-mobile] {
+  background: radial-gradient(80% 100% at 50% 100%, #ffffff, #e4e4e0);
+}
+.cine-phone {
+  position: absolute;
+  left: 50%;
+  top: 8px;
+  width: 62px;
+  height: 136px;
+  margin-left: -31px;
+  overflow: hidden;
+  border-radius: 10px;
+  background: #f0f0ee;
+  box-shadow:
+    0 0 0 3px #111,
+    0 0 0 4px #4a4a4a;
+}
+.cine-frame__tag {
+  position: absolute;
+  right: 10px;
+  bottom: 10px;
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  color: #cfcfcf;
+}
+:root:not(.dark) .cine-frame__tag {
+  color: #555;
+}
+.cine-frame__ln {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 10px;
+  margin-top: 9px;
+  font-size: 13px;
+  color: var(--cine-hi);
+}
+.cine-frame__meta {
+  flex: none;
+  font-size: 10.5px;
+  line-height: 18px;
+  letter-spacing: 0.04em;
+  color: var(--cine-mu);
+}
+.cine-frame--new .cine-frame__im {
+  display: grid;
+  place-items: center;
+  border: 1px dashed color-mix(in oklab, var(--cine-hi) 30%, transparent);
+  background: transparent;
+}
+.cine-frame--new .cine-frame__im .cine-cap {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 10.5px;
+  letter-spacing: 0.24em;
+  color: var(--cine-fg);
+}
+.cine-frame--new .cine-frame__ln {
+  color: var(--cine-mu);
+}
+
+/* Sidebar (app/Shell): quiet next to Home's scene. No filled pills: muted ink that brightens on hover,
+   the current page in full ink with a one-pixel rule at the edge, mono letter-spaced section labels. */
+.side-cap {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 400;
+  line-height: 1.5;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--dim);
+}
+.side-item {
+  border-radius: 4px;
+  transition: color 120ms, background-color 120ms;
+}
+.side-item:hover {
+  background: color-mix(in oklab, var(--fg) 4%, transparent);
+}
+.side-nav {
+  color: var(--muted);
+}
+.side-nav svg {
+  color: var(--dim);
+  transition: color 120ms;
+}
+.side-nav:hover,
+.side-nav[aria-current="page"] {
+  color: var(--fg);
+}
+.side-nav:hover svg,
+.side-nav[aria-current="page"] svg {
+  color: var(--fg);
+}
+.side-nav[aria-current="page"] {
+  font-weight: 500;
+}
+.side-new {
+  border: 1px solid var(--border-strong);
+  border-radius: 999px;
+  color: var(--fg);
+  transition: border-color 120ms, background-color 120ms;
+}
+.side-new:hover {
+  border-color: var(--mark);
+  background: color-mix(in oklab, var(--fg) 4%, transparent);
+}
+/* The template-menu tab sits in the Menu wrapper; keep it on the same baseline as its siblings. */
+:root .cine .space-modes > div {
+  display: flex;
+}
+
+/* A narrower centre (smaller windows): tighter caption and tab tracking so each stays on one line. */
+@container cine-center (max-width: 640px) {
+  .cine__caption {
+    letter-spacing: 0.28em;
+  }
+  :root .cine .space-modes {
+    column-gap: 20px;
+  }
+  :root .cine .space-mode {
+    letter-spacing: 0.18em;
+  }
+}

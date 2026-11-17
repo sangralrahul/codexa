@@ -13,6 +13,21 @@ export function relativeTime(iso: string | null | undefined): string {
   return new Date(iso).toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" });
 }
 
+/** A compact, film-slate age for mono labels: "NOW", "04 MIN", "02 HRS", "01 DAY", "11 DAYS", or a short date. */
+export function slateTime(iso: string | null | undefined): string {
+  if (!iso) return "";
+  const diff = (Date.now() - new Date(iso).getTime()) / 1000;
+  const pad = (n: number) => String(n).padStart(2, "0");
+  if (diff < 45) return "NOW";
+  const m = Math.round(diff / 60);
+  if (m < 60) return `${pad(m)} MIN`;
+  const h = Math.round(m / 60);
+  if (h < 24) return `${pad(h)} ${h === 1 ? "HR" : "HRS"}`;
+  const d = Math.round(h / 24);
+  if (d < 30) return `${pad(d)} ${d === 1 ? "DAY" : "DAYS"}`;
+  return new Date(iso).toLocaleDateString(undefined, { month: "short", day: "numeric" }).toUpperCase();
+}
+
 export function initials(name: string) {
   const parts = name.trim().split(/\s+/).filter(Boolean);
   return ((parts[0]?.[0] ?? "?") + (parts[1]?.[0] ?? "")).toUpperCase();
@@ -39,3 +54,7 @@ let appUrl = "";
 export const setAppUrl = (u: string) => (appUrl = u);
 export const getAppUrl = () => appUrl;
 export const templateShot = (id: string | null | undefined) => (id ? `${appUrl}/templates/${id}-720.webp` : "");
+/** A mobile (Expo) starter's screen capture at phone proportions (780x1688), for phone frames. */
+export const templatePhoneShot = (id: string | null | undefined) => (id ? `${appUrl}/templates/${id}-phone.webp` : "");
+/** True for Expo / React Native projects (shown in a phone frame). */
+export const isMobileProject = (p: { framework?: string | null; templateId?: string | null }) => p.framework === "expo" || Boolean(p.templateId?.startsWith("expo"));

@@ -2,7 +2,7 @@ import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { Repeat } from "lucide-react";
 import { useCalm } from "../../lib/motion";
 import { cn } from "../../lib/util";
-import { ALL_SCENES, isSpaceSceneId, sceneFor, scenesFor, type DarkSceneId, type SpaceSceneId, type SpaceTheme } from "./scenes";
+import { ALL_SCENES, isSpaceSceneId, sceneFor, scenesFor, type DarkSceneId, type LightSceneId, type SpaceScene, type SpaceSceneId, type SpaceTheme } from "./scenes";
 import { Starfield } from "./Starfield";
 import { Dustfield } from "./Dustfield";
 
@@ -94,10 +94,16 @@ function useOnScreen(ref: React.RefObject<HTMLElement | null>) {
 export function SpaceBackdrop({
   interval = 25_000,
   scene: fixed,
+  start,
+  onScene,
   variant = "hero",
   className,
 }: {
   interval?: number;
+  /** The scene the rotation starts on, per theme (defaults to each set's first scene). */
+  start?: { dark: DarkSceneId; light: LightSceneId };
+  /** Called with the scene on screen and its 1-based number in the theme's set (Home's caption uses it). */
+  onScene?: (scene: SpaceScene, number: number) => void;
   /** Show this scene (its daylight pair in the light theme) instead of rotating; hides the picker. */
   scene?: DarkSceneId;
   /** "banner" uses each scene's short-crop focus and a quieter canvas. */
@@ -116,7 +122,8 @@ export function SpaceBackdrop({
   const pinned = fixed ? null : storedPin;
   const active = useOnScreen(rootRef);
   const [auto, setAuto] = useState(0);
-  const current: SpaceSceneId = fixed ? sceneFor(theme, fixed).id : (pinned ?? scenes[auto % scenes.length].id);
+  const offset = start ? Math.max(0, scenes.findIndex((s) => s.id === start[theme])) : 0;
+  const current: SpaceSceneId = fixed ? sceneFor(theme, fixed).id : (pinned ?? scenes[(auto + offset) % scenes.length].id);
   const banner = variant === "banner";
   const motion = ALL_SCENES.find((s) => s.id === current)?.motion;
 
@@ -134,6 +141,11 @@ export function SpaceBackdrop({
     const t = window.setTimeout(() => setAuto((i) => (i + 1) % scenes.length), interval);
     return () => window.clearTimeout(t);
   }, [fixed, calm, pinned, active, auto, interval, scenes.length]);
+
+  useEffect(() => {
+    const i = scenes.findIndex((s) => s.id === current);
+    if (i >= 0) onScene?.(scenes[i], i + 1);
+  }, [current, scenes, onScene]);
 
   const markLoaded = (id: SpaceSceneId) => {
     // Two frames later, so the opacity transition starts from a painted 0.
@@ -211,7 +223,7 @@ export function SpaceBackdrop({
               type="button"
               aria-pressed={!pinned}
               onClick={() => {
-                setAuto(Math.max(0, scenes.findIndex((s) => s.id === current)));
+                setAuto((Math.max(0, scenes.findIndex((s) => s.id === current)) - offset + scenes.length) % scenes.length);
                 pinSpaceScene(null, theme);
               }}
               className="space-picker__btn space-picker__btn--icon"

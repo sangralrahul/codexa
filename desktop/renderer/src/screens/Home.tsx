@@ -1,8 +1,8 @@
 import { useEffect, useRef, useState } from "react";
-import { ArrowRight, ArrowUpRight, BarChart3, Bot, Briefcase, Check, CheckCircle2, ChevronDown, Circle, ExternalLink, GitBranch, GitFork, Globe, LayoutTemplate, Rocket, Server, ShoppingBag, Smartphone, X } from "lucide-react";
+import { ArrowRight, ArrowUpRight, BarChart3, Bot, Briefcase, Check, CheckCircle2, ChevronDown, Circle, ExternalLink, GitBranch, GitFork, Globe, LayoutTemplate, Loader2, Plus, Rocket, Server, ShoppingBag, Smartphone, X } from "lucide-react";
 import { useApp } from "../app/state";
 import { deployApi, historyApi, membersApi, showcaseApi, statusApi, templatesApi, type Deployment, type Project, type ShowcaseItem, type Snapshot, type SystemStatus, type TeamMember, type Template } from "../lib/api";
-import { cn, frameworkLabel, relativeTime } from "../lib/util";
+import { cn, frameworkLabel, isMobileProject, relativeTime, slateTime, templatePhoneShot } from "../lib/util";
 import { Avatar, Button, EmptyState, Menu, Spinner } from "../ui";
 import { ProjectMenu } from "../components/ProjectCard";
 import { ProjectThumb } from "../components/ProjectThumb";
@@ -63,6 +63,8 @@ const LEARN = [
 ];
 /** How many projects each filter's table shows (checkpoints load for these rows only). */
 const TABLE_ROWS = 8;
+/** How many recent projects the filmstrip shows (before the "new from a template" frame). */
+const REEL_FRAMES = 8;
 /** How many of the most recent projects get their deployments loaded (Live / Drafts filters, Status, Domain, activity). */
 const DEPLOY_SCAN = 40;
 const SETUP_KEY = "codexa:setup-dismissed";
@@ -260,13 +262,12 @@ export function HomeScreen() {
   const unlimited = (n: number | undefined) => n === undefined || n <= 0 || n >= 1e9;
   const meters = usage
     ? [
-        { label: "AI requests", value: usage.used.ai_request ?? 0, limit: usage.limits.aiRequestsPerMonth },
-        { label: "Preview minutes", value: usage.used.runtime_minutes ?? 0, limit: usage.limits.runtimeMinutesPerMonth },
-        { label: "Projects", value: usage.counts.projects, limit: usage.limits.projects },
-        { label: "Deployments", value: usage.used.deployment ?? 0, limit: usage.limits.deploymentsPerMonth },
+        { label: "AI requests", value: usage.used.ai_request ?? 0, limit: usage.limits.aiRequestsPerMonth, unit: "" },
+        { label: "Preview time", value: usage.used.runtime_minutes ?? 0, limit: usage.limits.runtimeMinutesPerMonth, unit: "min" },
+        { label: "Projects", value: usage.counts.projects, limit: usage.limits.projects, unit: "" },
+        { label: "Deploys", value: usage.used.deployment ?? 0, limit: usage.limits.deploymentsPerMonth, unit: "" },
       ]
     : null;
-  const recent = all.slice(0, 4);
 
   const starterMenu = (close: () => void) => (
     <>
@@ -289,7 +290,7 @@ export function HomeScreen() {
 
   /** One filter's table (Status, Domain, Checkpoint from the loaded deployments and checkpoints). */
   const table = (list: Project[] | null, label: string, empty: React.ReactNode) => (
-    <div className="overflow-hidden rounded-lg border border-border">
+    <div className="scroll overflow-x-auto overflow-y-hidden rounded-lg border border-border">
       <table className="w-full border-collapse text-[13px]" aria-label={label}>
         <thead>
           <tr className="bg-card">
@@ -378,102 +379,260 @@ export function HomeScreen() {
     </div>
   );
 
+  const firstName = (user.name ?? "").trim().split(/\s+/)[0] || null;
+  const lastEdited = all[0]?.updatedAt ?? null;
+  const reel = all.slice(0, REEL_FRAMES);
+  // The idea that fits the selected runtime leads the "Try" row (the row shows as many as fit).
+  const fits = (i: (typeof IDEAS)[number]) => i.template === template || (isMobileProject({ templateId: template }) && isMobileProject({ templateId: i.template })) || (template === "static-site" && i.template === "vite-react-landing");
+  const tryIdeas = [...IDEAS.filter(fits), ...IDEAS.filter((i) => !fits(i))];
+
+  /** Left of the composer: this month's usage from the real plan, as big figures with mono labels. */
+  const telemetry = (
+    <section aria-labelledby="usage-title" className="cine-tele">
+      <h2 id="usage-title" className="sr-only">
+        Usage this month
+      </h2>
+      {workspace ? (
+        <button type="button" onClick={() => go({ name: "settings", tab: "workspace" })} className="cine-ws" title={`${workspace.name} workspace settings`}>
+          <Avatar name={workspace.name} size={18} />
+          <span className="min-w-0 truncate">{workspace.name}</span>
+        </button>
+      ) : null}
+      {meters ? (
+        meters.map((m) => {
+          const free = unlimited(m.limit);
+          const pct = free ? 0 : Math.min(100, (m.value / m.limit) * 100);
+          return (
+            <div key={m.label} className="cine-tele__item">
+              <p className="cine-tele__num">
+                {m.value.toLocaleString()}
+                <small>
+                  {free ? " · no limit" : ` / ${m.limit.toLocaleString()}`}
+                  {m.unit ? ` ${m.unit}` : ""}
+                </small>
+              </p>
+              <p className="cine-cap cine-tele__label">{m.label}</p>
+              <span className="cine-tele__bar" aria-hidden="true">
+                <i data-tone={pct > 90 ? "danger" : pct > 75 ? "warning" : undefined} style={{ width: free ? "100%" : `${Math.max(pct, 1)}%`, opacity: free ? 0.35 : undefined }} />
+              </span>
+            </div>
+          );
+        })
+      ) : (
+        Array.from({ length: 4 }, (_, i) => (
+          <div key={i} className="cine-tele__item" aria-hidden="true">
+            <span className="pulse block h-[26px] w-16 rounded-[3px] bg-[color-mix(in_oklab,var(--fg)_10%,transparent)]" />
+            <span className="pulse mt-2.5 block h-2 w-24 rounded-[2px] bg-[color-mix(in_oklab,var(--fg)_8%,transparent)]" />
+          </div>
+        ))
+      )}
+      {usage ? (
+        usage.plan === "free" ? (
+          <button type="button" onClick={() => void window.codexa.openWeb("/settings/billing")} className="cine-cap cine-tele__plan cine-link">
+            Free plan · Upgrade <ArrowUpRight className="size-3" />
+          </button>
+        ) : (
+          <p className="cine-cap cine-tele__plan">
+            <span className="capitalize">{usage.plan}</span> plan · this month
+          </p>
+        )
+      ) : null}
+    </section>
+  );
+
+  /** Right of the composer: the newest deployments across the scanned projects. */
+  const deployLog = (
+    <section aria-labelledby="deploys-title" className="cine-logs">
+      <h2 id="deploys-title" className="cine-cap">
+        Recent deploys
+      </h2>
+      {deploys === null ? (
+        <ul aria-hidden="true">
+          {Array.from({ length: 3 }, (_, i) => (
+            <li key={i} className="cine-logs__row">
+              <span className="pulse block h-9 w-full rounded-[3px] bg-[color-mix(in_oklab,var(--fg)_7%,transparent)]" />
+            </li>
+          ))}
+        </ul>
+      ) : deploys.length === 0 ? (
+        <p className="cine-logs__empty">Nothing published yet. Publish a project from the editor and its deploys show up here.</p>
+      ) : (
+        <ul>
+          {deploys.slice(0, 4).map((d) => (
+            <li key={d.id}>
+              <button type="button" onClick={() => go({ name: "project", id: d.project.id })} className="cine-logs__row" title={`Open ${d.project.name}`}>
+                <time dateTime={d.createdAt} className="mono cine-logs__time">
+                  {slateTime(d.createdAt)}
+                </time>
+                <span className="min-w-0">
+                  <span className="cine-logs__name">{d.project.name}</span>
+                  <span className="cine-logs__detail">
+                    <span className={cn("size-1.5 shrink-0 rounded-full", DEPLOY_DOT[d.status], (d.status === "queued" || d.status === "building" || d.status === "deploying") && "pulse")} />
+                    <span className="truncate">{d.status === "live" ? (hostOf(d.url) ?? "Live") : d.status === "failed" ? "Publish failed" : DEPLOY_LABEL[d.status]}</span>
+                  </span>
+                </span>
+              </button>
+            </li>
+          ))}
+        </ul>
+      )}
+    </section>
+  );
+
+  /** The bottom edge: recent projects as a perforated filmstrip (Expo projects in a phone frame). */
+  const filmstrip = (
+    <section aria-labelledby="reel-title" className="cine-film">
+      <div className="cine-film__hd">
+        <h2 id="reel-title" className="cine-cap">
+          Your projects
+        </h2>
+        <p className="cine-film__count">{projects === null ? <span className="pulse inline-block h-5 w-24 rounded-[3px] bg-[color-mix(in_oklab,var(--fg)_9%,transparent)] align-middle" /> : `${all.length} ${all.length === 1 ? "project" : "projects"}`}</p>
+        <p className="cine-film__sub">{projects === null ? "Loading…" : lastEdited ? `Last edited ${relativeTime(lastEdited)}` : "Describe your first app above."}</p>
+        {all.length > 0 ? (
+          <button type="button" onClick={() => go({ name: "projects" })} className="cine-cap cine-film__all">
+            All projects
+          </button>
+        ) : null}
+      </div>
+      <ul className="cine-film__reel" aria-label="Recent projects">
+        {projects === null
+          ? Array.from({ length: 4 }, (_, i) => (
+              <li key={i} aria-hidden="true" className="cine-frame">
+                <span className="cine-frame__im pulse" />
+                <span className="cine-frame__ln">
+                  <span className="pulse block h-3 w-24 rounded-[2px] bg-[color-mix(in_oklab,var(--fg)_9%,transparent)]" />
+                </span>
+              </li>
+            ))
+          : reel.map((p) => {
+              const live = liveDeploy.has(p.id);
+              const state = deploys === null ? null : live ? "Live" : "Draft";
+              const mobile = isMobileProject(p);
+              return (
+                <li key={p.id}>
+                  <button type="button" onClick={() => go({ name: "project", id: p.id })} className="cine-frame" title={`Open ${p.name}`}>
+                    <span className="cine-frame__im" data-mobile={mobile || undefined}>
+                      {mobile ? (
+                        <>
+                          <span className="cine-phone">
+                            <PhoneShot templateId={p.templateId} name={p.name} />
+                          </span>
+                          <span className="mono cine-frame__tag">EXPO{state ? ` · ${state.toUpperCase()}` : ""}</span>
+                        </>
+                      ) : (
+                        <ProjectThumb templateId={p.templateId} name={p.name} big className="h-full w-full" />
+                      )}
+                    </span>
+                    <span className="cine-frame__ln">
+                      <span className="min-w-0 truncate">{p.name}</span>
+                      <span className="mono cine-frame__meta">{[mobile ? null : state?.toUpperCase(), slateTime(p.updatedAt)].filter(Boolean).join(" · ")}</span>
+                    </span>
+                  </button>
+                </li>
+              );
+            })}
+        <li>
+          <button type="button" onClick={() => go({ name: "templates" })} className="cine-frame cine-frame--new">
+            <span className="cine-frame__im">
+              <span className="cine-cap">
+                <Plus className="size-3.5" aria-hidden="true" /> New from a template
+              </span>
+            </span>
+            <span className="cine-frame__ln">
+              <span>Browse templates</span>
+              <span className="mono cine-frame__meta">{templates?.length ? templates.length : ""}</span>
+            </span>
+          </button>
+        </li>
+      </ul>
+    </section>
+  );
+
   return (
     <div className="scroll h-full">
-      <SpaceHero workspace={workspace ? { id: workspace.id, name: workspace.name, plan: usage?.plan ?? workspace.plan ?? "free" } : null} onWorkspace={() => go({ name: "settings", tab: "workspace" })}>
-        <div className="mx-auto w-full max-w-[760px]">
-          <div role="group" aria-label="What are you building?" className="space-modes">
-            {modes.map((m) => (
-              <button key={m.id} type="button" aria-pressed={template === m.templateId} disabled={busy} onClick={() => (pickTemplate(m.templateId), window.dispatchEvent(new CustomEvent(SPACE_MODE_EVENT, { detail: m.id })))} className="space-mode" title={`Start from the ${byId.get(m.templateId)?.name ?? m.label} starter`}>
-                {m.label}
-              </button>
-            ))}
-            {starters.length > modes.length ? (
-              <Menu
-                align="start"
-                width={300}
-                trigger={(open, toggle) => (
-                  <button type="button" onClick={toggle} aria-pressed={!MODE_IDS.has(template)} aria-haspopup="menu" aria-expanded={open} disabled={busy} className="space-mode" title="Pick one of the templates to start from">
-                    From template
-                  </button>
-                )}
-              >
-                {starterMenu}
-              </Menu>
-            ) : null}
-          </div>
+      <SpaceHero name={firstName} left={telemetry} right={deployLog} strip={filmstrip}>
+        <div role="group" aria-label="What are you building?" className="space-modes">
+          {modes.map((m) => (
+            <button key={m.id} type="button" aria-pressed={template === m.templateId} disabled={busy} onClick={() => (pickTemplate(m.templateId), window.dispatchEvent(new CustomEvent(SPACE_MODE_EVENT, { detail: m.id })))} className="space-mode" title={`Start from the ${byId.get(m.templateId)?.name ?? m.label} starter`}>
+              {m.label}
+            </button>
+          ))}
+          {starters.length > modes.length ? (
+            <Menu
+              align="start"
+              width={300}
+              trigger={(open, toggle) => (
+                <button type="button" onClick={toggle} aria-pressed={!MODE_IDS.has(template)} aria-haspopup="menu" aria-expanded={open} disabled={busy} className="space-mode" title="Pick one of the templates to start from">
+                  From template
+                </button>
+              )}
+            >
+              {starterMenu}
+            </Menu>
+          ) : null}
+        </div>
 
-          <div className="space-composer">
-            <textarea
-              id="composer"
-              ref={composerRef}
-              value={prompt}
-              rows={3}
-              maxLength={4000}
-              onChange={(e) => setPrompt(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter" && !e.shiftKey && !e.nativeEvent.isComposing) {
-                  e.preventDefault();
-                  void build();
-                }
-              }}
-              placeholder={ideas[ph % ideas.length]}
-              aria-label="Describe what you want to build"
-              className="block min-h-[96px] w-full resize-none bg-transparent px-5 pb-3 pt-5 text-[16px] leading-relaxed text-fg outline-none placeholder:text-dim"
-            />
-            <div className="flex items-center gap-1.5 px-3 pb-3 pt-1">
-              <Menu
-                align="start"
-                width={300}
-                trigger={(open, toggle) => (
-                  <button type="button" onClick={toggle} aria-expanded={open} aria-haspopup="menu" aria-label={`Starter: ${picked?.name ?? "React starter"}. Change starter`} className="space-chip max-w-[240px]">
-                    <ProjectThumb templateId={picked?.id ?? template} name={picked?.name ?? "Starter"} className="h-3.5 w-6 rounded-[2px]" />
-                    <span className="truncate">{picked?.name ?? "React starter"}</span>
-                    <ChevronDown className="size-3 shrink-0 text-dim" />
-                  </button>
-                )}
-              >
-                {starterMenu}
-              </Menu>
-              <button type="button" onClick={() => void window.codexa.openWeb("/dashboard/github")} className="space-chip">
-                <GitBranch className="size-3.5" /> Import from GitHub
-              </button>
-              <Button variant="primary" size="sm" className="ml-auto h-8 gap-2 rounded-lg px-3.5 text-[13.5px]" onClick={() => void build()} disabled={!prompt.trim()} loading={busy}>
-                Build
-                <kbd className="mono rounded border border-primary-fg/25 px-1 text-[10.5px] font-normal text-primary-fg/60">Enter</kbd>
-              </Button>
-            </div>
+        <div className="space-composer">
+          <textarea
+            id="composer"
+            ref={composerRef}
+            value={prompt}
+            rows={2}
+            maxLength={4000}
+            onChange={(e) => setPrompt(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" && !e.shiftKey && !e.nativeEvent.isComposing) {
+                e.preventDefault();
+                void build();
+              }
+            }}
+            placeholder={ideas[ph % ideas.length]}
+            aria-label="Describe what you want to build"
+            className="space-composer__input"
+          />
+          <div className="flex min-w-0 items-center gap-2 px-3.5 pb-3.5 pt-1">
+            <Menu
+              align="start"
+              width={300}
+              trigger={(open, toggle) => (
+                <button type="button" onClick={toggle} aria-expanded={open} aria-haspopup="menu" aria-label={`Starter: ${picked?.name ?? "React starter"}. Change starter`} className="space-chip min-w-0 max-w-[260px]">
+                  {isMobileProject({ templateId: template }) ? <Smartphone className="size-3.5 shrink-0" /> : <ProjectThumb templateId={picked?.id ?? template} name={picked?.name ?? "Starter"} className="h-3.5 w-6 rounded-[2px]" />}
+                  <span className="truncate">
+                    <span className="text-dim">Starter: </span>
+                    {picked?.name ?? "React starter"}
+                  </span>
+                  <ChevronDown className="size-3 shrink-0 text-dim" />
+                </button>
+              )}
+            >
+              {starterMenu}
+            </Menu>
+            <button type="button" onClick={() => void window.codexa.openWeb("/dashboard/github")} className="space-chip">
+              <GitBranch className="size-3.5" /> Import from GitHub
+            </button>
+            <button type="button" onClick={() => void build()} disabled={!prompt.trim() || busy} aria-busy={busy || undefined} className="cine-go" title="Build (Enter)">
+              {busy ? <Loader2 className="spin size-4" aria-hidden="true" /> : null}
+              Build
+              {busy ? null : <ArrowRight className="size-4" aria-hidden="true" />}
+            </button>
           </div>
         </div>
 
-        {recent.length ? (
-          <nav aria-label="Recent projects" className="mx-auto mt-5 flex max-w-[760px] items-center justify-center gap-2">
-            <span className="mono shrink-0 text-[10.5px] uppercase tracking-[0.06em] text-muted">Jump back in</span>
-            <ul className="flex min-w-0 flex-wrap justify-center gap-1.5">
-              {recent.map((p) => (
-                <li key={p.id} className="shrink-0">
-                  <button type="button" onClick={() => go({ name: "project", id: p.id })} className="space-pick" title={`Open ${p.name}`}>
-                    <ProjectThumb templateId={p.templateId} name={p.name} className="h-3.5 w-6 rounded-[3px]" />
-                    <span className="max-w-[160px] truncate">{p.name}</span>
-                  </button>
-                </li>
-              ))}
-            </ul>
-          </nav>
-        ) : projects !== null ? (
-          <ul aria-label="Ideas" className="mx-auto mt-5 flex max-w-[760px] flex-wrap justify-center gap-1.5">
-            {IDEAS.map((i) => (
-              <li key={i.label}>
-                <button type="button" onClick={() => applyIdea(i)} aria-pressed={prompt === i.prompt} title={i.prompt} disabled={busy} className="space-pick">
-                  <i.icon className="size-3.5" aria-hidden="true" /> {i.label}
-                </button>
-              </li>
-            ))}
-          </ul>
-        ) : null}
+        <ul aria-label="Ideas" className="cine-try">
+          <li aria-hidden="true" className="cine-cap cine-try__cap">
+            Try
+          </li>
+          {tryIdeas.map((i) => (
+            <li key={i.label}>
+              <button type="button" onClick={() => applyIdea(i)} aria-pressed={prompt === i.prompt} title={i.prompt} disabled={busy} className="space-pick">
+                <i.icon className="size-3.5" aria-hidden="true" /> {i.label}
+              </button>
+            </li>
+          ))}
+        </ul>
       </SpaceHero>
 
-      <div className="mx-auto grid max-w-[1280px] grid-cols-[minmax(0,1fr)_320px] gap-8 px-8 pb-14 pt-2">
+      <div className="cine-below mx-auto grid max-w-[1280px] grid-cols-[minmax(0,1fr)_320px] gap-8 px-8 pb-14 pt-10">
         <div className="min-w-0">
           {showSetup ? (
             <section className="mb-7 rounded-lg border border-border" aria-labelledby="setup">
@@ -662,37 +821,6 @@ export function HomeScreen() {
 
         {/* Aside */}
         <aside className="flex flex-col gap-5">
-          <Box title="Usage" meta={usage ? <><span className="capitalize">{usage.plan}</span> plan · this month</> : null}>
-            {meters ? (
-              <div className="flex flex-col gap-3.5 px-3.5 py-3">
-                {meters.map((m) => {
-                  const free = unlimited(m.limit);
-                  const pct = free ? 0 : Math.min(100, (m.value / m.limit) * 100);
-                  return (
-                    <div key={m.label}>
-                      <div className="mb-1.5 flex justify-between text-[13px] text-muted">
-                        {m.label}
-                        <span className="mono text-[12px] text-fg">
-                          {m.value.toLocaleString()} / {free ? "Unlimited" : m.limit.toLocaleString()}
-                        </span>
-                      </div>
-                      <div className="h-1 rounded-sm bg-track">
-                        <div className={cn("h-full rounded-sm", pct > 90 ? "bg-danger" : pct > 75 ? "bg-warning" : "bg-fg")} style={{ width: free ? 0 : `${Math.max(pct, 1)}%` }} />
-                      </div>
-                    </div>
-                  );
-                })}
-                {usage?.plan === "free" ? (
-                  <button type="button" onClick={() => void window.codexa.openWeb("/settings/billing")} className="flex items-center justify-between border-t border-border pt-3 text-[12.5px] text-muted hover:text-fg">
-                    Pro: 25 projects, 1,000 AI requests a month <ArrowUpRight className="size-3.5" />
-                  </button>
-                ) : null}
-              </div>
-            ) : (
-              <BoxLoading />
-            )}
-          </Box>
-
           <Box title="Recent activity" meta={feed.length ? "Deploys and checkpoints" : null}>
             {deploys === null || !snapsLoaded ? (
               <BoxLoading />
@@ -789,4 +917,12 @@ function BoxLoading() {
       <Spinner />
     </div>
   );
+}
+
+/** An Expo starter's phone-proportioned capture, falling back to the regular thumbnail. */
+function PhoneShot({ templateId, name }: { templateId: string | null; name: string }) {
+  const [failed, setFailed] = useState(false);
+  const src = templatePhoneShot(templateId);
+  if (!src || failed) return <ProjectThumb templateId={templateId} name={name} className="h-full w-full" />;
+  return <img src={src} alt="" loading="lazy" decoding="async" draggable={false} onError={() => setFailed(true)} className="h-full w-full bg-white object-cover object-top" />;
 }
