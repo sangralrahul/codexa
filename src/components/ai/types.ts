@@ -13,7 +13,11 @@ export type AiStatus = {
   mock: boolean;
   missingEnv: string[];
   lastError: string | null;
+  /** Every pickable model and whether its provider key is set on this server. */
+  models?: AiModelChoice[];
 };
+
+export type AiModelChoice = { id: string; label: string; provider: "anthropic" | "openai"; featured: boolean; note: string; available: boolean; missingEnv: string | null };
 
 export type ConversationView = { id: string; title: string; createdAt: string; updatedAt: string };
 

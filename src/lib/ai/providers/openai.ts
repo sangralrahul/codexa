@@ -5,49 +5,38 @@ import { parseToolInput } from "../provider";
 
 const TIMEOUT_MS = 5 * 60 * 1000;
 
-function toOpenAiMessages(system: string, messages: ChatMessage[]): OpenAI.Chat.Completions.ChatCompletionMessageParam[] {
-  const out: OpenAI.Chat.Completions.ChatCompletionMessageParam[] = [{ role: "system", content: system }];
+/**
+ * OpenAI through the Responses API (current GPT models, incl. GPT-6 Astra and GPT-6.1 Sol, take
+ * function tools there). Stateless: `store: false`, the whole conversation is sent each turn, and
+ * replayed function calls carry only `call_id` (no server item ids, so no stored reasoning is needed).
+ */
+type InputItem = OpenAI.Responses.ResponseInputItem;
+
+export function toResponsesInput(messages: ChatMessage[]): InputItem[] {
+  const out: InputItem[] = [];
   for (const m of messages) {
     if (m.role === "user") {
       out.push({
         role: "user",
         content: m.images?.length
-          ? [...m.images.map((img) => ({ type: "image_url" as const, image_url: { url: `data:${img.mediaType};base64,${img.data}` } })), { type: "text" as const, text: m.content }]
+          ? [
+              ...m.images.map((img): OpenAI.Responses.ResponseInputImage => ({ type: "input_image", detail: "auto", image_url: `data:${img.mediaType};base64,${img.data}` })),
+              { type: "input_text" as const, text: m.content },
+            ]
           : m.content,
       });
     } else if (m.role === "assistant") {
-      out.push({
-        role: "assistant",
-        content: m.text || null,
-        tool_calls: m.toolCalls.length
-          ? m.toolCalls.map((c) => ({ id: c.id, type: "function" as const, function: { name: c.name, arguments: JSON.stringify(c.input ?? {}) } }))
-          : undefined,
-      });
+      if (m.text) out.push({ role: "assistant", content: m.text });
+      for (const c of m.toolCalls) out.push({ type: "function_call", call_id: c.id, name: c.name, arguments: JSON.stringify(c.input ?? {}) });
     } else {
-      for (const r of m.results) out.push({ role: "tool", tool_call_id: r.toolCallId, content: r.isError ? `ERROR: ${r.output}` : r.output });
+      for (const r of m.results) out.push({ type: "function_call_output", call_id: r.toolCallId, output: r.isError ? `ERROR: ${r.output}` : r.output });
     }
   }
   return out;
 }
 
-function toOpenAiTools(tools: ToolDefinition[]): OpenAI.Chat.Completions.ChatCompletionTool[] {
-  return tools.map((t) => ({ type: "function", function: { name: t.name, description: t.description, parameters: t.inputSchema } }));
-}
-
-function mapFinish(reason: string | null | undefined): StopReason {
-  switch (reason) {
-    case "stop":
-      return "end_turn";
-    case "tool_calls":
-    case "function_call":
-      return "tool_use";
-    case "length":
-      return "max_tokens";
-    case "content_filter":
-      return "refusal";
-    default:
-      return "other";
-  }
+function toResponsesTools(tools: ToolDefinition[]): OpenAI.Responses.FunctionTool[] {
+  return tools.map((t) => ({ type: "function", name: t.name, description: t.description, parameters: t.inputSchema as Record<string, unknown>, strict: false }));
 }
 
 export function createOpenAiProvider(apiKey: string): AiProvider {
@@ -57,42 +46,75 @@ export function createOpenAiProvider(apiKey: string): AiProvider {
     async *stream(request: ProviderRequest): AsyncIterable<ProviderEvent> {
       let inputTokens = 0;
       let outputTokens = 0;
-      let stop: StopReason = "other";
-      // Tool-call deltas arrive by index; accumulate until the stream finishes.
-      const calls = new Map<number, { id: string; name: string; args: string }>();
+      let stop: StopReason = "end_turn";
+      let sawCall = false;
+      // Function calls by output item id: name and call_id arrive first, arguments stream in.
+      const calls = new Map<string, { callId: string; name: string; args: string }>();
       try {
-        const stream = await client.chat.completions.create(
+        const stream = await client.responses.create(
           {
             model: request.model,
-            messages: toOpenAiMessages(request.system, request.messages),
-            tools: request.tools.length ? toOpenAiTools(request.tools) : undefined,
+            instructions: request.system,
+            input: toResponsesInput(request.messages),
+            tools: request.tools.length ? toResponsesTools(request.tools) : undefined,
+            max_output_tokens: request.maxTokens,
+            store: false,
             stream: true,
-            stream_options: { include_usage: true },
-            max_completion_tokens: request.maxTokens,
           },
           { signal: request.abortSignal, timeout: TIMEOUT_MS },
         );
-        for await (const chunk of stream) {
+        for await (const event of stream) {
           if (request.abortSignal?.aborted) break;
-          if (chunk.usage) {
-            inputTokens = chunk.usage.prompt_tokens ?? inputTokens;
-            outputTokens = chunk.usage.completion_tokens ?? outputTokens;
-          }
-          const choice = chunk.choices?.[0];
-          if (!choice) continue;
-          const delta = choice.delta;
-          if (delta?.content) yield { type: "text_delta", text: delta.content };
-          for (const tc of delta?.tool_calls ?? []) {
-            const existing = calls.get(tc.index);
-            if (!existing) {
-              calls.set(tc.index, { id: tc.id ?? `call_${tc.index}`, name: tc.function?.name ?? "", args: tc.function?.arguments ?? "" });
-            } else {
-              if (tc.id) existing.id = tc.id;
-              if (tc.function?.name) existing.name += tc.function.name;
-              if (tc.function?.arguments) existing.args += tc.function.arguments;
+          switch (event.type) {
+            case "response.output_text.delta":
+              if (event.delta) yield { type: "text_delta", text: event.delta };
+              break;
+            case "response.refusal.delta":
+              if (event.delta) yield { type: "text_delta", text: event.delta };
+              stop = "refusal";
+              break;
+            case "response.output_item.added":
+              if (event.item.type === "function_call") calls.set(event.item.id ?? event.item.call_id, { callId: event.item.call_id, name: event.item.name, args: event.item.arguments ?? "" });
+              break;
+            case "response.function_call_arguments.delta": {
+              const c = calls.get(event.item_id);
+              if (c) c.args += event.delta;
+              break;
             }
+            case "response.output_item.done":
+              if (event.item.type === "function_call") {
+                const key = event.item.id ?? event.item.call_id;
+                const c = calls.get(key);
+                calls.delete(key);
+                const args = event.item.arguments || c?.args || "";
+                const parsed = parseToolInput(args);
+                sawCall = true;
+                if (parsed.ok) yield { type: "tool_call", id: event.item.call_id, name: event.item.name, input: parsed.value };
+                else yield { type: "error", message: `Could not parse tool arguments for ${event.item.name}: ${parsed.error}`, code: "tool_input_invalid", retryable: true };
+              }
+              break;
+            case "response.completed":
+            case "response.incomplete":
+            case "response.failed": {
+              const r = event.response;
+              inputTokens = r.usage?.input_tokens ?? inputTokens;
+              outputTokens = r.usage?.output_tokens ?? outputTokens;
+              if (event.type === "response.incomplete") {
+                const reason = r.incomplete_details?.reason;
+                stop = reason === "max_output_tokens" ? "max_tokens" : reason === "content_filter" ? "refusal" : "other";
+              } else if (event.type === "response.failed") {
+                yield { type: "error", message: `OpenAI could not finish the response: ${r.error?.message ?? "unknown error"}`, code: r.error?.code ?? "api_error", retryable: false };
+                stop = "other";
+              }
+              break;
+            }
+            case "error":
+              yield { type: "error", message: `OpenAI error: ${event.message}`, code: event.code ?? "api_error", retryable: false };
+              stop = "other";
+              break;
+            default:
+              break;
           }
-          if (choice.finish_reason) stop = mapFinish(choice.finish_reason);
         }
       } catch (err) {
         if (request.abortSignal?.aborted) {
@@ -105,12 +127,7 @@ export function createOpenAiProvider(apiKey: string): AiProvider {
         yield { type: "stop", reason: "other" };
         return;
       }
-      for (const [, c] of [...calls.entries()].sort((a, b) => a[0] - b[0])) {
-        const parsed = parseToolInput(c.args);
-        if (parsed.ok) yield { type: "tool_call", id: c.id, name: c.name, input: parsed.value };
-        else yield { type: "error", message: `Could not parse tool arguments for ${c.name}: ${parsed.error}`, code: "tool_input_invalid", retryable: true };
-      }
-      if (calls.size && stop === "end_turn") stop = "tool_use";
+      if (sawCall && stop === "end_turn") stop = "tool_use";
       yield { type: "usage", inputTokens, outputTokens };
       yield { type: "stop", reason: request.abortSignal?.aborted ? "cancelled" : stop };
     },

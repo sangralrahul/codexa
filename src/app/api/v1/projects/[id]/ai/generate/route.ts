@@ -18,6 +18,8 @@ const bodySchema = z.object({
   mode: z.enum(["build", "ask", "fix", "plan"]).optional(),
   /** Steps approved in plan mode (build runs only). */
   approvedPlan: z.array(z.string().trim().min(1).max(600)).min(1).max(12).optional(),
+  /** The model picked in the composer; checked against the catalog and the configured keys. */
+  model: z.string().trim().min(1).max(64).optional().nullable(),
   /** Screenshots or designs attached to the prompt (base64, downscaled in the browser). */
   images: z
     .array(
@@ -48,7 +50,7 @@ export const POST = handler<Ctx>(async (req, ctx) => {
   await enforceRateLimit(`ai:generate:user:${user.id}`, 20, 60_000);
   const body = await parseBody(req, bodySchema);
 
-  const prepared = await prepareRun({ project, workspaceId: workspace.id, userId: user.id, prompt: body.prompt, mode: body.mode, conversationId: body.conversationId ?? null, approvedPlan: body.approvedPlan, images: body.images });
+  const prepared = await prepareRun({ project, workspaceId: workspace.id, userId: user.id, prompt: body.prompt, mode: body.mode, conversationId: body.conversationId ?? null, approvedPlan: body.approvedPlan, images: body.images, model: body.model ?? null });
 
   const encoder = new TextEncoder();
   let keepalive: NodeJS.Timeout | null = null;

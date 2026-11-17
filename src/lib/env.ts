@@ -34,7 +34,7 @@ const schema = z.object({
   /** Model for AI image generation (needs OPENAI_API_KEY). */
   OPENAI_IMAGE_MODEL: z.string().default("gpt-image-1"),
   AI_DEFAULT_PROVIDER: z.enum(["anthropic", "openai"]).default("anthropic"),
-  AI_DEFAULT_MODEL: z.string().default("claude-sonnet-5-5"),
+  AI_DEFAULT_MODEL: z.string().default("claude-opus-5-5"),
 
   RESEND_API_KEY: z.string().optional(),
   CUSTOMERIO_APP_API_KEY: z.string().optional(),

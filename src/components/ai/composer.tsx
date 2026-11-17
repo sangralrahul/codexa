@@ -6,7 +6,8 @@ import { cn } from "@/lib/utils";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuRadioGroup, DropdownMenuRadioItem, DropdownMenuTrigger } from "@/components/ui/dropdown";
 import { useCalm } from "@/lib/client/motion";
 import { addImages, dataUrlOf, IMAGE_ACCEPT, imageFilesFrom, MAX_PROMPT_IMAGES, type PromptImage } from "@/lib/client/attachments";
-import type { AgentMode } from "./types";
+import type { AgentMode, AiModelChoice } from "./types";
+import { ModelPicker } from "./model-picker";
 
 const MODES: { id: AgentMode; label: string; hint: string; Icon: typeof Hammer }[] = [
   { id: "build", label: "Build", hint: "Plans, edits files and checks the result", Icon: Hammer },
@@ -56,6 +57,9 @@ export function Composer({
   lastError,
   textareaRef,
   model,
+  models,
+  selectedModel,
+  onModelChange,
   activeFile,
   context,
   onContextChange,
@@ -81,6 +85,10 @@ export function Composer({
   textareaRef?: React.Ref<HTMLTextAreaElement>;
   /** The configured model (shown in the footer) or the mock badge. */
   model?: { name: string; provider: string; mock: boolean } | null;
+  /** Pickable models; with onModelChange set, the footer shows the model menu instead of the name. */
+  models?: AiModelChoice[];
+  selectedModel?: string;
+  onModelChange?: (id: string) => void;
   activeFile?: string | null;
   context?: ComposerContext;
   onContextChange?: (c: ComposerContext) => void;
@@ -329,12 +337,15 @@ export function Composer({
                 </button>
               )
             ) : null}
-            <div className="min-w-0 flex-1 truncate pl-0.5 text-[11px] text-muted-foreground">
+            <div className="flex min-w-0 flex-1 items-center gap-1 truncate pl-0.5 text-[11px] text-muted-foreground">
               {model?.mock ? (
                 <span className="inline-flex h-5 items-center gap-1 rounded-[5px] px-1.5 font-mono text-[10.5px] font-medium text-muted-foreground shadow-[inset_0_0_0_1px_var(--border)]" title="AI_MOCK=1 is set: responses are scripted. Development only.">
                   <FlaskConical className="size-3" aria-hidden="true" /> Mock AI
                 </span>
-              ) : model ? (
+              ) : null}
+              {models?.length && onModelChange && selectedModel ? (
+                <ModelPicker models={models} value={selectedModel} onChange={onModelChange} disabled={running} />
+              ) : model && !model.mock ? (
                 <span className="font-mono" title={`Provider: ${model.provider}`}>
                   {model.name}
                 </span>

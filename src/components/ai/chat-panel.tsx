@@ -39,6 +39,7 @@ import { attachmentUrl, dataUrlOf, takeInitialImages, type PromptImage } from "@
 import { AssistantParts, stageLabel } from "./message-parts";
 import { RunFooter, useRunDetails } from "./review-changes";
 import { streamGenerate } from "./stream-client";
+import { usePickedModel } from "./model-picker";
 import { suggestionsFor, type Suggestion, type SuggestionIcon } from "./suggestions";
 import type { AgentMode, AiStatus, ConversationView, MessagePart, MessageView, RunValidation, RunView, SseEvent } from "./types";
 
@@ -100,6 +101,7 @@ export function ChatPanel({
   const agent = useAgent();
   const { report, setAi, activeFile } = agent;
   const [status, setStatus] = React.useState<AiStatus | null>(null);
+  const [pickedModel, pickModel] = usePickedModel(status?.models, status?.model);
   const [statusError, setStatusError] = React.useState<string | null>(null);
   const [conversations, setConversations] = React.useState<ConversationView[]>([]);
   const [activeId, setActiveId] = React.useState<string | null>(initialConversationId ?? null);
@@ -371,6 +373,7 @@ export function ChatPanel({
             mode: sendMode,
             conversationId: activeId,
             approvedPlan: extra.approvedPlan,
+            model: pickedModel || null,
             images: sentImages.length ? sentImages.map(({ name, mediaType, data, width, height }) => ({ name, mediaType, data, width, height })) : undefined,
           },
           { signal: abort.signal, onEvent },
@@ -406,7 +409,7 @@ export function ChatPanel({
         }
       }
     },
-    [projectId, activeId, running, updateStreaming, loadConversations, loadMessages, loadStatus, report, announce],
+    [projectId, activeId, running, updateStreaming, loadConversations, loadMessages, loadStatus, report, announce, pickedModel],
   );
 
   // A request that arrived mid-run goes out as soon as the run ends.
@@ -679,6 +682,9 @@ export function ChatPanel({
         lastError={lastError}
         textareaRef={textareaRef}
         model={status?.configured ? { name: status.model, provider: status.provider, mock: status.mock } : null}
+        models={status?.configured ? status.models : undefined}
+        selectedModel={pickedModel}
+        onModelChange={pickModel}
         activeFile={activeFile}
         context={context}
         onContextChange={setContext}

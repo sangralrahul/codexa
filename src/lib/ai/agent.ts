@@ -150,10 +150,12 @@ export async function prepareRun(input: {
   conversationId?: string | null;
   approvedPlan?: string[];
   images?: PromptImageInput[];
+  /** The model picked in the composer (validated against the catalog); the server default otherwise. */
+  model?: string | null;
 }): Promise<PreparedRun> {
   const mode: AgentMode = input.mode ?? "build";
   const prompt = validatePrompt(input.prompt);
-  const creds = await resolveAiCredentials(input.workspaceId);
+  const creds = await resolveAiCredentials(input.workspaceId, input.model);
   const provider = createProvider(creds);
   if (!creds.configured || !provider) {
     throw new ApiError(503, "AI is not configured. Set ANTHROPIC_API_KEY or OPENAI_API_KEY on the server.", "ai_not_configured", { missingEnv: ["ANTHROPIC_API_KEY", "OPENAI_API_KEY"] });

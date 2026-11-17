@@ -4,7 +4,7 @@ import { ClientApiError, type ApiErrorShape } from "@/lib/client/api";
 import { SseParser } from "@/lib/ai/sse";
 import type { AgentMode, SseEvent } from "./types";
 
-export type GenerateBody = { prompt: string; mode: AgentMode; conversationId?: string | null; approvedPlan?: string[];
+export type GenerateBody = { prompt: string; mode: AgentMode; conversationId?: string | null; approvedPlan?: string[]; model?: string | null;
   images?: { name: string; mediaType: string; data: string; width?: number; height?: number }[];
 };
 
