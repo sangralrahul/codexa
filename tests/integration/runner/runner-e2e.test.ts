@@ -58,8 +58,10 @@ async function waitFor(id: string, want: string[], timeoutMs = 90_000) {
   let last = "";
   while (Date.now() < deadline) {
     const r = await request("GET", `/sessions/${id}`);
-    last = (r.json() as { session: { status: string; error: string | null } }).session.status;
-    if (want.includes(last)) return last;
+    const { session } = r.json() as { session: { status: string; error: string | null } };
+    last = session.status;
+    // An unexpected "error" carries the runner's reason, so a failure says why.
+    if (want.includes(last)) return last === "error" && !want.every((w) => w === "error") && session.error ? `error: ${session.error}` : last;
     await new Promise((r) => setTimeout(r, 300));
   }
   throw new Error(`session ${id} is "${last}" after ${timeoutMs}ms`);

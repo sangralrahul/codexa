@@ -281,7 +281,7 @@ describe.skipIf(!canRun)("runtime API", () => {
   it("execInProject starts a runtime on demand (vite project, typecheck) and marks runner-stopped sessions", async () => {
     as(alice);
     const r = await execInProject(viteProject.id, "typecheck", { userId: alice.id });
-    expect(r.available).toBe(true);
+    expect(r.available, JSON.stringify(r)).toBe(true);
     expect(r.exitCode, r.output).toBe(0);
     expect(r.timedOut).toBe(false);
     const state = await getRuntimeStatus(viteProject.id);
@@ -304,7 +304,8 @@ describe.skipIf(!canRun)("runtime API", () => {
     expect(vercel?.available).toBe(Boolean(process.env.VERCEL_TOKEN));
     if (!vercel?.available) expect(vercel?.reason).toMatch(/VERCEL_TOKEN/);
     expect(l0.domain.host).toMatch(/\.sites\.test:4100$/);
-    expect(l0.domain.verificationSupported).toBe(false);
+    // Custom domains are verified in Publishing → Domains (DNS checks), so the instructions say so.
+    expect(l0.domain.verificationSupported).toBe(true);
 
     as(bob);
     expect((await routes.deployments.POST(req("POST", "/x", { provider: "codexa" }), ctx({ id: staticProject.id }))).status).toBe(403);

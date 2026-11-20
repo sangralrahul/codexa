@@ -68,6 +68,13 @@ export async function deleteFiles(root: string, paths: string[]) {
 }
 
 /**
+ * Entries of a base node_modules that are never linked: npm's lockfile and tool caches. Tools write
+ * into these (Vite bundles vite.config.ts into node_modules/.vite-temp, and keeps its optimizer cache
+ * in node_modules/.vite), so a stray copy left in the read-only base must not shadow the project's own.
+ */
+const NOT_LINKED = new Set([".package-lock.json", ".vite", ".vite-temp", ".cache"]);
+
+/**
  * Link the prebuilt base dependency set into <project>/node_modules as one
  * symlink per package (and the .bin directory). Per-package links (instead of
  * a single node_modules symlink) keep node_modules itself writable so tools
@@ -86,13 +93,11 @@ export async function linkBaseNodeModules(projectDir: string, hostBaseDir: strin
   await fs.rm(nm, { recursive: true, force: true });
   await fs.mkdir(nm, { recursive: true });
   const target = `${SANDBOX_PATHS.base}/${framework}/node_modules`;
-  for (const name of entries) {
-    if (name === ".package-lock.json") continue;
-    await fs.symlink(`${target}/${name}`, path.join(nm, name));
-  }
+  const linked = entries.filter((name) => !NOT_LINKED.has(name));
+  for (const name of linked) await fs.symlink(`${target}/${name}`, path.join(nm, name));
   await fs.writeFile(path.join(nm, ".codexa-linked"), `${framework}\n`);
   await fs.chown(nm, owner.uid, owner.gid).catch(() => {});
-  for (const name of entries) await fs.lchown(path.join(nm, name), owner.uid, owner.gid).catch(() => {});
+  for (const name of linked) await fs.lchown(path.join(nm, name), owner.uid, owner.gid).catch(() => {});
   return true;
 }
 
